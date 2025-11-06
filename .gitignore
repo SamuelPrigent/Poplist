@@ -3,3 +3,4 @@ prompt
 .DS_Store
 dist
 node_modules
+dist-ssr
