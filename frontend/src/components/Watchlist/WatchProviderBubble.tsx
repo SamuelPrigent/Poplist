@@ -34,7 +34,6 @@ export function WatchProviderBubble({
     >
       <img
         src={localLogo}
-        // src={}
         alt={providerName}
         className="aspect-auto h-full w-full object-contain p-1"
         loading="lazy"

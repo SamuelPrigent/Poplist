@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X, Pencil, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,24 +24,26 @@ export interface EditWatchlistDialogRef {
   openFilePicker: () => void;
 }
 
-export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchlistDialogProps>(
-  ({ open, onOpenChange, onSuccess, watchlist, offline = false }, ref) => {
-    const { content } = useLanguageStore();
-    const [name, setName] = useState("");
-    const [description, setDescription] = useState("");
-    const [isPublic, setIsPublic] = useState(false);
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+export const EditWatchlistDialog = forwardRef<
+  EditWatchlistDialogRef,
+  EditWatchlistDialogProps
+>(({ open, onOpenChange, onSuccess, watchlist, offline = false }, ref) => {
+  const { content } = useLanguageStore();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Expose method to trigger file picker
-    useImperativeHandle(ref, () => ({
-      openFilePicker: () => {
-        fileInputRef.current?.click();
-      },
-    }));
+  // Expose method to trigger file picker
+  useImperativeHandle(ref, () => ({
+    openFilePicker: () => {
+      fileInputRef.current?.click();
+    },
+  }));
 
   // Initialize form with watchlist data when dialog opens
   useEffect(() => {
@@ -121,8 +129,8 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
         };
 
         // Explicitly set description (empty string to clear it)
-        if (description.trim() === '') {
-          updates.description = '';
+        if (description.trim() === "") {
+          updates.description = "";
         } else {
           updates.description = description.trim();
         }
@@ -133,7 +141,11 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
         if (imagePreview === null && watchlist.imageUrl) {
           // User removed the image - delete from Cloudinary
           await watchlistAPI.deleteCover(watchlist._id);
-        } else if (imageFile && imagePreview && imagePreview !== watchlist.imageUrl) {
+        } else if (
+          imageFile &&
+          imagePreview &&
+          imagePreview !== watchlist.imageUrl
+        ) {
           // User uploaded a new image (old one will be auto-deleted by backend)
           await watchlistAPI.uploadCover(watchlist._id, imagePreview);
         }
@@ -154,7 +166,7 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-[620px] translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
           <div className="flex flex-col space-y-1.5">
             <DialogPrimitive.Title className="text-lg font-semibold">
               {content.watchlists.editWatchlist}
@@ -164,13 +176,13 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
             </DialogPrimitive.Description>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Main Layout: Image on left, Title and Description on right */}
-            <div className="flex gap-4" style={{ height: "280px" }}>
+          <form onSubmit={handleSubmit} className="mt-3 space-y-6">
+            {/* Main Layout: square cover on the left, fields on the right */}
+            <div className="flex flex-col gap-6 md:flex-row">
               {/* Cover Image */}
-              <div className="w-48 flex-shrink-0">
+              <div className="flex justify-center md:block">
                 <div
-                  className="group relative h-full w-full cursor-pointer overflow-hidden rounded-lg border border-border"
+                  className="group relative aspect-square w-48 cursor-pointer overflow-hidden rounded-lg border border-border"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {imagePreview ? (
@@ -223,7 +235,7 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
               </div>
 
               {/* Title and Description */}
-              <div className="flex flex-1 flex-col gap-4">
+              <div className="flex flex-1 flex-col gap-4 md:h-48">
                 {/* Name Input */}
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-medium">
@@ -243,7 +255,7 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
                 </div>
 
                 {/* Description Textarea */}
-                <div className="flex-1 space-y-2">
+                <div className="flex flex-1 flex-col space-y-2">
                   <label htmlFor="description" className="text-sm font-medium">
                     {content.watchlists.description}
                   </label>
@@ -254,28 +266,37 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
                     placeholder={content.watchlists.descriptionPlaceholder}
                     maxLength={500}
                     disabled={loading}
-                    className="flex h-full w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:flex-1"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Public Checkbox - Below everything */}
-            <div className="flex items-center space-x-2 pt-2">
-              <input
-                type="checkbox"
-                id="isPublic"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isPublic"
+                  checked={isPublic}
+                  onChange={(e) => setIsPublic(e.target.checked)}
+                  disabled={loading}
+                  className="h-4 w-4 rounded border-input bg-background text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+                <label
+                  htmlFor="isPublic"
+                  className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {content.watchlists.makePublic}
+                </label>
+              </div>
+
+              <Button
+                type="submit"
                 disabled={loading}
-                className="h-4 w-4 rounded border-input bg-background text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <label
-                htmlFor="isPublic"
-                className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="self-end md:self-auto"
               >
-                {content.watchlists.makePublic}
-              </label>
+                {loading ? content.watchlists.saving : content.watchlists.save}
+              </Button>
             </div>
 
             {/* Error Message */}
@@ -284,13 +305,6 @@ export const EditWatchlistDialog = forwardRef<EditWatchlistDialogRef, EditWatchl
                 {error}
               </div>
             )}
-
-            {/* Actions */}
-            <div className="flex justify-end">
-              <Button type="submit" disabled={loading}>
-                {loading ? content.watchlists.saving : content.watchlists.save}
-              </Button>
-            </div>
           </form>
 
           <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
