@@ -2,9 +2,10 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { fr } from "@/lib/content/fr";
 import { en } from "@/lib/content/en";
-import type { Content } from "@/lib/content/fr";
+import { es } from "@/lib/content/es";
+import type { Content } from "@/types/content";
 
-export type Language = "fr" | "en";
+export type Language = "fr" | "en" | "es";
 
 interface LanguageState {
   language: Language;
@@ -15,6 +16,7 @@ interface LanguageState {
 const contentMap: Record<Language, Content> = {
   fr,
   en,
+  es,
 };
 
 export const useLanguageStore = create<LanguageState>()(
@@ -30,6 +32,6 @@ export const useLanguageStore = create<LanguageState>()(
     }),
     {
       name: "language-storage",
-    }
-  )
+    },
+  ),
 );

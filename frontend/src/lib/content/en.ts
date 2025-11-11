@@ -1,4 +1,4 @@
-import type { Content } from "./fr";
+import type { Content } from "@/types/content";
 
 export const en: Content = {
   // Header
@@ -28,16 +28,67 @@ export const en: Content = {
 
   // Watchlists Page
   watchlists: {
-    title: "Your Watchlists",
-    createWatchlist: "Create Watchlist",
-    notLoggedInWarning:
-      "You're not logged in. Watchlists are stored locally and will be synced when you log in.",
+    title: "Your watchlists",
+    createWatchlist: "Create",
+    createWatchlistDescription:
+      "Create a new watchlist to organize your movies and series.",
+    notLoggedInWarning: "Local data",
     noWatchlists: "You haven't created any watchlists yet.",
-    createFirstWatchlist: "Create Your First Watchlist",
     items: "items",
     item: "item",
     public: "Public",
+    private: "Private",
     loading: "Loading...",
+    accountDataBadge: "User account data",
+    name: "Name",
+    namePlaceholder: "My watchlist",
+    description: "Description",
+    descriptionPlaceholder: "Description of your watchlist",
+    coverImage: "Cover image",
+    uploadImage: "Upload image",
+    changeImage: "Change image",
+    imageUploadHint: "PNG, JPG or WEBP (max. 5MB)",
+    makePublic: "Make public",
+    cancel: "Cancel",
+    create: "Create",
+    creating: "Creating...",
+    back: "Back",
+    noItemsYet: "No items yet",
+    noItemsDescription:
+      "Start adding movies and series to your watchlist to organize your viewing queue.",
+    editWatchlist: "Edit Watchlist",
+    editWatchlistDescription: "Edit your watchlist information.",
+    deleteWatchlist: "Delete Watchlist",
+    deleteWatchlistConfirm:
+      'Are you sure you want to delete "{name}"? This action cannot be undone.',
+    deleteWatchlistWarning:
+      "This watchlist contains {count} item(s) that will also be deleted.",
+    saving: "Saving...",
+    save: "Save",
+    deleting: "Deleting...",
+    delete: "Delete",
+    addItem: "Add",
+    searchMoviesAndSeries: "Search and add movies or series to your watchlist",
+    searchPlaceholder: "Search for a movie or series...",
+    searching: "Searching...",
+    noResults: "No results found",
+    startSearching: "Start typing to search for movies and series",
+    add: "Add",
+    added: "Added",
+    inWatchlist: "In watchlist",
+    // Table headers
+    tableHeaders: {
+      number: "#",
+      title: "Title",
+      type: "Type",
+      platforms: "Platforms",
+      duration: "Duration",
+    },
+    // Content types
+    contentTypes: {
+      movie: "Movie",
+      series: "Series",
+    },
   },
 
   // Home Page

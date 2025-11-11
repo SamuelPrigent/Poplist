@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/auth-context";
-import { mergeLocalWatchlistsToDB } from "@/features/watchlists/localStorage";
 import { useLanguageStore } from "@/store/language";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -79,13 +78,6 @@ export function AuthDrawer({
         await signup(email, password);
       }
 
-      // Merge local watchlists after successful auth
-      try {
-        await mergeLocalWatchlistsToDB();
-      } catch (mergeError) {
-        console.error("Failed to merge local watchlists:", mergeError);
-      }
-
       onClose();
     } catch (error: unknown) {
       setError(getAuthErrorMessage(error));
@@ -106,9 +98,6 @@ export function AuthDrawer({
       `width=${width},height=${height},left=${left},top=${top}`,
     );
 
-    // Auto cleanup after 5 minutes (in case popup is closed manually)
-    let cleanupTimeout: NodeJS.Timeout;
-
     // Listen for postMessage from popup
     const handleMessage = async (event: MessageEvent) => {
       // Check that message comes from our backend
@@ -117,31 +106,29 @@ export function AuthDrawer({
       }
 
       if (event.data.status === "success") {
-        clearTimeout(cleanupTimeout);
         window.removeEventListener("message", handleMessage);
-
         await refetch();
-
-        // Merge local watchlists after successful auth
-        try {
-          await mergeLocalWatchlistsToDB();
-        } catch (mergeError) {
-          console.error("Failed to merge local watchlists:", mergeError);
-        }
 
         onClose();
       } else if (event.data.status === "error") {
-        clearTimeout(cleanupTimeout);
         window.removeEventListener("message", handleMessage);
         setError(event.data.message || "Google authentication failed");
       }
     };
 
+    // Auto cleanup after 5 minutes (in case popup is closed manually)
+    const cleanupTimeout = window.setTimeout(
+      () => {
+        window.removeEventListener("message", handleMessage);
+      },
+      5 * 60 * 1000,
+    );
+
     window.addEventListener("message", handleMessage);
 
-    cleanupTimeout = setTimeout(() => {
-      window.removeEventListener("message", handleMessage);
-    }, 5 * 60 * 1000);
+    return () => {
+      clearTimeout(cleanupTimeout);
+    };
   };
 
   return (

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { watchlistAPI } from "@/lib/api-client";
 import type { Watchlist } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Plus, Film, MoreVertical, Edit, Trash2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
+import { cn } from "@/lib/cn";
+import { OfflineIcon } from "@/components/icons/OfflineIcon";
 import { CreateWatchlistDialog } from "@/components/Watchlist/CreateWatchlistDialog";
 import { EditWatchlistDialog } from "@/components/Watchlist/EditWatchlistDialog";
 import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
@@ -18,70 +19,30 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
-import {
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  closestCenter,
-  type DragEndEvent,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  rectSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
-interface WatchlistCardProps {
+const STORAGE_KEY = "watchlists";
+
+interface WatchlistCardOfflineProps {
   watchlist: Watchlist;
   onEdit: (watchlist: Watchlist) => void;
   onDelete: (watchlist: Watchlist) => void;
   content: Content;
 }
 
-function WatchlistCard({
+function WatchlistCardOffline({
   watchlist,
   onEdit,
   onDelete,
   content,
-}: WatchlistCardProps) {
+}: WatchlistCardOfflineProps) {
   const navigate = useNavigate();
   const thumbnailUrl = useWatchlistThumbnail(watchlist);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: watchlist._id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="group cursor-grab rounded-lg p-2 transition-colors hover:bg-[#36363780] active:cursor-grabbing"
-    >
+    <div className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]">
       {/* Cover Image */}
       <div
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/account/watchlist/${watchlist._id}`);
-        }}
+        onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
         className="relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted"
       >
         {thumbnailUrl ? (
@@ -101,10 +62,7 @@ function WatchlistCard({
 
       {/* Text Info */}
       <h3
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/account/watchlist/${watchlist._id}`);
-        }}
+        onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
         className="line-clamp-2 text-sm font-semibold text-white"
       >
         {watchlist.name}
@@ -112,10 +70,7 @@ function WatchlistCard({
 
       <div className="mt-2 text-xs">
         <span
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/account/watchlist/${watchlist._id}`);
-          }}
+          onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
           className="text-muted-foreground"
         >
           {watchlist.isPublic
@@ -125,12 +80,7 @@ function WatchlistCard({
       </div>
 
       <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-        <span
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/account/watchlist/${watchlist._id}`);
-          }}
-        >
+        <span onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}>
           {watchlist.items.length}{" "}
           {watchlist.items.length === 1
             ? content.watchlists.item
@@ -183,7 +133,7 @@ function WatchlistCard({
   );
 }
 
-export function Watchlists() {
+export function WatchlistsOffline() {
   const { content } = useLanguageStore();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
@@ -194,55 +144,20 @@ export function Watchlists() {
     null,
   );
 
-  // Setup drag sensors
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 6,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
-  const fetchWatchlists = async () => {
+  const fetchWatchlists = () => {
     try {
       setLoading(true);
-      const data = await watchlistAPI.getMine();
-      setWatchlists(data.watchlists);
+      const localWatchlists = localStorage.getItem(STORAGE_KEY);
+      if (localWatchlists) {
+        setWatchlists(JSON.parse(localWatchlists));
+      } else {
+        setWatchlists([]);
+      }
     } catch (error) {
-      console.error("Failed to fetch watchlists:", error);
+      console.error("Failed to load watchlists from localStorage:", error);
+      setWatchlists([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = watchlists.findIndex((w) => w._id === active.id);
-      const newIndex = watchlists.findIndex((w) => w._id === over.id);
-
-      const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
-      setWatchlists(newWatchlists);
-
-      // Persist to backend
-      try {
-        const orderedWatchlistIds = newWatchlists.map((w) => w._id);
-        await watchlistAPI.reorderWatchlists(orderedWatchlistIds);
-      } catch (error) {
-        console.error("Failed to reorder watchlists:", error);
-        // Revert on error
-        setWatchlists(watchlists);
-      }
     }
   };
 
@@ -250,10 +165,19 @@ export function Watchlists() {
     fetchWatchlists();
   }, []);
 
+  const handleCreateSuccess = (newWatchlist?: Watchlist) => {
+    if (newWatchlist) {
+      // Save to localStorage
+      const updatedWatchlists = [...watchlists, newWatchlist];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedWatchlists));
+    }
+    fetchWatchlists();
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="mb-10 text-3xl font-bold text-white">
+        <h1 className="mb-8 text-3xl font-bold text-white">
           {content.watchlists.title}
         </h1>
         <div className="flex items-center justify-center py-12">
@@ -267,8 +191,8 @@ export function Watchlists() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 mt-9 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mb-4 mt-9 flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-white">
             {content.watchlists.title}
           </h1>
@@ -282,7 +206,8 @@ export function Watchlists() {
       <CreateWatchlistDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSuccess={fetchWatchlists}
+        onSuccess={handleCreateSuccess}
+        offline={true}
       />
 
       {selectedWatchlist && (
@@ -292,15 +217,27 @@ export function Watchlists() {
             onOpenChange={setEditDialogOpen}
             onSuccess={fetchWatchlists}
             watchlist={selectedWatchlist}
+            offline={true}
           />
           <DeleteWatchlistDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
             onSuccess={fetchWatchlists}
             watchlist={selectedWatchlist}
+            offline={true}
           />
         </>
       )}
+
+      {/* Data Source Badge */}
+      <div className="mb-6">
+        <div className="flex w-fit items-center gap-1">
+          <p className="text-sm font-light text-slate-300">
+            {content.watchlists.notLoggedInWarning}
+          </p>
+          <OfflineIcon className={cn("h-4 w-4 text-slate-300")} />
+        </div>
+      </div>
 
       {watchlists.length === 0 ? (
         <Empty>
@@ -315,34 +252,23 @@ export function Watchlists() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={watchlists.map((w) => w._id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {watchlists.map((watchlist) => (
-                <WatchlistCard
-                  key={watchlist._id}
-                  watchlist={watchlist}
-                  onEdit={(wl) => {
-                    setSelectedWatchlist(wl);
-                    setEditDialogOpen(true);
-                  }}
-                  onDelete={(wl) => {
-                    setSelectedWatchlist(wl);
-                    setDeleteDialogOpen(true);
-                  }}
-                  content={content}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {watchlists.map((watchlist) => (
+            <WatchlistCardOffline
+              key={watchlist._id}
+              watchlist={watchlist}
+              onEdit={(wl) => {
+                setSelectedWatchlist(wl);
+                setEditDialogOpen(true);
+              }}
+              onDelete={(wl) => {
+                setSelectedWatchlist(wl);
+                setDeleteDialogOpen(true);
+              }}
+              content={content}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

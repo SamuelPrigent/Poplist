@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { useState } from "react";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { useLanguageStore } from "@/store/language";
-import play from "../../../public/4.png";
+import play from "../../assets/play.png";
 
 export function Header() {
   const { isAuthenticated, logout } = useAuth();
@@ -35,9 +35,9 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/account/watchlists">
+            <Link to="/watchlists">
               <Button variant="ghost" size="icon">
-                <Bookmark className="h-5 w-5" />
+                <Bookmark className={`h-5 w-5 ${isAuthenticated ? 'fill-white' : ''}`} />
               </Button>
             </Link>
 

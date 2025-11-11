@@ -5,6 +5,7 @@ import { ChevronDown } from "lucide-react";
 const languages: { code: Language; flag: string; name: string }[] = [
   { code: "fr", flag: "🇫🇷", name: "Français" },
   { code: "en", flag: "🇬🇧", name: "English" },
+  { code: "es", flag: "🇪🇸", name: "Español" },
 ];
 
 export function Footer() {

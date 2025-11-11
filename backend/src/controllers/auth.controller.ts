@@ -9,6 +9,7 @@ import {
   hashToken,
   generateTokenId,
 } from '../lib/jwt.js';
+// cookie non http only pour le moment
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../lib/cookies.js';
 import { getGoogleAuthURL, getGoogleUserInfo, getClientURL } from '../lib/google.js';
 
