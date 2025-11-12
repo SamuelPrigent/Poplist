@@ -453,6 +453,8 @@ export async function addItemToWatchlist(req: Request, res: Response): Promise<v
       type: enrichedData.type,
       platformList: enrichedData.platformList,
       runtime: enrichedData.runtime,
+      numberOfSeasons: enrichedData.numberOfSeasons,
+      numberOfEpisodes: enrichedData.numberOfEpisodes,
       addedAt: new Date(),
     });
 

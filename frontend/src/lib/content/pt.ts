@@ -90,6 +90,12 @@ export const pt: Content = {
       movie: "Filme",
       series: "Série",
     },
+    // Series info
+    seriesInfo: {
+      season: "temporada",
+      seasons: "temporadas",
+      episodes: "episódios",
+    },
     // Item Details Modal
     itemDetails: {
       loading: "A carregar...",
@@ -104,6 +110,7 @@ export const pt: Content = {
       creator: "Criador",
       availableOn: "Disponível em",
       mainCast: "Elenco principal",
+      seeMore: "Ver mais",
     },
   },
 
@@ -141,12 +148,12 @@ export const pt: Content = {
     passwordSection: {
       title: "Palavra-passe",
       description: "Altere a sua palavra-passe. Certifique-se de que tem pelo menos 8 caracteres.",
-      currentPasswordLabel: "Palavra-passe atual",
+      currentPasswordLabel: "Palavra-passe",
       currentPasswordPlaceholder: "Introduza a sua palavra-passe atual",
       newPasswordLabel: "Nova palavra-passe",
-      newPasswordPlaceholder: "Introduza a sua nova palavra-passe",
-      confirmPasswordLabel: "Confirmar nova palavra-passe",
-      confirmPasswordPlaceholder: "Confirme a sua nova palavra-passe",
+      newPasswordPlaceholder: "Nova palavra-passe",
+      confirmPasswordLabel: "Confirmação",
+      confirmPasswordPlaceholder: "Nova palavra-passe",
       changeButton: "Alterar palavra-passe",
     },
     toasts: {

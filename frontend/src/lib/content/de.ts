@@ -90,6 +90,12 @@ export const de: Content = {
       movie: "Film",
       series: "Serie",
     },
+    // Series info
+    seriesInfo: {
+      season: "Staffel",
+      seasons: "Staffeln",
+      episodes: "Episoden",
+    },
     // Item Details Modal
     itemDetails: {
       loading: "Lädt...",
@@ -104,6 +110,7 @@ export const de: Content = {
       creator: "Schöpfer",
       availableOn: "Verfügbar auf",
       mainCast: "Hauptbesetzung",
+      seeMore: "Mehr sehen",
     },
   },
 
@@ -141,12 +148,12 @@ export const de: Content = {
     passwordSection: {
       title: "Passwort",
       description: "Ändern Sie Ihr Passwort. Stellen Sie sicher, dass es mindestens 8 Zeichen lang ist.",
-      currentPasswordLabel: "Aktuelles Passwort",
+      currentPasswordLabel: "Passwort",
       currentPasswordPlaceholder: "Geben Sie Ihr aktuelles Passwort ein",
       newPasswordLabel: "Neues Passwort",
-      newPasswordPlaceholder: "Geben Sie Ihr neues Passwort ein",
-      confirmPasswordLabel: "Neues Passwort bestätigen",
-      confirmPasswordPlaceholder: "Bestätigen Sie Ihr neues Passwort",
+      newPasswordPlaceholder: "Neues Passwort",
+      confirmPasswordLabel: "Bestätigung",
+      confirmPasswordPlaceholder: "Neues Passwort",
       changeButton: "Passwort ändern",
     },
     toasts: {

@@ -78,7 +78,9 @@ export async function signup(req: Request, res: Response): Promise<void> {
         id: user._id,
         email: user.email,
         username: user.username,
+        language: user.language || 'fr',
         roles: user.roles,
+        hasPassword: !!user.passwordHash,
       },
     });
   } catch (error) {
@@ -142,7 +144,9 @@ export async function login(req: Request, res: Response): Promise<void> {
         id: user._id,
         email: user.email,
         username: user.username,
+        language: user.language || 'fr',
         roles: user.roles,
+        hasPassword: !!user.passwordHash,
       },
     });
   } catch (error) {
@@ -387,7 +391,7 @@ export async function me(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const user = await User.findById(req.user.sub).select('-passwordHash -refreshTokens');
+    const user = await User.findById(req.user.sub).select('-refreshTokens');
 
     if (!user) {
       res.status(404).json({ error: 'User not found' });
@@ -444,7 +448,9 @@ export async function updateUsername(req: Request, res: Response): Promise<void>
         id: user._id,
         email: user.email,
         username: user.username,
+        language: user.language || 'fr',
         roles: user.roles,
+        hasPassword: !!user.passwordHash,
       },
     });
   } catch (error) {
@@ -485,6 +491,7 @@ export async function updateLanguage(req: Request, res: Response): Promise<void>
         username: user.username,
         language: user.language,
         roles: user.roles,
+        hasPassword: !!user.passwordHash,
       },
     });
   } catch (error) {

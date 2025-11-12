@@ -23,6 +23,8 @@ interface TMDBTVDetails {
   name: string;
   poster_path: string | null;
   episode_run_time: number[];
+  number_of_seasons: number;
+  number_of_episodes: number;
 }
 
 interface TMDBWatchProvider {
@@ -71,6 +73,8 @@ interface EnrichedMediaData {
   posterUrl: string;
   type: 'movie' | 'tv';
   runtime?: number;
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
   platformList: Platform[];
 }
 
@@ -204,6 +208,8 @@ export async function getTVDetails(
       posterUrl: buildImageUrl(data.poster_path),
       type: 'tv',
       runtime,
+      numberOfSeasons: data.number_of_seasons,
+      numberOfEpisodes: data.number_of_episodes,
     };
 
     cache.set(cacheKey, result);
@@ -549,6 +555,8 @@ interface TMDBTVFullDetails {
   vote_average: number;
   vote_count: number;
   genres: Array<{ id: number; name: string }>;
+  number_of_seasons: number;
+  number_of_episodes: number;
   credits?: {
     cast: TMDBCastMember[];
     crew: TMDBCrewMember[];
@@ -573,6 +581,8 @@ export interface FullMediaDetails {
   }>;
   director?: string;
   type: 'movie' | 'tv';
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
 }
 
 // Fetch full movie details with credits
@@ -646,7 +656,7 @@ export async function getTVFullDetails(
   tmdbId: string,
   language: string = 'fr-FR'
 ): Promise<FullMediaDetails | null> {
-  const cacheKey = `tv-full:${tmdbId}:${language}`;
+  const cacheKey = `tv-full-v2:${tmdbId}:${language}`;
   const cached = cache.get<FullMediaDetails>(cacheKey);
   if (cached) return cached;
 
@@ -697,6 +707,8 @@ export async function getTVFullDetails(
       cast,
       director,
       type: 'tv',
+      numberOfSeasons: tvData.number_of_seasons,
+      numberOfEpisodes: tvData.number_of_episodes,
     };
 
     cache.set(cacheKey, result);

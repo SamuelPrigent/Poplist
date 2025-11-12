@@ -24,6 +24,7 @@ export function ItemDetailsModal({
   const [details, setDetails] = useState<FullMediaDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
 
   const languageCode =
     language === "fr" ? "fr-FR" : language === "es" ? "es-ES" : "en-US";
@@ -36,6 +37,9 @@ export function ItemDetailsModal({
     if (!open) {
       return;
     }
+
+    // Reset expanded state when modal opens
+    setIsOverviewExpanded(false);
 
     const fetchDetails = async () => {
       setLoading(true);
@@ -164,7 +168,7 @@ export function ItemDetailsModal({
                 </DialogPrimitive.Close>
 
                 {/* Content over backdrop */}
-                <div className="relative z-10 px-6 pb-6 pt-6">
+                <div className="relative z-10 min-h-[70vh] px-6 pb-6 pt-6">
                   <div className="flex gap-5">
                     {/* Poster */}
                     <div className="flex-shrink-0">
@@ -189,23 +193,38 @@ export function ItemDetailsModal({
                       <div>
                         <h2 className="text-3xl font-bold">{details.title}</h2>
                         <div className="mt-2.5 flex flex-wrap items-center gap-3 text-sm text-white/90">
+                          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
+                            {type === "movie"
+                              ? content.watchlists.contentTypes.movie
+                              : content.watchlists.contentTypes.series}
+                          </span>
                           {formatDate(details.releaseDate) && (
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
                               <span>{formatDate(details.releaseDate)}</span>
                             </div>
                           )}
-                          {details.runtime && (
+                          {type === "movie" && details.runtime && (
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
                               <span>{formatRuntime(details.runtime)}</span>
                             </div>
                           )}
-                          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
-                            {type === "movie"
-                              ? content.watchlists.contentTypes.movie
-                              : content.watchlists.contentTypes.series}
-                          </span>
+                          {type === "tv" && details.numberOfSeasons && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              <span>
+                                {details.numberOfSeasons}{" "}
+                                {details.numberOfSeasons > 1
+                                  ? content.watchlists.seriesInfo.seasons
+                                  : content.watchlists.seriesInfo.season}
+                                {details.numberOfEpisodes &&
+                                  ` • ${details.numberOfEpisodes} ${content.watchlists.seriesInfo.episodes}`}
+                                {details.runtime &&
+                                  ` (${formatRuntime(details.runtime)})`}
+                              </span>
+                            </div>
+                          )}{" "}
                         </div>
                       </div>
 
@@ -232,9 +251,20 @@ export function ItemDetailsModal({
                           <h3 className="mb-2 text-base font-semibold">
                             {content.watchlists.itemDetails.synopsis}
                           </h3>
-                          <p className="text-sm leading-relaxed text-muted-foreground">
+                          <p
+                            className={`text-sm leading-relaxed text-muted-foreground ${!isOverviewExpanded ? "line-clamp-5" : ""}`}
+                          >
                             {details.overview}
                           </p>
+                          {!isOverviewExpanded &&
+                            details.overview.length > 200 && (
+                              <button
+                                onClick={() => setIsOverviewExpanded(true)}
+                                className="mt-2 text-sm font-bold text-muted-foreground underline transition-colors hover:text-foreground"
+                              >
+                                {content.watchlists.itemDetails.seeMore}
+                              </button>
+                            )}
                         </div>
                       )}
 

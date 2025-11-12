@@ -12,6 +12,8 @@ export interface WatchlistItem {
   type: 'movie' | 'tv';
   platformList: Platform[];
   runtime?: number; // Duration in minutes
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
   addedAt: Date;
 }
 
@@ -44,6 +46,8 @@ const watchlistItemSchema = new Schema<WatchlistItem>(
     type: { type: String, enum: ['movie', 'tv'], required: true },
     platformList: { type: [platformSchema], default: [] },
     runtime: { type: Number },
+    numberOfSeasons: { type: Number },
+    numberOfEpisodes: { type: Number },
     addedAt: { type: Date, default: Date.now, required: true },
   },
   { _id: false }

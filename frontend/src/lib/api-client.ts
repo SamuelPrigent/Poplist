@@ -190,6 +190,8 @@ export interface WatchlistItem {
   type: "movie" | "tv";
   platformList: Platform[];
   runtime?: number;
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
   addedAt: string;
 }
 
@@ -231,6 +233,8 @@ export interface FullMediaDetails {
   }>;
   director?: string;
   type: "movie" | "tv";
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
 }
 
 export const watchlistAPI = {

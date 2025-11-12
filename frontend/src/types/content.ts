@@ -77,6 +77,11 @@ export interface Content {
       movie: string;
       series: string;
     };
+    seriesInfo: {
+      season: string;
+      seasons: string;
+      episodes: string;
+    };
     itemDetails: {
       loading: string;
       error: string;
@@ -90,6 +95,7 @@ export interface Content {
       creator: string;
       availableOn: string;
       mainCast: string;
+      seeMore: string;
     };
   };
   home: {

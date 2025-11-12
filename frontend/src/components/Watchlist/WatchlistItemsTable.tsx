@@ -131,67 +131,67 @@ function DraggableRow({
             >
               {cellIndex === totalCells - 1 ? (
                 <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    className={cn(
-                      "cursor-pointer rounded-full p-1 transition-opacity hover:bg-muted",
-                      hoveredRow === item.tmdbId
-                        ? "opacity-100"
-                        : "opacity-0 group-hover:opacity-100",
-                    )}
-                    disabled={loadingItem === item.tmdbId}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </DropdownMenu.Trigger>
-
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
-                    sideOffset={5}
-                  >
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      disabled
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      className={cn(
+                        "cursor-pointer rounded-full p-1 transition-opacity hover:bg-muted",
+                        hoveredRow === item.tmdbId
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100",
+                      )}
+                      disabled={loadingItem === item.tmdbId}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
-                      <span>Add to Watchlist</span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        →
-                      </span>
-                    </DropdownMenu.Item>
+                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </DropdownMenu.Trigger>
 
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onSelect={() => handleRemoveItem(item.tmdbId)}
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                      sideOffset={5}
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Remove from Watchlist</span>
-                    </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        disabled
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        <span>Add to Watchlist</span>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          →
+                        </span>
+                      </DropdownMenu.Item>
 
-                    <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                      <DropdownMenu.Item
+                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onSelect={() => handleRemoveItem(item.tmdbId)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Remove from Watchlist</span>
+                      </DropdownMenu.Item>
 
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onSelect={() => handleMoveItem(item.tmdbId, "first")}
-                      disabled={index === 0}
-                    >
-                      <MoveUp className="mr-2 h-4 w-4" />
-                      <span>Move to First Position</span>
-                    </DropdownMenu.Item>
+                      <DropdownMenu.Separator className="my-1 h-px bg-border" />
 
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onSelect={() => handleMoveItem(item.tmdbId, "last")}
-                      disabled={index === totalItems - 1}
-                    >
-                      <MoveDown className="mr-2 h-4 w-4" />
-                      <span>Move to Last Position</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                      <DropdownMenu.Item
+                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onSelect={() => handleMoveItem(item.tmdbId, "first")}
+                        disabled={index === 0}
+                      >
+                        <MoveUp className="mr-2 h-4 w-4" />
+                        <span>Move to First Position</span>
+                      </DropdownMenu.Item>
+
+                      <DropdownMenu.Item
+                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onSelect={() => handleMoveItem(item.tmdbId, "last")}
+                        disabled={index === totalItems - 1}
+                      >
+                        <MoveDown className="mr-2 h-4 w-4" />
+                        <span>Move to Last Position</span>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               ) : (
                 // Informations column
                 flexRender(cell.column.columnDef.cell, cell.getContext())
@@ -252,10 +252,10 @@ export function WatchlistItemsTable({
 
   const formatRuntime = (minutes: number | undefined) => {
     if (!minutes) return "—";
-    if (minutes < 60) return `${minutes}min`;
+    if (minutes < 60) return `${minutes} min`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+    return mins > 0 ? `${hours}h ${mins} min` : `${hours}h`;
   };
 
   const handleRemoveItem = async (tmdbId: string) => {
@@ -405,7 +405,7 @@ export function WatchlistItemsTable({
             </span>
           );
         },
-        size: 100,
+        size: 80,
       },
       {
         accessorKey: "platformList",
@@ -463,14 +463,25 @@ export function WatchlistItemsTable({
           );
         },
         cell: (info) => {
+          const item = info.row.original;
           const runtime = info.getValue() as number | undefined;
+
+          // For TV shows with both runtime and episodes, show combined format
+          if (item.type === "tv" && runtime && item.numberOfEpisodes) {
+            return (
+              <span className="text-sm text-muted-foreground">
+                {formatRuntime(runtime)} · {item.numberOfEpisodes} ep
+              </span>
+            );
+          }
+
           return (
             <span className="text-sm text-muted-foreground">
               {formatRuntime(runtime)}
             </span>
           );
         },
-        size: 120,
+        size: 150,
       },
       {
         id: "informations",

@@ -261,10 +261,10 @@ export function WatchlistItemsTableOffline({
 
   const formatRuntime = (minutes: number | undefined) => {
     if (!minutes) return "—";
-    if (minutes < 60) return `${minutes}min`;
+    if (minutes < 60) return `${minutes} min`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+    return mins > 0 ? `${hours}h ${mins} min` : `${hours}h`;
   };
 
   const STORAGE_KEY = "watchlists";
@@ -411,11 +411,13 @@ export function WatchlistItemsTableOffline({
                   : "bg-purple-500/10 text-purple-400",
               )}
             >
-              {type === "movie" ? content.watchlists.contentTypes.movie : content.watchlists.contentTypes.series}
+              {type === "movie"
+                ? content.watchlists.contentTypes.movie
+                : content.watchlists.contentTypes.series}
             </span>
           );
         },
-        size: 100,
+        size: 80,
       },
       {
         accessorKey: "platformList",
@@ -473,14 +475,25 @@ export function WatchlistItemsTableOffline({
           );
         },
         cell: (info) => {
+          const item = info.row.original;
           const runtime = info.getValue() as number | undefined;
+
+          // For TV shows with both runtime and episodes, show combined format
+          if (item.type === "tv" && runtime && item.numberOfEpisodes) {
+            return (
+              <span className="text-sm text-muted-foreground">
+                {formatRuntime(runtime)} · {item.numberOfEpisodes} ep
+              </span>
+            );
+          }
+
           return (
             <span className="text-sm text-muted-foreground">
               {formatRuntime(runtime)}
             </span>
           );
         },
-        size: 120,
+        size: 150,
       },
       {
         id: "informations",
