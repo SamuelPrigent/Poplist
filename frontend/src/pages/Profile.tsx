@@ -3,8 +3,8 @@ import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Lock, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguageStore } from "@/store/language";
 
@@ -37,7 +37,10 @@ export function Profile() {
     } catch (error) {
       toast({
         title: content.profile.toasts.error,
-        description: error instanceof Error ? error.message : content.profile.toasts.updateFailed,
+        description:
+          error instanceof Error
+            ? error.message
+            : content.profile.toasts.updateFailed,
         variant: "destructive",
       });
     } finally {
@@ -70,7 +73,10 @@ export function Profile() {
     } catch (error) {
       toast({
         title: content.profile.toasts.error,
-        description: error instanceof Error ? error.message : content.profile.toasts.passwordChangeFailed,
+        description:
+          error instanceof Error
+            ? error.message
+            : content.profile.toasts.passwordChangeFailed,
         variant: "destructive",
       });
     } finally {
@@ -80,7 +86,7 @@ export function Profile() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mx-auto max-w-2xl space-y-8">
+      <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{content.profile.title}</h1>
           <p className="mt-2 text-muted-foreground">
@@ -90,16 +96,12 @@ export function Profile() {
 
         {/* Username Section */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              {content.profile.userInformation}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleUpdateUsername} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">{content.profile.usernameSection.label}</Label>
+                <Label htmlFor="username">
+                  {content.profile.usernameSection.label}
+                </Label>
                 <Input
                   id="username"
                   type="text"
@@ -111,9 +113,6 @@ export function Profile() {
                   pattern="[a-zA-Z0-9_]+"
                   title="Username can only contain letters, numbers, and underscores"
                 />
-                <p className="text-xs text-muted-foreground">
-                  {content.profile.usernameSection.hint}
-                </p>
               </div>
               <Button
                 type="submit"
@@ -135,46 +134,49 @@ export function Profile() {
         {/* Password Section - Only show if user has password */}
         {user?.hasPassword && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                {content.profile.passwordSection.title}
-              </CardTitle>
-              <CardDescription>
-                {content.profile.passwordSection.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="oldPassword">{content.profile.passwordSection.currentPasswordLabel}</Label>
+                  <Label htmlFor="oldPassword">
+                    {content.profile.passwordSection.currentPasswordLabel}
+                  </Label>
                   <Input
                     id="oldPassword"
                     type="password"
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    placeholder={content.profile.passwordSection.currentPasswordPlaceholder}
+                    placeholder={
+                      content.profile.passwordSection.currentPasswordPlaceholder
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword">{content.profile.passwordSection.newPasswordLabel}</Label>
+                  <Label htmlFor="newPassword">
+                    {content.profile.passwordSection.newPasswordLabel}
+                  </Label>
                   <Input
                     id="newPassword"
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder={content.profile.passwordSection.newPasswordPlaceholder}
+                    placeholder={
+                      content.profile.passwordSection.newPasswordPlaceholder
+                    }
                     minLength={8}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{content.profile.passwordSection.confirmPasswordLabel}</Label>
+                  <Label htmlFor="confirmPassword">
+                    {content.profile.passwordSection.confirmPasswordLabel}
+                  </Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder={content.profile.passwordSection.confirmPasswordPlaceholder}
+                    placeholder={
+                      content.profile.passwordSection.confirmPasswordPlaceholder
+                    }
                     minLength={8}
                   />
                 </div>
@@ -196,7 +198,6 @@ export function Profile() {
             </CardContent>
           </Card>
         )}
-
       </div>
     </div>
   );
