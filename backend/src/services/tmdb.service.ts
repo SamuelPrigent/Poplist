@@ -110,9 +110,19 @@ class TMDBCache {
 const cache = new TMDBCache();
 
 // Helper to build TMDB image URL
-function buildImageUrl(path: string | null): string {
+function buildImageUrl(path: string | null, size: string = 'w500'): string {
   if (!path) return '';
-  return `https://image.tmdb.org/t/p/w500${path}`;
+  return `https://image.tmdb.org/t/p/${size}${path}`;
+}
+
+// Helper to build TMDB poster URL (high quality)
+function buildPosterUrl(path: string | null): string {
+  return buildImageUrl(path, 'w780');
+}
+
+// Helper to build TMDB backdrop URL (original quality - best available)
+function buildBackdropUrl(path: string | null): string {
+  return buildImageUrl(path, 'original');
 }
 
 // Fetch movie details
@@ -341,6 +351,70 @@ export async function enrichMediaData(
   }
 }
 
+// Fetch runtime for a single movie
+async function getMovieRuntime(tmdbId: number, language: string): Promise<number | undefined> {
+  const cacheKey = `runtime:movie:${tmdbId}`;
+  const cached = cache.get<number>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/movie/${tmdbId}?language=${language}`,
+      {
+        headers: {
+          Authorization: `Bearer ${TMDB_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) return undefined;
+
+    const data = await response.json() as TMDBMovieDetails;
+    const runtime = data.runtime ?? undefined;
+
+    if (runtime) {
+      cache.set(cacheKey, runtime);
+    }
+
+    return runtime;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+// Fetch runtime for a single TV show (episode runtime)
+async function getTVRuntime(tmdbId: number, language: string): Promise<number | undefined> {
+  const cacheKey = `runtime:tv:${tmdbId}`;
+  const cached = cache.get<number>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/tv/${tmdbId}?language=${language}`,
+      {
+        headers: {
+          Authorization: `Bearer ${TMDB_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) return undefined;
+
+    const data = await response.json() as TMDBTVDetails;
+    const runtime = data.episode_run_time?.[0] ?? undefined;
+
+    if (runtime) {
+      cache.set(cacheKey, runtime);
+    }
+
+    return runtime;
+  } catch (error) {
+    return undefined;
+  }
+}
+
 // Search movies and TV shows
 export async function searchMedia(
   query: string,
@@ -399,8 +473,25 @@ export async function searchMedia(
       runtime?: number;
     }>;
 
+    // Enrich first 15 results with runtime in parallel (balance between UX and API calls)
+    const resultsToEnrich = filteredResults.slice(0, 15);
+    const enrichmentPromises = resultsToEnrich.map(async (item) => {
+      const runtime = item.media_type === 'movie'
+        ? await getMovieRuntime(item.id, language)
+        : await getTVRuntime(item.id, language);
+      return { ...item, runtime };
+    });
+
+    const enrichedResults = await Promise.all(enrichmentPromises);
+
+    // Combine enriched results with remaining results
+    const finalResults = [
+      ...enrichedResults,
+      ...filteredResults.slice(15),
+    ];
+
     const result = {
-      results: filteredResults,
+      results: finalResults,
       total_pages: data.total_pages,
       total_results: data.total_results,
     };
@@ -411,6 +502,220 @@ export async function searchMedia(
     console.error(`Error searching media:`, error);
     return { results: [], total_pages: 0, total_results: 0 };
   }
+}
+
+// Interfaces for full details
+interface TMDBCastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+  order: number;
+}
+
+interface TMDBCrewMember {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path: string | null;
+}
+
+interface TMDBMovieFullDetails {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date: string;
+  runtime: number | null;
+  vote_average: number;
+  vote_count: number;
+  genres: Array<{ id: number; name: string }>;
+  credits?: {
+    cast: TMDBCastMember[];
+    crew: TMDBCrewMember[];
+  };
+}
+
+interface TMDBTVFullDetails {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date: string;
+  episode_run_time: number[];
+  vote_average: number;
+  vote_count: number;
+  genres: Array<{ id: number; name: string }>;
+  credits?: {
+    cast: TMDBCastMember[];
+    crew: TMDBCrewMember[];
+  };
+}
+
+export interface FullMediaDetails {
+  tmdbId: string;
+  title: string;
+  overview: string;
+  posterUrl: string;
+  backdropUrl: string;
+  releaseDate: string;
+  runtime?: number;
+  rating: number;
+  voteCount: number;
+  genres: string[];
+  cast: Array<{
+    name: string;
+    character: string;
+    profileUrl: string;
+  }>;
+  director?: string;
+  type: 'movie' | 'tv';
+}
+
+// Fetch full movie details with credits
+export async function getMovieFullDetails(
+  tmdbId: string,
+  language: string = 'fr-FR'
+): Promise<FullMediaDetails | null> {
+  const cacheKey = `movie-full:${tmdbId}:${language}`;
+  const cached = cache.get<FullMediaDetails>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    // Fetch movie details with credits appended
+    const detailsResponse = await fetch(
+      `${TMDB_BASE_URL}/movie/${tmdbId}?language=${language}&append_to_response=credits`,
+      {
+        headers: {
+          Authorization: `Bearer ${TMDB_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!detailsResponse.ok) {
+      console.error(`TMDB API error (movie full ${tmdbId}):`, detailsResponse.statusText);
+      return null;
+    }
+
+    const movieData = await detailsResponse.json() as TMDBMovieFullDetails;
+
+    // Extract top 3 cast members
+    const cast = movieData.credits?.cast
+      ?.slice(0, 3)
+      .map((member) => ({
+        name: member.name,
+        character: member.character,
+        profileUrl: buildImageUrl(member.profile_path, 'h632'),
+      })) || [];
+
+    // Find director
+    const director = movieData.credits?.crew?.find(
+      (member) => member.job === 'Director'
+    )?.name;
+
+    const result: FullMediaDetails = {
+      tmdbId,
+      title: movieData.title,
+      overview: movieData.overview || '',
+      posterUrl: buildPosterUrl(movieData.poster_path),
+      backdropUrl: buildBackdropUrl(movieData.backdrop_path),
+      releaseDate: movieData.release_date || '',
+      runtime: movieData.runtime ?? undefined,
+      rating: movieData.vote_average,
+      voteCount: movieData.vote_count,
+      genres: movieData.genres.map((g) => g.name),
+      cast,
+      director,
+      type: 'movie',
+    };
+
+    cache.set(cacheKey, result);
+    return result;
+  } catch (error) {
+    console.error(`Error fetching full movie details for ${tmdbId}:`, error);
+    return null;
+  }
+}
+
+// Fetch full TV show details with credits
+export async function getTVFullDetails(
+  tmdbId: string,
+  language: string = 'fr-FR'
+): Promise<FullMediaDetails | null> {
+  const cacheKey = `tv-full:${tmdbId}:${language}`;
+  const cached = cache.get<FullMediaDetails>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    // Fetch TV details with credits appended
+    const detailsResponse = await fetch(
+      `${TMDB_BASE_URL}/tv/${tmdbId}?language=${language}&append_to_response=credits`,
+      {
+        headers: {
+          Authorization: `Bearer ${TMDB_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!detailsResponse.ok) {
+      console.error(`TMDB API error (TV full ${tmdbId}):`, detailsResponse.statusText);
+      return null;
+    }
+
+    const tvData = await detailsResponse.json() as TMDBTVFullDetails;
+
+    // Extract top 3 cast members
+    const cast = tvData.credits?.cast
+      ?.slice(0, 3)
+      .map((member) => ({
+        name: member.name,
+        character: member.character,
+        profileUrl: buildImageUrl(member.profile_path, 'h632'),
+      })) || [];
+
+    // For TV shows, find creator or executive producer
+    const director = tvData.credits?.crew?.find(
+      (member) => member.job === 'Creator' || member.job === 'Executive Producer'
+    )?.name;
+
+    const result: FullMediaDetails = {
+      tmdbId,
+      title: tvData.name,
+      overview: tvData.overview || '',
+      posterUrl: buildPosterUrl(tvData.poster_path),
+      backdropUrl: buildBackdropUrl(tvData.backdrop_path),
+      releaseDate: tvData.first_air_date || '',
+      runtime: tvData.episode_run_time?.[0] ?? undefined,
+      rating: tvData.vote_average,
+      voteCount: tvData.vote_count,
+      genres: tvData.genres.map((g) => g.name),
+      cast,
+      director,
+      type: 'tv',
+    };
+
+    cache.set(cacheKey, result);
+    return result;
+  } catch (error) {
+    console.error(`Error fetching full TV details for ${tmdbId}:`, error);
+    return null;
+  }
+}
+
+// Main function: get full media details
+export async function getFullMediaDetails(
+  tmdbId: string,
+  type: 'movie' | 'tv',
+  language: string = 'fr-FR'
+): Promise<FullMediaDetails | null> {
+  return type === 'movie'
+    ? await getMovieFullDetails(tmdbId, language)
+    : await getTVFullDetails(tmdbId, language);
 }
 
 // Export cache for debugging/management

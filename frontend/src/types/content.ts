@@ -1,6 +1,7 @@
 export interface Content {
   header: {
     appName: string;
+    home: string;
     login: string;
     signup: string;
     logout: string;
@@ -76,6 +77,20 @@ export interface Content {
       movie: string;
       series: string;
     };
+    itemDetails: {
+      loading: string;
+      error: string;
+      mediaDetails: string;
+      fullDetailsFor: string;
+      loadingDetails: string;
+      notAvailable: string;
+      votes: string;
+      synopsis: string;
+      director: string;
+      creator: string;
+      availableOn: string;
+      mainCast: string;
+    };
   };
   home: {
     hero: {
@@ -90,5 +105,39 @@ export interface Content {
   footer: {
     appName: string;
     language: string;
+  };
+  profile: {
+    title: string;
+    subtitle: string;
+    userInformation: string;
+    usernameSection: {
+      title: string;
+      description: string;
+      label: string;
+      placeholder: string;
+      hint: string;
+      updateButton: string;
+    };
+    passwordSection: {
+      title: string;
+      description: string;
+      currentPasswordLabel: string;
+      currentPasswordPlaceholder: string;
+      newPasswordLabel: string;
+      newPasswordPlaceholder: string;
+      confirmPasswordLabel: string;
+      confirmPasswordPlaceholder: string;
+      changeButton: string;
+    };
+    toasts: {
+      usernameUpdated: string;
+      usernameUpdatedDesc: string;
+      passwordChanged: string;
+      passwordChangedDesc: string;
+      error: string;
+      passwordMismatch: string;
+      updateFailed: string;
+      passwordChangeFailed: string;
+    };
   };
 }

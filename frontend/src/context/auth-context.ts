@@ -3,7 +3,10 @@ import { createContext, useContext } from "react";
 export interface User {
   id: string;
   email: string;
+  username: string;
+  language?: string;
   roles: string[];
+  hasPassword?: boolean;
 }
 
 export interface AuthContextValue {
@@ -14,9 +17,13 @@ export interface AuthContextValue {
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refetch: () => Promise<void>;
+  updateUsername: (username: string) => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+export const AuthContext = createContext<AuthContextValue | undefined>(
+  undefined,
+);
 
 export function useAuth() {
   const context = useContext(AuthContext);

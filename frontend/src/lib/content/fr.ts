@@ -4,6 +4,7 @@ export const fr: Content = {
   // Header
   header: {
     appName: "WatchlistHub",
+    home: "Accueil",
     login: "Connexion",
     signup: "Inscription",
     logout: "Déconnexion",
@@ -91,6 +92,21 @@ export const fr: Content = {
       movie: "Film",
       series: "Série",
     },
+    // Item Details Modal
+    itemDetails: {
+      loading: "Chargement...",
+      error: "Échec du chargement des détails",
+      mediaDetails: "Détails du média",
+      fullDetailsFor: "Détails complets pour",
+      loadingDetails: "Chargement des détails",
+      notAvailable: "N/A",
+      votes: "votes",
+      synopsis: "Synopsis",
+      director: "Réalisateur",
+      creator: "Créateur",
+      availableOn: "Disponible sur",
+      mainCast: "Acteurs principaux",
+    },
   },
 
   // Home Page
@@ -110,5 +126,41 @@ export const fr: Content = {
   footer: {
     appName: "WatchlistHub",
     language: "Langue",
+  },
+
+  // Profile Page
+  profile: {
+    title: "Paramètres du profil",
+    subtitle: "Gérez les paramètres et préférences de votre compte",
+    userInformation: "Informations utilisateur",
+    usernameSection: {
+      title: "Nom d'utilisateur",
+      description: "Modifiez votre nom d'utilisateur. C'est ainsi que les autres vous verront.",
+      label: "Nom d'utilisateur",
+      placeholder: "Entrez votre nom d'utilisateur",
+      hint: "3-20 caractères. Lettres, chiffres et underscores uniquement.",
+      updateButton: "Mettre à jour",
+    },
+    passwordSection: {
+      title: "Mot de passe",
+      description: "Changez votre mot de passe. Assurez-vous qu'il contient au moins 8 caractères.",
+      currentPasswordLabel: "Mot de passe actuel",
+      currentPasswordPlaceholder: "Entrez votre mot de passe actuel",
+      newPasswordLabel: "Nouveau mot de passe",
+      newPasswordPlaceholder: "Entrez votre nouveau mot de passe",
+      confirmPasswordLabel: "Confirmer le nouveau mot de passe",
+      confirmPasswordPlaceholder: "Confirmez votre nouveau mot de passe",
+      changeButton: "Changer le mot de passe",
+    },
+    toasts: {
+      usernameUpdated: "Nom d'utilisateur mis à jour",
+      usernameUpdatedDesc: "Votre nom d'utilisateur a été mis à jour avec succès.",
+      passwordChanged: "Mot de passe changé",
+      passwordChangedDesc: "Votre mot de passe a été changé avec succès.",
+      error: "Erreur",
+      passwordMismatch: "Les nouveaux mots de passe ne correspondent pas",
+      updateFailed: "Échec de la mise à jour du nom d'utilisateur",
+      passwordChangeFailed: "Échec du changement de mot de passe",
+    },
   },
 };

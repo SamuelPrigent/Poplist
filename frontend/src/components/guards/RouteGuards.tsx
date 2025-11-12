@@ -8,7 +8,7 @@ interface RouteGuardProps {
 
 /**
  * ProtectedRoute: Requires authentication
- * Redirects to /local/watchlists if not authenticated
+ * Redirects to home page if not authenticated
  */
 export function ProtectedRoute({ children }: RouteGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,7 +24,7 @@ export function ProtectedRoute({ children }: RouteGuardProps) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/local/watchlists" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -87,10 +87,9 @@ export function OfflineWatchlistRoute({ children }: RouteGuardProps) {
 
 /**
  * OnlineWatchlistRoute: For account/authenticated watchlist detail pages
- * Redirects to /local/watchlist/:id (same ID) if not authenticated
+ * Redirects to home page if not authenticated
  */
 export function OnlineWatchlistRoute({ children }: RouteGuardProps) {
-  const { id } = useParams<{ id: string }>();
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -104,7 +103,7 @@ export function OnlineWatchlistRoute({ children }: RouteGuardProps) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={`/local/watchlist/${id}`} replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

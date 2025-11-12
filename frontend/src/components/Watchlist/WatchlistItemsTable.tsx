@@ -8,6 +8,7 @@ import {
   Film,
   ArrowUp,
   ArrowDown,
+  Eye,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
@@ -43,6 +44,8 @@ import { watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { cn } from "@/lib/cn";
 import { WatchProviderList } from "./WatchProviderBubble";
+import { Button } from "@/components/ui/button";
+import { ItemDetailsModal } from "./ItemDetailsModal";
 import {
   Empty,
   EmptyHeader,
@@ -117,15 +120,17 @@ function DraggableRow({
       )}
     >
       {row.getVisibleCells().map((cell, cellIndex: number) => {
-        // Actions column (last column - not draggable)
-        if (cellIndex === row.getVisibleCells().length - 1) {
+        const totalCells = row.getVisibleCells().length;
+        // Actions column (last column) and Informations column (second to last) - not draggable
+        if (cellIndex === totalCells - 1 || cellIndex === totalCells - 2) {
           return (
             <td
               key={cell.id}
               className="px-4 py-3"
               onClick={(e) => e.stopPropagation()}
             >
-              <DropdownMenu.Root>
+              {cellIndex === totalCells - 1 ? (
+                <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <button
                     className={cn(
@@ -187,6 +192,10 @@ function DraggableRow({
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>
+              ) : (
+                // Informations column
+                flexRender(cell.column.columnDef.cell, cell.getContext())
+              )}
             </td>
           );
         }
@@ -215,6 +224,8 @@ export function WatchlistItemsTable({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [loadingItem, setLoadingItem] = useState<string | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
 
   // Sync with parent when watchlist changes
   useEffect(() => {
@@ -372,7 +383,7 @@ export function WatchlistItemsTable({
             </div>
           );
         },
-        size: 450,
+        size: 250,
       },
       {
         accessorKey: "type",
@@ -426,7 +437,7 @@ export function WatchlistItemsTable({
 
           return <WatchProviderList providers={platforms} maxVisible={4} />;
         },
-        size: 200,
+        size: 160,
       },
       {
         accessorKey: "runtime",
@@ -457,6 +468,29 @@ export function WatchlistItemsTable({
             <span className="text-sm text-muted-foreground">
               {formatRuntime(runtime)}
             </span>
+          );
+        },
+        size: 120,
+      },
+      {
+        id: "informations",
+        header: "Informations",
+        cell: (info) => {
+          const item = info.row.original;
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedItem(item);
+                setDetailsModalOpen(true);
+              }}
+              className="h-8 gap-1.5 px-3 text-xs"
+            >
+              <Eye className="h-3 w-3" />
+              Aperçu
+            </Button>
           );
         },
         size: 120,
@@ -510,61 +544,74 @@ export function WatchlistItemsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <table className="w-full">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr
-                key={headerGroup.id}
-                className="border-b border-border bg-muted/30"
-              >
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground"
-                    style={{ width: header.column.getSize() }}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            <SortableContext
-              items={displayItems.map((item) => item.tmdbId)}
-              strategy={verticalListSortingStrategy}
-              disabled={!isCustomOrder}
-            >
-              {table.getRowModel().rows.map((row, index) => (
-                <DraggableRow
-                  key={row.original.tmdbId}
-                  item={row.original}
-                  index={index}
-                  row={row}
-                  loadingItem={loadingItem}
-                  hoveredRow={hoveredRow}
-                  setHoveredRow={setHoveredRow}
-                  handleRemoveItem={handleRemoveItem}
-                  handleMoveItem={handleMoveItem}
-                  totalItems={displayItems.length}
-                  isDragDisabled={!isCustomOrder}
-                />
+    <>
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <table className="w-full">
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr
+                  key={headerGroup.id}
+                  className="border-b border-border bg-muted/30"
+                >
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground"
+                      style={{ width: header.column.getSize() }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </th>
+                  ))}
+                </tr>
               ))}
-            </SortableContext>
-          </tbody>
-        </table>
-      </DndContext>
-    </div>
+            </thead>
+            <tbody>
+              <SortableContext
+                items={displayItems.map((item) => item.tmdbId)}
+                strategy={verticalListSortingStrategy}
+                disabled={!isCustomOrder}
+              >
+                {table.getRowModel().rows.map((row, index) => (
+                  <DraggableRow
+                    key={row.original.tmdbId}
+                    item={row.original}
+                    index={index}
+                    row={row}
+                    loadingItem={loadingItem}
+                    hoveredRow={hoveredRow}
+                    setHoveredRow={setHoveredRow}
+                    handleRemoveItem={handleRemoveItem}
+                    handleMoveItem={handleMoveItem}
+                    totalItems={displayItems.length}
+                    isDragDisabled={!isCustomOrder}
+                  />
+                ))}
+              </SortableContext>
+            </tbody>
+          </table>
+        </DndContext>
+      </div>
+
+      {/* Item Details Modal */}
+      {selectedItem && (
+        <ItemDetailsModal
+          open={detailsModalOpen}
+          onOpenChange={setDetailsModalOpen}
+          tmdbId={selectedItem.tmdbId}
+          type={selectedItem.type}
+          platforms={selectedItem.platformList}
+        />
+      )}
+    </>
   );
 }

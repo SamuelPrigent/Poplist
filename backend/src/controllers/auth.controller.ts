@@ -12,6 +12,7 @@ import {
 // cookie non http only pour le moment
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../lib/cookies.js';
 import { getGoogleAuthURL, getGoogleUserInfo, getClientURL } from '../lib/google.js';
+import { generateUniqueUsername } from '../lib/username.js';
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -37,9 +38,13 @@ export async function signup(req: Request, res: Response): Promise<void> {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Generate unique username
+    const username = await generateUniqueUsername();
+
     // Create user
     const user = await User.create({
       email,
+      username,
       passwordHash,
       roles: ['user'],
     });
@@ -72,6 +77,7 @@ export async function signup(req: Request, res: Response): Promise<void> {
       user: {
         id: user._id,
         email: user.email,
+        username: user.username,
         roles: user.roles,
       },
     });
@@ -102,6 +108,11 @@ export async function login(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Generate username if missing (for existing users)
+    if (!user.username) {
+      user.username = await generateUniqueUsername();
+    }
+
     // Generate tokens
     const tokenId = generateTokenId();
     const accessToken = signAccessToken({
@@ -130,6 +141,7 @@ export async function login(req: Request, res: Response): Promise<void> {
       user: {
         id: user._id,
         email: user.email,
+        username: user.username,
         roles: user.roles,
       },
     });
@@ -176,15 +188,34 @@ export async function googleCallback(req: Request, res: Response): Promise<void>
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (!user) {
+      // Generate unique username for new user
+      const username = await generateUniqueUsername();
+
       user = await User.create({
         email,
+        username,
         googleId,
         roles: ['user'],
       });
-    } else if (!user.googleId) {
-      // Link Google account to existing user
-      user.googleId = googleId;
-      await user.save();
+    } else {
+      // Update existing user
+      let needsSave = false;
+
+      // Link Google account if not linked
+      if (!user.googleId) {
+        user.googleId = googleId;
+        needsSave = true;
+      }
+
+      // Generate username if missing (for existing users)
+      if (!user.username) {
+        user.username = await generateUniqueUsername();
+        needsSave = true;
+      }
+
+      if (needsSave) {
+        await user.save();
+      }
     }
 
     // Generate tokens
@@ -367,11 +398,147 @@ export async function me(req: Request, res: Response): Promise<void> {
       user: {
         id: user._id,
         email: user.email,
+        username: user.username,
+        language: user.language || 'fr',
         roles: user.roles,
         createdAt: user.createdAt,
+        hasPassword: !!user.passwordHash,
       },
     });
   } catch (error) {
+    throw error;
+  }
+}
+
+const updateUsernameSchema = z.object({
+  username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+});
+
+export async function updateUsername(req: Request, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { username } = updateUsernameSchema.parse(req.body);
+
+    const user = await User.findById(req.user.sub);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if username is already taken
+    const existingUser = await User.findOne({ username });
+    if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+      res.status(409).json({ error: 'Username already taken' });
+      return;
+    }
+
+    user.username = username;
+    await user.save();
+
+    res.json({
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        roles: user.roles,
+      },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      return;
+    }
+    throw error;
+  }
+}
+
+const updateLanguageSchema = z.object({
+  language: z.enum(['fr', 'en', 'de', 'es', 'it', 'pt']),
+});
+
+export async function updateLanguage(req: Request, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { language } = updateLanguageSchema.parse(req.body);
+
+    const user = await User.findById(req.user.sub);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    user.language = language;
+    await user.save();
+
+    res.json({
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        language: user.language,
+        roles: user.roles,
+      },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      return;
+    }
+    throw error;
+  }
+}
+
+const changePasswordSchema = z.object({
+  oldPassword: z.string(),
+  newPassword: z.string().min(8),
+});
+
+export async function changePassword(req: Request, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { oldPassword, newPassword } = changePasswordSchema.parse(req.body);
+
+    const user = await User.findById(req.user.sub);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if user has a password (OAuth users don't)
+    if (!user.passwordHash) {
+      res.status(400).json({ error: 'Cannot change password for OAuth accounts' });
+      return;
+    }
+
+    // Verify old password
+    const isValid = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!isValid) {
+      res.status(401).json({ error: 'Invalid old password' });
+      return;
+    }
+
+    // Hash new password
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      return;
+    }
     throw error;
   }
 }

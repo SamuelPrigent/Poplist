@@ -18,5 +18,8 @@ router.post('/logout', authController.logout);
 
 // User profile
 router.get('/me', requireAuth, authController.me);
+router.put('/profile/username', requireAuth, authController.updateUsername);
+router.put('/profile/password', requireAuth, authController.changePassword);
+router.put('/profile/language', requireAuth, authController.updateLanguage);
 
 export default router;

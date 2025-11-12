@@ -173,6 +173,20 @@ export function AddItemModal({
     return date ? new Date(date).getFullYear() : null;
   };
 
+  const getMediaType = (type: "movie" | "tv") => {
+    return type === "movie"
+      ? content.watchlists.contentTypes.movie
+      : content.watchlists.contentTypes.series;
+  };
+
+  const formatRuntime = (minutes: number | undefined) => {
+    if (!minutes) return null;
+    if (minutes < 60) return `${minutes}min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  };
+
   const buildPosterUrl = (path: string | null) => {
     if (!path) return "";
     return `https://image.tmdb.org/t/p/w200${path}`;
@@ -299,9 +313,22 @@ export function AddItemModal({
                               {item.title || item.name}
                             </h3>
 
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              {year && <span>{year}</span>}
-                              {item.runtime && <span>{item.runtime} min</span>}
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span className="rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium">
+                                {getMediaType(item.media_type)}
+                              </span>
+                              {year && (
+                                <>
+                                  <span>•</span>
+                                  <span>{year}</span>
+                                </>
+                              )}
+                              {formatRuntime(item.runtime) && (
+                                <>
+                                  <span>•</span>
+                                  <span>{formatRuntime(item.runtime)}</span>
+                                </>
+                              )}
                             </div>
 
                             {/* Platform bubbles - placeholder for now since search doesn't return platform data */}

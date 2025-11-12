@@ -9,8 +9,10 @@ export interface RefreshToken {
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
+  username: string;
   passwordHash?: string;
   googleId?: string;
+  language?: string;
   roles: string[];
   refreshTokens: RefreshToken[];
   createdAt: Date;
@@ -36,8 +38,19 @@ const userSchema = new Schema<IUser>(
       trim: true,
       index: true,
     },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      index: true,
+    },
     passwordHash: { type: String },
     googleId: { type: String, sparse: true, index: true },
+    language: {
+      type: String,
+      default: 'fr',
+    },
     roles: {
       type: [String],
       default: ['user'],

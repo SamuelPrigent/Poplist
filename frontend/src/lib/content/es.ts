@@ -4,6 +4,7 @@ export const es: Content = {
   // Header
   header: {
     appName: "WatchlistHub",
+    home: "Inicio",
     login: "Iniciar sesión",
     signup: "Registrarse",
     logout: "Cerrar sesión",
@@ -89,6 +90,21 @@ export const es: Content = {
       movie: "Película",
       series: "Serie",
     },
+    // Item Details Modal
+    itemDetails: {
+      loading: "Cargando...",
+      error: "Error al cargar los detalles",
+      mediaDetails: "Detalles del contenido",
+      fullDetailsFor: "Detalles completos de",
+      loadingDetails: "Cargando detalles",
+      notAvailable: "N/D",
+      votes: "votos",
+      synopsis: "Sinopsis",
+      director: "Director",
+      creator: "Creador",
+      availableOn: "Disponible en",
+      mainCast: "Reparto principal",
+    },
   },
 
   // Home Page
@@ -107,5 +123,41 @@ export const es: Content = {
   footer: {
     appName: "WatchlistHub",
     language: "Idioma",
+  },
+
+  // Profile Page
+  profile: {
+    title: "Configuración del perfil",
+    subtitle: "Administra la configuración y preferencias de tu cuenta",
+    userInformation: "Información del usuario",
+    usernameSection: {
+      title: "Nombre de usuario",
+      description: "Actualiza tu nombre de usuario. Así es como te verán los demás.",
+      label: "Nombre de usuario",
+      placeholder: "Introduce tu nombre de usuario",
+      hint: "3-20 caracteres. Solo letras, números y guiones bajos.",
+      updateButton: "Actualizar",
+    },
+    passwordSection: {
+      title: "Contraseña",
+      description: "Cambia tu contraseña. Asegúrate de que tenga al menos 8 caracteres.",
+      currentPasswordLabel: "Contraseña actual",
+      currentPasswordPlaceholder: "Introduce tu contraseña actual",
+      newPasswordLabel: "Nueva contraseña",
+      newPasswordPlaceholder: "Introduce tu nueva contraseña",
+      confirmPasswordLabel: "Confirmar nueva contraseña",
+      confirmPasswordPlaceholder: "Confirma tu nueva contraseña",
+      changeButton: "Cambiar contraseña",
+    },
+    toasts: {
+      usernameUpdated: "Nombre de usuario actualizado",
+      usernameUpdatedDesc: "Tu nombre de usuario se ha actualizado correctamente.",
+      passwordChanged: "Contraseña cambiada",
+      passwordChangedDesc: "Tu contraseña se ha cambiado correctamente.",
+      error: "Error",
+      passwordMismatch: "Las nuevas contraseñas no coinciden",
+      updateFailed: "Error al actualizar el nombre de usuario",
+      passwordChangeFailed: "Error al cambiar la contraseña",
+    },
   },
 };

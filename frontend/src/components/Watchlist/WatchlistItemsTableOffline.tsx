@@ -8,6 +8,7 @@ import {
   Film,
   ArrowUp,
   ArrowDown,
+  Eye,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
@@ -41,7 +42,9 @@ import { CSS } from "@dnd-kit/utilities";
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { cn } from "@/lib/cn";
+import { Button } from "@/components/ui/button";
 import { WatchProviderList } from "./WatchProviderBubble";
+import { ItemDetailsModal } from "./ItemDetailsModal";
 import {
   Empty,
   EmptyHeader,
@@ -116,8 +119,25 @@ function DraggableRow({
       )}
     >
       {row.getVisibleCells().map((cell, cellIndex: number) => {
+        const totalCells = row.getVisibleCells().length;
+        const isInformationsColumn = cellIndex === totalCells - 2;
+        const isActionsColumn = cellIndex === totalCells - 1;
+
+        // Informations column (second-to-last column - not draggable)
+        if (isInformationsColumn) {
+          return (
+            <td
+              key={cell.id}
+              className="px-4 py-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </td>
+          );
+        }
+
         // Actions column (last column - not draggable)
-        if (cellIndex === row.getVisibleCells().length - 1) {
+        if (isActionsColumn) {
           return (
             <td
               key={cell.id}
@@ -213,6 +233,8 @@ export function WatchlistItemsTableOffline({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [loadingItem, setLoadingItem] = useState<string | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
 
   // Sync with parent when watchlist changes
   useEffect(() => {
@@ -461,6 +483,29 @@ export function WatchlistItemsTableOffline({
         size: 120,
       },
       {
+        id: "informations",
+        header: "Informations",
+        cell: (info) => {
+          const item = info.row.original;
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedItem(item);
+                setDetailsModalOpen(true);
+              }}
+              className="h-8 gap-1.5 px-3 text-xs"
+            >
+              <Eye className="h-3 w-3" />
+              Aperçu
+            </Button>
+          );
+        },
+        size: 120,
+      },
+      {
         id: "actions",
         header: "",
         cell: () => null,
@@ -564,6 +609,17 @@ export function WatchlistItemsTableOffline({
           </tbody>
         </table>
       </DndContext>
+
+      {/* Item Details Modal */}
+      {selectedItem && (
+        <ItemDetailsModal
+          open={detailsModalOpen}
+          onOpenChange={setDetailsModalOpen}
+          tmdbId={selectedItem.tmdbId}
+          type={selectedItem.type}
+          platforms={selectedItem.platformList}
+        />
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
+import { Profile } from './pages/Profile';
 import { Watchlists } from './pages/Account/Watchlists';
 import { WatchlistsOffline } from './pages/Watchlists/WatchlistsOffline';
 import { WatchlistDetail } from './pages/Watchlist/WatchlistDetail';
@@ -19,6 +20,16 @@ function App() {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Home />} />
+
+              {/* Profile page */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Smart redirect for /watchlists - goes to account or local based on status */}
               <Route
@@ -63,6 +74,9 @@ function App() {
                   </OfflineWatchlistRoute>
                 }
               />
+
+              {/* Catch-all route for 404 - redirect to home */}
+              <Route path="*" element={<SmartRedirect authenticatedPath="/" unauthenticatedPath="/" />} />
             </Routes>
           </main>
           <Footer />

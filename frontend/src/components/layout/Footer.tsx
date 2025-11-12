@@ -1,15 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { useLanguageStore, type Language } from "@/store/language";
+import { useAuth } from "@/context/auth-context";
+import { authAPI } from "@/lib/api-client";
 import { ChevronDown } from "lucide-react";
 
 const languages: { code: Language; flag: string; name: string }[] = [
   { code: "fr", flag: "🇫🇷", name: "Français" },
   { code: "en", flag: "🇬🇧", name: "English" },
+  { code: "de", flag: "🇩🇪", name: "Deutsch" },
   { code: "es", flag: "🇪🇸", name: "Español" },
+  { code: "it", flag: "🇮🇹", name: "Italiano" },
+  { code: "pt", flag: "🇵🇹", name: "Português" },
 ];
 
 export function Footer() {
   const { language, content, setLanguage } = useLanguageStore();
+  const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -34,9 +40,19 @@ export function Footer() {
     };
   }, [isOpen]);
 
-  const handleLanguageChange = (lang: Language) => {
+  const handleLanguageChange = async (lang: Language) => {
     setLanguage(lang);
     setIsOpen(false);
+
+    // Save to database if user is authenticated
+    if (isAuthenticated) {
+      try {
+        await authAPI.updateLanguage(lang);
+      } catch (error) {
+        console.error("Failed to update language in database:", error);
+        // Continue with local change even if DB update fails
+      }
+    }
   };
 
   return (

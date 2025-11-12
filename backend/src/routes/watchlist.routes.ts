@@ -34,4 +34,7 @@ router.get('/public/:id', watchlistController.getPublicWatchlist);
 // Search route (no auth required)
 router.get('/search/tmdb', watchlistController.searchTMDB);
 
+// Get full item details (no auth required)
+router.get('/items/:tmdbId/:type/details', watchlistController.getItemDetails);
+
 export default router;

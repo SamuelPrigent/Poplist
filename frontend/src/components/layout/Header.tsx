@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { Bookmark, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Bookmark, LogOut, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { useState } from "react";
@@ -8,8 +8,9 @@ import { useLanguageStore } from "@/store/language";
 import play from "../../assets/play.png";
 
 export function Header() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const { content } = useLanguageStore();
+  const navigate = useNavigate();
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
@@ -27,10 +28,18 @@ export function Header() {
     <>
       <header className="border-b border-border bg-background">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <img src={play} className="h-4 w-4" alt="" />
-            <Link to="/" className="text-xl font-bold text-white">
-              {content.header.appName}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <img src={play} className="h-4 w-4" alt="" />
+              <Link to="/" className="text-xl font-bold text-white">
+                {content.header.appName}
+              </Link>
+            </div>
+            <Link
+              to="/"
+              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
+            >
+              {content.header.home}
             </Link>
           </div>
 
@@ -42,10 +51,18 @@ export function Header() {
             </Link>
 
             {isAuthenticated ? (
-              <Button variant="outline" onClick={logout}>
-                <LogOut className="h-4 w-4" />
-                {content.header.logout}
-              </Button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="flex items-center gap-2 rounded-full bg-muted/50 px-4 py-1.5 transition-colors hover:bg-muted"
+                >
+                  <UserIcon className="h-4 w-4" />
+                  <span className="text-sm font-medium">{user?.username}</span>
+                </button>
+                <Button variant="ghost" size="icon" onClick={logout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             ) : (
               <>
                 <Button variant="outline" onClick={openLogin}>

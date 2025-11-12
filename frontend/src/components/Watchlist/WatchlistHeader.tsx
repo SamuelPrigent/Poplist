@@ -26,8 +26,7 @@ function isWatchlistOwner(
   return (
     typeof value === "object" &&
     value !== null &&
-    "email" in value &&
-    typeof (value as { email?: unknown }).email === "string"
+    ("username" in value || "email" in value)
   );
 }
 
@@ -307,8 +306,8 @@ export function WatchlistHeader({
   }, [watchlist]);
 
   const itemCount = watchlist.items.length;
-  const ownerEmail = isWatchlistOwner(watchlist.ownerId)
-    ? watchlist.ownerId.email
+  const ownerUsername = isWatchlistOwner(watchlist.ownerId)
+    ? watchlist.ownerId.username || watchlist.ownerId.email
     : null;
 
   return (
@@ -388,9 +387,9 @@ export function WatchlistHeader({
 
             <div className="flex items-end justify-between gap-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {ownerEmail && (
+                {ownerUsername && (
                   <>
-                    <span className="font-semibold text-white">{ownerEmail}</span>
+                    <span className="font-semibold text-white">{ownerUsername}</span>
                     <span>•</span>
                   </>
                 )}

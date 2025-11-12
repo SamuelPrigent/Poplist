@@ -157,6 +157,24 @@ export const authAPI = {
     request("/auth/refresh", {
       method: "POST",
     }),
+
+  updateUsername: (username: string) =>
+    request("/auth/profile/username", {
+      method: "PUT",
+      body: { username },
+    }),
+
+  changePassword: (oldPassword: string, newPassword: string) =>
+    request("/auth/profile/password", {
+      method: "PUT",
+      body: { oldPassword, newPassword },
+    }),
+
+  updateLanguage: (language: string) =>
+    request("/auth/profile/language", {
+      method: "PUT",
+      body: { language },
+    }),
 };
 
 // Watchlist API
@@ -178,6 +196,7 @@ export interface WatchlistItem {
 export interface WatchlistOwner {
   _id?: string;
   email: string;
+  username?: string;
   [key: string]: unknown;
 }
 
@@ -192,6 +211,26 @@ export interface Watchlist {
   items: WatchlistItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface FullMediaDetails {
+  tmdbId: string;
+  title: string;
+  overview: string;
+  posterUrl: string;
+  backdropUrl: string;
+  releaseDate: string;
+  runtime?: number;
+  rating: number;
+  voteCount: number;
+  genres: string[];
+  cast: Array<{
+    name: string;
+    character: string;
+    profileUrl: string;
+  }>;
+  director?: string;
+  type: "movie" | "tv";
 }
 
 export const watchlistAPI = {
@@ -336,6 +375,19 @@ export const watchlistAPI = {
       ...(params.page && { page: params.page.toString() }),
     });
     return request(`/watchlists/search/tmdb?${searchParams.toString()}`);
+  },
+
+  getItemDetails: (
+    tmdbId: string,
+    type: "movie" | "tv",
+    language?: string,
+  ): Promise<{ details: FullMediaDetails }> => {
+    const searchParams = new URLSearchParams();
+    if (language) searchParams.append("language", language);
+    const query = searchParams.toString();
+    return request(
+      `/watchlists/items/${tmdbId}/${type}/details${query ? `?${query}` : ""}`,
+    );
   },
 };
 

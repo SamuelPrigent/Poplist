@@ -5,8 +5,16 @@ import { User } from '../models/User.model.js';
 import { OneTimeInvite } from '../models/OneTimeInvite.model.js';
 import { generateTokenId, hashToken } from '../lib/jwt.js';
 import { Types } from 'mongoose';
-import { enrichMediaData, searchMedia } from '../services/tmdb.service.js';
+import { enrichMediaData, searchMedia, getFullMediaDetails } from '../services/tmdb.service.js';
 import { v2 as cloudinary } from 'cloudinary';
+
+/**
+ * Validate if an ID is a valid MongoDB ObjectId
+ * Returns false for offline IDs or invalid ObjectIds
+ */
+function isValidWatchlistId(id: string): boolean {
+  return !id.startsWith('offline-') && Types.ObjectId.isValid(id);
+}
 
 /**
  * Extract Cloudinary public_id from a Cloudinary URL
@@ -128,6 +136,11 @@ export async function updateWatchlist(req: Request, res: Response): Promise<void
     const { id } = req.params;
     const data = updateWatchlistSchema.parse(req.body);
 
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
     const watchlist = await Watchlist.findById(id);
 
     if (!watchlist) {
@@ -203,6 +216,11 @@ export async function deleteWatchlist(req: Request, res: Response): Promise<void
     const userId = req.user!.sub;
     const { id } = req.params;
 
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
     const watchlist = await Watchlist.findById(id);
 
     if (!watchlist) {
@@ -228,6 +246,11 @@ export async function createShareLink(req: Request, res: Response): Promise<void
   try {
     const userId = req.user!.sub;
     const { id } = req.params;
+
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
 
     const watchlist = await Watchlist.findById(id);
 
@@ -273,6 +296,11 @@ export async function addCollaborator(req: Request, res: Response): Promise<void
     const { id } = req.params;
     const { email } = addCollaboratorSchema.parse(req.body);
 
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
     const watchlist = await Watchlist.findById(id);
 
     if (!watchlist) {
@@ -317,7 +345,12 @@ export async function getPublicWatchlist(req: Request, res: Response): Promise<v
   try {
     const { id } = req.params;
 
-    const watchlist = await Watchlist.findById(id).populate('ownerId', 'email');
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
+    const watchlist = await Watchlist.findById(id).populate('ownerId', 'email username');
 
     if (!watchlist) {
       res.status(404).json({ error: 'Watchlist not found' });
@@ -341,7 +374,12 @@ export async function getWatchlistById(req: Request, res: Response): Promise<voi
     const userId = req.user!.sub;
     const { id } = req.params;
 
-    const watchlist = await Watchlist.findById(id).populate('ownerId', 'email');
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
+    const watchlist = await Watchlist.findById(id).populate('ownerId', 'email username');
 
     if (!watchlist) {
       res.status(404).json({ error: 'Watchlist not found' });
@@ -370,6 +408,11 @@ export async function addItemToWatchlist(req: Request, res: Response): Promise<v
     const userId = req.user!.sub;
     const { id } = req.params;
     const data = addItemSchema.parse(req.body);
+
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
 
     const watchlist = await Watchlist.findById(id);
 
@@ -523,6 +566,11 @@ export async function reorderItems(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     const { orderedTmdbIds } = reorderItemsSchema.parse(req.body);
 
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
     const watchlist = await Watchlist.findById(id);
 
     if (!watchlist) {
@@ -609,6 +657,11 @@ export async function uploadCover(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
 
     console.log('📸 [UPLOAD] Starting image upload for watchlist:', id);
+
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
 
     const watchlist = await Watchlist.findById(id);
 
@@ -739,6 +792,11 @@ export async function deleteCover(req: Request, res: Response): Promise<void> {
 
     console.log('🗑️  [DELETE] Starting image deletion for watchlist:', id);
 
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
     const watchlist = await Watchlist.findById(id);
 
     if (!watchlist) {
@@ -859,5 +917,37 @@ export async function searchTMDB(req: Request, res: Response): Promise<void> {
   } catch (error) {
     console.error('Error searching TMDB:', error);
     res.status(500).json({ error: 'Failed to search media' });
+  }
+}
+
+// Get full details for a specific media item (movie or TV show)
+export async function getItemDetails(req: Request, res: Response): Promise<void> {
+  try {
+    const { tmdbId, type } = req.params;
+    const language = (req.query.language as string) || 'fr-FR';
+
+    if (!tmdbId || !type) {
+      res.status(400).json({ error: 'tmdbId and type are required' });
+      return;
+    }
+
+    if (type !== 'movie' && type !== 'tv') {
+      res.status(400).json({ error: 'type must be either "movie" or "tv"' });
+      return;
+    }
+
+    console.log(`🔍 [ITEM DETAILS] Fetching details for ${type} ${tmdbId}`);
+
+    const details = await getFullMediaDetails(tmdbId, type, language);
+
+    if (!details) {
+      res.status(404).json({ error: 'Media details not found' });
+      return;
+    }
+
+    res.json({ details });
+  } catch (error) {
+    console.error('Error fetching item details:', error);
+    res.status(500).json({ error: 'Failed to fetch media details' });
   }
 }

@@ -4,6 +4,7 @@ export const en: Content = {
   // Header
   header: {
     appName: "WatchlistHub",
+    home: "Home",
     login: "Login",
     signup: "Sign Up",
     logout: "Logout",
@@ -89,6 +90,21 @@ export const en: Content = {
       movie: "Movie",
       series: "Series",
     },
+    // Item Details Modal
+    itemDetails: {
+      loading: "Loading...",
+      error: "Failed to load details",
+      mediaDetails: "Media Details",
+      fullDetailsFor: "Full details for",
+      loadingDetails: "Loading details",
+      notAvailable: "N/A",
+      votes: "votes",
+      synopsis: "Synopsis",
+      director: "Director",
+      creator: "Creator",
+      availableOn: "Available on",
+      mainCast: "Main Cast",
+    },
   },
 
   // Home Page
@@ -108,5 +124,41 @@ export const en: Content = {
   footer: {
     appName: "WatchlistHub",
     language: "Language",
+  },
+
+  // Profile Page
+  profile: {
+    title: "Profile Settings",
+    subtitle: "Manage your account settings and preferences",
+    userInformation: "User Information",
+    usernameSection: {
+      title: "Username",
+      description: "Update your username. This is how others will see you.",
+      label: "Username",
+      placeholder: "Enter your username",
+      hint: "3-20 characters. Letters, numbers, and underscores only.",
+      updateButton: "Update",
+    },
+    passwordSection: {
+      title: "Password",
+      description: "Change your password. Make sure it's at least 8 characters.",
+      currentPasswordLabel: "Current Password",
+      currentPasswordPlaceholder: "Enter your current password",
+      newPasswordLabel: "New Password",
+      newPasswordPlaceholder: "Enter your new password",
+      confirmPasswordLabel: "Confirm New Password",
+      confirmPasswordPlaceholder: "Confirm your new password",
+      changeButton: "Change Password",
+    },
+    toasts: {
+      usernameUpdated: "Username updated",
+      usernameUpdatedDesc: "Your username has been updated successfully.",
+      passwordChanged: "Password changed",
+      passwordChangedDesc: "Your password has been changed successfully.",
+      error: "Error",
+      passwordMismatch: "New passwords do not match",
+      updateFailed: "Failed to update username",
+      passwordChangeFailed: "Failed to change password",
+    },
   },
 };
