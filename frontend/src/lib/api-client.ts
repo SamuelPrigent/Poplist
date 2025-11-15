@@ -209,6 +209,7 @@ export interface Watchlist {
   description?: string;
   imageUrl?: string;
   isPublic: boolean;
+  categories?: string[];
   collaborators: string[];
   items: WatchlistItem[];
   createdAt: string;
@@ -248,6 +249,7 @@ export const watchlistAPI = {
     name: string;
     description?: string;
     isPublic?: boolean;
+    categories?: string[];
     items?: WatchlistItem[];
     fromLocalStorage?: boolean;
   }): Promise<{ watchlist: Watchlist }> =>
@@ -393,6 +395,38 @@ export const watchlistAPI = {
       `/watchlists/items/${tmdbId}/${type}/details${query ? `?${query}` : ""}`,
     );
   },
+
+  getPublicWatchlists: (
+    limit?: number,
+  ): Promise<{ watchlists: Watchlist[] }> => {
+    const searchParams = new URLSearchParams();
+    if (limit) searchParams.append("limit", limit.toString());
+    const query = searchParams.toString();
+    return request(`/watchlists/public/featured${query ? `?${query}` : ""}`);
+  },
+
+  getAllPublicWatchlists: (): Promise<{ watchlists: Watchlist[] }> =>
+    request("/watchlists/public/all"),
+
+  getWatchlistsByCategory: (
+    category: string,
+  ): Promise<{ watchlists: Watchlist[] }> =>
+    request(`/watchlists/by-category/${category}`),
+
+  saveWatchlist: (id: string): Promise<{ message: string }> =>
+    request(`/watchlists/${id}/save`, {
+      method: "POST",
+    }),
+
+  unsaveWatchlist: (id: string): Promise<{ message: string }> =>
+    request(`/watchlists/${id}/unsave`, {
+      method: "DELETE",
+    }),
+
+  duplicateWatchlist: (id: string): Promise<{ watchlist: Watchlist }> =>
+    request(`/watchlists/${id}/duplicate`, {
+      method: "POST",
+    }),
 };
 
 // TMDB API

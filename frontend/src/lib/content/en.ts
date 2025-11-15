@@ -57,6 +57,7 @@ export const en: Content = {
     noItemsYet: "No items yet",
     noItemsDescription:
       "Start adding movies and series to your watchlist to organize your viewing queue.",
+    edit: "Edit",
     editWatchlist: "Edit Watchlist",
     editWatchlistDescription: "Edit your watchlist information.",
     deleteWatchlist: "Delete Watchlist",
@@ -117,9 +118,103 @@ export const en: Content = {
   // Home Page
   home: {
     hero: {
-      title: "WatchlistHub",
-      subtitle:
-        "Your platform to create and share personal or collaborative watchlists.",
+      title: "Discover, create and share your watchlists.",
+      subtitle: "Your movie universe, organized and shared with friends.",
+      cta: "Create a watchlist",
+    },
+    categories: {
+      title: "Watchlists by theme",
+      subtitle: "WatchlistHub selection",
+      seeMore: "See more",
+      items: {
+        // Line 1 - By type and platform
+        movies: {
+          title: "Movies",
+          description: "Movie selection",
+        },
+        series: {
+          title: "Series",
+          description: "Series selection",
+        },
+        netflix: {
+          title: "Netflix only",
+          description: "Exclusively on Netflix",
+        },
+        primeVideo: {
+          title: "Prime Video only",
+          description: "Exclusively on Prime Video",
+        },
+        disneyPlus: {
+          title: "Disney+ only",
+          description: "Exclusively on Disney+",
+        },
+        crunchyroll: {
+          title: "Crunchyroll only",
+          description: "Exclusively on Crunchyroll",
+        },
+        // Line 2 - By genre and theme
+        netflixChill: {
+          title: "Netflix & Chill",
+          description: "Popular movies to watch together",
+        },
+        films2010s: {
+          title: "Films 2010–2020",
+          description: "Modern must-sees",
+        },
+        childhood: {
+          title: "Childhood Classics",
+          description: "Youth films and nostalgia",
+        },
+        comedy: {
+          title: "Comedy",
+          description: "Laugh and relax",
+        },
+        action: {
+          title: "Action",
+          description: "Action films and blockbusters",
+        },
+        anime: {
+          title: "Anime",
+          description: "Japanese animated series",
+        },
+      },
+    },
+    popularWatchlists: {
+      title: "Popular watchlists",
+      subtitle: "Shared by the community",
+      seeMore: "See more",
+      noWatchlists: "No public watchlists at the moment",
+    },
+    faq: {
+      title: "Frequently Asked Questions",
+      subtitle: "Everything you need to know to get started",
+      questions: {
+        privateWatchlists: {
+          question: "How do private watchlists work?",
+          answer:
+            "Private watchlists allow you to keep your selections to yourself. They are only visible to you and cannot be shared with other users. You can switch between private and public at any time from your watchlist settings.",
+        },
+        pricing: {
+          question: "Is it free to use?",
+          answer:
+            "Yes, the app is completely free! You can create as many watchlists as you want, share them with your friends, and explore thousands of movies and series without any fees.",
+        },
+        exploreSection: {
+          question: "What is the Explore section for?",
+          answer:
+            "The Explore section allows you to discover new content by browsing current trends, the most popular or best-rated movies and series. You can filter by genre to find exactly what you're looking for and add items directly to your watchlists.",
+        },
+        whatMakesDifferent: {
+          question: "What makes this app different?",
+          answer:
+            "This application aims to remain simple with few features and pages to be clear and easy to use. The experience is intended to be natural and intuitive, without unnecessary complexity. We focus on the essentials: organizing and sharing your favorite movies and series.",
+        },
+        streaming: {
+          question: "Can I watch series or movies?",
+          answer:
+            "No, the purpose of this application is not streaming but easy sharing of content you enjoyed on your favorite platforms. We help you organize what you want to watch and share it with your community, but to view the content, you'll need to go to the appropriate streaming platforms.",
+        },
+      },
     },
     trending: {
       title: "Trending Today",

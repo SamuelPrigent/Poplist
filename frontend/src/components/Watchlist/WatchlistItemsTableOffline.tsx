@@ -567,7 +567,7 @@ export function WatchlistItemsTableOffline({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
+    <div className="mb-32 overflow-hidden rounded-lg border border-border bg-card">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

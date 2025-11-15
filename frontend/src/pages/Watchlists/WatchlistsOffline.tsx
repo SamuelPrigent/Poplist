@@ -190,7 +190,7 @@ export function WatchlistsOffline() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto mb-32 px-4 py-8">
       <div className="mb-4 mt-9 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-white">

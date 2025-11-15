@@ -58,6 +58,7 @@ export const fr: Content = {
     noItemsYet: "Aucun élément pour le moment",
     noItemsDescription:
       "Commencez à ajouter des films et séries à votre watchlist pour organiser votre liste de visionnage.",
+    edit: "Modifier",
     editWatchlist: "Modifier la watchlist",
     editWatchlistDescription: "Modifiez les informations de votre watchlist.",
     deleteWatchlist: "Supprimer la watchlist",
@@ -119,9 +120,104 @@ export const fr: Content = {
   // Home Page
   home: {
     hero: {
-      title: "WatchlistHub",
-      subtitle:
-        "Créez et partagez des watchlists de vos films et séries favorites.",
+      //   title: "Découvre, crée et partage tes watchlists",
+      title: "Vos Watchlists parfaitement organisés",
+      subtitle: "Ton univers cinéma, organisé et partagé avec tes amis.",
+      cta: "Créer une watchlist",
+    },
+    categories: {
+      title: "Watchlists par thème",
+      subtitle: "Sélection WatchlistHub",
+      seeMore: "Voir plus",
+      items: {
+        // Ligne 1 - Par type et plateforme
+        movies: {
+          title: "Films",
+          description: "Sélection de films",
+        },
+        series: {
+          title: "Séries",
+          description: "Sélection de séries",
+        },
+        netflix: {
+          title: "Netflix only",
+          description: "Exclusivement sur Netflix",
+        },
+        primeVideo: {
+          title: "Prime Video only",
+          description: "Exclusivement sur Prime Video",
+        },
+        disneyPlus: {
+          title: "Disney+ only",
+          description: "Exclusivement sur Disney+",
+        },
+        crunchyroll: {
+          title: "Crunchyroll only",
+          description: "Exclusivement sur Crunchyroll",
+        },
+        // Ligne 2 - Par genre et thème
+        netflixChill: {
+          title: "Netflix & Chill",
+          description: "Films populaires à voir à deux",
+        },
+        films2010s: {
+          title: "Films 2010–2020",
+          description: "Les incontournables modernes",
+        },
+        childhood: {
+          title: "Classiques d'enfance",
+          description: "Films jeunesse et nostalgie",
+        },
+        comedy: {
+          title: "Comédie",
+          description: "Pour rire et se détendre",
+        },
+        action: {
+          title: "Action",
+          description: "Films d'action et blockbusters",
+        },
+        anime: {
+          title: "Anime",
+          description: "Séries animées japonaises",
+        },
+      },
+    },
+    popularWatchlists: {
+      title: "Watchlists populaires",
+      subtitle: "Partagées par la communauté",
+      seeMore: "Voir plus",
+      noWatchlists: "Aucune watchlist publique pour le moment",
+    },
+    faq: {
+      title: "Questions fréquentes",
+      subtitle: "Tout ce que tu dois savoir pour commencer",
+      questions: {
+        privateWatchlists: {
+          question: "Comment les watchlists privées fonctionnent ?",
+          answer:
+            "Les watchlists privées te permettent de garder tes sélections pour toi seul. Elles ne sont visibles que par toi et ne peuvent pas être partagées avec d'autres utilisateurs. Tu peux basculer entre privé et public à tout moment depuis les paramètres de ta watchlist.",
+        },
+        pricing: {
+          question: "Est-ce que c'est gratuit à l'utilisation ?",
+          answer:
+            "Oui, l'application est entièrement gratuite ! Tu peux créer autant de watchlists que tu veux, les partager avec tes amis et explorer des milliers de films et séries sans aucun frais.",
+        },
+        exploreSection: {
+          question: "À quoi sert la partie Explorer du site ?",
+          answer:
+            "La section Explorer te permet de découvrir de nouveaux contenus en parcourant les tendances actuelles, les films et séries les plus populaires ou les mieux notés. Tu peux filtrer par genre pour trouver exactement ce que tu recherches et ajouter directement des éléments à tes watchlists.",
+        },
+        whatMakesDifferent: {
+          question: "Qu'est-ce qui fait que cette application est différente ?",
+          answer:
+            "Cette application a pour but de rester simple avec peu de fonctionnalités et de pages différentes pour être claire et facile d'utilisation. L'expérience se veut naturelle et intuitive, sans complexité inutile. On se concentre sur l'essentiel : organiser et partager tes films et séries préférés.",
+        },
+        streaming: {
+          question: "Est-ce que je peux regarder des séries ou des films ?",
+          answer:
+            "Non, le but de cette application n'est pas le streaming mais le partage facile de contenu qui t'a plu sur tes plateformes favorites. On t'aide à organiser ce que tu veux regarder et à le partager avec ta communauté, mais pour visionner le contenu, tu devras te rendre sur les plateformes de streaming appropriées.",
+        },
+      },
     },
     trending: {
       title: "Tendances du jour",
@@ -142,7 +238,8 @@ export const fr: Content = {
     userInformation: "Informations utilisateur",
     usernameSection: {
       title: "Nom d'utilisateur",
-      description: "Modifiez votre nom d'utilisateur. C'est ainsi que les autres vous verront.",
+      description:
+        "Modifiez votre nom d'utilisateur. C'est ainsi que les autres vous verront.",
       label: "Nom d'utilisateur",
       placeholder: "Entrez votre nom d'utilisateur",
       hint: "3-20 caractères. Lettres, chiffres et underscores uniquement.",
@@ -150,7 +247,8 @@ export const fr: Content = {
     },
     passwordSection: {
       title: "Mot de passe",
-      description: "Changez votre mot de passe. Assurez-vous qu'il contient au moins 8 caractères.",
+      description:
+        "Changez votre mot de passe. Assurez-vous qu'il contient au moins 8 caractères.",
       currentPasswordLabel: "Mot de passe",
       currentPasswordPlaceholder: "Entrez votre mot de passe actuel",
       newPasswordLabel: "Nouveau mot de passe",
@@ -161,7 +259,8 @@ export const fr: Content = {
     },
     toasts: {
       usernameUpdated: "Nom d'utilisateur mis à jour",
-      usernameUpdatedDesc: "Votre nom d'utilisateur a été mis à jour avec succès.",
+      usernameUpdatedDesc:
+        "Votre nom d'utilisateur a été mis à jour avec succès.",
       passwordChanged: "Mot de passe changé",
       passwordChangedDesc: "Votre mot de passe a été changé avec succès.",
       error: "Erreur",

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
+import { WATCHLIST_CATEGORIES, CATEGORY_INFO, type WatchlistCategory } from "@/types/categories";
 
 interface EditWatchlistDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ export const EditWatchlistDialog = forwardRef<
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [categories, setCategories] = useState<WatchlistCategory[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,12 +47,21 @@ export const EditWatchlistDialog = forwardRef<
     },
   }));
 
+  const toggleCategory = (category: WatchlistCategory) => {
+    setCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+  };
+
   // Initialize form with watchlist data when dialog opens
   useEffect(() => {
     if (open && watchlist) {
       setName(watchlist.name);
       setDescription(watchlist.description || "");
       setIsPublic(watchlist.isPublic);
+      setCategories(watchlist.categories || []);
       setImagePreview(watchlist.imageUrl || null);
     }
   }, [open, watchlist]);
@@ -110,6 +121,7 @@ export const EditWatchlistDialog = forwardRef<
             description: description.trim() || undefined,
             imageUrl: imagePreview || undefined,
             isPublic,
+            categories: categories.length > 0 ? categories : undefined,
             updatedAt: new Date().toISOString(),
           };
           localStorage.setItem("watchlists", JSON.stringify(watchlists));
@@ -123,6 +135,7 @@ export const EditWatchlistDialog = forwardRef<
           name: string;
           description?: string;
           isPublic: boolean;
+          categories?: WatchlistCategory[];
         } = {
           name: name.trim(),
           isPublic,
@@ -133,6 +146,11 @@ export const EditWatchlistDialog = forwardRef<
           updates.description = "";
         } else {
           updates.description = description.trim();
+        }
+
+        // Add categories if any are selected
+        if (categories.length > 0) {
+          updates.categories = categories;
         }
 
         await watchlistAPI.update(watchlist._id, updates);
@@ -270,6 +288,33 @@ export const EditWatchlistDialog = forwardRef<
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Categories Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Catégories / Tags
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {WATCHLIST_CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => toggleCategory(category)}
+                    disabled={loading}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                      categories.includes(category)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {CATEGORY_INFO[category].name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Sélectionnez une ou plusieurs catégories pour faciliter la découverte de votre watchlist
+              </p>
             </div>
 
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

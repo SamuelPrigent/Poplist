@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
+import { WATCHLIST_CATEGORIES, CATEGORY_INFO, type WatchlistCategory } from "@/types/categories";
 
 interface CreateWatchlistDialogProps {
   open: boolean;
@@ -23,11 +24,20 @@ export function CreateWatchlistDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [categories, setCategories] = useState<WatchlistCategory[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleCategory = (category: WatchlistCategory) => {
+    setCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,6 +87,7 @@ export function CreateWatchlistDialog({
           description: description.trim() || undefined,
           imageUrl: imagePreview || undefined,
           isPublic,
+          categories: categories.length > 0 ? categories : undefined,
           collaborators: [],
           items: [],
           createdAt: new Date().toISOString(),
@@ -87,6 +98,7 @@ export function CreateWatchlistDialog({
         setName("");
         setDescription("");
         setIsPublic(false);
+        setCategories([]);
         setImageFile(null);
         setImagePreview(null);
 
@@ -98,6 +110,7 @@ export function CreateWatchlistDialog({
           name: name.trim(),
           description: description.trim() || undefined,
           isPublic,
+          categories: categories.length > 0 ? categories : undefined,
         });
 
         // Upload cover image if provided
@@ -109,6 +122,7 @@ export function CreateWatchlistDialog({
         setName("");
         setDescription("");
         setIsPublic(false);
+        setCategories([]);
         setImageFile(null);
         setImagePreview(null);
 
@@ -126,6 +140,7 @@ export function CreateWatchlistDialog({
     setName("");
     setDescription("");
     setIsPublic(false);
+    setCategories([]);
     setImageFile(null);
     setImagePreview(null);
     setError(null);
@@ -179,6 +194,33 @@ export function CreateWatchlistDialog({
                 rows={3}
                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
+            </div>
+
+            {/* Categories Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Catégories / Tags
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {WATCHLIST_CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => toggleCategory(category)}
+                    disabled={loading}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                      categories.includes(category)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {CATEGORY_INFO[category].name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Sélectionnez une ou plusieurs catégories pour faciliter la découverte de votre watchlist
+              </p>
             </div>
 
             {/* Cover Image Upload */}

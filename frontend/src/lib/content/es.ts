@@ -57,6 +57,7 @@ export const es: Content = {
     noItemsYet: "Aún no hay elementos",
     noItemsDescription:
       "Comienza a añadir películas y series a tu lista para organizar tu cola de visualización.",
+    edit: "Editar",
     editWatchlist: "Editar lista",
     editWatchlistDescription: "Edita la información de tu lista.",
     deleteWatchlist: "Eliminar lista",
@@ -117,8 +118,103 @@ export const es: Content = {
   // Home Page
   home: {
     hero: {
-      title: "WatchlistHub",
-      subtitle: "Crea y comparte listas de tus películas y series favoritas.",
+      title: "Descubre, crea y comparte tus listas.",
+      subtitle: "Tu universo del cine, organizado y compartido con amigos.",
+      cta: "Crear una lista",
+    },
+    categories: {
+      title: "Watchlists por tema",
+      subtitle: "Selección WatchlistHub",
+      seeMore: "Ver más",
+      items: {
+        // Línea 1 - Por tipo y plataforma
+        movies: {
+          title: "Películas",
+          description: "Selección de películas",
+        },
+        series: {
+          title: "Series",
+          description: "Selección de series",
+        },
+        netflix: {
+          title: "Netflix only",
+          description: "Exclusivamente en Netflix",
+        },
+        primeVideo: {
+          title: "Prime Video only",
+          description: "Exclusivamente en Prime Video",
+        },
+        disneyPlus: {
+          title: "Disney+ only",
+          description: "Exclusivamente en Disney+",
+        },
+        crunchyroll: {
+          title: "Crunchyroll only",
+          description: "Exclusivamente en Crunchyroll",
+        },
+        // Línea 2 - Por género y tema
+        netflixChill: {
+          title: "Netflix & Chill",
+          description: "Películas populares para ver juntos",
+        },
+        films2010s: {
+          title: "Películas 2010–2020",
+          description: "Imprescindibles modernos",
+        },
+        childhood: {
+          title: "Clásicos de la infancia",
+          description: "Películas juveniles y nostalgia",
+        },
+        comedy: {
+          title: "Comedia",
+          description: "Para reír y relajarse",
+        },
+        action: {
+          title: "Acción",
+          description: "Películas de acción y blockbusters",
+        },
+        anime: {
+          title: "Anime",
+          description: "Series animadas japonesas",
+        },
+      },
+    },
+    popularWatchlists: {
+      title: "Watchlists populares",
+      subtitle: "Compartidas por la comunidad",
+      seeMore: "Ver más",
+      noWatchlists: "No hay listas públicas por el momento",
+    },
+    faq: {
+      title: "Preguntas frecuentes",
+      subtitle: "Todo lo que necesitas saber para empezar",
+      questions: {
+        privateWatchlists: {
+          question: "¿Cómo funcionan las listas privadas?",
+          answer:
+            "Las listas privadas te permiten mantener tus selecciones para ti solo. Solo son visibles para ti y no pueden ser compartidas con otros usuarios. Puedes cambiar entre privado y público en cualquier momento desde la configuración de tu lista.",
+        },
+        pricing: {
+          question: "¿Es gratis usar la aplicación?",
+          answer:
+            "¡Sí, la aplicación es completamente gratuita! Puedes crear tantas listas como quieras, compartirlas con tus amigos y explorar miles de películas y series sin ningún costo.",
+        },
+        exploreSection: {
+          question: "¿Para qué sirve la sección Explorar?",
+          answer:
+            "La sección Explorar te permite descubrir nuevo contenido navegando por las tendencias actuales, las películas y series más populares o mejor valoradas. Puedes filtrar por género para encontrar exactamente lo que buscas y agregar elementos directamente a tus listas.",
+        },
+        whatMakesDifferent: {
+          question: "¿Qué hace que esta aplicación sea diferente?",
+          answer:
+            "Esta aplicación tiene como objetivo mantenerse simple con pocas funciones y páginas para ser clara y fácil de usar. La experiencia pretende ser natural e intuitiva, sin complejidad innecesaria. Nos centramos en lo esencial: organizar y compartir tus películas y series favoritas.",
+        },
+        streaming: {
+          question: "¿Puedo ver series o películas?",
+          answer:
+            "No, el propósito de esta aplicación no es el streaming sino compartir fácilmente contenido que te gustó en tus plataformas favoritas. Te ayudamos a organizar lo que quieres ver y compartirlo con tu comunidad, pero para ver el contenido, deberás ir a las plataformas de streaming apropiadas.",
+        },
+      },
     },
     trending: {
       title: "Tendencias de hoy",

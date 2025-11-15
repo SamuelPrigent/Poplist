@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Bookmark, LogOut, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
@@ -11,6 +11,7 @@ export function Header() {
   const { isAuthenticated, user, logout } = useAuth();
   const { content } = useLanguageStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
@@ -22,6 +23,18 @@ export function Header() {
   const openSignup = () => {
     setAuthMode("signup");
     setAuthDrawerOpen(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+
+    // Smart redirect based on current route
+    if (location.pathname === "/account/watchlists") {
+      navigate("/local/watchlists");
+    } else if (location.pathname.startsWith("/account/")) {
+      navigate("/home");
+    }
+    // For other pages, no redirect needed (stays on current page)
   };
 
   return (
@@ -36,10 +49,16 @@ export function Header() {
               </Link>
             </div>
             <Link
-              to="/"
+              to="/home"
               className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
             >
               {content.header.home}
+            </Link>
+            <Link
+              to="/explore"
+              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
+            >
+              Explorer
             </Link>
           </div>
 
@@ -59,7 +78,7 @@ export function Header() {
                   <UserIcon className="h-4 w-4" />
                   <span className="text-sm font-medium">{user?.username}</span>
                 </button>
-                <Button variant="ghost" size="icon" onClick={logout}>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>

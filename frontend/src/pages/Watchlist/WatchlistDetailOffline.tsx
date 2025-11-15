@@ -106,6 +106,19 @@ export function WatchlistDetailOffline() {
     }, 300);
   };
 
+  const handleShare = async () => {
+    if (!id) return;
+
+    const url = `${window.location.origin}/local/watchlist/${id}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      console.log("✅ Lien copié dans le presse-papier:", url);
+    } catch (error) {
+      console.error("❌ Failed to copy link:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background">
       <WatchlistHeader
@@ -118,6 +131,7 @@ export function WatchlistDetailOffline() {
         }
         onEdit={() => setEditModalOpen(true)}
         onImageClick={handleImageClick}
+        onShare={handleShare}
       />
 
       <div className="container mx-auto px-4 py-8">

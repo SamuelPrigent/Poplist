@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
+import { watchlistAPI } from "@/lib/api-client";
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -87,12 +88,43 @@ export function OfflineWatchlistRoute({ children }: RouteGuardProps) {
 
 /**
  * OnlineWatchlistRoute: For account/authenticated watchlist detail pages
- * Redirects to home page if not authenticated
+ * Allows access if:
+ * - User is authenticated (backend will check ownership/collaboration)
+ * - OR watchlist is public (accessible to everyone)
+ * Redirects to home page if not authenticated AND watchlist is not public
  */
 export function OnlineWatchlistRoute({ children }: RouteGuardProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [checkingPublic, setCheckingPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState<boolean | null>(null);
 
-  if (isLoading) {
+  useEffect(() => {
+    // If user is authenticated, no need to check if watchlist is public
+    if (isAuthenticated || authLoading) {
+      return;
+    }
+
+    // If not authenticated, check if watchlist is public
+    const checkWatchlistAccess = async () => {
+      if (!id) return;
+
+      try {
+        setCheckingPublic(true);
+        const { watchlist } = await watchlistAPI.getPublic(id);
+        setIsPublic(watchlist.isPublic);
+      } catch (error) {
+        // If fetch fails, watchlist doesn't exist or is not public
+        setIsPublic(false);
+      } finally {
+        setCheckingPublic(false);
+      }
+    };
+
+    checkWatchlistAccess();
+  }, [id, isAuthenticated, authLoading]);
+
+  if (authLoading || checkingPublic) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center py-12">
@@ -102,9 +134,27 @@ export function OnlineWatchlistRoute({ children }: RouteGuardProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  // If authenticated, always allow access (backend will handle authorization)
+  if (isAuthenticated) {
+    return <>{children}</>;
+  }
+
+  // If not authenticated, only allow if watchlist is public
+  if (isPublic === true) {
+    return <>{children}</>;
+  }
+
+  // Not authenticated and watchlist is not public (or doesn't exist)
+  if (isPublic === false) {
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  // Still checking (shouldn't reach here due to loading check above)
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    </div>
+  );
 }

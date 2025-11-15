@@ -48,6 +48,7 @@ export interface Content {
     back: string;
     noItemsYet: string;
     noItemsDescription: string;
+    edit: string;
     editWatchlist: string;
     editWatchlistDescription: string;
     deleteWatchlist: string;
@@ -102,6 +103,94 @@ export interface Content {
     hero: {
       title: string;
       subtitle: string;
+      cta: string;
+    };
+    categories: {
+      title: string;
+      subtitle: string;
+      seeMore: string;
+      items: {
+        movies: {
+          title: string;
+          description: string;
+        };
+        series: {
+          title: string;
+          description: string;
+        };
+        netflix: {
+          title: string;
+          description: string;
+        };
+        primeVideo: {
+          title: string;
+          description: string;
+        };
+        disneyPlus: {
+          title: string;
+          description: string;
+        };
+        crunchyroll: {
+          title: string;
+          description: string;
+        };
+        netflixChill: {
+          title: string;
+          description: string;
+        };
+        films2010s: {
+          title: string;
+          description: string;
+        };
+        childhood: {
+          title: string;
+          description: string;
+        };
+        comedy: {
+          title: string;
+          description: string;
+        };
+        action: {
+          title: string;
+          description: string;
+        };
+        anime: {
+          title: string;
+          description: string;
+        };
+      };
+    };
+    popularWatchlists: {
+      title: string;
+      subtitle: string;
+      seeMore: string;
+      noWatchlists: string;
+    };
+    faq: {
+      title: string;
+      subtitle: string;
+      questions: {
+        privateWatchlists: {
+          question: string;
+          answer: string;
+        };
+        pricing: {
+          question: string;
+          answer: string;
+        };
+        exploreSection: {
+          question: string;
+          answer: string;
+        };
+        whatMakesDifferent: {
+          question: string;
+          answer: string;
+        };
+        streaming: {
+          question: string;
+          answer: string;
+        };
+      };
     };
     trending: {
       title: string;

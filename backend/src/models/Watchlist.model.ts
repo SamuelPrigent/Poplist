@@ -23,6 +23,7 @@ export interface IWatchlist extends Document {
   description?: string;
   imageUrl?: string; // Custom cover image URL (Cloudinary)
   isPublic: boolean;
+  categories?: string[]; // Tags/categories for filtering (e.g., 'netflix', 'action', 'comedy')
   collaborators: Types.ObjectId[];
   items: WatchlistItem[];
   displayOrder?: number; // Custom order for sorting watchlists
@@ -65,6 +66,10 @@ const watchlistSchema = new Schema<IWatchlist>(
     description: { type: String },
     imageUrl: { type: String },
     isPublic: { type: Boolean, default: false },
+    categories: {
+      type: [String],
+      default: [],
+    },
     collaborators: {
       type: [Schema.Types.ObjectId],
       ref: 'User',
@@ -86,5 +91,6 @@ const watchlistSchema = new Schema<IWatchlist>(
 
 // Compound index for efficient queries
 watchlistSchema.index({ ownerId: 1, createdAt: -1 });
+watchlistSchema.index({ categories: 1, isPublic: 1 }); // For filtering public watchlists by category
 
 export const Watchlist = mongoose.model<IWatchlist>('Watchlist', watchlistSchema);

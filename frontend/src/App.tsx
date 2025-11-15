@@ -2,7 +2,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
-import { Home } from './pages/Home';
+import { Landing } from './pages/Landing';
+import { HomeApp } from './pages/HomeApp';
+import { Explore } from './pages/Explore';
+import { Categories } from './pages/Categories';
+import { CategoryDetail } from './pages/CategoryDetail';
+import { CommunityWatchlists } from './pages/CommunityWatchlists';
 import { Profile } from './pages/Profile';
 import { Watchlists } from './pages/Account/Watchlists';
 import { WatchlistsOffline } from './pages/Watchlists/WatchlistsOffline';
@@ -19,7 +24,12 @@ function App() {
           <Header />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/home" element={<HomeApp />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/category/:id" element={<CategoryDetail />} />
+              <Route path="/community-watchlists" element={<CommunityWatchlists />} />
 
               {/* Profile page */}
               <Route

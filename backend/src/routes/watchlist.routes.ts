@@ -28,8 +28,18 @@ router.put('/:id/items/reorder', requireAuth, watchlistController.reorderItems);
 router.post('/:id/upload-cover', requireAuth, watchlistController.uploadCover);
 router.delete('/:id/cover', requireAuth, watchlistController.deleteCover);
 
+// Save/Unsave/Duplicate routes
+router.post('/:id/save', requireAuth, watchlistController.saveWatchlist);
+router.delete('/:id/unsave', requireAuth, watchlistController.unsaveWatchlist);
+router.post('/:id/duplicate', requireAuth, watchlistController.duplicateWatchlist);
+
 // Public routes
+router.get('/public/featured', watchlistController.getPublicWatchlists);
 router.get('/public/:id', watchlistController.getPublicWatchlist);
+
+// Category filtering (no auth required)
+router.get('/by-category/:category', watchlistController.getWatchlistsByCategory);
+router.get('/count-by-category/:category', watchlistController.getWatchlistCountByCategory);
 
 // Search route (no auth required)
 router.get('/search/tmdb', watchlistController.searchTMDB);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
+import { useAuth } from "@/context/auth-context";
 import { WatchlistHeader } from "@/components/Watchlist/WatchlistHeader";
 import { WatchlistItemsTable } from "@/components/Watchlist/WatchlistItemsTable";
 import { AddItemModal } from "@/components/Watchlist/AddItemModal";
@@ -13,11 +14,14 @@ export function WatchlistDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { content } = useLanguageStore();
+  const { isAuthenticated, user } = useAuth();
   const [watchlist, setWatchlist] = useState<Watchlist | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const editDialogRef = useRef<EditWatchlistDialogRef>(null);
 
   const fetchWatchlist = useCallback(async () => {
@@ -29,7 +33,30 @@ export function WatchlistDetail() {
     try {
       setLoading(true);
       setNotFound(false);
-      const { watchlist: data } = await watchlistAPI.getById(id);
+
+      let data;
+      if (isAuthenticated) {
+        // Authenticated users use the regular endpoint (includes ownership check)
+        const response = await watchlistAPI.getById(id);
+        data = response.watchlist;
+
+        // Check if current user is the owner by comparing emails
+        const ownerEmail = typeof data.ownerId === "string"
+          ? null
+          : data.ownerId?.email;
+        const isUserOwner = user?.email === ownerEmail;
+        setIsOwner(isUserOwner);
+
+        // TODO: Check if watchlist is saved (will be implemented when backend is ready)
+        setIsSaved(false);
+      } else {
+        // Unauthenticated users use the public endpoint
+        const response = await watchlistAPI.getPublic(id);
+        data = response.watchlist;
+        setIsOwner(false); // Public viewers are never owners
+        setIsSaved(false);
+      }
+
       setWatchlist(data);
     } catch (err) {
       console.error("Failed to fetch watchlist:", err);
@@ -38,7 +65,7 @@ export function WatchlistDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, navigate, isAuthenticated, user]);
 
   useEffect(() => {
     fetchWatchlist();
@@ -98,42 +125,111 @@ export function WatchlistDetail() {
     }, 300);
   };
 
+  const handleShare = async () => {
+    if (!id) return;
+
+    const url = `${window.location.origin}/account/watchlist/${id}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      console.log("✅ Lien copié dans le presse-papier:", url);
+    } catch (error) {
+      console.error("❌ Failed to copy link:", error);
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (!id || !isAuthenticated || isOwner) return;
+
+    try {
+      if (isSaved) {
+        await watchlistAPI.unsaveWatchlist(id);
+        setIsSaved(false);
+        console.log("✅ Watchlist retirée de votre bibliothèque");
+      } else {
+        await watchlistAPI.saveWatchlist(id);
+        setIsSaved(true);
+        console.log("✅ Watchlist ajoutée à votre bibliothèque");
+      }
+    } catch (error) {
+      console.error("❌ Failed to toggle save watchlist:", error);
+      console.log("⏳ Cette fonctionnalité sera bientôt disponible!");
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (!id || !isAuthenticated || isOwner) return;
+
+    try {
+      const { watchlist: duplicatedWatchlist } = await watchlistAPI.duplicateWatchlist(id);
+      console.log("✅ Watchlist dupliquée avec succès!");
+      // Redirect to the new duplicated watchlist
+      navigate(`/account/watchlist/${duplicatedWatchlist._id}`);
+    } catch (error) {
+      console.error("❌ Failed to duplicate watchlist:", error);
+      console.log("⏳ Cette fonctionnalité sera bientôt disponible!");
+    }
+  };
+
+  const handleInviteCollaborator = () => {
+    if (!id || !isOwner) return;
+    console.log("🔔 Ouverture du modal d'invitation de collaborateur");
+    // TODO: Open invite collaborator modal
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background">
       <WatchlistHeader
         watchlist={watchlist}
         actionButton={
-          <Button onClick={() => setAddModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            {content.watchlists.addItem}
-          </Button>
+          isOwner ? (
+            <Button onClick={() => setAddModalOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {content.watchlists.addItem}
+            </Button>
+          ) : null
         }
-        onEdit={() => setEditModalOpen(true)}
-        onImageClick={handleImageClick}
+        onEdit={isOwner ? () => setEditModalOpen(true) : undefined}
+        onImageClick={isOwner ? handleImageClick : undefined}
+        onShare={handleShare}
+        onSave={handleToggleSave}
+        isSaved={isSaved}
+        showSaveButton={isAuthenticated && !isOwner}
+        onDuplicate={handleDuplicate}
+        showDuplicateButton={isAuthenticated && !isOwner}
+        onInviteCollaborator={handleInviteCollaborator}
+        showInviteButton={isOwner}
       />
 
       <div className="container mx-auto px-4 py-8">
-        <WatchlistItemsTable watchlist={watchlist} onUpdate={fetchWatchlist} />
+        <WatchlistItemsTable
+          watchlist={watchlist}
+          onUpdate={fetchWatchlist}
+        />
       </div>
 
-      {/* Add Item Modal */}
-      <AddItemModal
-        open={addModalOpen}
-        onOpenChange={setAddModalOpen}
-        watchlist={watchlist}
-        onSuccess={fetchWatchlist}
-        offline={false}
-      />
+      {/* Add Item Modal - only for owners */}
+      {isOwner && (
+        <AddItemModal
+          open={addModalOpen}
+          onOpenChange={setAddModalOpen}
+          watchlist={watchlist}
+          onSuccess={fetchWatchlist}
+          offline={false}
+        />
+      )}
 
-      {/* Edit Watchlist Modal */}
-      <EditWatchlistDialog
-        ref={editDialogRef}
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        onSuccess={fetchWatchlist}
-        watchlist={watchlist}
-        offline={false}
-      />
+      {/* Edit Watchlist Modal - only for owners */}
+      {isOwner && (
+        <EditWatchlistDialog
+          ref={editDialogRef}
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          onSuccess={fetchWatchlist}
+          watchlist={watchlist}
+          offline={false}
+        />
+      )}
     </div>
   );
 }

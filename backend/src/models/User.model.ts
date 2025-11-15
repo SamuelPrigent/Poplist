@@ -15,6 +15,7 @@ export interface IUser extends Document {
   language?: string;
   roles: string[];
   refreshTokens: RefreshToken[];
+  savedWatchlists: mongoose.Types.ObjectId[]; // References to saved public watchlists
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +58,11 @@ const userSchema = new Schema<IUser>(
     },
     refreshTokens: {
       type: [refreshTokenSchema],
+      default: [],
+    },
+    savedWatchlists: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Watchlist',
       default: [],
     },
   },

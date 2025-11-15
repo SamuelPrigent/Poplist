@@ -39,6 +39,8 @@ const watchlistItemSchema = z.object({
   type: z.enum(['movie', 'tv']),
   platformList: z.array(z.string()).default([]),
   runtime: z.number().optional(),
+  numberOfSeasons: z.number().optional(),
+  numberOfEpisodes: z.number().optional(),
   addedAt: z.string().or(z.date()).optional(),
 });
 
@@ -46,6 +48,7 @@ const createWatchlistSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   isPublic: z.boolean().default(false),
+  categories: z.array(z.string()).optional(),
   items: z.array(watchlistItemSchema).default([]),
   fromLocalStorage: z.boolean().optional(),
 });
@@ -54,6 +57,7 @@ const updateWatchlistSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   isPublic: z.boolean().optional(),
+  categories: z.array(z.string()).optional(),
   items: z.array(watchlistItemSchema).optional(),
 });
 
@@ -84,9 +88,42 @@ export async function getMyWatchlists(req: Request, res: Response): Promise<void
   try {
     const userId = req.user!.sub;
 
-    const watchlists = await Watchlist.find({
+    // Get user to access savedWatchlists
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Find all watchlists where user is owner or collaborator
+    const ownedOrCollaborated = await Watchlist.find({
       $or: [{ ownerId: userId }, { collaborators: userId }],
     }).sort({ displayOrder: 1, createdAt: -1 });
+
+    // Find all saved watchlists
+    const saved = user.savedWatchlists.length > 0
+      ? await Watchlist.find({
+          _id: { $in: user.savedWatchlists },
+        }).populate('ownerId', 'username email')
+      : [];
+
+    // Merge and deduplicate (prioritize owned/collaborated watchlists over saved)
+    const watchlistsMap = new Map<string, any>();
+
+    // Add owned/collaborated first (higher priority)
+    ownedOrCollaborated.forEach(w => {
+      watchlistsMap.set((w._id as Types.ObjectId).toString(), w);
+    });
+
+    // Add saved watchlists (won't override if already exists)
+    saved.forEach(w => {
+      const idStr = (w._id as Types.ObjectId).toString();
+      if (!watchlistsMap.has(idStr)) {
+        watchlistsMap.set(idStr, w);
+      }
+    });
+
+    const watchlists = Array.from(watchlistsMap.values());
 
     res.json({ watchlists });
   } catch (error) {
@@ -117,6 +154,7 @@ export async function createWatchlist(req: Request, res: Response): Promise<void
       name: data.name,
       description: data.description,
       isPublic: data.isPublic,
+      categories: data.categories,
       items: data.items,
     });
 
@@ -161,6 +199,7 @@ export async function updateWatchlist(req: Request, res: Response): Promise<void
     if (data.name) watchlist.name = data.name;
     if (data.description !== undefined) watchlist.description = data.description;
     if (data.isPublic !== undefined) watchlist.isPublic = data.isPublic;
+    if (data.categories !== undefined) watchlist.categories = data.categories;
     if (data.items) {
       // Transform items to ensure addedAt is a Date and platformList is properly formatted
       watchlist.items = data.items.map(item => {
@@ -185,7 +224,13 @@ export async function updateWatchlist(req: Request, res: Response): Promise<void
           .filter((p: any): p is { name: string; logoPath: string } => p !== null);
 
         return {
-          ...item,
+          tmdbId: item.tmdbId,
+          title: item.title,
+          posterUrl: item.posterUrl,
+          type: item.type,
+          runtime: item.runtime,
+          numberOfSeasons: item.numberOfSeasons,
+          numberOfEpisodes: item.numberOfEpisodes,
           platformList:
             cleanedPlatformList.length > 0
               ? cleanedPlatformList
@@ -363,6 +408,70 @@ export async function getPublicWatchlist(req: Request, res: Response): Promise<v
     }
 
     res.json({ watchlist });
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Get featured/community public watchlists (for homepage)
+export async function getPublicWatchlists(req: Request, res: Response): Promise<void> {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 6, 12);
+
+    const watchlists = await Watchlist.find({
+      isPublic: true,
+    })
+      .populate('ownerId', 'username')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select('_id name description imageUrl items ownerId createdAt');
+
+    res.json({ watchlists });
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Get public watchlists by category
+export async function getWatchlistsByCategory(req: Request, res: Response): Promise<void> {
+  try {
+    const { category } = req.params;
+
+    if (!category || category.trim().length === 0) {
+      res.status(400).json({ error: 'Category parameter is required' });
+      return;
+    }
+
+    const watchlists = await Watchlist.find({
+      isPublic: true,
+      categories: category,
+    })
+      .populate('ownerId', 'username email')
+      .sort({ createdAt: -1 })
+      .select('_id name description imageUrl items categories ownerId createdAt');
+
+    res.json({ watchlists });
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Get count of public watchlists by category
+export async function getWatchlistCountByCategory(req: Request, res: Response): Promise<void> {
+  try {
+    const { category } = req.params;
+
+    if (!category || category.trim().length === 0) {
+      res.status(400).json({ error: 'Category parameter is required' });
+      return;
+    }
+
+    const count = await Watchlist.countDocuments({
+      isPublic: true,
+      categories: category,
+    });
+
+    res.json({ category, count });
   } catch (error) {
     throw error;
   }
@@ -624,6 +733,8 @@ export async function reorderItems(req: Request, res: Response): Promise<void> {
           posterUrl: item.posterUrl,
           type: item.type,
           runtime: item.runtime,
+          numberOfSeasons: item.numberOfSeasons,
+          numberOfEpisodes: item.numberOfEpisodes,
           addedAt: item.addedAt,
           platformList:
             cleanedPlatformList.length > 0
@@ -938,7 +1049,7 @@ export async function getItemDetails(req: Request, res: Response): Promise<void>
       return;
     }
 
-    console.log(`🔍 [ITEM DETAILS] Fetching details for ${type} ${tmdbId}`);
+    // console.log(`🔍 [ITEM DETAILS] Fetching details for ${type} ${tmdbId}`);
 
     const details = await getFullMediaDetails(tmdbId, type, language);
 
@@ -951,5 +1062,135 @@ export async function getItemDetails(req: Request, res: Response): Promise<void>
   } catch (error) {
     console.error('Error fetching item details:', error);
     res.status(500).json({ error: 'Failed to fetch media details' });
+  }
+}
+
+// Save a public watchlist to user's library
+export async function saveWatchlist(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user!.sub;
+    const { id } = req.params;
+
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
+    const watchlist = await Watchlist.findById(id);
+
+    if (!watchlist) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
+    // Can only save public watchlists
+    if (!watchlist.isPublic) {
+      res.status(403).json({ error: 'Can only save public watchlists' });
+      return;
+    }
+
+    // Cannot save your own watchlist
+    if (watchlist.ownerId.toString() === userId) {
+      res.status(400).json({ error: 'Cannot save your own watchlist' });
+      return;
+    }
+
+    // Add to user's savedWatchlists
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if already saved
+    if (user.savedWatchlists.some(w => w.toString() === id)) {
+      res.status(400).json({ error: 'Watchlist already saved' });
+      return;
+    }
+
+    user.savedWatchlists.push(new Types.ObjectId(id));
+    await user.save();
+
+    res.json({ message: 'Watchlist saved successfully' });
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Unsave a watchlist from user's library
+export async function unsaveWatchlist(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user!.sub;
+    const { id } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Remove from savedWatchlists
+    const initialLength = user.savedWatchlists.length;
+    user.savedWatchlists = user.savedWatchlists.filter(w => w.toString() !== id);
+
+    if (user.savedWatchlists.length === initialLength) {
+      res.status(404).json({ error: 'Watchlist not in saved list' });
+      return;
+    }
+
+    await user.save();
+
+    res.json({ message: 'Watchlist removed from library' });
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Duplicate a public watchlist to user's personal space
+export async function duplicateWatchlist(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user!.sub;
+    const { id } = req.params;
+
+    if (!isValidWatchlistId(id)) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
+    const originalWatchlist = await Watchlist.findById(id);
+
+    if (!originalWatchlist) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
+    // Can only duplicate public watchlists or ones you have access to
+    const isOwner = originalWatchlist.ownerId.toString() === userId;
+    const isCollaborator = originalWatchlist.collaborators.some(c => c.toString() === userId);
+
+    if (!originalWatchlist.isPublic && !isOwner && !isCollaborator) {
+      res.status(403).json({ error: 'Access denied' });
+      return;
+    }
+
+    // Cannot duplicate your own watchlist if you're the owner
+    if (isOwner) {
+      res.status(400).json({ error: 'Cannot duplicate your own watchlist' });
+      return;
+    }
+
+    // Create a copy
+    const duplicatedWatchlist = await Watchlist.create({
+      ownerId: userId,
+      name: `${originalWatchlist.name} (copy)`,
+      description: originalWatchlist.description,
+      isPublic: false, // Duplicates are private by default
+      categories: originalWatchlist.categories,
+      items: originalWatchlist.items,
+    });
+
+    res.status(201).json({ watchlist: duplicatedWatchlist });
+  } catch (error) {
+    throw error;
   }
 }

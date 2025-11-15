@@ -129,6 +129,11 @@ function buildBackdropUrl(path: string | null): string {
   return buildImageUrl(path, 'original');
 }
 
+// Helper to build TMDB profile URL (optimized for 64px display)
+function buildProfileUrl(path: string | null): string {
+  return buildImageUrl(path, 'w185');
+}
+
 // Fetch movie details
 export async function getMovieDetails(
   tmdbId: string,
@@ -619,7 +624,7 @@ export async function getMovieFullDetails(
       .map((member) => ({
         name: member.name,
         character: member.character,
-        profileUrl: buildImageUrl(member.profile_path, 'h632'),
+        profileUrl: buildProfileUrl(member.profile_path),
       })) || [];
 
     // Find director
@@ -685,7 +690,7 @@ export async function getTVFullDetails(
       .map((member) => ({
         name: member.name,
         character: member.character,
-        profileUrl: buildImageUrl(member.profile_path, 'h632'),
+        profileUrl: buildProfileUrl(member.profile_path),
       })) || [];
 
     // For TV shows, find creator or executive producer

@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { ArrowLeft, Film, Pencil } from "lucide-react";
+import { ArrowLeft, Film, Pencil, Copy, UserPlus } from "lucide-react";
+import shareIcon from "@/assets/share.svg";
+import plusIcon from "@/assets/plus.svg";
 import type { Watchlist, WatchlistOwner } from "@/lib/api-client";
 import { getTMDBImageUrl } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
@@ -11,6 +13,14 @@ interface WatchlistHeaderProps {
   actionButton?: React.ReactNode;
   onEdit?: () => void;
   onImageClick?: () => void;
+  onShare?: () => void;
+  onSave?: () => void;
+  isSaved?: boolean;
+  showSaveButton?: boolean;
+  onDuplicate?: () => void;
+  showDuplicateButton?: boolean;
+  onInviteCollaborator?: () => void;
+  showInviteButton?: boolean;
 }
 
 const CACHE_PREFIX = "watchlist_header_";
@@ -162,6 +172,14 @@ export function WatchlistHeader({
   actionButton,
   onEdit,
   onImageClick,
+  onShare,
+  onSave,
+  isSaved = false,
+  showSaveButton = false,
+  onDuplicate,
+  showDuplicateButton = false,
+  onInviteCollaborator,
+  showInviteButton = false,
 }: WatchlistHeaderProps) {
   const navigate = useNavigate();
   const { content } = useLanguageStore();
@@ -318,7 +336,7 @@ export function WatchlistHeader({
       {/* Hidden canvas for generating collage */}
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="container relative mx-auto px-4 py-8">
+      <div className="container relative mx-auto px-4 pt-8">
         {/* Back Button */}
         <div className="mb-8">
           <button
@@ -385,26 +403,85 @@ export function WatchlistHeader({
               </p>
             )}
 
-            <div className="flex items-end justify-between gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {ownerUsername && (
-                  <>
-                    <span className="font-semibold text-white">{ownerUsername}</span>
-                    <span>•</span>
-                  </>
-                )}
-                <span>
-                  {itemCount}{" "}
-                  {itemCount === 1
-                    ? content.watchlists.item
-                    : content.watchlists.items}
-                </span>
-              </div>
-              {actionButton && (
-                <div className="flex-shrink-0">{actionButton}</div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {ownerUsername && (
+                <>
+                  <span className="font-semibold text-white">
+                    {ownerUsername}
+                  </span>
+                  <span>•</span>
+                </>
               )}
+              <span>
+                {itemCount}{" "}
+                {itemCount === 1
+                  ? content.watchlists.item
+                  : content.watchlists.items}
+              </span>
             </div>
           </div>
+        </div>
+
+        {/* Action Buttons Row - Below Header */}
+        <div className="mt-6 flex items-center justify-between">
+          {/* Left: Icon Buttons */}
+          <div className="flex items-center gap-1">
+            {showSaveButton && onSave && (
+              <button
+                onClick={onSave}
+                className="group p-3 transition-all hover:scale-105"
+                title={
+                  isSaved
+                    ? "Retirer de la bibliothèque"
+                    : "Ajouter à la bibliothèque"
+                }
+              >
+                <img
+                  src={plusIcon}
+                  alt={isSaved ? "Saved" : "Save"}
+                  className={`h-6 w-6 transition-all ${
+                    isSaved
+                      ? "opacity-100 brightness-0 invert"
+                      : "opacity-60 brightness-0 invert group-hover:opacity-100"
+                  }`}
+                />
+              </button>
+            )}
+            {showDuplicateButton && onDuplicate && (
+              <button
+                onClick={onDuplicate}
+                className="group p-3 transition-all hover:scale-105"
+                title="Dupliquer dans mon espace"
+              >
+                <Copy className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
+              </button>
+            )}
+            {onShare && (
+              <button
+                onClick={onShare}
+                className="group p-3 transition-all hover:scale-105"
+                title="Partager"
+              >
+                <img
+                  src={shareIcon}
+                  alt="Share"
+                  className="h-7 w-7 opacity-60 brightness-0 invert transition-all group-hover:opacity-100"
+                />
+              </button>
+            )}
+            {showInviteButton && onInviteCollaborator && (
+              <button
+                onClick={onInviteCollaborator}
+                className="group p-3 transition-all hover:scale-105"
+                title="Inviter un collaborateur"
+              >
+                <UserPlus className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
+              </button>
+            )}
+          </div>
+
+          {/* Right: Action Button (e.g., Add Item) */}
+          {actionButton && <div className="flex-shrink-0">{actionButton}</div>}
         </div>
       </div>
     </div>

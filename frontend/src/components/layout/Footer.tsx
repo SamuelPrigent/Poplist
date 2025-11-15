@@ -56,7 +56,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="mt-40 border-t border-border bg-background py-6">
+    <footer className="border-t border-border bg-background py-6">
       <div className="container mx-auto flex items-center justify-between px-4">
         <div className="text-sm text-muted-foreground">
           {content.footer.appName}

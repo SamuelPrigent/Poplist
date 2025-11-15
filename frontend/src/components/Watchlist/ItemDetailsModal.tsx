@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X, Star, Calendar, Clock } from "lucide-react";
 import { watchlistAPI, type FullMediaDetails } from "@/lib/api-client";
@@ -25,6 +25,8 @@ export function ItemDetailsModal({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
+  const [showSeeMore, setShowSeeMore] = useState(false);
+  const overviewRef = useRef<HTMLParagraphElement>(null);
 
   const languageCode =
     language === "fr" ? "fr-FR" : language === "es" ? "es-ES" : "en-US";
@@ -40,6 +42,7 @@ export function ItemDetailsModal({
 
     // Reset expanded state when modal opens
     setIsOverviewExpanded(false);
+    setShowSeeMore(false);
 
     const fetchDetails = async () => {
       setLoading(true);
@@ -61,6 +64,29 @@ export function ItemDetailsModal({
 
     void fetchDetails();
   }, [open, tmdbId, type, languageCode, errorMessage]);
+
+  // Check if overview is truncated and needs "see more" button
+  useEffect(() => {
+    if (!details?.overview || isOverviewExpanded) {
+      setShowSeeMore(false);
+      return;
+    }
+
+    const checkTruncation = () => {
+      if (overviewRef.current) {
+        const isTruncated =
+          overviewRef.current.scrollHeight > overviewRef.current.clientHeight;
+        setShowSeeMore(isTruncated);
+      }
+    };
+
+    // Check after render
+    checkTruncation();
+
+    // Also check on window resize in case layout changes
+    window.addEventListener("resize", checkTruncation);
+    return () => window.removeEventListener("resize", checkTruncation);
+  }, [details?.overview, isOverviewExpanded]);
 
   const formatRuntime = (minutes: number | undefined) => {
     if (!minutes) return null;
@@ -229,7 +255,9 @@ export function ItemDetailsModal({
                       </div>
 
                       {/* Rating */}
-                      <div>{renderStars(details.rating)}</div>
+                      {details.voteCount > 0 && (
+                        <div>{renderStars(details.rating)}</div>
+                      )}
 
                       {/* Genres */}
                       {details.genres.length > 0 && (
@@ -252,19 +280,19 @@ export function ItemDetailsModal({
                             {content.watchlists.itemDetails.synopsis}
                           </h3>
                           <p
+                            ref={overviewRef}
                             className={`text-sm leading-relaxed text-muted-foreground ${!isOverviewExpanded ? "line-clamp-5" : ""}`}
                           >
                             {details.overview}
                           </p>
-                          {!isOverviewExpanded &&
-                            details.overview.length > 200 && (
-                              <button
-                                onClick={() => setIsOverviewExpanded(true)}
-                                className="mt-2 text-sm font-bold text-muted-foreground underline transition-colors hover:text-foreground"
-                              >
-                                {content.watchlists.itemDetails.seeMore}
-                              </button>
-                            )}
+                          {showSeeMore && (
+                            <button
+                              onClick={() => setIsOverviewExpanded(true)}
+                              className="mt-2 text-sm font-bold text-muted-foreground underline transition-colors hover:text-foreground"
+                            >
+                              {content.watchlists.itemDetails.seeMore}
+                            </button>
+                          )}
                         </div>
                       )}
 
