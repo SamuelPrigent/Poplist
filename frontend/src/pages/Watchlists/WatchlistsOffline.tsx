@@ -12,6 +12,7 @@ import { CreateWatchlistDialog } from "@/components/Watchlist/CreateWatchlistDia
 import { EditWatchlistDialog } from "@/components/Watchlist/EditWatchlistDialog";
 import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import {
   Empty,
   EmptyHeader,
@@ -147,12 +148,10 @@ export function WatchlistsOffline() {
   const fetchWatchlists = () => {
     try {
       setLoading(true);
-      const localWatchlists = localStorage.getItem(STORAGE_KEY);
-      if (localWatchlists) {
-        setWatchlists(JSON.parse(localWatchlists));
-      } else {
-        setWatchlists([]);
-      }
+      const localWatchlists = getLocalWatchlists();
+      // Only show watchlists created locally (ownerId === "offline")
+      const ownedWatchlists = localWatchlists.filter(w => w.ownerId === "offline");
+      setWatchlists(ownedWatchlists);
     } catch (error) {
       console.error("Failed to load watchlists from localStorage:", error);
       setWatchlists([]);
@@ -191,7 +190,7 @@ export function WatchlistsOffline() {
 
   return (
     <div className="container mx-auto mb-32 px-4 py-8">
-      <div className="mb-4 mt-9 flex items-center justify-between">
+      <div className="mb-8 mt-9 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-white">
             {content.watchlists.title}
@@ -245,7 +244,9 @@ export function WatchlistsOffline() {
             <EmptyMedia variant="icon">
               <Film className="h-8 w-8 text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>{content.watchlists.noWatchlists}</EmptyTitle>
+            <EmptyTitle>
+              {content.watchlists.noWatchlists}
+            </EmptyTitle>
             <EmptyDescription>
               {content.watchlists.createWatchlistDescription}
             </EmptyDescription>

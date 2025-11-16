@@ -214,6 +214,8 @@ export interface Watchlist {
   items: WatchlistItem[];
   createdAt: string;
   updatedAt: string;
+  isSaved?: boolean; // Indicates if this watchlist is followed/saved by the current user
+  isOwner?: boolean; // Indicates if the current user is the owner of this watchlist
 }
 
 export interface FullMediaDetails {
@@ -242,7 +244,7 @@ export const watchlistAPI = {
   getMine: (): Promise<{ watchlists: Watchlist[] }> =>
     request("/watchlists/mine"),
 
-  getById: (id: string): Promise<{ watchlist: Watchlist }> =>
+  getById: (id: string): Promise<{ watchlist: Watchlist; isSaved: boolean }> =>
     request(`/watchlists/${id}`),
 
   create: (data: {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Film, MoreVertical, Edit, Trash2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useLanguageStore } from "@/store/language";
+import { useWatchlistFiltersStore } from "@/store/watchlistFilters";
 import type { Content } from "@/types/content";
 import { CreateWatchlistDialog } from "@/components/Watchlist/CreateWatchlistDialog";
 import { EditWatchlistDialog } from "@/components/Watchlist/EditWatchlistDialog";
@@ -53,6 +54,12 @@ function WatchlistCard({
   const navigate = useNavigate();
   const thumbnailUrl = useWatchlistThumbnail(watchlist);
 
+  // Use isOwner flag from backend
+  const isOwner = watchlist.isOwner ?? false;
+
+  // Disable drag for followed watchlists (not owned by user)
+  const isDraggable = isOwner;
+
   const {
     attributes,
     listeners,
@@ -60,7 +67,10 @@ function WatchlistCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: watchlist._id });
+  } = useSortable({
+    id: watchlist._id,
+    disabled: !isDraggable,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -73,8 +83,10 @@ function WatchlistCard({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="group cursor-grab rounded-lg p-2 transition-colors hover:bg-[#36363780] active:cursor-grabbing"
+      {...(isDraggable ? listeners : {})}
+      className={`group rounded-lg p-2 transition-colors hover:bg-[#36363780] ${
+        isDraggable ? "cursor-grab active:cursor-grabbing" : ""
+      }`}
     >
       {/* Cover Image */}
       <div
@@ -100,15 +112,26 @@ function WatchlistCard({
       </div>
 
       {/* Text Info */}
-      <h3
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/account/watchlist/${watchlist._id}`);
-        }}
-        className="line-clamp-2 text-sm font-semibold text-white"
-      >
-        {watchlist.name}
-      </h3>
+      <div className="flex items-center gap-2">
+        {/* Saved Badge - Indicates this is a followed watchlist, not owned */}
+        {!isOwner && (
+          <img
+            src="/src/assets/checkGreenFull.svg"
+            alt="Suivi"
+            className="h-4 w-4 flex-shrink-0"
+          />
+        )}
+
+        <h3
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/account/watchlist/${watchlist._id}`);
+          }}
+          className="line-clamp-2 text-sm font-semibold text-white"
+        >
+          {watchlist.name}
+        </h3>
+      </div>
 
       <div className="mt-2 text-xs">
         <span
@@ -185,6 +208,8 @@ function WatchlistCard({
 
 export function Watchlists() {
   const { content } = useLanguageStore();
+  const { showOwned, showSaved, toggleOwned, toggleSaved } =
+    useWatchlistFiltersStore();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -216,6 +241,14 @@ export function Watchlists() {
     try {
       setLoading(true);
       const data = await watchlistAPI.getMine();
+      console.log(
+        "📦 Watchlists received from backend:",
+        data.watchlists.map((w) => ({
+          name: w.name,
+          isOwner: w.isOwner,
+          isSaved: w.isSaved,
+        })),
+      );
       setWatchlists(data.watchlists);
     } catch (error) {
       console.error("Failed to fetch watchlists:", error);
@@ -265,9 +298,23 @@ export function Watchlists() {
     );
   }
 
+  // Filter watchlists based on selected filters
+  const filteredWatchlists = watchlists.filter((watchlist) => {
+    // Use isOwner flag from backend
+    const isOwner = watchlist.isOwner ?? false;
+
+    // If user is owner, show in "Mes watchlists" category
+    // If user is not owner (followed watchlist), show in "Suivies" category
+    if (isOwner) {
+      return showOwned;
+    } else {
+      return showSaved;
+    }
+  });
+
   return (
     <div className="container mx-auto mb-32 px-4 py-8">
-      <div className="mb-8 mt-9 flex items-center justify-between">
+      <div className="mb-4 mt-9 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-3xl font-bold text-white">
             {content.watchlists.title}
@@ -277,6 +324,30 @@ export function Watchlists() {
           <Plus className="h-4 w-4" />
           {content.watchlists.createWatchlist}
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-6 flex items-center gap-2">
+        <button
+          onClick={toggleOwned}
+          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            showOwned
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          {content.watchlists.myWatchlists || "Mes watchlists"}
+        </button>
+        <button
+          onClick={toggleSaved}
+          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            showSaved
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          {content.watchlists.followed || "Suivies"}
+        </button>
       </div>
 
       <CreateWatchlistDialog
@@ -302,15 +373,23 @@ export function Watchlists() {
         </>
       )}
 
-      {watchlists.length === 0 ? (
+      {filteredWatchlists.length === 0 ? (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Film className="h-8 w-8 text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>{content.watchlists.noWatchlists}</EmptyTitle>
+            <EmptyTitle>
+              {watchlists.length === 0
+                ? content.watchlists.noWatchlists
+                : content.watchlists.noWatchlistsInCategory ||
+                  "Aucune watchlist dans cette catégorie"}
+            </EmptyTitle>
             <EmptyDescription>
-              {content.watchlists.createWatchlistDescription}
+              {watchlists.length === 0
+                ? content.watchlists.createWatchlistDescription
+                : content.watchlists.adjustFilters ||
+                  "Ajustez les filtres pour voir plus de watchlists"}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -321,11 +400,11 @@ export function Watchlists() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={watchlists.map((w) => w._id)}
+            items={filteredWatchlists.map((w) => w._id)}
             strategy={rectSortingStrategy}
           >
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {watchlists.map((watchlist) => (
+              {filteredWatchlists.map((watchlist) => (
                 <WatchlistCard
                   key={watchlist._id}
                   watchlist={watchlist}

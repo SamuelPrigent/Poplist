@@ -58,7 +58,7 @@ export function Header() {
               to="/explore"
               className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
             >
-              Explorer
+              {content.header.explore}
             </Link>
           </div>
 

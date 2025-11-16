@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { ToasterLight } from './components/ui/sonner-light';
 import { Landing } from './pages/Landing';
 import { HomeApp } from './pages/HomeApp';
 import { Explore } from './pages/Explore';
@@ -91,6 +92,7 @@ function App() {
           </main>
           <Footer />
         </div>
+        <ToasterLight />
       </AuthProvider>
     </BrowserRouter>
   );

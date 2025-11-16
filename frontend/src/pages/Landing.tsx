@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ListChecks, Users, Sparkles, Check, Star } from "lucide-react";
+import { ListChecks, Users, Sparkles, Star } from "lucide-react";
 import { tmdbAPI } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,8 +9,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HeroSection3 } from "@/components/Home/HeroSection3";
+import { HeroSection } from "@/components/Home/HeroSection";
 import { useLanguageStore } from "@/store/language";
+import { useAuth } from "@/context/auth-context";
 
 interface TrendingItem {
   id: number;
@@ -23,7 +24,13 @@ interface TrendingItem {
 
 export function Landing() {
   const { content } = useLanguageStore();
+  const { isAuthenticated } = useAuth();
   const [trending, setTrending] = useState<TrendingItem[]>([]);
+
+  // Determine the watchlist URL based on authentication status
+  const watchlistsUrl = isAuthenticated
+    ? "/account/watchlists"
+    : "/local/watchlists";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +48,11 @@ export function Landing() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <HeroSection3 content={content} trending={trending} />
+      <HeroSection
+        content={content}
+        trending={trending}
+        watchlistsUrl={watchlistsUrl}
+      />
 
       {/* Trending Movies Row */}
       <section className="py-9">
@@ -71,39 +82,23 @@ export function Landing() {
           {/* Left: Features */}
           <div>
             <h2 className="mb-4 text-4xl font-bold leading-tight text-white">
-              Planifiez, suivez et profitez de vos films ensemble
+              {content.landing.hero.tagline}
             </h2>
             <p className="mb-10 text-lg text-gray-400">
-              Organisez vos soirées TV et partagez vos découvertes avec vos amis
+              {content.landing.hero.subtitle}
             </p>
 
             <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
-                  <Users className="h-5 w-5 text-sky-400" />
-                </div>
-                <div>
-                  <h3 className="mb-2 text-base font-semibold text-white">
-                    Création de listes
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    Créez votre collection personnelle de films et séries
-                    incontournables.
-                  </p>
-                </div>
-              </div>
-
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
                   <ListChecks className="h-5 w-5 text-sky-400" />
                 </div>
                 <div>
                   <h3 className="mb-2 text-base font-semibold text-white">
-                    Suivez des watchlists d'autres utilisateurs
+                    {content.landing.features.organize.title}
                   </h3>
                   <p className="text-sm text-gray-400">
-                    Les watchlist de la communauté peuvent vous inspirez,
-                    profitez-en.
+                    {content.landing.features.organize.description}
                   </p>
                 </div>
               </div>
@@ -114,25 +109,24 @@ export function Landing() {
                 </div>
                 <div>
                   <h3 className="mb-2 text-base font-semibold text-white">
-                    Découvrez des films et séries
+                    {content.landing.features.discover.title}
                   </h3>
                   <p className="text-sm text-gray-400">
-                    Parcourez nos watchlists ainsi que celle de la communauté.
+                    {content.landing.features.discover.description}
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
-                  <Check className="h-5 w-5 text-sky-400" />
+                  <Users className="h-5 w-5 text-sky-400" />
                 </div>
                 <div>
                   <h3 className="mb-2 text-base font-semibold text-white">
-                    Suivez vos visionnages
+                    {content.landing.features.share.title}
                   </h3>
                   <p className="text-sm text-gray-400">
-                    Sur vos watchlist personnelle et suivi indiqué ce que celles
-                    que vous avez vu.
+                    {content.landing.features.share.description}
                   </p>
                 </div>
               </div>
@@ -167,10 +161,10 @@ export function Landing() {
       <section className="container mx-auto mb-32 px-4 py-5">
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-4xl font-bold text-white">
-            Démarrez dans la secondes
+            {content.landing.startInSeconds.title}
           </h2>
           <p className="text-lg text-gray-400">
-            Pas de set-up compliqué, c'est vous et vos contenus préférés
+            {content.landing.startInSeconds.subtitle}
           </p>
         </div>
 
@@ -182,11 +176,10 @@ export function Landing() {
               </div>
             </div>
             <h3 className="mb-3 text-xl font-semibold text-sky-400">
-              Créez votre watchlist
+              {content.landing.startInSeconds.step1.title}
             </h3>
             <p className="text-balance text-[16px] text-gray-300">
-              Commencez avec "Mes films favoris" ou soyez nostalgique avec
-              "Films d'enfance".
+              {content.landing.startInSeconds.step1.description}
             </p>
           </div>
 
@@ -197,11 +190,10 @@ export function Landing() {
               </div>
             </div>
             <h3 className="mb-3 text-xl font-semibold text-purple-400">
-              Ajoutez des films
+              {content.landing.startInSeconds.step2.title}
             </h3>
             <p className="text-balance text-[16px] text-gray-300">
-              Recherchez un film ou une série à l'aide d'un mot clé et ajoutez
-              le à votre watchlist du moment.
+              {content.landing.startInSeconds.step2.description}
             </p>
           </div>
 
@@ -212,11 +204,10 @@ export function Landing() {
               </div>
             </div>
             <h3 className="mb-3 text-xl font-semibold text-yellow-400">
-              Partagez-la avec vos amis
+              {content.landing.startInSeconds.step3.title}
             </h3>
             <p className="text-balance text-[16px] text-gray-300">
-              Mettez vos watchlist en mode "public" et partagez les facilement
-              avec un lien.
+              {content.landing.startInSeconds.step3.description}
             </p>
           </div>
         </div>
@@ -227,10 +218,10 @@ export function Landing() {
         <div className="container mx-auto max-w-[1150px] px-4">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-4xl font-bold text-white">
-              Apprécié par les passionnés
+              {content.landing.testimonials.title}
             </h2>
             <p className="text-lg text-gray-400">
-              Rejoignez une communauté d'utilisateurs satisfaits
+              {content.landing.testimonials.subtitle}
             </p>
           </div>
 
@@ -245,10 +236,11 @@ export function Landing() {
                 ))}
               </div>
               <p className="mb-4 text-gray-400">
-                "Application parfaite pour organiser mes watchlists. Interface
-                claire et intuitive."
+                "{content.landing.testimonials.testimonial1.text}"
               </p>
-              <p className="font-semibold text-white">— Marie L.</p>
+              <p className="font-semibold text-white">
+                {content.landing.testimonials.testimonial1.author}
+              </p>
             </div>
 
             <div className="rounded-lg border border-border bg-background p-6">
@@ -261,10 +253,11 @@ export function Landing() {
                 ))}
               </div>
               <p className="mb-4 text-gray-400">
-                "Très pratique ! Permet de garder une trace de ce qu'on a vu et
-                de ce qu'on souhaite recommander."
+                "{content.landing.testimonials.testimonial2.text}"
               </p>
-              <p className="font-semibold text-white">— Thomas D.</p>
+              <p className="font-semibold text-white">
+                {content.landing.testimonials.testimonial2.author}
+              </p>
             </div>
 
             <div className="rounded-lg border border-border bg-background p-6">
@@ -277,10 +270,11 @@ export function Landing() {
                 ))}
               </div>
               <p className="mb-4 text-gray-400">
-                "Simple, efficace, exactement ce que je cherchais pour gérer mes
-                films à voir."
+                "{content.landing.testimonials.testimonial3.text}"
               </p>
-              <p className="font-semibold text-white">— Julie M.</p>
+              <p className="font-semibold text-white">
+                {content.landing.testimonials.testimonial3.author}
+              </p>
             </div>
           </div>
         </div>
@@ -353,22 +347,21 @@ export function Landing() {
       <section className="bg-gradient-to-br from-slate-900/50 via-slate-900/60 to-yellow-900/20 py-24">
         <div className="container mx-auto px-4 text-center">
           <h2 className="mb-6 text-4xl font-bold text-white">
-            Commence à créer tes watchlists facilement
+            {content.landing.finalCta.title}
           </h2>
           <p className="mb-10 text-xl text-gray-400">
-            Rejoignez WatchlistHub et organisez vos contenus favoris en quelques
-            clics.
+            {content.landing.finalCta.subtitle}
           </p>
-          <Link to="/account/watchlists">
+          <Link to={watchlistsUrl}>
             <Button
               size="lg"
               className="bg-gray-200 px-8 py-4 text-base font-semibold text-black transition-colors hover:bg-gray-300"
             >
-              Créer ma watchlist
+              {content.landing.finalCta.button}
             </Button>
           </Link>
           <p className="mt-4 text-sm text-gray-400">
-            Application gratuite • Pas de carte requise
+            {content.landing.finalCta.disclaimer}
           </p>
         </div>
       </section>

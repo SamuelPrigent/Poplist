@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useAuth } from "@/context/auth-context";
+import { useLanguageStore } from "@/store/language";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ItemDetailsModal } from "@/components/Watchlist/ItemDetailsModal";
 import { Button } from "@/components/ui/button";
@@ -51,23 +53,62 @@ const GENRES = {
 };
 
 export function Explore() {
+  const { content } = useLanguageStore();
   const { isAuthenticated } = useAuth();
-  const [mediaType, setMediaType] = useState<"movie" | "tv">("movie");
-  const [filterType, setFilterType] = useState<
-    "trending" | "popular" | "top_rated"
-  >("trending");
-  const [selectedGenre, setSelectedGenre] = useState<number | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize state from URL params
+  const mediaType = (searchParams.get("type") as "movie" | "tv") || "movie";
+  const filterType =
+    (searchParams.get("filter") as "trending" | "popular" | "top_rated") ||
+    "trending";
+  const selectedGenre = searchParams.get("genre")
+    ? Number(searchParams.get("genre"))
+    : null;
+  const page = Number(searchParams.get("page")) || 1;
+
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [addingTo, setAddingTo] = useState<number | null>(null);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     tmdbId: string;
     type: "movie" | "tv";
   } | null>(null);
+
+  // Helper functions to update URL params
+  const updateMediaType = (type: "movie" | "tv") => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("type", type);
+    newParams.set("page", "1"); // Reset to page 1 when changing type
+    setSearchParams(newParams);
+  };
+
+  const updateFilterType = (filter: "trending" | "popular" | "top_rated") => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("filter", filter);
+    newParams.set("page", "1"); // Reset to page 1 when changing filter
+    setSearchParams(newParams);
+  };
+
+  const updateGenre = (genre: number | null) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (genre === null) {
+      newParams.delete("genre");
+    } else {
+      newParams.set("genre", genre.toString());
+    }
+    newParams.set("page", "1"); // Reset to page 1 when changing genre
+    setSearchParams(newParams);
+  };
+
+  const updatePage = (newPage: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", newPage.toString());
+    setSearchParams(newParams);
+  };
 
   // Scroll to top on mount and page change
   useEffect(() => {
@@ -169,10 +210,6 @@ export function Explore() {
     fetchMedia();
   }, [mediaType, filterType, selectedGenre, page]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [mediaType, filterType, selectedGenre]);
 
   const handleAddToWatchlist = async (
     watchlistId: string,
@@ -208,9 +245,9 @@ export function Explore() {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h1 className="mb-4 text-5xl font-bold text-white">Explorer</h1>
+          <h1 className="mb-4 text-5xl font-bold text-white">{content.explore.title}</h1>
           <p className="text-lg text-muted-foreground">
-            Découvre les films et séries du moment
+            {content.explore.subtitle}
           </p>
         </div>
 
@@ -220,11 +257,11 @@ export function Explore() {
           <div className="flex justify-center">
             <Tabs
               value={mediaType}
-              onValueChange={(v) => setMediaType(v as "movie" | "tv")}
+              onValueChange={(v) => updateMediaType(v as "movie" | "tv")}
             >
               <TabsList>
-                <TabsTrigger value="movie">Films</TabsTrigger>
-                <TabsTrigger value="tv">Séries</TabsTrigger>
+                <TabsTrigger value="movie">{content.explore.filters.movies}</TabsTrigger>
+                <TabsTrigger value="tv">{content.explore.filters.series}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -233,12 +270,12 @@ export function Explore() {
           <div className="flex justify-center">
             <Tabs
               value={filterType}
-              onValueChange={(v) => setFilterType(v as typeof filterType)}
+              onValueChange={(v) => updateFilterType(v as typeof filterType)}
             >
               <TabsList>
-                <TabsTrigger value="trending">Tendances</TabsTrigger>
-                <TabsTrigger value="popular">Populaires</TabsTrigger>
-                <TabsTrigger value="top_rated">Mieux notés</TabsTrigger>
+                <TabsTrigger value="trending">{content.explore.filters.trending}</TabsTrigger>
+                <TabsTrigger value="popular">{content.explore.sortBy.popular}</TabsTrigger>
+                <TabsTrigger value="top_rated">{content.explore.filters.topRated}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -247,19 +284,19 @@ export function Explore() {
           {filterType !== "trending" && (
             <div className="flex flex-wrap justify-center gap-2">
               <button
-                onClick={() => setSelectedGenre(null)}
+                onClick={() => updateGenre(null)}
                 className={`rounded-full px-4 py-2 text-sm transition-colors ${
                   selectedGenre === null
                     ? "bg-white text-black"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
-                Tous
+                {content.explore.filters.all}
               </button>
               {GENRES[mediaType].map((genre) => (
                 <button
                   key={genre.id}
-                  onClick={() => setSelectedGenre(genre.id)}
+                  onClick={() => updateGenre(genre.id)}
                   className={`rounded-full px-4 py-2 text-sm transition-colors ${
                     selectedGenre === genre.id
                       ? "bg-white text-black"
@@ -328,7 +365,7 @@ export function Explore() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                              Ajouter à une watchlist
+                              {content.watchlists.addToWatchlist}
                             </DropdownMenu.Label>
                             {watchlists.length > 0 ? (
                               watchlists.map((watchlist) => (
@@ -344,7 +381,7 @@ export function Explore() {
                               ))
                             ) : (
                               <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                Aucune watchlist
+                                {content.watchlists.noWatchlist}
                               </div>
                             )}
                           </DropdownMenu.Content>
@@ -375,20 +412,22 @@ export function Explore() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => updatePage(Math.max(1, page - 1))}
                   disabled={page === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
 
                 <span className="text-sm text-muted-foreground">
-                  Page {page} sur {totalPages}
+                  {content.explore.pagination.pageOf
+                    .replace("{page}", String(page))
+                    .replace("{totalPages}", String(totalPages))}
                 </span>
 
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => updatePage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
                 >
                   <ChevronRight className="h-4 w-4" />

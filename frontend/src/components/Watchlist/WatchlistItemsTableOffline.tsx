@@ -113,7 +113,7 @@ function DraggableRow({
       onMouseEnter={() => setHoveredRow(item.tmdbId)}
       onMouseLeave={() => setHoveredRow(null)}
       className={cn(
-        "group border-b border-border transition-colors duration-150",
+        "group select-none border-b border-border transition-colors duration-150",
         hoveredRow === item.tmdbId && "bg-muted/30",
         !isDragDisabled && "cursor-grab active:cursor-grabbing",
       )}
@@ -512,7 +512,7 @@ export function WatchlistItemsTableOffline({
               className="h-8 gap-1.5 px-3 text-xs"
             >
               <Eye className="h-3 w-3" />
-              Aperçu
+              {content.watchlists.preview}
             </Button>
           );
         },

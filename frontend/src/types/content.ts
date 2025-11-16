@@ -2,6 +2,7 @@ export interface Content {
   header: {
     appName: string;
     home: string;
+    explore: string;
     login: string;
     signup: string;
     logout: string;
@@ -27,12 +28,19 @@ export interface Content {
     createWatchlistDescription: string;
     notLoggedInWarning: string;
     noWatchlists: string;
+    myWatchlists: string;
+    followed: string;
+    noWatchlistsInCategory: string;
+    adjustFilters: string;
     items: string;
     item: string;
     public: string;
     private: string;
     loading: string;
     accountDataBadge: string;
+    preview: string;
+    categories: string;
+    categoriesDescription: string;
     name: string;
     namePlaceholder: string;
     description: string;
@@ -98,12 +106,94 @@ export interface Content {
       mainCast: string;
       seeMore: string;
     };
+    tooltips: {
+      share: string;
+      save: string;
+      unsave: string;
+      duplicate: string;
+      inviteCollaborator: string;
+    };
+    addToWatchlist: string;
+    noWatchlist: string;
+  };
+  landing: {
+    hero: {
+      tagline: string;
+      title: string;
+      subtitle: string;
+      cta: string;
+    };
+    features: {
+      organize: {
+        tagline: string;
+        title: string;
+        description: string;
+      };
+      discover: {
+        tagline: string;
+        title: string;
+        description: string;
+      };
+      share: {
+        tagline: string;
+        title: string;
+        description: string;
+      };
+    };
+    startInSeconds: {
+      title: string;
+      subtitle: string;
+      step1: {
+        title: string;
+        description: string;
+      };
+      step2: {
+        title: string;
+        description: string;
+      };
+      step3: {
+        title: string;
+        description: string;
+      };
+    };
+    testimonials: {
+      title: string;
+      subtitle: string;
+      testimonial1: {
+        text: string;
+        author: string;
+      };
+      testimonial2: {
+        text: string;
+        author: string;
+      };
+      testimonial3: {
+        text: string;
+        author: string;
+      };
+    };
+    finalCta: {
+      title: string;
+      subtitle: string;
+      button: string;
+      disclaimer: string;
+    };
   };
   home: {
     hero: {
       title: string;
       subtitle: string;
       cta: string;
+      pills: {
+        organize: string;
+        share: string;
+        discover: string;
+      };
+    };
+    library: {
+      title: string;
+      subtitle: string;
+      seeAll: string;
     };
     categories: {
       title: string;
@@ -195,6 +285,50 @@ export interface Content {
     trending: {
       title: string;
       noImage: string;
+    };
+    recommendations: {
+      title: string;
+      subtitle: string;
+      seeMore: string;
+    };
+  };
+  explore: {
+    title: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    filters: {
+      all: string;
+      movies: string;
+      series: string;
+      trending: string;
+      topRated: string;
+    };
+    sortBy: {
+      label: string;
+      popular: string;
+      recentlyAdded: string;
+      mostItems: string;
+    };
+    pagination: {
+      pageOf: string;
+    };
+    noResults: string;
+    noResultsDescription: string;
+  };
+  categories: {
+    title: string;
+    subtitle: string;
+    list: {
+      movies: { name: string; description: string; };
+      series: { name: string; description: string; };
+      netflix: { name: string; description: string; };
+      "prime-video": { name: string; description: string; };
+      "disney-plus": { name: string; description: string; };
+      anime: { name: string; description: string; };
+      action: { name: string; description: string; };
+      documentaries: { name: string; description: string; };
+      enfant: { name: string; description: string; };
+      jeunesse: { name: string; description: string; };
     };
   };
   footer: {

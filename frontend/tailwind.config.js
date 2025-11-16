@@ -61,12 +61,17 @@ export default {
           '0%': { transform: 'translateX(-50%)' },
           '100%': { transform: 'translateX(0)' },
         },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'slide-right': 'slide-right 60s linear infinite',
         'slide-left': 'slide-left 60s linear infinite',
+        'fade-in': 'fade-in 0.2s ease-out',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

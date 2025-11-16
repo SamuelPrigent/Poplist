@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import { ArrowLeft, Film, Pencil, Copy, UserPlus } from "lucide-react";
 import shareIcon from "@/assets/share.svg";
-import plusIcon from "@/assets/plus.svg";
+import plusIcon from "@/assets/plus2.svg";
+import checkGreenIcon from "@/assets/checkGreen2.svg";
 import type { Watchlist, WatchlistOwner } from "@/lib/api-client";
 import { getTMDBImageUrl } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
@@ -184,6 +185,7 @@ export function WatchlistHeader({
   const navigate = useNavigate();
   const { content } = useLanguageStore();
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Generate 2x2 collage from first 4 posters if no custom image
@@ -423,66 +425,111 @@ export function WatchlistHeader({
         </div>
 
         {/* Action Buttons Row - Below Header */}
-        <div className="mt-6 flex items-center justify-between">
-          {/* Left: Icon Buttons */}
-          <div className="flex items-center gap-1">
-            {showSaveButton && onSave && (
-              <button
-                onClick={onSave}
-                className="group p-3 transition-all hover:scale-105"
-                title={
-                  isSaved
-                    ? "Retirer de la bibliothèque"
-                    : "Ajouter à la bibliothèque"
-                }
-              >
-                <img
-                  src={plusIcon}
-                  alt={isSaved ? "Saved" : "Save"}
-                  className={`h-6 w-6 transition-all ${
-                    isSaved
-                      ? "opacity-100 brightness-0 invert"
-                      : "opacity-60 brightness-0 invert group-hover:opacity-100"
-                  }`}
-                />
-              </button>
-            )}
-            {showDuplicateButton && onDuplicate && (
-              <button
-                onClick={onDuplicate}
-                className="group p-3 transition-all hover:scale-105"
-                title="Dupliquer dans mon espace"
-              >
-                <Copy className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
-              </button>
-            )}
-            {onShare && (
-              <button
-                onClick={onShare}
-                className="group p-3 transition-all hover:scale-105"
-                title="Partager"
-              >
-                <img
-                  src={shareIcon}
-                  alt="Share"
-                  className="h-7 w-7 opacity-60 brightness-0 invert transition-all group-hover:opacity-100"
-                />
-              </button>
-            )}
-            {showInviteButton && onInviteCollaborator && (
-              <button
-                onClick={onInviteCollaborator}
-                className="group p-3 transition-all hover:scale-105"
-                title="Inviter un collaborateur"
-              >
-                <UserPlus className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
-              </button>
-            )}
-          </div>
+        {(() => {
+          const hasLeftButtons =
+            showSaveButton ||
+            showDuplicateButton ||
+            onShare ||
+            showInviteButton;
+          return (
+            <div
+              className={`mt-6 flex items-center ${hasLeftButtons ? "justify-between" : "justify-end"}`}
+            >
+              {/* Left: Icon Buttons */}
+              {hasLeftButtons && (
+                <div className="flex items-center gap-1">
+                  {showSaveButton && onSave && (
+                    <button
+                      onClick={async () => {
+                        // Trigger animation on every click (both save and unsave)
+                        setShowSaveAnimation(true);
+                        setTimeout(() => setShowSaveAnimation(false), 200);
+                        await onSave();
+                      }}
+                      className="group relative p-3 transition-all hover:scale-105"
+                      title={
+                        isSaved
+                          ? content.watchlists.tooltips.unsave
+                          : content.watchlists.tooltips.save
+                      }
+                    >
+                      {/* Container to maintain fixed size */}
+                      <div className="relative h-6 w-6">
+                        {/* Plus Icon - shown when not saved */}
+                        <img
+                          src={plusIcon}
+                          alt="Save"
+                          className={`absolute inset-0 h-6 w-6 transition-opacity ${
+                            isSaved
+                              ? "opacity-0"
+                              : showSaveAnimation
+                                ? "opacity-100"
+                                : "opacity-60 brightness-0 invert group-hover:opacity-100"
+                          }`}
+                          style={{
+                            transitionDuration: isSaved ? "0ms" : "200ms",
+                          }}
+                        />
+                        {/* Check Green Icon - shown when saved */}
+                        <img
+                          src={checkGreenIcon}
+                          alt="Saved"
+                          className={`absolute inset-0 h-6 w-6 transition-opacity ${
+                            isSaved
+                              ? showSaveAnimation
+                                ? "opacity-100"
+                                : "opacity-100"
+                              : "opacity-0"
+                          }`}
+                          style={{
+                            transitionDuration: !isSaved ? "0ms" : "200ms",
+                          }}
+                        />
+                      </div>
+                    </button>
+                  )}
+                  {showInviteButton && onInviteCollaborator && (
+                    <button
+                      onClick={onInviteCollaborator}
+                      className="group p-3 transition-all hover:scale-105"
+                      title={content.watchlists.tooltips.inviteCollaborator}
+                    >
+                      <UserPlus className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
+                    </button>
+                  )}
 
-          {/* Right: Action Button (e.g., Add Item) */}
-          {actionButton && <div className="flex-shrink-0">{actionButton}</div>}
-        </div>
+                  {showDuplicateButton && onDuplicate && (
+                    <button
+                      onClick={onDuplicate}
+                      className="group p-3 transition-all hover:scale-105"
+                      title={content.watchlists.tooltips.duplicate}
+                    >
+                      <Copy className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
+                    </button>
+                  )}
+                  {onShare && (
+                    <button
+                      onClick={onShare}
+                      className="group p-3 transition-all hover:scale-105"
+                      title={content.watchlists.tooltips.share}
+                    >
+                      <img
+                        src={shareIcon}
+                        alt="Share"
+                        className="h-7 w-7 opacity-60 brightness-0 invert transition-all group-hover:opacity-100"
+                      />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Right: Action Button (e.g., Add Item) */}
+              {actionButton && (
+                <div className="flex-shrink-0">{actionButton}</div>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

@@ -8,8 +8,7 @@ import { EditWatchlistDialog, type EditWatchlistDialogRef } from "@/components/W
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useLanguageStore } from "@/store/language";
-
-const STORAGE_KEY = "watchlists";
+import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 
 export function WatchlistDetailOffline() {
   const { id } = useParams<{ id: string }>();
@@ -28,15 +27,11 @@ export function WatchlistDetailOffline() {
     try {
       setLoading(true);
       setNotFound(false);
-      const localWatchlists = localStorage.getItem(STORAGE_KEY);
-      if (localWatchlists) {
-        const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-        const found = watchlists.find((w) => w._id === id);
-        if (found) {
-          setWatchlist(found);
-        } else {
-          setNotFound(true);
-        }
+      const watchlists = getLocalWatchlists();
+      const found = watchlists.find((w) => w._id === id);
+
+      if (found && found.ownerId === "offline") {
+        setWatchlist(found);
       } else {
         setNotFound(true);
       }
@@ -106,19 +101,6 @@ export function WatchlistDetailOffline() {
     }, 300);
   };
 
-  const handleShare = async () => {
-    if (!id) return;
-
-    const url = `${window.location.origin}/local/watchlist/${id}`;
-
-    try {
-      await navigator.clipboard.writeText(url);
-      console.log("✅ Lien copié dans le presse-papier:", url);
-    } catch (error) {
-      console.error("❌ Failed to copy link:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background">
       <WatchlistHeader
@@ -131,7 +113,6 @@ export function WatchlistDetailOffline() {
         }
         onEdit={() => setEditModalOpen(true)}
         onImageClick={handleImageClick}
-        onShare={handleShare}
       />
 
       <div className="container mx-auto px-4 py-8">

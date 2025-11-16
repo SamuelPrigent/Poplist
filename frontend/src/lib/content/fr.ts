@@ -5,6 +5,7 @@ export const fr: Content = {
   header: {
     appName: "WatchlistHub",
     home: "Accueil",
+    explore: "Explorer",
     login: "Connexion",
     signup: "Inscription",
     logout: "Déconnexion",
@@ -36,12 +37,20 @@ export const fr: Content = {
       "Créez une nouvelle watchlist pour organiser vos films et séries.",
     notLoggedInWarning: "Données locales",
     noWatchlists: "Vous n'avez pas encore créé de watchlist.",
+    myWatchlists: "Mes watchlists",
+    followed: "Suivies",
+    noWatchlistsInCategory: "Aucune watchlist dans cette catégorie",
+    adjustFilters: "Ajustez les filtres pour voir plus de watchlists",
     items: "éléments",
     item: "élément",
     public: "Public",
     private: "Privé",
     loading: "Chargement...",
     accountDataBadge: "Données du compte utilisateur",
+    preview: "Aperçu",
+    categories: "Catégories / Tags",
+    categoriesDescription:
+      "Sélectionnez une ou plusieurs catégories pour faciliter la découverte de votre watchlist",
     name: "Nom",
     namePlaceholder: "Ma watchlist",
     description: "Description",
@@ -115,15 +124,105 @@ export const fr: Content = {
       mainCast: "Acteurs principaux",
       seeMore: "Voir plus",
     },
+    tooltips: {
+      share: "Partager",
+      save: "Ajouter à la bibliothèque",
+      unsave: "Retirer de la bibliothèque",
+      duplicate: "Dupliquer dans mon espace",
+      inviteCollaborator: "Inviter un collaborateur",
+    },
+    addToWatchlist: "Ajouter à une watchlist",
+    noWatchlist: "Aucune watchlist",
+  },
+
+  landing: {
+    hero: {
+      tagline: "Planifiez, suivez et profitez de vos films ensemble",
+      title: "Vos Watchlists parfaitement organisées",
+      subtitle:
+        "Organisez vos soirées TV et partagez vos découvertes avec vos amis",
+      cta: "Créer une watchlist",
+    },
+    features: {
+      organize: {
+        tagline: "Organisation",
+        title: "Création de watchlistes",
+        description:
+          "Créez votre collection personnelle de films et séries incontournables.",
+      },
+      discover: {
+        tagline: "Découverte",
+        title: "Découvrez des films et séries",
+        description:
+          "Utilisez la fonction explorer pour trouver du contenu à ajouter à vos watchlists.",
+      },
+      share: {
+        tagline: "Partage",
+        title: "Suivez des watchlists d'autres utilisateurs",
+        description: "Ajoutez des watchlists à votre espace personnel.",
+      },
+    },
+    startInSeconds: {
+      title: "Démarrez dans la secondes",
+      subtitle: "Pas de set-up compliqué, c'est vous et vos contenus préférés",
+      step1: {
+        title: "Créez votre watchlist",
+        description:
+          'Commencez avec "Mes films favoris" ou soyez nostalgique avec "Films d\'enfance".',
+      },
+      step2: {
+        title: "Ajoutez des films",
+        description:
+          "Recherchez un film ou une série à l'aide d'un mot clé et ajoutez le à votre watchlist du moment.",
+      },
+      step3: {
+        title: "Partagez-la avec vos amis",
+        description:
+          'Mettez vos watchlist en mode "public" et partagez les facilement avec un lien.',
+      },
+    },
+    testimonials: {
+      title: "Apprécié par les passionnés",
+      subtitle: "Rejoignez une communauté d'utilisateurs satisfaits",
+      testimonial1: {
+        text: "Application parfaite pour organiser mes watchlists. Interface claire et intuitive.",
+        author: "— Marie L.",
+      },
+      testimonial2: {
+        text: "Très pratique ! Permet de garder une trace de ce qu'on a vu et de ce qu'on souhaite recommander.",
+        author: "— Thomas D.",
+      },
+      testimonial3: {
+        text: "Simple, efficace, exactement ce que je cherchais pour gérer mes films à voir.",
+        author: "— Julie M.",
+      },
+    },
+    finalCta: {
+      title: "Commence à créer tes watchlists facilement",
+      subtitle:
+        "Rejoignez WatchlistHub et organisez vos contenus favoris en quelques clics.",
+      button: "Créer ma watchlist",
+      disclaimer: "Application gratuite • Pas de carte requise",
+    },
   },
 
   // Home Page
   home: {
     hero: {
       //   title: "Découvre, crée et partage tes watchlists",
-      title: "Vos Watchlists parfaitement organisés",
-      subtitle: "Ton univers cinéma, organisé et partagé avec tes amis.",
+      title: "Vos Watchlists parfaitement organisées",
+      subtitle: "Ton univers cinéma, organisée et partagé avec tes amis.",
       cta: "Créer une watchlist",
+      pills: {
+        organize: "Organisez vos films",
+        share: "Partagez avec vos amis",
+        discover: "Découvrez des pépites",
+      },
+    },
+    library: {
+      title: "Bibliothèque",
+      subtitle: "Vos watchlists personnelles",
+      seeAll: "Voir tout",
     },
     categories: {
       title: "Watchlists par thème",
@@ -222,6 +321,83 @@ export const fr: Content = {
     trending: {
       title: "Tendances du jour",
       noImage: "Pas d'image",
+    },
+    recommendations: {
+      title: "Des titres qui pourraient vous plaire",
+      subtitle: "Basé sur les tendances actuelles",
+      seeMore: "Voir tout",
+    },
+  },
+
+  explore: {
+    title: "Explorer",
+    subtitle: "Découvrez de nouvelles watchlists partagées par la communauté",
+    searchPlaceholder: "Rechercher une watchlist...",
+    filters: {
+      all: "Tout",
+      movies: "Films",
+      series: "Séries",
+      trending: "Tendances",
+      topRated: "Mieux notés",
+    },
+    sortBy: {
+      label: "Trier par",
+      popular: "Les plus populaires",
+      recentlyAdded: "Récemment ajoutées",
+      mostItems: "Plus d'éléments",
+    },
+    pagination: {
+      pageOf: "Page {page} sur {totalPages}",
+    },
+    noResults: "Aucune watchlist trouvée",
+    noResultsDescription: "Essayez de modifier vos filtres ou votre recherche",
+  },
+
+  categories: {
+    title: "Catégories",
+    subtitle: "Explorez les watchlists par thème",
+    list: {
+      movies: {
+        name: "Films",
+        description: "Les meilleurs films du moment",
+      },
+      series: {
+        name: "Séries",
+        description: "Les séries à ne pas manquer",
+      },
+      netflix: {
+        name: "Netflix",
+        description: "Les pépites Netflix",
+      },
+      "prime-video": {
+        name: "Prime Video",
+        description: "Exclusivités Amazon Prime",
+      },
+      "disney-plus": {
+        name: "Disney+",
+        description: "L'univers Disney, Pixar, Marvel et Star Wars",
+      },
+      anime: {
+        name: "Animation",
+        description:
+          "Les meilleurs séries et films d'animation et manga adaptés",
+      },
+      action: {
+        name: "Action",
+        description: "Classiques et nouveautés films d'actions",
+      },
+      documentaries: {
+        name: "Documentaires",
+        description: "Documentaires captivants et éducatifs",
+      },
+      enfant: {
+        name: "Enfant",
+        description: "Films et séries pour enfant",
+      },
+      jeunesse: {
+        name: "Jeunesse",
+        description: "Films et séries adolescent et adulte",
+      },
     },
   },
 

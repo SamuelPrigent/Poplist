@@ -5,6 +5,7 @@ export const en: Content = {
   header: {
     appName: "WatchlistHub",
     home: "Home",
+    explore: "Explore",
     login: "Login",
     signup: "Sign Up",
     logout: "Logout",
@@ -35,12 +36,19 @@ export const en: Content = {
       "Create a new watchlist to organize your movies and series.",
     notLoggedInWarning: "Local data",
     noWatchlists: "You haven't created any watchlists yet.",
+    myWatchlists: "My watchlists",
+    followed: "Followed",
+    noWatchlistsInCategory: "No watchlists in this category",
+    adjustFilters: "Adjust the filters to see more watchlists",
     items: "items",
     item: "item",
     public: "Public",
     private: "Private",
     loading: "Loading...",
     accountDataBadge: "User account data",
+    preview: "Preview",
+    categories: "Categories / Tags",
+    categoriesDescription: "Select one or more categories to make your watchlist easier to discover",
     name: "Name",
     namePlaceholder: "My watchlist",
     description: "Description",
@@ -113,6 +121,81 @@ export const en: Content = {
       mainCast: "Main Cast",
       seeMore: "See more",
     },
+    tooltips: {
+      share: "Share",
+      save: "Add to library",
+      unsave: "Remove from library",
+      duplicate: "Duplicate to my space",
+      inviteCollaborator: "Invite a collaborator",
+    },
+    addToWatchlist: "Add to a watchlist",
+    noWatchlist: "No watchlist",
+  },
+
+  landing: {
+    hero: {
+      tagline: "Plan, track and enjoy your movies together",
+      title: "Your Watchlists perfectly organized",
+      subtitle: "Organize your TV nights and share your discoveries with your friends",
+      cta: "Create a watchlist",
+    },
+    features: {
+      organize: {
+        tagline: "Organization",
+        title: "Create watchlists",
+        description:
+          "Create your personal collection of must-watch movies and series.",
+      },
+      discover: {
+        tagline: "Discovery",
+        title: "Discover movies and series",
+        description:
+          "Use the explore feature to find content to add to your watchlists.",
+      },
+      share: {
+        tagline: "Sharing",
+        title: "Follow other users' watchlists",
+        description: "Add watchlists to your personal space.",
+      },
+    },
+    startInSeconds: {
+      title: "Start in Seconds",
+      subtitle: "No complicated setup, just you and your favorite content",
+      step1: {
+        title: "Create your watchlist",
+        description: "Start with \"My Favorite Movies\" or get nostalgic with \"Childhood Films\".",
+      },
+      step2: {
+        title: "Add movies",
+        description: "Search for a movie or series using a keyword and add it to your current watchlist.",
+      },
+      step3: {
+        title: "Share with your friends",
+        description: "Make your watchlists \"public\" and easily share them with a link.",
+      },
+    },
+    testimonials: {
+      title: "Loved by enthusiasts",
+      subtitle: "Join a community of satisfied users",
+      testimonial1: {
+        text: "Perfect app for organizing my watchlists. Clear and intuitive interface.",
+        author: "— Marie L.",
+      },
+      testimonial2: {
+        text: "Very practical! Helps keep track of what we've watched and what we want to recommend.",
+        author: "— Thomas D.",
+      },
+      testimonial3: {
+        text: "Simple, effective, exactly what I was looking for to manage my movies to watch.",
+        author: "— Julie M.",
+      },
+    },
+    finalCta: {
+      title: "Start creating your watchlists easily",
+      subtitle: "Join WatchlistHub and organize your favorite content in just a few clicks.",
+      button: "Create my watchlist",
+      disclaimer: "Free application • No card required",
+    },
   },
 
   // Home Page
@@ -121,6 +204,16 @@ export const en: Content = {
       title: "Discover, create and share your watchlists.",
       subtitle: "Your movie universe, organized and shared with friends.",
       cta: "Create a watchlist",
+      pills: {
+        organize: "Organize your movies",
+        share: "Share with your friends",
+        discover: "Discover gems",
+      },
+    },
+    library: {
+      title: "Library",
+      subtitle: "Your personal watchlists",
+      seeAll: "See all",
     },
     categories: {
       title: "Watchlists by theme",
@@ -220,6 +313,52 @@ export const en: Content = {
       title: "Trending Today",
       noImage: "No Image",
     },
+    recommendations: {
+      title: "Titles You Might Like",
+      subtitle: "Based on current trends",
+      seeMore: "See all",
+    },
+  },
+
+  explore: {
+    title: "Explore",
+    subtitle: "Discover new watchlists shared by the community",
+    searchPlaceholder: "Search for a watchlist...",
+    filters: {
+      all: "All",
+      movies: "Movies",
+      series: "Series",
+      trending: "Trending",
+      topRated: "Top Rated",
+    },
+    sortBy: {
+      label: "Sort by",
+      popular: "Most popular",
+      recentlyAdded: "Recently added",
+      mostItems: "Most items",
+    },
+    pagination: {
+      pageOf: "Page {page} of {totalPages}",
+    },
+    noResults: "No watchlists found",
+    noResultsDescription: "Try adjusting your filters or search",
+  },
+
+  categories: {
+    title: "Categories",
+    subtitle: "Explore watchlists by theme",
+    list: {
+      movies: { name: "Movies", description: "The best movies of the moment" },
+      series: { name: "Series", description: "Series not to be missed" },
+      netflix: { name: "Netflix", description: "Netflix gems" },
+      "prime-video": { name: "Prime Video", description: "Amazon Prime exclusives" },
+      "disney-plus": { name: "Disney+", description: "The Disney, Pixar, Marvel and Star Wars universe" },
+      anime: { name: "Animation", description: "The best animated series and adapted manga films" },
+      action: { name: "Action", description: "Classics and new action films" },
+      documentaries: { name: "Documentaries", description: "Captivating and educational documentaries" },
+      enfant: { name: "Kids", description: "Movies and series for children" },
+      jeunesse: { name: "Youth", description: "Movies and series for teens and young adults" },
+    },
   },
 
   // Footer
@@ -243,7 +382,8 @@ export const en: Content = {
     },
     passwordSection: {
       title: "Password",
-      description: "Change your password. Make sure it's at least 8 characters.",
+      description:
+        "Change your password. Make sure it's at least 8 characters.",
       currentPasswordLabel: "Password",
       currentPasswordPlaceholder: "Enter your current password",
       newPasswordLabel: "New Password",

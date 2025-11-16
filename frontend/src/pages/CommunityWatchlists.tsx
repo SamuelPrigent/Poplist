@@ -16,6 +16,11 @@ export function CommunityWatchlists() {
     scrollToTop();
   }, []);
 
+  const handleBackClick = () => {
+    navigate("/home");
+    scrollToTop();
+  };
+
   useEffect(() => {
     const fetchWatchlists = async () => {
       try {
@@ -38,7 +43,7 @@ export function CommunityWatchlists() {
         {/* Back Button */}
         <div className="mb-8">
           <button
-            onClick={() => navigate("/home")}
+            onClick={handleBackClick}
             className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />

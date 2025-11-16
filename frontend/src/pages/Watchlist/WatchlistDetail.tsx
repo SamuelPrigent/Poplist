@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useAuth } from "@/context/auth-context";
 import { WatchlistHeader } from "@/components/Watchlist/WatchlistHeader";
 import { WatchlistItemsTable } from "@/components/Watchlist/WatchlistItemsTable";
 import { AddItemModal } from "@/components/Watchlist/AddItemModal";
-import { EditWatchlistDialog, type EditWatchlistDialogRef } from "@/components/Watchlist/EditWatchlistDialog";
+import {
+  EditWatchlistDialog,
+  type EditWatchlistDialogRef,
+} from "@/components/Watchlist/EditWatchlistDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useLanguageStore } from "@/store/language";
@@ -41,14 +45,13 @@ export function WatchlistDetail() {
         data = response.watchlist;
 
         // Check if current user is the owner by comparing emails
-        const ownerEmail = typeof data.ownerId === "string"
-          ? null
-          : data.ownerId?.email;
+        const ownerEmail =
+          typeof data.ownerId === "string" ? null : data.ownerId?.email;
         const isUserOwner = user?.email === ownerEmail;
         setIsOwner(isUserOwner);
 
-        // TODO: Check if watchlist is saved (will be implemented when backend is ready)
-        setIsSaved(false);
+        // Set isSaved from backend response
+        setIsSaved(response.isSaved || false);
       } else {
         // Unauthenticated users use the public endpoint
         const response = await watchlistAPI.getPublic(id);
@@ -132,9 +135,10 @@ export function WatchlistDetail() {
 
     try {
       await navigator.clipboard.writeText(url);
-      console.log("✅ Lien copié dans le presse-papier:", url);
+      toast.success("Lien copié");
     } catch (error) {
       console.error("❌ Failed to copy link:", error);
+      toast.error("Impossible de copier le lien");
     }
   };
 
@@ -145,29 +149,34 @@ export function WatchlistDetail() {
       if (isSaved) {
         await watchlistAPI.unsaveWatchlist(id);
         setIsSaved(false);
-        console.log("✅ Watchlist retirée de votre bibliothèque");
+        toast.success("Watchlist retirée");
       } else {
         await watchlistAPI.saveWatchlist(id);
         setIsSaved(true);
-        console.log("✅ Watchlist ajoutée à votre bibliothèque");
+        toast.success("Watchlist ajoutée");
       }
     } catch (error) {
       console.error("❌ Failed to toggle save watchlist:", error);
-      console.log("⏳ Cette fonctionnalité sera bientôt disponible!");
+      toast.error("Impossible de modifier la watchlist");
     }
   };
 
   const handleDuplicate = async () => {
     if (!id || !isAuthenticated || isOwner) return;
 
+    const loadingToast = toast.loading("Duplication en cours...");
+
     try {
-      const { watchlist: duplicatedWatchlist } = await watchlistAPI.duplicateWatchlist(id);
-      console.log("✅ Watchlist dupliquée avec succès!");
+      const { watchlist: duplicatedWatchlist } =
+        await watchlistAPI.duplicateWatchlist(id);
+
+      toast.success("Watchlist dupliquée", { id: loadingToast });
+
       // Redirect to the new duplicated watchlist
       navigate(`/account/watchlist/${duplicatedWatchlist._id}`);
     } catch (error) {
       console.error("❌ Failed to duplicate watchlist:", error);
-      console.log("⏳ Cette fonctionnalité sera bientôt disponible!");
+      toast.error("Impossible de dupliquer la watchlist", { id: loadingToast });
     }
   };
 
@@ -205,6 +214,7 @@ export function WatchlistDetail() {
         <WatchlistItemsTable
           watchlist={watchlist}
           onUpdate={fetchWatchlist}
+          isOwner={isOwner}
         />
       </div>
 

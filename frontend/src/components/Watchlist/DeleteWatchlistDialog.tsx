@@ -87,12 +87,6 @@ export function DeleteWatchlistDialog({
               {content.watchlists.deleteWatchlistConfirm.replace("{name}", watchlist.name)}
             </DialogPrimitive.Description>
 
-            {watchlist.items.length > 0 && (
-              <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm text-yellow-500">
-                {content.watchlists.deleteWatchlistWarning.replace("{count}", String(watchlist.items.length))}
-              </div>
-            )}
-
             {/* Error Message */}
             {error && (
               <div className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-500">

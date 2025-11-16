@@ -57,6 +57,7 @@ import {
 interface WatchlistItemsTableProps {
   watchlist: Watchlist;
   onUpdate: () => void;
+  isOwner?: boolean;
 }
 
 // Extend RowData for custom meta
@@ -78,6 +79,7 @@ interface DraggableRowProps {
   handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
   totalItems: number;
   isDragDisabled: boolean;
+  isOwner: boolean;
 }
 
 function DraggableRow({
@@ -91,6 +93,7 @@ function DraggableRow({
   handleMoveItem,
   totalItems,
   isDragDisabled,
+  isOwner,
 }: DraggableRowProps) {
   const {
     attributes,
@@ -114,7 +117,7 @@ function DraggableRow({
       onMouseEnter={() => setHoveredRow(item.tmdbId)}
       onMouseLeave={() => setHoveredRow(null)}
       className={cn(
-        "group border-b border-border transition-colors duration-150",
+        "group select-none border-b border-border transition-colors duration-150",
         hoveredRow === item.tmdbId && "bg-muted/30",
         !isDragDisabled && "cursor-grab active:cursor-grabbing",
       )}
@@ -130,68 +133,70 @@ function DraggableRow({
               onClick={(e) => e.stopPropagation()}
             >
               {cellIndex === totalCells - 1 ? (
-                <DropdownMenu.Root>
-                  <DropdownMenu.Trigger asChild>
-                    <button
-                      className={cn(
-                        "cursor-pointer rounded-full p-1 transition-opacity hover:bg-muted",
-                        hoveredRow === item.tmdbId
-                          ? "opacity-100"
-                          : "opacity-0 group-hover:opacity-100",
-                      )}
-                      disabled={loadingItem === item.tmdbId}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </DropdownMenu.Trigger>
-
-                  <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                      className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
-                      sideOffset={5}
-                    >
-                      <DropdownMenu.Item
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                        disabled
+                isOwner ? (
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                      <button
+                        className={cn(
+                          "cursor-pointer rounded-full p-1 transition-opacity hover:bg-muted",
+                          hoveredRow === item.tmdbId
+                            ? "opacity-100"
+                            : "opacity-0 group-hover:opacity-100",
+                        )}
+                        disabled={loadingItem === item.tmdbId}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <Plus className="mr-2 h-4 w-4" />
-                        <span>Add to Watchlist</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          →
-                        </span>
-                      </DropdownMenu.Item>
+                        <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </DropdownMenu.Trigger>
 
-                      <DropdownMenu.Item
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                        onSelect={() => handleRemoveItem(item.tmdbId)}
+                    <DropdownMenu.Portal>
+                      <DropdownMenu.Content
+                        className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                        sideOffset={5}
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Remove from Watchlist</span>
-                      </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          disabled
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          <span>Add to Watchlist</span>
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            →
+                          </span>
+                        </DropdownMenu.Item>
 
-                      <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                        <DropdownMenu.Item
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          onSelect={() => handleRemoveItem(item.tmdbId)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Remove from Watchlist</span>
+                        </DropdownMenu.Item>
 
-                      <DropdownMenu.Item
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                        onSelect={() => handleMoveItem(item.tmdbId, "first")}
-                        disabled={index === 0}
-                      >
-                        <MoveUp className="mr-2 h-4 w-4" />
-                        <span>Move to First Position</span>
-                      </DropdownMenu.Item>
+                        <DropdownMenu.Separator className="my-1 h-px bg-border" />
 
-                      <DropdownMenu.Item
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                        onSelect={() => handleMoveItem(item.tmdbId, "last")}
-                        disabled={index === totalItems - 1}
-                      >
-                        <MoveDown className="mr-2 h-4 w-4" />
-                        <span>Move to Last Position</span>
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                </DropdownMenu.Root>
+                        <DropdownMenu.Item
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          onSelect={() => handleMoveItem(item.tmdbId, "first")}
+                          disabled={index === 0}
+                        >
+                          <MoveUp className="mr-2 h-4 w-4" />
+                          <span>Move to First Position</span>
+                        </DropdownMenu.Item>
+
+                        <DropdownMenu.Item
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          onSelect={() => handleMoveItem(item.tmdbId, "last")}
+                          disabled={index === totalItems - 1}
+                        >
+                          <MoveDown className="mr-2 h-4 w-4" />
+                          <span>Move to Last Position</span>
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
+                ) : null
               ) : (
                 // Informations column
                 flexRender(cell.column.columnDef.cell, cell.getContext())
@@ -218,6 +223,7 @@ function DraggableRow({
 export function WatchlistItemsTable({
   watchlist,
   //   onUpdate,
+  isOwner = true,
 }: WatchlistItemsTableProps) {
   const { content } = useLanguageStore();
   const [items, setItems] = useState<WatchlistItem[]>(watchlist.items);
@@ -500,7 +506,7 @@ export function WatchlistItemsTable({
               className="h-8 gap-1.5 px-3 text-xs"
             >
               <Eye className="h-3 w-3" />
-              Aperçu
+              {content.watchlists.preview}
             </Button>
           );
         },
@@ -590,7 +596,7 @@ export function WatchlistItemsTable({
               <SortableContext
                 items={displayItems.map((item) => item.tmdbId)}
                 strategy={verticalListSortingStrategy}
-                disabled={!isCustomOrder}
+                disabled={!isCustomOrder || !isOwner}
               >
                 {table.getRowModel().rows.map((row, index) => (
                   <DraggableRow
@@ -604,7 +610,8 @@ export function WatchlistItemsTable({
                     handleRemoveItem={handleRemoveItem}
                     handleMoveItem={handleMoveItem}
                     totalItems={displayItems.length}
-                    isDragDisabled={!isCustomOrder}
+                    isDragDisabled={!isCustomOrder || !isOwner}
+                    isOwner={isOwner}
                   />
                 ))}
               </SortableContext>

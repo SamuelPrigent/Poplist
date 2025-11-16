@@ -9,10 +9,12 @@ import {
   type WatchlistItem,
 } from "@/lib/api-client";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
+import { WatchlistCardSmall } from "@/components/Watchlist/WatchlistCardSmall";
 import { MoviePoster } from "@/components/Movie/MoviePoster";
 import { ItemDetailsModal } from "@/components/Watchlist/ItemDetailsModal";
 import { useLanguageStore } from "@/store/language";
 import { useAuth } from "@/context/auth-context";
+import { WATCHLIST_CATEGORIES, getCategoryInfo } from "@/types/categories";
 
 interface TrendingItem {
   id: number;
@@ -41,7 +43,9 @@ export function HomeApp() {
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [publicWatchlists, setPublicWatchlists] = useState<Watchlist[]>([]);
   const [recommendations, setRecommendations] = useState<TrendingItem[]>([]);
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -53,24 +57,79 @@ export function HomeApp() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch public watchlists and trending
-        const [publicData, trendingData] = await Promise.all([
-          watchlistAPI.getPublicWatchlists(10),
-          tmdbAPI.getTrending("day"),
-        ]);
-
+        // Fetch public watchlists
+        const publicData = await watchlistAPI.getPublicWatchlists(10);
         setPublicWatchlists(publicData.watchlists || []);
-        setRecommendations(trendingData.results || []);
 
-        // Fetch user's watchlists if logged in, otherwise load from localStorage
+        // Fetch user's watchlists first to get their items
+        let userWatchlistsData: Watchlist[] = [];
         if (user) {
           const userData = await watchlistAPI.getMine();
-          setUserWatchlists(userData.watchlists || []);
+          userWatchlistsData = userData.watchlists || [];
+          setUserWatchlists(userWatchlistsData);
         } else {
           const localWatchlists = localStorage.getItem("watchlists");
           if (localWatchlists) {
-            setUserWatchlists(JSON.parse(localWatchlists) as Watchlist[]);
+            userWatchlistsData = JSON.parse(localWatchlists) as Watchlist[];
+            setUserWatchlists(userWatchlistsData);
           }
+        }
+
+        // Collect all items from user's watchlists
+        const allItems: { tmdbId: string; type: "movie" | "tv" }[] = [];
+        userWatchlistsData.forEach((watchlist) => {
+          watchlist.items.forEach((item) => {
+            allItems.push({
+              tmdbId: item.tmdbId,
+              type: item.type,
+            });
+          });
+        });
+
+        // Fetch recommendations based on user's items or trending
+        if (allItems.length > 0) {
+          // Use similar items from random items in user's watchlists
+          const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+          const randomItems = allItems
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3); // Pick 3 random items
+
+          const similarPromises = randomItems.map(async (item) => {
+            try {
+              const response = await fetch(
+                `https://api.themoviedb.org/3/${item.type}/${item.tmdbId}/similar?language=fr-FR&page=1`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${TMDB_API_KEY}`,
+                    "Content-Type": "application/json",
+                  },
+                },
+              );
+              const data = await response.json();
+              return (data.results || []).map((result: any) => ({
+                ...result,
+                media_type: item.type,
+              }));
+            } catch (error) {
+              console.error(`Failed to fetch similar items:`, error);
+              return [];
+            }
+          });
+
+          const similarResults = await Promise.all(similarPromises);
+          const allSimilar = similarResults.flat();
+
+          // Remove duplicates and limit to 5
+          const uniqueSimilar = allSimilar.filter(
+            (item, index, self) =>
+              index === self.findIndex((t) => t.id === item.id),
+          );
+
+          setRecommendations(uniqueSimilar.slice(0, 5));
+        } else {
+          // Fallback to trending if no items in watchlists
+          const trendingData = await tmdbAPI.getTrending("day");
+          setRecommendations((trendingData.results || []).slice(0, 5));
         }
 
         // Fetch category counts for all categories
@@ -80,24 +139,20 @@ export function HomeApp() {
           "netflix",
           "prime-video",
           "disney-plus",
-          "jeunesse",
-          "enfant",
-          "action",
-          "anime",
-          "documentaries",
         ];
 
         const counts: Record<string, number> = {};
         await Promise.all(
           categoryIds.map(async (categoryId) => {
             try {
-              const data = await watchlistAPI.getWatchlistsByCategory(categoryId);
+              const data =
+                await watchlistAPI.getWatchlistsByCategory(categoryId);
               counts[categoryId] = data.watchlists?.length || 0;
             } catch (error) {
               console.error(`Failed to fetch count for ${categoryId}:`, error);
               counts[categoryId] = 0;
             }
-          })
+          }),
         );
         setCategoryCounts(counts);
       } catch (error) {
@@ -190,89 +245,20 @@ export function HomeApp() {
     setDetailsModalOpen(true);
   };
 
-  // Featured categories
-  const categories: FeaturedCategory[] = [
-    {
-      id: "movies",
-      name: content.home.categories.items.movies.title,
-      description: content.home.categories.items.movies.description,
-      gradient: "linear-gradient(16deg, #10b981, #0a4d3a 60%, #000000)",
-      itemCount: categoryCounts["movies"] || 0,
-      username: "WatchlistHub",
+  // Featured categories - using getCategoryInfo for translations
+  const categories: FeaturedCategory[] = WATCHLIST_CATEGORIES.slice(0, 5).map(
+    (categoryId) => {
+      const categoryInfo = getCategoryInfo(categoryId, content);
+      return {
+        id: categoryId,
+        name: categoryInfo.name,
+        description: categoryInfo.description,
+        gradient: categoryInfo.cardGradient,
+        itemCount: categoryCounts[categoryId] || 0,
+        username: "WatchlistHub",
+      };
     },
-    {
-      id: "series",
-      name: content.home.categories.items.series.title,
-      description: content.home.categories.items.series.description,
-      gradient: "linear-gradient(16deg, #f59e0b, #7c4d07 60%, #000000)",
-      itemCount: categoryCounts["series"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "netflix",
-      name: content.home.categories.items.netflix.title,
-      description: content.home.categories.items.netflix.description,
-      gradient: "linear-gradient(16deg, #e50914, #8b0a0d 60%, #000000)",
-      itemCount: categoryCounts["netflix"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "prime-video",
-      name: content.home.categories.items.primeVideo.title,
-      description: content.home.categories.items.primeVideo.description,
-      gradient: "linear-gradient(16deg, #00a8e1, #005573 60%, #000000)",
-      itemCount: categoryCounts["prime-video"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "disney-plus",
-      name: content.home.categories.items.disneyPlus.title,
-      description: content.home.categories.items.disneyPlus.description,
-      gradient: "linear-gradient(16deg, #14b8a6, #0a5c53 60%, #000000)",
-      itemCount: categoryCounts["disney-plus"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "jeunesse",
-      name: "Jeunesse",
-      description: "Films et séries adoloescent et adulte",
-      gradient: "linear-gradient(16deg, #6b7280, #374151 60%, #000000)",
-      itemCount: categoryCounts["jeunesse"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "enfant",
-      name: "Enfant",
-      description: "Films et séries pour enfant",
-      gradient: "linear-gradient(16deg, #3b82f6, #1e3a8a 60%, #000000)",
-      itemCount: categoryCounts["enfant"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "action",
-      name: "Action",
-      description: "Classiques et nouveautés films d'actions",
-      gradient: "linear-gradient(16deg, #ef4444, #7f1d1d 60%, #000000)",
-      itemCount: categoryCounts["action"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "anime",
-      name: "Anime",
-      description: "Les meilleurs anime et manga adaptés",
-      gradient: "linear-gradient(16deg, #ec4899, #831843 60%, #000000)",
-      itemCount: categoryCounts["anime"] || 0,
-      username: "WatchlistHub",
-    },
-    {
-      id: "documentaries",
-      name: "Documentaires",
-      description: "Documentaires captivants et éducatifs",
-      gradient: "linear-gradient(16deg, #06b6d4, #164e63 60%, #000000)",
-      itemCount: categoryCounts["documentaries"] || 0,
-      username: "WatchlistHub",
-    },
-  ];
+  );
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -281,32 +267,31 @@ export function HomeApp() {
         <section className="container mx-auto px-4 py-12">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white">Bibliothèque</h2>
+              <h2 className="text-2xl font-bold text-white">
+                {content.home.library.title}
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Vos watchlists personnelles
+                {content.home.library.subtitle}
               </p>
             </div>
             <Link
               to={user ? "/account/watchlists" : "/local/watchlists"}
               className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
             >
-              Voir tout
+              {content.home.library.seeAll}
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {userWatchlists.slice(0, 5).map((watchlist) => (
-              <WatchlistCard
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {userWatchlists.slice(0, 8).map((watchlist) => (
+              <WatchlistCardSmall
                 key={watchlist._id}
                 watchlist={watchlist}
-                content={content}
-                href={
-                  user
+                onClick={() => {
+                  window.location.href = user
                     ? `/account/watchlist/${watchlist._id}`
-                    : `/local/watchlist/${watchlist._id}`
-                }
-                showMenu={false}
-                showOwner={false}
+                    : `/local/watchlist/${watchlist._id}`;
+                }}
               />
             ))}
           </div>
@@ -328,7 +313,7 @@ export function HomeApp() {
             to="/categories"
             className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
           >
-            Voir tout
+            {content.home.categories.seeMore}
           </Link>
         </div>
 
@@ -393,7 +378,7 @@ export function HomeApp() {
             to="/community-watchlists"
             className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
           >
-            Voir tout
+            {content.home.popularWatchlists.seeMore}
           </Link>
         </div>
 
@@ -429,27 +414,27 @@ export function HomeApp() {
         )}
       </section>
 
-      {/* Recommendations Section */}
+      {/* Recommandations Section */}
       <section className="container mx-auto px-4 py-12">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white">
-              Des titres qui pourraient vous plaire
+              {content.home.recommendations.title}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Basé sur les tendances actuelles
+              {content.home.recommendations.subtitle}
             </p>
           </div>
           <Link
             to="/explore"
             className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
           >
-            Voir tout
+            {content.home.recommendations.seeMore}
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-          {recommendations.slice(0, 8).map((item) => (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {recommendations.slice(0, 5).map((item) => (
             <div key={item.id} className="group relative">
               <MoviePoster
                 id={item.id}
@@ -493,7 +478,7 @@ export function HomeApp() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                          Ajouter à une watchlist
+                          {content.watchlists.addToWatchlist}
                         </DropdownMenu.Label>
                         {userWatchlists.length > 0 ? (
                           userWatchlists.map((watchlist) => (
@@ -509,7 +494,7 @@ export function HomeApp() {
                           ))
                         ) : (
                           <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            Aucune watchlist
+                            {content.watchlists.noWatchlist}
                           </div>
                         )}
                       </DropdownMenu.Content>

@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
-import { WATCHLIST_CATEGORIES, CATEGORY_INFO, type WatchlistCategory } from "@/types/categories";
+import { WATCHLIST_CATEGORIES, getCategoryInfo, type WatchlistCategory } from "@/types/categories";
 
 interface CreateWatchlistDialogProps {
   open: boolean;
@@ -38,6 +38,13 @@ export function CreateWatchlistDialog({
         : [...prev, category]
     );
   };
+
+  // Clear categories when watchlist becomes private
+  useEffect(() => {
+    if (!isPublic && categories.length > 0) {
+      setCategories([]);
+    }
+  }, [isPublic]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -196,32 +203,52 @@ export function CreateWatchlistDialog({
               />
             </div>
 
-            {/* Categories Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Catégories / Tags
+            {/* Public Checkbox */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isPublic"
+                checked={isPublic}
+                onChange={(e) => setIsPublic(e.target.checked)}
+                disabled={loading}
+                className="h-4 w-4 rounded border-input bg-background text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <label
+                htmlFor="isPublic"
+                className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {content.watchlists.makePublic}
               </label>
-              <div className="flex flex-wrap gap-2">
-                {WATCHLIST_CATEGORIES.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => toggleCategory(category)}
-                    disabled={loading}
-                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                      categories.includes(category)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    {CATEGORY_INFO[category].name}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Sélectionnez une ou plusieurs catégories pour faciliter la découverte de votre watchlist
-              </p>
             </div>
+
+            {/* Categories Selection - Only shown if public */}
+            {isPublic && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {content.watchlists.categories}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {WATCHLIST_CATEGORIES.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => toggleCategory(category)}
+                      disabled={loading}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                        categories.includes(category)
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      {getCategoryInfo(category, content).name}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {content.watchlists.categoriesDescription}
+                </p>
+              </div>
+            )}
 
             {/* Cover Image Upload */}
             <div className="space-y-2">
@@ -280,24 +307,6 @@ export function CreateWatchlistDialog({
                   className="hidden"
                 />
               </div>
-            </div>
-
-            {/* Public Checkbox */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isPublic"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
-                disabled={loading}
-                className="h-4 w-4 rounded border-input bg-background text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <label
-                htmlFor="isPublic"
-                className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {content.watchlists.makePublic}
-              </label>
             </div>
 
             {/* Error Message */}

@@ -109,17 +109,29 @@ export async function getMyWatchlists(req: Request, res: Response): Promise<void
 
     // Merge and deduplicate (prioritize owned/collaborated watchlists over saved)
     const watchlistsMap = new Map<string, any>();
+    const savedIds = new Set(saved.map(w => (w._id as Types.ObjectId).toString()));
 
     // Add owned/collaborated first (higher priority)
     ownedOrCollaborated.forEach(w => {
-      watchlistsMap.set((w._id as Types.ObjectId).toString(), w);
+      const idStr = (w._id as Types.ObjectId).toString();
+      const watchlistObj = w.toObject();
+      // Check if user is the owner
+      const ownerId = (w.ownerId as Types.ObjectId).toString();
+      const isOwner = ownerId === userId;
+      watchlistObj.isOwner = isOwner;
+      // Mark as saved if it's also in the saved list
+      watchlistObj.isSaved = savedIds.has(idStr);
+      watchlistsMap.set(idStr, watchlistObj);
     });
 
     // Add saved watchlists (won't override if already exists)
     saved.forEach(w => {
       const idStr = (w._id as Types.ObjectId).toString();
       if (!watchlistsMap.has(idStr)) {
-        watchlistsMap.set(idStr, w);
+        const watchlistObj = w.toObject();
+        watchlistObj.isOwner = false; // User is not owner (it's a followed watchlist)
+        watchlistObj.isSaved = true;
+        watchlistsMap.set(idStr, watchlistObj);
       }
     });
 
@@ -505,7 +517,13 @@ export async function getWatchlistById(req: Request, res: Response): Promise<voi
       return;
     }
 
-    res.json({ watchlist });
+    // Check if watchlist is saved by the user
+    const user = await User.findById(userId);
+    const isSaved = user?.savedWatchlists?.some(
+      savedId => (savedId as Types.ObjectId).toString() === id
+    ) || false;
+
+    res.json({ watchlist, isSaved });
   } catch (error) {
     throw error;
   }
