@@ -119,6 +119,25 @@ export interface Content {
       moveToFirst: string;
       moveToLast: string;
     };
+    collaborators: {
+      addTitle: string;
+      addDescription: string;
+      usernamePlaceholder: string;
+      add: string;
+      adding: string;
+      addSuccess: string;
+      addError: string;
+      currentTitle: string;
+      remove: string;
+      removeSuccess: string;
+      removeError: string;
+      leaveTitle: string;
+      leaveDescription: string;
+      leave: string;
+      leaving: string;
+      leaveSuccess: string;
+      leaveError: string;
+    };
     addToWatchlist: string;
     noWatchlist: string;
   };

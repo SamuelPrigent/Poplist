@@ -9,9 +9,15 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    dedupe: ['react', 'react-dom'], // Force single copy of React
   },
   optimizeDeps: {
-    force: true,
+    include: ['react', 'react-dom', 'react-router-dom'], // Pre-bundle critical deps
+  },
+  server: {
+    hmr: {
+      overlay: true, // Show errors in browser overlay
+    },
   },
   build: {
     rollupOptions: {

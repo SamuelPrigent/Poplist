@@ -97,6 +97,7 @@ export function CreateWatchlistDialog({
           categories: categories.length > 0 ? categories : undefined,
           collaborators: [],
           items: [],
+          likedBy: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };

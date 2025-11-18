@@ -23,7 +23,7 @@ export function ItemDetailsModal({
   const { language, content } = useLanguageStore(); // use it for (acteur principaux, etc)
   const [details, setDetails] = useState<FullMediaDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
   const [showSeeMore, setShowSeeMore] = useState(false);
   const overviewRef = useRef<HTMLParagraphElement>(null);

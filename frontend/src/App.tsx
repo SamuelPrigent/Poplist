@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { ToasterLight } from "./components/ui/sonner-light";
@@ -24,11 +25,12 @@ import { SmartRedirect } from "./components/guards/SmartRedirect";
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <div className="flex min-h-screen flex-col bg-background">
-          <Header />
-          <main className="flex-1">
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <div className="flex min-h-screen flex-col bg-background">
+            <Header />
+            <main className="flex-1">
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/home" element={<HomeApp />} />
@@ -111,6 +113,7 @@ function App() {
         <ToasterLight />
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

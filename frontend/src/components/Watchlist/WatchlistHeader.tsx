@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { ArrowLeft, Film, Pencil, Copy, UserPlus } from "lucide-react";
+import { ArrowLeft, Film, Pencil, Copy, User } from "lucide-react";
 import shareIcon from "@/assets/share.svg";
 import plusIcon from "@/assets/plus2.svg";
 import checkGreenIcon from "@/assets/checkGreenFull.svg";
-import type { Watchlist, WatchlistOwner } from "@/lib/api-client";
+import type { Watchlist, WatchlistOwner, Collaborator } from "@/lib/api-client";
 // import { getTMDBImageUrl } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
@@ -22,8 +22,7 @@ interface WatchlistHeaderProps {
   showSaveButton?: boolean;
   onDuplicate?: () => void;
   showDuplicateButton?: boolean;
-  onInviteCollaborator?: () => void;
-  showInviteButton?: boolean;
+  collaboratorButton?: React.ReactNode;
 }
 
 /**
@@ -59,8 +58,7 @@ export function WatchlistHeader({
   showSaveButton = false,
   onDuplicate,
   showDuplicateButton = false,
-  onInviteCollaborator,
-  showInviteButton = false,
+  collaboratorButton,
 }: WatchlistHeaderProps) {
   const navigate = useNavigate();
   const { content } = useLanguageStore();
@@ -151,9 +149,61 @@ export function WatchlistHeader({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {ownerUsername && (
                 <>
-                  <span className="font-semibold text-white">
-                    {ownerUsername}
-                  </span>
+                  {/* flex c */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center">
+                      {/* user + username */}
+                      <div className="flex items-center gap-1">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <span className="font-semibold capitalize text-white">
+                          {ownerUsername}
+                        </span>
+                      </div>
+                      {watchlist.collaborators &&
+                        watchlist.collaborators.length > 0 && <div>,</div>}
+                    </div>
+                    {/* Collaborator Avatars - overlapping */}
+                    {watchlist.collaborators &&
+                      watchlist.collaborators.length > 0 &&
+                      Array.isArray(watchlist.collaborators) && (
+                        <div className="flex -space-x-2">
+                          {(watchlist.collaborators as Collaborator[])
+                            .filter(
+                              (c): c is Collaborator =>
+                                typeof c === "object" && c !== null,
+                            )
+                            .slice(0, 3)
+                            .map((collaborator) => (
+                              <div
+                                key={collaborator._id}
+                                className="flex h-6 w-6 items-center justify-center rounded-full bg-muted ring-2 ring-background"
+                                title={collaborator.username}
+                              >
+                                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                              </div>
+                            ))}
+                          {(watchlist.collaborators as Collaborator[]).filter(
+                            (c): c is Collaborator =>
+                              typeof c === "object" && c !== null,
+                          ).length > 3 && (
+                            <div
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium ring-2 ring-background"
+                              title={`+${(watchlist.collaborators as Collaborator[]).filter((c): c is Collaborator => typeof c === "object" && c !== null).length - 3} collaborateurs`}
+                            >
+                              +
+                              {(
+                                watchlist.collaborators as Collaborator[]
+                              ).filter(
+                                (c): c is Collaborator =>
+                                  typeof c === "object" && c !== null,
+                              ).length - 3}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                  </div>
                   <span>•</span>
                 </>
               )}
@@ -184,7 +234,7 @@ export function WatchlistHeader({
             showSaveButton ||
             showDuplicateButton ||
             onShare ||
-            showInviteButton ||
+            collaboratorButton ||
             menuButton;
           return (
             <div
@@ -243,15 +293,7 @@ export function WatchlistHeader({
                       </div>
                     </button>
                   )}
-                  {showInviteButton && onInviteCollaborator && (
-                    <button
-                      onClick={onInviteCollaborator}
-                      className="group p-3 transition-all hover:scale-105"
-                      title={content.watchlists.tooltips.inviteCollaborator}
-                    >
-                      <UserPlus className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
-                    </button>
-                  )}
+                  {collaboratorButton && collaboratorButton}
 
                   {showDuplicateButton && onDuplicate && (
                     <button

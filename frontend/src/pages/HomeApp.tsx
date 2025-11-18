@@ -27,6 +27,19 @@ interface TrendingItem {
   overview?: string;
 }
 
+interface TMDBSearchResult {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  backdrop_path?: string;
+  media_type?: "movie" | "tv";
+  vote_average?: number;
+  overview?: string;
+  release_date?: string;
+  first_air_date?: string;
+}
+
 interface FeaturedCategory {
   id: string;
   name: string;
@@ -110,7 +123,7 @@ export function HomeApp() {
                 `${API_URL}/tmdb/${item.type}/${item.tmdbId}/similar?language=fr-FR&page=1`,
               );
               const data = await response.json();
-              return (data.results || []).map((result: any) => ({
+              return (data.results || []).map((result: TMDBSearchResult) => ({
                 ...result,
                 media_type: item.type,
               }));
@@ -175,75 +188,6 @@ export function HomeApp() {
 
     fetchData();
   }, [user]);
-
-  const handleQuickAdd = async (item: TrendingItem) => {
-    try {
-      setAddingTo(item.id);
-
-      // Always use localStorage for quick add
-      const QUICK_ADD_KEY = "quick-add-watchlist";
-      const quickAddWatchlist = localStorage.getItem(QUICK_ADD_KEY);
-      let watchlist: Watchlist;
-
-      if (!quickAddWatchlist) {
-        // Create quick add watchlist if it doesn't exist
-        watchlist = {
-          _id: "quick-add",
-          ownerId: {
-            email: user?.email || "local@watchlisthub.app",
-            username: user?.username || "Local User",
-          },
-          name: "Ajouts Rapides",
-          description: "Films et séries ajoutés rapidement",
-          imageUrl: "",
-          isPublic: false,
-          collaborators: [],
-          items: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-      } else {
-        watchlist = JSON.parse(quickAddWatchlist);
-      }
-
-      // Fetch item details from backend cached route
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const type = item.media_type || "movie";
-      const response = await fetch(
-        `${API_URL}/watchlists/items/${item.id}/${type}/details?language=fr-FR`,
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const details = data.details;
-        const newItem = {
-          tmdbId: item.id.toString(),
-          title: details.title || details.name || "",
-          posterUrl: details.poster_path
-            ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
-            : "",
-          type: type as "movie" | "tv",
-          platformList: [],
-          addedAt: new Date().toISOString(),
-        };
-
-        // Check if item already exists
-        const itemExists = watchlist.items.some(
-          (existingItem) => existingItem.tmdbId === newItem.tmdbId,
-        );
-
-        if (!itemExists) {
-          watchlist.items.push(newItem);
-          watchlist.updatedAt = new Date().toISOString();
-          localStorage.setItem(QUICK_ADD_KEY, JSON.stringify(watchlist));
-        }
-      }
-    } catch (error) {
-      console.error("Failed to quick add:", error);
-    } finally {
-      setAddingTo(null);
-    }
-  };
 
   const handleAddToWatchlist = async (
     watchlistId: string,
@@ -422,6 +366,7 @@ export function HomeApp() {
               items: placeholderItems,
               createdAt: placeholderTimestamp,
               updatedAt: placeholderTimestamp,
+              likedBy: [],
             };
 
             return (
@@ -477,11 +422,13 @@ export function HomeApp() {
                   : watchlist.ownerId?.email;
               const isOwner = user?.email === ownerEmail;
 
-              // Check if this watchlist is in user's saved watchlists
-              const isSaved = userWatchlists.some(
-                (uw) => uw._id === watchlist._id && !uw.isOwner,
-              );
+              // Find this watchlist in user's watchlists to check status
+              const userWatchlist = userWatchlists.find((uw) => uw._id === watchlist._id);
+              const isCollaborator = userWatchlist?.isCollaborator === true;
+              const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
+
               const showSavedBadge = !isOwner && isSaved;
+              const showCollaborativeBadge = isCollaborator;
 
               return (
                 <WatchlistCard
@@ -492,6 +439,7 @@ export function HomeApp() {
                   showMenu={false}
                   showOwner={true}
                   showSavedBadge={showSavedBadge}
+                  showCollaborativeBadge={showCollaborativeBadge}
                 />
               );
             })}

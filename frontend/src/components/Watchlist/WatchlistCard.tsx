@@ -6,6 +6,7 @@ import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+import teamIcon from "@/assets/team.svg";
 
 interface WatchlistCardProps {
   watchlist: Watchlist;
@@ -17,6 +18,7 @@ interface WatchlistCardProps {
   showOwner?: boolean;
   showVisibility?: boolean;
   showSavedBadge?: boolean;
+  showCollaborativeBadge?: boolean;
   categoryGradient?: string;
   draggableProps?: {
     ref: (node: HTMLElement | null) => void;
@@ -36,6 +38,7 @@ export function WatchlistCard({
   showOwner = false,
   showVisibility = false,
   showSavedBadge = false,
+  showCollaborativeBadge = false,
   categoryGradient,
   draggableProps,
 }: WatchlistCardProps) {
@@ -81,7 +84,7 @@ export function WatchlistCard({
       </div>
 
       {/* Text Info */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {/* Saved Badge - Indicates this is a followed watchlist */}
         {showSavedBadge && (
           <img
@@ -89,6 +92,19 @@ export function WatchlistCard({
             alt="Suivi"
             className="h-4 w-4 flex-shrink-0"
           />
+        )}
+
+        {/* Collaborative Badge - Indicates this is a collaborative watchlist */}
+        {showCollaborativeBadge && (
+          //   <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-muted/80">
+          // {/* <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(0deg_85.8%_55.11%_/_54%)]"> */}
+          <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(207.87deg_100%_34.92%_/_57%)]">
+            <img
+              src={teamIcon}
+              alt="Collaborative"
+              className="h-3 w-3 brightness-0 invert"
+            />
+          </div>
         )}
 
         <h3

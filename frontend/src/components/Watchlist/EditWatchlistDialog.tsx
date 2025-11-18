@@ -62,7 +62,7 @@ export const EditWatchlistDialog = forwardRef<
       setName(watchlist.name);
       setDescription(watchlist.description || "");
       setIsPublic(watchlist.isPublic);
-      setCategories(watchlist.categories || []);
+      setCategories((watchlist.categories || []) as WatchlistCategory[]);
       setImagePreview(watchlist.imageUrl || null);
     }
   }, [open, watchlist]);

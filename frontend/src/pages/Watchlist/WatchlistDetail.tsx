@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { watchlistAPI, type Watchlist } from "@/lib/api-client";
+import { watchlistAPI, type Watchlist, type Collaborator } from "@/lib/api-client";
 import { useAuth } from "@/context/auth-context";
 import { WatchlistHeader } from "@/components/Watchlist/WatchlistHeader";
 import { WatchlistItemsTable } from "@/components/Watchlist/WatchlistItemsTable";
@@ -11,10 +11,13 @@ import {
   type EditWatchlistDialogRef,
 } from "@/components/Watchlist/EditWatchlistDialog";
 import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
+import { AddCollaboratorPopover } from "@/components/Watchlist/AddCollaboratorPopover";
+import { LeaveWatchlistDialog } from "@/components/Watchlist/LeaveWatchlistDialog";
 import { Button } from "@/components/ui/button";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, UserPlus } from "lucide-react";
 import pointIcon from "@/assets/points.svg";
+import cancelUserIcon from "@/assets/cancelUser.svg";
 import { useLanguageStore } from "@/store/language";
 
 export function WatchlistDetail() {
@@ -28,7 +31,9 @@ export function WatchlistDetail() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [isCollaborator, setIsCollaborator] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const editDialogRef = useRef<EditWatchlistDialogRef>(null);
 
@@ -54,6 +59,9 @@ export function WatchlistDetail() {
         const isUserOwner = user?.email === ownerEmail;
         setIsOwner(isUserOwner);
 
+        // Set isCollaborator from backend response
+        setIsCollaborator(response.isCollaborator || false);
+
         // Set isSaved from backend response
         setIsSaved(response.isSaved || false);
       } else {
@@ -61,6 +69,7 @@ export function WatchlistDetail() {
         const response = await watchlistAPI.getPublic(id);
         data = response.watchlist;
         setIsOwner(false); // Public viewers are never owners
+        setIsCollaborator(false);
         setIsSaved(false);
       }
 
@@ -184,10 +193,12 @@ export function WatchlistDetail() {
     }
   };
 
-  const handleInviteCollaborator = () => {
-    if (!id || !isOwner) return;
-    console.log("🔔 Ouverture du modal d'invitation de collaborateur");
-    // TODO: Open invite collaborator modal
+  const getCollaborators = (): Collaborator[] => {
+    if (!watchlist || !watchlist.collaborators) return [];
+    // Filter out non-populated collaborators (if any are still IDs)
+    return watchlist.collaborators.filter(
+      (c): c is Collaborator => typeof c === "object" && c !== null
+    );
   };
 
   return (
@@ -195,7 +206,7 @@ export function WatchlistDetail() {
       <WatchlistHeader
         watchlist={watchlist}
         actionButton={
-          isOwner ? (
+          (isOwner || isCollaborator) ? (
             <Button onClick={() => setAddModalOpen(true)}>
               <Plus className="h-4 w-4" />
               {content.watchlists.addItem}
@@ -220,14 +231,14 @@ export function WatchlistDetail() {
                   sideOffset={5}
                 >
                   <DropdownMenu.Item
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
                     onClick={() => setEditModalOpen(true)}
                   >
                     <Pencil className="h-4 w-4" />
                     <span>{content.watchlists.editWatchlist}</span>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:bg-red-500/10"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:bg-red-500/10"
                     onClick={() => setDeleteDialogOpen(true)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -243,11 +254,38 @@ export function WatchlistDetail() {
         onShare={handleShare}
         onSave={handleToggleSave}
         isSaved={isSaved}
-        showSaveButton={isAuthenticated && !isOwner}
+        showSaveButton={isAuthenticated && !isOwner && !isCollaborator}
         onDuplicate={handleDuplicate}
-        showDuplicateButton={isAuthenticated && !isOwner}
-        onInviteCollaborator={handleInviteCollaborator}
-        showInviteButton={isOwner}
+        showDuplicateButton={isAuthenticated && !isOwner && !isCollaborator}
+        collaboratorButton={
+          isOwner && id ? (
+            <AddCollaboratorPopover
+              watchlistId={id}
+              collaborators={getCollaborators()}
+              onCollaboratorAdded={fetchWatchlist}
+              onCollaboratorRemoved={fetchWatchlist}
+            >
+              <button
+                className="group p-3 transition-all hover:scale-105"
+                title={content.watchlists.tooltips.inviteCollaborator}
+              >
+                <UserPlus className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
+              </button>
+            </AddCollaboratorPopover>
+          ) : isCollaborator ? (
+            <button
+              onClick={() => setLeaveDialogOpen(true)}
+              className="group p-3 transition-all hover:scale-105"
+              title={content.watchlists.collaborators?.leaveTitle || "Quitter la watchlist"}
+            >
+              <img
+                src={cancelUserIcon}
+                alt="Leave"
+                className="h-6 w-6 opacity-60 brightness-0 invert transition-all group-hover:opacity-100"
+              />
+            </button>
+          ) : null
+        }
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -255,11 +293,12 @@ export function WatchlistDetail() {
           watchlist={watchlist}
           onUpdate={fetchWatchlist}
           isOwner={isOwner}
+          isCollaborator={isCollaborator}
         />
       </div>
 
-      {/* Add Item Modal - only for owners */}
-      {isOwner && (
+      {/* Add Item Modal - for owners and collaborators */}
+      {(isOwner || isCollaborator) && (
         <AddItemModal
           open={addModalOpen}
           onOpenChange={setAddModalOpen}
@@ -289,6 +328,16 @@ export function WatchlistDetail() {
           watchlist={watchlist}
           onSuccess={() => navigate("/account/watchlists")}
           offline={false}
+        />
+      )}
+
+      {/* Leave Watchlist Dialog - only for collaborators */}
+      {isCollaborator && !isOwner && (
+        <LeaveWatchlistDialog
+          open={leaveDialogOpen}
+          onOpenChange={setLeaveDialogOpen}
+          watchlistId={id!}
+          watchlistName={watchlist.name}
         />
       )}
     </div>

@@ -51,8 +51,8 @@ function SortableWatchlistCard({
   // Use isOwner flag from backend
   const isOwner = watchlist.isOwner ?? false;
 
-  // Disable drag for followed watchlists (not owned by user)
-  const isDraggable = isOwner;
+  // Enable drag for all watchlists (each user has their own watchlistsOrder)
+  const isDraggable = true;
 
   const {
     attributes,
@@ -81,7 +81,8 @@ function SortableWatchlistCard({
       onDelete={isOwner ? onDelete : undefined}
       showMenu={isOwner}
       showVisibility={true}
-      showSavedBadge={!isOwner}
+      showSavedBadge={!isOwner && watchlist.isSaved}
+      showCollaborativeBadge={watchlist.isCollaborator === true}
       draggableProps={{
         ref: setNodeRef,
         style,

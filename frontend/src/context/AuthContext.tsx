@@ -52,14 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await authAPI.login(email, password);
     setUser((response as { user: User }).user);
-
-    // Merge local watchlists to database after successful login
-    try {
-      await mergeLocalWatchlistsToDB();
-    } catch (error) {
-      console.error("Failed to merge local watchlists after login:", error);
-      // Don't throw - login was successful, just log the error
-    }
   };
 
   const signup = async (email: string, password: string) => {

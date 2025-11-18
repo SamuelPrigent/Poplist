@@ -27,7 +27,6 @@ export interface IWatchlist extends Document {
   categories?: string[]; // Tags/categories for filtering (e.g., 'netflix', 'action', 'comedy')
   collaborators: Types.ObjectId[];
   items: WatchlistItem[];
-  displayOrder?: number; // Custom order for sorting watchlists
   followersCount?: number; // Number of users who saved/follow this watchlist
   likedBy: Types.ObjectId[]; // Array of user IDs who liked/saved this watchlist
   createdAt: Date;
@@ -82,10 +81,6 @@ const watchlistSchema = new Schema<IWatchlist>(
     items: {
       type: [watchlistItemSchema],
       default: [],
-    },
-    displayOrder: {
-      type: Number,
-      default: 0,
     },
     followersCount: {
       type: Number,

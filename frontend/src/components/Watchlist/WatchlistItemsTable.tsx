@@ -60,6 +60,7 @@ interface WatchlistItemsTableProps {
   watchlist: Watchlist;
   onUpdate: () => void;
   isOwner?: boolean;
+  isCollaborator?: boolean;
   offline?: boolean;
 }
 
@@ -82,7 +83,7 @@ interface DraggableRowProps {
   handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
   totalItems: number;
   isDragDisabled: boolean;
-  isOwner: boolean;
+  canEdit: boolean;
   content: any;
   watchlists: Watchlist[];
   addingTo: string | null;
@@ -101,7 +102,7 @@ function DraggableRow({
   handleMoveItem,
   totalItems,
   isDragDisabled,
-  isOwner,
+  canEdit,
   content,
   watchlists,
   addingTo,
@@ -146,7 +147,7 @@ function DraggableRow({
               onClick={(e) => e.stopPropagation()}
             >
               {cellIndex === totalCells - 1 ? (
-                isOwner ? (
+                canEdit ? (
                   <DropdownMenu.Root>
                     <DropdownMenu.Trigger asChild>
                       <button
@@ -266,9 +267,13 @@ export function WatchlistItemsTable({
   watchlist,
   //   onUpdate,
   isOwner = true,
-  offline = false,
+  isCollaborator = false,
+  offline: _offline = false,
 }: WatchlistItemsTableProps) {
   const { content } = useLanguageStore();
+
+  // Both owners and collaborators can edit
+  const canEdit = isOwner || isCollaborator;
   const { isAuthenticated } = useAuth();
   const [items, setItems] = useState<WatchlistItem[]>(watchlist.items);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -713,7 +718,7 @@ export function WatchlistItemsTable({
               <SortableContext
                 items={displayItems.map((item) => item.tmdbId)}
                 strategy={verticalListSortingStrategy}
-                disabled={!isCustomOrder || !isOwner}
+                disabled={!isCustomOrder || !canEdit}
               >
                 {table.getRowModel().rows.map((row, index) => (
                   <DraggableRow
@@ -727,8 +732,8 @@ export function WatchlistItemsTable({
                     handleRemoveItem={handleRemoveItem}
                     handleMoveItem={handleMoveItem}
                     totalItems={displayItems.length}
-                    isDragDisabled={!isCustomOrder || !isOwner}
-                    isOwner={isOwner}
+                    isDragDisabled={!isCustomOrder || !canEdit}
+                    canEdit={canEdit}
                     content={content}
                     watchlists={watchlists}
                     addingTo={addingTo}

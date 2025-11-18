@@ -18,6 +18,8 @@ router.put('/:id', requireAuth, watchlistController.updateWatchlist);
 router.delete('/:id', requireAuth, watchlistController.deleteWatchlist);
 router.post('/:id/share', requireAuth, watchlistController.createShareLink);
 router.post('/:id/collaborators', requireAuth, watchlistController.addCollaborator);
+router.delete('/:id/collaborators/:collaboratorId', requireAuth, watchlistController.removeCollaborator);
+router.post('/:id/leave', requireAuth, watchlistController.leaveWatchlist);
 
 // Item management routes
 router.post('/:id/items', requireAuth, watchlistController.addItemToWatchlist);

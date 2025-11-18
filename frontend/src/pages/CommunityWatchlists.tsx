@@ -99,11 +99,13 @@ export function CommunityWatchlists() {
                   : watchlist.ownerId?.email;
               const isOwner = user?.email === ownerEmail;
 
-              // Check if this watchlist is in user's saved watchlists
-              const isSaved = userWatchlists.some(
-                (uw) => uw._id === watchlist._id && !uw.isOwner
-              );
+              // Find this watchlist in user's watchlists to check status
+              const userWatchlist = userWatchlists.find((uw) => uw._id === watchlist._id);
+              const isCollaborator = userWatchlist?.isCollaborator === true;
+              const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
+
               const showSavedBadge = !isOwner && isSaved;
+              const showCollaborativeBadge = isCollaborator;
 
               return (
                 <WatchlistCard
@@ -114,6 +116,7 @@ export function CommunityWatchlists() {
                   showMenu={false}
                   showOwner={true}
                   showSavedBadge={showSavedBadge}
+                  showCollaborativeBadge={showCollaborativeBadge}
                 />
               );
             })}

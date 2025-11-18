@@ -16,6 +16,8 @@ export interface IUser extends Document {
   roles: string[];
   refreshTokens: RefreshToken[];
   savedWatchlists: mongoose.Types.ObjectId[]; // References to saved public watchlists
+  collaborativeWatchlists: mongoose.Types.ObjectId[]; // Watchlists where user is a collaborator
+  watchlistsOrder: mongoose.Types.ObjectId[]; // User's custom ordering for all watchlists
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +63,16 @@ const userSchema = new Schema<IUser>(
       default: [],
     },
     savedWatchlists: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Watchlist',
+      default: [],
+    },
+    collaborativeWatchlists: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Watchlist',
+      default: [],
+    },
+    watchlistsOrder: {
       type: [Schema.Types.ObjectId],
       ref: 'Watchlist',
       default: [],

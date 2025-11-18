@@ -127,6 +127,7 @@ export function Categories() {
                 items: placeholderItems,
                 createdAt: placeholderTimestamp,
                 updatedAt: placeholderTimestamp,
+                likedBy: [],
               };
 
               return (

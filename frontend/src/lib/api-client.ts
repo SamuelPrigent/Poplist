@@ -208,6 +208,12 @@ export interface WatchlistOwner {
   [key: string]: unknown;
 }
 
+export interface Collaborator {
+  _id: string;
+  email: string;
+  username: string;
+}
+
 export interface Watchlist {
   _id: string;
   ownerId: string | WatchlistOwner;
@@ -217,7 +223,7 @@ export interface Watchlist {
   thumbnailUrl?: string; // Auto-generated 2x2 poster grid (Cloudinary)
   isPublic: boolean;
   categories?: string[];
-  collaborators: string[];
+  collaborators: string[] | Collaborator[]; // Can be IDs or populated collaborator objects
   items: WatchlistItem[];
   createdAt: string;
   updatedAt: string;
@@ -225,6 +231,7 @@ export interface Watchlist {
   likedBy: string[]; // Array of user IDs who liked/saved this watchlist
   isSaved?: boolean; // Indicates if this watchlist is followed/saved by the current user
   isOwner?: boolean; // Indicates if the current user is the owner of this watchlist
+  isCollaborator?: boolean; // Indicates if the current user is a collaborator of this watchlist
 }
 
 export interface FullMediaDetails {
@@ -253,7 +260,7 @@ export const watchlistAPI = {
   getMine: (): Promise<{ watchlists: Watchlist[] }> =>
     request("/watchlists/mine"),
 
-  getById: (id: string): Promise<{ watchlist: Watchlist; isSaved: boolean }> =>
+  getById: (id: string): Promise<{ watchlist: Watchlist; isSaved: boolean; isCollaborator: boolean }> =>
     request(`/watchlists/${id}`),
 
   create: (data: {
@@ -295,10 +302,26 @@ export const watchlistAPI = {
       method: "POST",
     }),
 
-  addCollaborator: (id: string, email: string): Promise<{ message: string }> =>
+  addCollaborator: (
+    id: string,
+    username: string,
+  ): Promise<{ message: string; collaborator: Collaborator }> =>
     request(`/watchlists/${id}/collaborators`, {
       method: "POST",
-      body: { email },
+      body: { username },
+    }),
+
+  removeCollaborator: (
+    id: string,
+    collaboratorId: string,
+  ): Promise<{ message: string }> =>
+    request(`/watchlists/${id}/collaborators/${collaboratorId}`, {
+      method: "DELETE",
+    }),
+
+  leaveWatchlist: (id: string): Promise<{ message: string }> =>
+    request(`/watchlists/${id}/leave`, {
+      method: "POST",
     }),
 
   getPublic: (id: string): Promise<{ watchlist: Watchlist }> =>
