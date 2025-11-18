@@ -128,6 +128,12 @@ export const it: Content = {
       duplicate: "Duplica nel mio spazio",
       inviteCollaborator: "Invita un collaboratore",
     },
+    contextMenu: {
+      addToWatchlist: "Aggiungi alla watchlist",
+      removeFromWatchlist: "Rimuovi dalla watchlist",
+      moveToFirst: "Sposta in prima posizione",
+      moveToLast: "Sposta in ultima posizione",
+    },
     addToWatchlist: "Aggiungi a una watchlist",
     noWatchlist: "Nessuna watchlist",
   },
@@ -379,6 +385,11 @@ export const it: Content = {
       placeholder: "Inserisci il tuo nome utente",
       hint: "3-20 caratteri. Solo lettere, numeri e trattini bassi.",
       updateButton: "Aggiorna",
+      validation: {
+        lengthError: "Il nome utente deve essere compreso tra 3 e 20 caratteri",
+        formatError: "Il nome utente può contenere solo lettere, numeri e trattini bassi",
+        alreadyTaken: "Nome utente già in uso",
+      },
     },
     passwordSection: {
       title: "Password",
@@ -391,6 +402,17 @@ export const it: Content = {
       confirmPasswordPlaceholder: "Nuova password",
       changeButton: "Cambia password",
     },
+    deleteSection: {
+      title: "Elimina account",
+      description: "Azione irreversibile. Tutti i tuoi dati verranno eliminati.",
+      dialogTitle: "Elimina il tuo account",
+      dialogDescription: "Azione irreversibile. Tutti i tuoi dati verranno eliminati.",
+      confirmationLabel: "Digita 'confirmer' per continuare",
+      confirmationPlaceholder: "confirmer",
+      deleteButton: "Elimina account",
+      deleting: "Eliminazione...",
+      cancel: "Annulla",
+    },
     toasts: {
       usernameUpdated: "Nome utente aggiornato",
       usernameUpdatedDesc: "Il tuo nome utente è stato aggiornato con successo.",
@@ -400,6 +422,9 @@ export const it: Content = {
       passwordMismatch: "Le nuove password non corrispondono",
       updateFailed: "Impossibile aggiornare il nome utente",
       passwordChangeFailed: "Impossibile cambiare la password",
+      accountDeleted: "Account eliminato",
+      accountDeletedDesc: "Il tuo account è stato eliminato con successo.",
+      accountDeleteFailed: "Impossibile eliminare l'account",
     },
   },
 };

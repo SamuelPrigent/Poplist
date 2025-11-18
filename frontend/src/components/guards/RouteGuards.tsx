@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { watchlistAPI } from "@/lib/api-client";
 
@@ -9,10 +9,12 @@ interface RouteGuardProps {
 
 /**
  * ProtectedRoute: Requires authentication
- * Redirects to home page if not authenticated
+ * Redirects to /local/watchlists if not authenticated and coming from account watchlists
+ * Otherwise redirects to home page
  */
 export function ProtectedRoute({ children }: RouteGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -25,6 +27,11 @@ export function ProtectedRoute({ children }: RouteGuardProps) {
   }
 
   if (!isAuthenticated) {
+    // If user was on account watchlists, redirect to local watchlists
+    if (location.pathname.startsWith("/account/watchlist")) {
+      return <Navigate to="/local/watchlists" replace />;
+    }
+    // Otherwise redirect to home page
     return <Navigate to="/" replace />;
   }
 
@@ -116,6 +123,7 @@ export function OnlineWatchlistRoute({ children }: RouteGuardProps) {
       } catch (error) {
         // If fetch fails, watchlist doesn't exist or is not public
         setIsPublic(false);
+        return error;
       } finally {
         setCheckingPublic(false);
       }

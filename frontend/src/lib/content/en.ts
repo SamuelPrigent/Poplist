@@ -128,6 +128,12 @@ export const en: Content = {
       duplicate: "Duplicate to my space",
       inviteCollaborator: "Invite a collaborator",
     },
+    contextMenu: {
+      addToWatchlist: "Add to Watchlist",
+      removeFromWatchlist: "Remove from Watchlist",
+      moveToFirst: "Move to First Position",
+      moveToLast: "Move to Last Position",
+    },
     addToWatchlist: "Add to a watchlist",
     noWatchlist: "No watchlist",
   },
@@ -379,6 +385,11 @@ export const en: Content = {
       placeholder: "Enter your username",
       hint: "3-20 characters. Letters, numbers, and underscores only.",
       updateButton: "Update",
+      validation: {
+        lengthError: "Username must be between 3 and 20 characters",
+        formatError: "Username can only contain letters, numbers, and underscores",
+        alreadyTaken: "Username already taken",
+      },
     },
     passwordSection: {
       title: "Password",
@@ -392,15 +403,31 @@ export const en: Content = {
       confirmPasswordPlaceholder: "New password",
       changeButton: "Change Password",
     },
+    deleteSection: {
+      title: "Delete Account",
+      description:
+        "Irreversible action. All your data will be deleted.",
+      dialogTitle: "Delete Your Account",
+      dialogDescription:
+        "Irreversible action. All your data will be deleted.",
+      confirmationLabel: "Type 'confirmer' to continue",
+      confirmationPlaceholder: "confirmer",
+      deleteButton: "Delete Account",
+      deleting: "Deleting...",
+      cancel: "Cancel",
+    },
     toasts: {
       usernameUpdated: "Username updated",
       usernameUpdatedDesc: "Your username has been updated successfully.",
       passwordChanged: "Password changed",
       passwordChangedDesc: "Your password has been changed successfully.",
+      accountDeleted: "Account deleted",
+      accountDeletedDesc: "Your account has been deleted successfully.",
       error: "Error",
       passwordMismatch: "New passwords do not match",
       updateFailed: "Failed to update username",
       passwordChangeFailed: "Failed to change password",
+      accountDeleteFailed: "Failed to delete account",
     },
   },
 };

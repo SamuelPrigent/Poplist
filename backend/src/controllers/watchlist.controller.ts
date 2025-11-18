@@ -7,6 +7,8 @@ import { generateTokenId, hashToken } from '../lib/jwt.js';
 import { Types } from 'mongoose';
 import { enrichMediaData, searchMedia, getFullMediaDetails } from '../services/tmdb.service.js';
 import { v2 as cloudinary } from 'cloudinary';
+import { saveToCache } from '../middleware/cache.middleware.js';
+import { generateThumbnail, uploadThumbnailToCloudinary, regenerateThumbnail, deleteThumbnailFromCloudinary } from '../services/thumbnail.service.js';
 
 /**
  * Validate if an ID is a valid MongoDB ObjectId
@@ -32,12 +34,17 @@ function extractPublicIdFromUrl(imageUrl: string): string | null {
   }
 }
 
+const platformSchema = z.object({
+  name: z.string(),
+  logoPath: z.string().default(''),
+});
+
 const watchlistItemSchema = z.object({
   tmdbId: z.string(),
   title: z.string(),
   posterUrl: z.string(),
   type: z.enum(['movie', 'tv']),
-  platformList: z.array(z.string()).default([]),
+  platformList: z.array(platformSchema).default([]),
   runtime: z.number().optional(),
   numberOfSeasons: z.number().optional(),
   numberOfEpisodes: z.number().optional(),
@@ -114,7 +121,7 @@ export async function getMyWatchlists(req: Request, res: Response): Promise<void
     // Add owned/collaborated first (higher priority)
     ownedOrCollaborated.forEach(w => {
       const idStr = (w._id as Types.ObjectId).toString();
-      const watchlistObj = w.toObject();
+      const watchlistObj: any = w.toObject();
       // Check if user is the owner
       const ownerId = (w.ownerId as Types.ObjectId).toString();
       const isOwner = ownerId === userId;
@@ -128,7 +135,7 @@ export async function getMyWatchlists(req: Request, res: Response): Promise<void
     saved.forEach(w => {
       const idStr = (w._id as Types.ObjectId).toString();
       if (!watchlistsMap.has(idStr)) {
-        const watchlistObj = w.toObject();
+        const watchlistObj: any = w.toObject();
         watchlistObj.isOwner = false; // User is not owner (it's a followed watchlist)
         watchlistObj.isSaved = true;
         watchlistsMap.set(idStr, watchlistObj);
@@ -169,6 +176,23 @@ export async function createWatchlist(req: Request, res: Response): Promise<void
       categories: data.categories,
       items: data.items,
     });
+
+    // Regenerate thumbnail in background if watchlist has items (don't wait for it)
+    if (watchlist.items.length > 0) {
+      const posterUrls = watchlist.items
+        .slice(0, 4)
+        .filter(item => item.posterUrl)
+        .map(item => item.posterUrl);
+
+      if (posterUrls.length > 0) {
+        regenerateThumbnail(String(watchlist._id), posterUrls).then(thumbnailUrl => {
+          if (thumbnailUrl) {
+            watchlist.thumbnailUrl = thumbnailUrl;
+            watchlist.save().catch(err => console.error('Failed to save thumbnail URL:', err));
+          }
+        }).catch(err => console.error('Failed to regenerate thumbnail:', err));
+      }
+    }
 
     res.status(201).json({ watchlist });
   } catch (error) {
@@ -289,6 +313,11 @@ export async function deleteWatchlist(req: Request, res: Response): Promise<void
     if (watchlist.ownerId.toString() !== userId) {
       res.status(403).json({ error: 'Only owner can delete watchlist' });
       return;
+    }
+
+    // Delete thumbnail from Cloudinary if it exists
+    if (watchlist.thumbnailUrl) {
+      await deleteThumbnailFromCloudinary(id);
     }
 
     await Watchlist.findByIdAndDelete(id);
@@ -428,17 +457,37 @@ export async function getPublicWatchlist(req: Request, res: Response): Promise<v
 // Get featured/community public watchlists (for homepage)
 export async function getPublicWatchlists(req: Request, res: Response): Promise<void> {
   try {
-    const limit = Math.min(parseInt(req.query.limit as string) || 6, 12);
+    const limit = Math.min(parseInt(req.query.limit as string) || 6, 1000); // Max 1000 for community page
+    const userId = req.user?.sub; // Optional: user may not be authenticated
 
     const watchlists = await Watchlist.find({
       isPublic: true,
     })
-      .populate('ownerId', 'username')
-      .sort({ createdAt: -1 })
+      .populate('ownerId', 'username email')
+      .sort({ followersCount: -1, createdAt: -1 }) // Sort by followers (desc), then by date (desc)
       .limit(limit)
-      .select('_id name description imageUrl items ownerId createdAt');
+      .select('_id name description imageUrl thumbnailUrl items ownerId createdAt followersCount likedBy');
 
-    res.json({ watchlists });
+    // If user is authenticated, add isOwner and isSaved flags
+    if (userId) {
+      const user = await User.findById(userId);
+      const savedIds = new Set(
+        (user?.savedWatchlists || []).map((id) => id.toString())
+      );
+
+      const watchlistsWithFlags = watchlists.map((w) => {
+        const watchlistObj: any = w.toObject();
+        const ownerId = (w.ownerId as any)?._id?.toString() || w.ownerId?.toString();
+        watchlistObj.isOwner = ownerId === userId;
+        watchlistObj.isSaved = savedIds.has((w._id as Types.ObjectId).toString());
+        return watchlistObj;
+      });
+
+      res.json({ watchlists: watchlistsWithFlags });
+    } else {
+      // User not authenticated: return without flags
+      res.json({ watchlists });
+    }
   } catch (error) {
     throw error;
   }
@@ -460,7 +509,7 @@ export async function getWatchlistsByCategory(req: Request, res: Response): Prom
     })
       .populate('ownerId', 'username email')
       .sort({ createdAt: -1 })
-      .select('_id name description imageUrl items categories ownerId createdAt');
+      .select('_id name description imageUrl thumbnailUrl items categories ownerId createdAt');
 
     res.json({ watchlists });
   } catch (error) {
@@ -587,6 +636,19 @@ export async function addItemToWatchlist(req: Request, res: Response): Promise<v
 
     await watchlist.save();
 
+    // Regenerate thumbnail in background (don't wait for it)
+    const posterUrls = watchlist.items
+      .slice(0, 4)
+      .filter(item => item.posterUrl)
+      .map(item => item.posterUrl);
+
+    regenerateThumbnail(id, posterUrls).then(thumbnailUrl => {
+      if (thumbnailUrl) {
+        watchlist.thumbnailUrl = thumbnailUrl;
+        watchlist.save().catch(err => console.error('Failed to save thumbnail URL:', err));
+      }
+    }).catch(err => console.error('Failed to regenerate thumbnail:', err));
+
     res.json({ watchlist });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -629,6 +691,23 @@ export async function removeItemFromWatchlist(req: Request, res: Response): Prom
     }
 
     await watchlist.save();
+
+    // Regenerate thumbnail in background (don't wait for it)
+    const posterUrls = watchlist.items
+      .slice(0, 4)
+      .filter(item => item.posterUrl)
+      .map(item => item.posterUrl);
+
+    regenerateThumbnail(id, posterUrls).then(thumbnailUrl => {
+      if (thumbnailUrl) {
+        watchlist.thumbnailUrl = thumbnailUrl;
+        watchlist.save().catch(err => console.error('Failed to save thumbnail URL:', err));
+      } else if (posterUrls.length === 0) {
+        // Clear thumbnail if no items left
+        watchlist.thumbnailUrl = undefined;
+        watchlist.save().catch(err => console.error('Failed to clear thumbnail URL:', err));
+      }
+    }).catch(err => console.error('Failed to regenerate thumbnail:', err));
 
     res.json({ watchlist });
   } catch (error) {
@@ -770,6 +849,19 @@ export async function reorderItems(req: Request, res: Response): Promise<void> {
 
     watchlist.items = reorderedItems as any;
     await watchlist.save();
+
+    // Regenerate thumbnail in background (don't wait for it)
+    const posterUrls = watchlist.items
+      .slice(0, 4)
+      .filter(item => item.posterUrl)
+      .map(item => item.posterUrl);
+
+    regenerateThumbnail(id, posterUrls).then(thumbnailUrl => {
+      if (thumbnailUrl) {
+        watchlist.thumbnailUrl = thumbnailUrl;
+        watchlist.save().catch(err => console.error('Failed to save thumbnail URL:', err));
+      }
+    }).catch(err => console.error('Failed to regenerate thumbnail:', err));
 
     res.json({ watchlist });
   } catch (error) {
@@ -1044,6 +1136,15 @@ export async function searchTMDB(req: Request, res: Response): Promise<void> {
 
     const results = await searchMedia(query, language, region, page);
 
+    // Sauvegarder en cache si l'URL est fournie par le middleware
+    if (res.locals.cacheKey) {
+      await saveToCache(
+        res.locals.cacheKey,
+        results,
+        res.locals.cacheDurationDays
+      );
+    }
+
     res.json(results);
   } catch (error) {
     console.error('Error searching TMDB:', error);
@@ -1076,7 +1177,18 @@ export async function getItemDetails(req: Request, res: Response): Promise<void>
       return;
     }
 
-    res.json({ details });
+    const responseData = { details };
+
+    // Sauvegarder en cache si l'URL est fournie par le middleware
+    if (res.locals.cacheKey) {
+      await saveToCache(
+        res.locals.cacheKey,
+        responseData,
+        res.locals.cacheDurationDays
+      );
+    }
+
+    res.json(responseData);
   } catch (error) {
     console.error('Error fetching item details:', error);
     res.status(500).json({ error: 'Failed to fetch media details' });
@@ -1129,6 +1241,16 @@ export async function saveWatchlist(req: Request, res: Response): Promise<void> 
     user.savedWatchlists.push(new Types.ObjectId(id));
     await user.save();
 
+    // Add user to likedBy array (avoid duplicates)
+    const userObjectId = new Types.ObjectId(userId);
+    if (!watchlist.likedBy.some(id => id.toString() === userId)) {
+      watchlist.likedBy.push(userObjectId);
+    }
+
+    // Increment followersCount
+    watchlist.followersCount = (watchlist.followersCount || 0) + 1;
+    await watchlist.save();
+
     res.json({ message: 'Watchlist saved successfully' });
   } catch (error) {
     throw error;
@@ -1157,6 +1279,19 @@ export async function unsaveWatchlist(req: Request, res: Response): Promise<void
     }
 
     await user.save();
+
+    // Remove user from likedBy array and decrement followersCount
+    if (isValidWatchlistId(id)) {
+      const watchlist = await Watchlist.findById(id);
+      if (watchlist) {
+        // Remove from likedBy array
+        watchlist.likedBy = watchlist.likedBy.filter(
+          likedUserId => likedUserId.toString() !== userId
+        );
+        watchlist.followersCount = Math.max(0, (watchlist.followersCount || 0) - 1);
+        await watchlist.save();
+      }
+    }
 
     res.json({ message: 'Watchlist removed from library' });
   } catch (error) {
@@ -1197,7 +1332,7 @@ export async function duplicateWatchlist(req: Request, res: Response): Promise<v
       return;
     }
 
-    // Create a copy
+    // Create a copy with temporary thumbnail from original (for instant UX)
     const duplicatedWatchlist = await Watchlist.create({
       ownerId: userId,
       name: `${originalWatchlist.name} (copy)`,
@@ -1205,10 +1340,92 @@ export async function duplicateWatchlist(req: Request, res: Response): Promise<v
       isPublic: false, // Duplicates are private by default
       categories: originalWatchlist.categories,
       items: originalWatchlist.items,
+      thumbnailUrl: originalWatchlist.thumbnailUrl, // Temporary - use original's thumbnail for instant display
+      // Don't copy imageUrl - custom images should not be duplicated
     });
+
+    // Regenerate fresh thumbnail asynchronously (will replace the temporary one)
+    const posterUrls = duplicatedWatchlist.items
+      .slice(0, 4)
+      .map(item => item.posterUrl)
+      .filter(url => url);
+
+    if (posterUrls.length > 0) {
+      regenerateThumbnail(String(duplicatedWatchlist._id), posterUrls).then(thumbnailUrl => {
+        if (thumbnailUrl) {
+          duplicatedWatchlist.thumbnailUrl = thumbnailUrl; // Replace with new dedicated thumbnail
+          duplicatedWatchlist.save().catch(err => console.error('Failed to save thumbnail URL:', err));
+        }
+      }).catch(err => console.error('Failed to regenerate thumbnail:', err));
+    }
 
     res.status(201).json({ watchlist: duplicatedWatchlist });
   } catch (error) {
     throw error;
+  }
+}
+
+/**
+ * POST /api/watchlists/:id/generate-thumbnail
+ * Generate and upload a 2x2 thumbnail grid for a watchlist
+ */
+export async function generateWatchlistThumbnail(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!isValidWatchlistId(id)) {
+      res.status(400).json({ error: 'Invalid watchlist ID' });
+      return;
+    }
+
+    const watchlist = await Watchlist.findById(id);
+
+    if (!watchlist) {
+      res.status(404).json({ error: 'Watchlist not found' });
+      return;
+    }
+
+    // Check if user is owner or collaborator
+    const isOwner = watchlist.ownerId.toString() === userId;
+    const isCollaborator = watchlist.collaborators.some(
+      (collaboratorId) => collaboratorId.toString() === userId
+    );
+
+    if (!isOwner && !isCollaborator) {
+      res.status(403).json({ error: 'Forbidden' });
+      return;
+    }
+
+    // Get first 4 posters
+    const posterUrls = watchlist.items
+      .slice(0, 4)
+      .filter((item) => item.posterUrl)
+      .map((item) => item.posterUrl);
+
+    if (posterUrls.length === 0) {
+      res.status(400).json({ error: 'No posters available to generate thumbnail' });
+      return;
+    }
+
+    // Generate thumbnail
+    const thumbnailBuffer = await generateThumbnail(posterUrls);
+
+    // Upload to Cloudinary
+    const thumbnailUrl = await uploadThumbnailToCloudinary(thumbnailBuffer, id);
+
+    // Update watchlist
+    watchlist.thumbnailUrl = thumbnailUrl;
+    await watchlist.save();
+
+    res.json({ thumbnailUrl });
+  } catch (error) {
+    console.error('Error generating thumbnail:', error);
+    res.status(500).json({ error: 'Failed to generate thumbnail' });
   }
 }

@@ -12,6 +12,7 @@ import {
 import { HeroSection } from "@/components/Home/HeroSection";
 import { useLanguageStore } from "@/store/language";
 import { useAuth } from "@/context/auth-context";
+import { RightSectionPreview } from "@/components/Landing/RightSectionPreview";
 
 interface TrendingItem {
   id: number;
@@ -81,7 +82,7 @@ export function Landing() {
         <div className="mx-auto grid max-w-[88%] items-center gap-16 lg:grid-cols-[55%_45%]">
           {/* Left: Features */}
           <div>
-            <h2 className="mb-4 text-4xl font-bold leading-tight text-white">
+            <h2 className="mb-4 text-3xl font-bold leading-tight text-white">
               {content.landing.hero.tagline}
             </h2>
             <p className="mb-10 text-lg text-gray-400">
@@ -134,26 +135,7 @@ export function Landing() {
           </div>
 
           {/* Right: App Screenshot with gradient fade */}
-          <div className="relative">
-            <div className="relative overflow-hidden rounded-lg">
-              {/* Screenshot placeholder - remplace par une vraie capture d'écran */}
-              <div className="relative aspect-video bg-gradient-to-br from-slate-800 to-slate-900">
-                <div className="p-8">
-                  <div className="mb-6 h-10 w-2/3 rounded-lg bg-slate-700"></div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[...Array(6)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="aspect-square rounded-lg bg-slate-700"
-                      ></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              {/* Gradient fade overlay */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background"></div>
-            </div>
-          </div>
+          <RightSectionPreview />
         </div>
       </section>
 
@@ -352,10 +334,13 @@ export function Landing() {
           <p className="mb-10 text-xl text-gray-400">
             {content.landing.finalCta.subtitle}
           </p>
-          <Link to={watchlistsUrl}>
+          <Link
+            // className="mx-auto flex w-fit rounded-full p-[0.4rem] shadow-[rgb(189_189_189/_25%)_0px_30px_60px_-12px_inset,_rgba(0,0,0,0.3)_0px_18px_36px_-18px_inset]"
+            to={watchlistsUrl}
+          >
             <Button
               size="lg"
-              className="bg-gray-200 px-8 py-4 text-base font-semibold text-black transition-colors hover:bg-gray-300"
+              className="rounded-full bg-gray-200 px-7 py-5 text-base font-semibold text-black transition-colors hover:bg-gray-300"
             >
               {content.landing.finalCta.button}
             </Button>

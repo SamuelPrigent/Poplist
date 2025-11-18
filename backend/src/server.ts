@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import authRoutes from './routes/auth.routes.js';
 import watchlistRoutes from './routes/watchlist.routes.js';
+import tmdbRoutes from './routes/tmdb.routes.js';
 import { errorHandler } from './middleware/errors.js';
 
 dotenv.config();
@@ -96,6 +97,7 @@ app.get('/image-proxy', async (req: Request, res: Response) => {
 
 app.use('/auth', authRoutes);
 app.use('/watchlists', watchlistRoutes);
+app.use('/tmdb', tmdbRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

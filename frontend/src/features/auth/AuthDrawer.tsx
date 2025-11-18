@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -47,6 +48,8 @@ export function AuthDrawer({
   initialMode = "login",
 }: AuthDrawerProps) {
   const { content } = useLanguageStore();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,6 +79,11 @@ export function AuthDrawer({
         await login(email, password);
       } else {
         await signup(email, password);
+      }
+
+      // If user was on an offline watchlist page, redirect to watchlists page
+      if (location.pathname.includes("/offline-")) {
+        navigate("/account/watchlists");
       }
 
       onClose();
@@ -108,6 +116,11 @@ export function AuthDrawer({
       if (event.data.status === "success") {
         window.removeEventListener("message", handleMessage);
         await refetch();
+
+        // If user was on an offline watchlist page, redirect to watchlists page
+        if (location.pathname.includes("/offline-")) {
+          navigate("/account/watchlists");
+        }
 
         onClose();
       } else if (event.data.status === "error") {

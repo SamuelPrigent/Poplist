@@ -22,11 +22,14 @@ export interface IWatchlist extends Document {
   name: string;
   description?: string;
   imageUrl?: string; // Custom cover image URL (Cloudinary)
+  thumbnailUrl?: string; // Auto-generated 2x2 poster grid thumbnail (Cloudinary)
   isPublic: boolean;
   categories?: string[]; // Tags/categories for filtering (e.g., 'netflix', 'action', 'comedy')
   collaborators: Types.ObjectId[];
   items: WatchlistItem[];
   displayOrder?: number; // Custom order for sorting watchlists
+  followersCount?: number; // Number of users who saved/follow this watchlist
+  likedBy: Types.ObjectId[]; // Array of user IDs who liked/saved this watchlist
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,6 +68,7 @@ const watchlistSchema = new Schema<IWatchlist>(
     name: { type: String, required: true },
     description: { type: String },
     imageUrl: { type: String },
+    thumbnailUrl: { type: String },
     isPublic: { type: Boolean, default: false },
     categories: {
       type: [String],
@@ -83,6 +87,16 @@ const watchlistSchema = new Schema<IWatchlist>(
       type: Number,
       default: 0,
     },
+    followersCount: {
+      type: Number,
+      default: 0,
+      index: true, // Index for sorting by popularity
+    },
+    likedBy: {
+      type: [Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -92,5 +106,6 @@ const watchlistSchema = new Schema<IWatchlist>(
 // Compound index for efficient queries
 watchlistSchema.index({ ownerId: 1, createdAt: -1 });
 watchlistSchema.index({ categories: 1, isPublic: 1 }); // For filtering public watchlists by category
+watchlistSchema.index({ isPublic: 1, followersCount: -1, createdAt: -1 }); // For sorting public watchlists by popularity
 
 export const Watchlist = mongoose.model<IWatchlist>('Watchlist', watchlistSchema);

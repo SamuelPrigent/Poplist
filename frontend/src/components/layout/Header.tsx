@@ -50,13 +50,13 @@ export function Header() {
             </div>
             <Link
               to="/home"
-              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-white"
             >
               {content.header.home}
             </Link>
             <Link
               to="/explore"
-              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-white"
             >
               {content.header.explore}
             </Link>
@@ -65,7 +65,9 @@ export function Header() {
           <div className="flex items-center gap-4">
             <Link to="/watchlists">
               <Button variant="ghost" size="icon">
-                <Bookmark className={`h-5 w-5 ${isAuthenticated ? 'fill-white' : ''}`} />
+                <Bookmark
+                  className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}
+                />
               </Button>
             </Link>
 

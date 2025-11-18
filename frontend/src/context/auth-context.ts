@@ -19,6 +19,7 @@ export interface AuthContextValue {
   refetch: () => Promise<void>;
   updateUsername: (username: string) => Promise<void>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: (confirmation: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(

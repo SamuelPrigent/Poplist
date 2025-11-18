@@ -128,6 +128,12 @@ export const es: Content = {
       duplicate: "Duplicar en mi espacio",
       inviteCollaborator: "Invitar a un colaborador",
     },
+    contextMenu: {
+      addToWatchlist: "Añadir a una watchlist",
+      removeFromWatchlist: "Eliminar de la watchlist",
+      moveToFirst: "Mover a la primera posición",
+      moveToLast: "Mover a la última posición",
+    },
     addToWatchlist: "Añadir a una watchlist",
     noWatchlist: "Ninguna watchlist",
   },
@@ -379,6 +385,11 @@ export const es: Content = {
       placeholder: "Introduce tu nombre de usuario",
       hint: "3-20 caracteres. Solo letras, números y guiones bajos.",
       updateButton: "Actualizar",
+      validation: {
+        lengthError: "El nombre de usuario debe tener entre 3 y 20 caracteres",
+        formatError: "El nombre de usuario solo puede contener letras, números y guiones bajos",
+        alreadyTaken: "El nombre de usuario ya está en uso",
+      },
     },
     passwordSection: {
       title: "Contraseña",
@@ -391,6 +402,17 @@ export const es: Content = {
       confirmPasswordPlaceholder: "Nueva contraseña",
       changeButton: "Cambiar contraseña",
     },
+    deleteSection: {
+      title: "Eliminar cuenta",
+      description: "Acción irreversible. Todos tus datos serán eliminados.",
+      dialogTitle: "Eliminar tu cuenta",
+      dialogDescription: "Acción irreversible. Todos tus datos serán eliminados.",
+      confirmationLabel: "Escribe 'confirmar' para continuar",
+      confirmationPlaceholder: "confirmar",
+      deleteButton: "Eliminar cuenta",
+      deleting: "Eliminando...",
+      cancel: "Cancelar",
+    },
     toasts: {
       usernameUpdated: "Nombre de usuario actualizado",
       usernameUpdatedDesc: "Tu nombre de usuario se ha actualizado correctamente.",
@@ -400,6 +422,9 @@ export const es: Content = {
       passwordMismatch: "Las nuevas contraseñas no coinciden",
       updateFailed: "Error al actualizar el nombre de usuario",
       passwordChangeFailed: "Error al cambiar la contraseña",
+      accountDeleted: "Cuenta eliminada",
+      accountDeletedDesc: "Tu cuenta ha sido eliminada correctamente.",
+      accountDeleteFailed: "Error al eliminar la cuenta",
     },
   },
 };

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { useNavigate } from "react-router-dom";
+import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 
 interface DeleteWatchlistDialogProps {
   open: boolean;
@@ -36,6 +37,9 @@ export function DeleteWatchlistDialog({
         const watchlists = JSON.parse(localStorage.getItem("watchlists") || "[]");
         const filtered = watchlists.filter((w: Watchlist) => w._id !== watchlist._id);
         localStorage.setItem("watchlists", JSON.stringify(filtered));
+
+        // Delete cached thumbnail
+        deleteCachedThumbnail(watchlist._id);
 
         onOpenChange(false);
         if (onSuccess) {

@@ -601,7 +601,7 @@ export async function getMovieFullDetails(
 
   try {
     // Fetch movie details with credits appended
-    const detailsResponse = await fetch(
+    let detailsResponse = await fetch(
       `${TMDB_BASE_URL}/movie/${tmdbId}?language=${language}&append_to_response=credits`,
       {
         headers: {
@@ -610,6 +610,20 @@ export async function getMovieFullDetails(
         },
       }
     );
+
+    // If not found in requested language, try English as fallback
+    if (!detailsResponse.ok && language !== 'en-US') {
+      console.warn(`TMDB API error (movie full ${tmdbId}) with ${language}, trying en-US fallback`);
+      detailsResponse = await fetch(
+        `${TMDB_BASE_URL}/movie/${tmdbId}?language=en-US&append_to_response=credits`,
+        {
+          headers: {
+            Authorization: `Bearer ${TMDB_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
 
     if (!detailsResponse.ok) {
       console.error(`TMDB API error (movie full ${tmdbId}):`, detailsResponse.statusText);
@@ -667,7 +681,7 @@ export async function getTVFullDetails(
 
   try {
     // Fetch TV details with credits appended
-    const detailsResponse = await fetch(
+    let detailsResponse = await fetch(
       `${TMDB_BASE_URL}/tv/${tmdbId}?language=${language}&append_to_response=credits`,
       {
         headers: {
@@ -676,6 +690,20 @@ export async function getTVFullDetails(
         },
       }
     );
+
+    // If not found in requested language, try English as fallback
+    if (!detailsResponse.ok && language !== 'en-US') {
+      console.warn(`TMDB API error (TV full ${tmdbId}) with ${language}, trying en-US fallback`);
+      detailsResponse = await fetch(
+        `${TMDB_BASE_URL}/tv/${tmdbId}?language=en-US&append_to_response=credits`,
+        {
+          headers: {
+            Authorization: `Bearer ${TMDB_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
 
     if (!detailsResponse.ok) {
       console.error(`TMDB API error (TV full ${tmdbId}):`, detailsResponse.statusText);

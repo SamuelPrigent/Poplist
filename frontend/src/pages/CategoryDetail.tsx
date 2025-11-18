@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
 import { useLanguageStore } from "@/store/language";
+import { useAuth } from "@/context/auth-context";
 import { scrollToTop } from "@/lib/utils";
 import { getCategoryInfo, type WatchlistCategory } from "@/types/categories";
 import { Film, ArrowLeft } from "lucide-react";
@@ -10,11 +11,15 @@ import { Film, ArrowLeft } from "lucide-react";
 export function CategoryDetail() {
   const { id } = useParams<{ id: string }>();
   const { content } = useLanguageStore();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
+  const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const categoryInfo = id ? getCategoryInfo(id as WatchlistCategory, content) : null;
+  const categoryInfo = id
+    ? getCategoryInfo(id as WatchlistCategory, content)
+    : null;
 
   useEffect(() => {
     scrollToTop();
@@ -26,12 +31,23 @@ export function CategoryDetail() {
   };
 
   useEffect(() => {
-    const fetchWatchlists = async () => {
+    const fetchData = async () => {
       if (!id) return;
 
       try {
+        // Fetch category watchlists
         const data = await watchlistAPI.getWatchlistsByCategory(id);
         setWatchlists(data.watchlists || []);
+
+        // Fetch user's watchlists if authenticated
+        if (user) {
+          try {
+            const userData = await watchlistAPI.getMine();
+            setUserWatchlists(userData.watchlists || []);
+          } catch (error) {
+            console.error("Failed to fetch user watchlists:", error);
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch category watchlists:", error);
       } finally {
@@ -39,8 +55,8 @@ export function CategoryDetail() {
       }
     };
 
-    fetchWatchlists();
-  }, [id]);
+    fetchData();
+  }, [id, user]);
 
   if (!categoryInfo) {
     return (
@@ -56,17 +72,16 @@ export function CategoryDetail() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Immersive Header Banner */}
+      {/* Header with subtle gradient */}
       <div className="relative w-full">
         <div
-          className="relative h-[230px] w-full overflow-hidden"
-          style={{ background: categoryInfo.gradient }}
+          className="relative h-[210px] w-full overflow-hidden"
+          style={{
+            background: `linear-gradient(to bottom, ${categoryInfo.headerGradient.match(/rgb\([^)]+\)/)?.[0] || "rgb(30, 30, 30)"}, transparent 60%)`,
+          }}
         >
-          {/* Progressive overlay for better text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/15 via-30% to-background" />
-
           {/* Content */}
-          <div className="container relative mx-auto flex h-full flex-col justify-end px-4 pb-12">
+          <div className="container relative mx-auto flex h-full flex-col justify-start px-4 pt-[1.7rem]">
             {/* Back Button */}
             <div className="mb-6">
               <button
@@ -83,7 +98,7 @@ export function CategoryDetail() {
               <h1 className="mb-3 text-5xl font-bold text-white drop-shadow-lg md:text-6xl">
                 {categoryInfo.name}
               </h1>
-              <p className="max-w-2xl text-lg text-white/90 drop-shadow-md">
+              <p className="max-w-2xl text-base text-white/90 drop-shadow-md">
                 {categoryInfo.description}
               </p>
             </div>
@@ -91,38 +106,57 @@ export function CategoryDetail() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Watchlists Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {[...Array(10)].map((_, i) => (
-              <div
-                key={i}
-                className="aspect-[1/1] animate-pulse rounded-lg bg-muted"
-              />
-            ))}
-          </div>
-        ) : watchlists.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {watchlists.map((watchlist) => (
-              <WatchlistCard
-                key={watchlist._id}
-                watchlist={watchlist}
-                content={content}
-                href={`/account/watchlist/${watchlist._id}`}
-                showMenu={false}
-                showOwner={true}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-border bg-card p-12 text-center">
-            <Film className="mx-auto h-16 w-16 text-muted-foreground" />
-            <p className="mt-4 text-muted-foreground">
-              Aucune watchlist dans cette catégorie pour le moment
-            </p>
-          </div>
-        )}
+      {/* Watchlists section without gradient */}
+      <div className="relative w-full">
+        <div className="container mx-auto min-h-[75vh] px-4 py-4">
+          {/* Watchlists Grid */}
+          {loading ? (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {[...Array(10)].map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-[1/1] animate-pulse rounded-lg bg-muted"
+                />
+              ))}
+            </div>
+          ) : watchlists.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {watchlists.map((watchlist) => {
+                // Calculate isOwner by comparing user email with watchlist owner email
+                const ownerEmail =
+                  typeof watchlist.ownerId === "string"
+                    ? null
+                    : watchlist.ownerId?.email;
+                const isOwner = user?.email === ownerEmail;
+
+                // Check if this watchlist is in user's saved watchlists
+                const isSaved = userWatchlists.some(
+                  (uw) => uw._id === watchlist._id && !uw.isOwner,
+                );
+                const showSavedBadge = !isOwner && isSaved;
+
+                return (
+                  <WatchlistCard
+                    key={watchlist._id}
+                    watchlist={watchlist}
+                    content={content}
+                    href={`/account/watchlist/${watchlist._id}`}
+                    showMenu={false}
+                    showOwner={true}
+                    showSavedBadge={showSavedBadge}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border bg-card p-12 text-center">
+              <Film className="mx-auto h-16 w-16 text-muted-foreground" />
+              <p className="mt-4 text-muted-foreground">
+                Aucune watchlist dans cette catégorie pour le moment
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

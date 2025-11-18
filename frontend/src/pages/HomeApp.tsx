@@ -54,12 +54,20 @@ export function HomeApp() {
     type: "movie" | "tv";
   } | null>(null);
 
+  const fetchPublicWatchlists = async () => {
+    try {
+      const publicData = await watchlistAPI.getPublicWatchlists(10);
+      setPublicWatchlists(publicData.watchlists || []);
+    } catch (error) {
+      console.error("Failed to fetch public watchlists:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch public watchlists
-        const publicData = await watchlistAPI.getPublicWatchlists(10);
-        setPublicWatchlists(publicData.watchlists || []);
+        await fetchPublicWatchlists();
 
         // Fetch user's watchlists first to get their items
         let userWatchlistsData: Watchlist[] = [];
@@ -89,21 +97,17 @@ export function HomeApp() {
         // Fetch recommendations based on user's items or trending
         if (allItems.length > 0) {
           // Use similar items from random items in user's watchlists
-          const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+          const API_URL =
+            import.meta.env.VITE_API_URL || "http://localhost:3000";
           const randomItems = allItems
             .sort(() => Math.random() - 0.5)
             .slice(0, 3); // Pick 3 random items
 
           const similarPromises = randomItems.map(async (item) => {
             try {
+              // Use backend cached route instead of direct TMDB call
               const response = await fetch(
-                `https://api.themoviedb.org/3/${item.type}/${item.tmdbId}/similar?language=fr-FR&page=1`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${TMDB_API_KEY}`,
-                    "Content-Type": "application/json",
-                  },
-                },
+                `${API_URL}/tmdb/${item.type}/${item.tmdbId}/similar?language=fr-FR&page=1`,
               );
               const data = await response.json();
               return (data.results || []).map((result: any) => ({
@@ -125,7 +129,14 @@ export function HomeApp() {
               index === self.findIndex((t) => t.id === item.id),
           );
 
-          setRecommendations(uniqueSimilar.slice(0, 5));
+          // If we got similar items, use them. Otherwise fallback to trending
+          if (uniqueSimilar.length > 0) {
+            setRecommendations(uniqueSimilar.slice(0, 5));
+          } else {
+            // Fallback to trending if similar items failed
+            const trendingData = await tmdbAPI.getTrending("day");
+            setRecommendations((trendingData.results || []).slice(0, 5));
+          }
         } else {
           // Fallback to trending if no items in watchlists
           const trendingData = await tmdbAPI.getTrending("day");
@@ -165,6 +176,75 @@ export function HomeApp() {
     fetchData();
   }, [user]);
 
+  const handleQuickAdd = async (item: TrendingItem) => {
+    try {
+      setAddingTo(item.id);
+
+      // Always use localStorage for quick add
+      const QUICK_ADD_KEY = "quick-add-watchlist";
+      const quickAddWatchlist = localStorage.getItem(QUICK_ADD_KEY);
+      let watchlist: Watchlist;
+
+      if (!quickAddWatchlist) {
+        // Create quick add watchlist if it doesn't exist
+        watchlist = {
+          _id: "quick-add",
+          ownerId: {
+            email: user?.email || "local@watchlisthub.app",
+            username: user?.username || "Local User",
+          },
+          name: "Ajouts Rapides",
+          description: "Films et séries ajoutés rapidement",
+          imageUrl: "",
+          isPublic: false,
+          collaborators: [],
+          items: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      } else {
+        watchlist = JSON.parse(quickAddWatchlist);
+      }
+
+      // Fetch item details from backend cached route
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const type = item.media_type || "movie";
+      const response = await fetch(
+        `${API_URL}/watchlists/items/${item.id}/${type}/details?language=fr-FR`,
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const details = data.details;
+        const newItem = {
+          tmdbId: item.id.toString(),
+          title: details.title || details.name || "",
+          posterUrl: details.poster_path
+            ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+            : "",
+          type: type as "movie" | "tv",
+          platformList: [],
+          addedAt: new Date().toISOString(),
+        };
+
+        // Check if item already exists
+        const itemExists = watchlist.items.some(
+          (existingItem) => existingItem.tmdbId === newItem.tmdbId,
+        );
+
+        if (!itemExists) {
+          watchlist.items.push(newItem);
+          watchlist.updatedAt = new Date().toISOString();
+          localStorage.setItem(QUICK_ADD_KEY, JSON.stringify(watchlist));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to quick add:", error);
+    } finally {
+      setAddingTo(null);
+    }
+  };
+
   const handleAddToWatchlist = async (
     watchlistId: string,
     item: TrendingItem,
@@ -190,21 +270,17 @@ export function HomeApp() {
           );
 
           if (watchlistIndex !== -1) {
-            // Fetch item details from TMDB
-            const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+            // Fetch item details from backend cached route
+            const API_URL =
+              import.meta.env.VITE_API_URL || "http://localhost:3000";
             const type = item.media_type || "movie";
             const response = await fetch(
-              `https://api.themoviedb.org/3/${type}/${item.id}?language=fr-FR`,
-              {
-                headers: {
-                  Authorization: `Bearer ${TMDB_API_KEY}`,
-                  "Content-Type": "application/json",
-                },
-              },
+              `${API_URL}/watchlists/items/${item.id}/${type}/details?language=fr-FR`,
             );
 
             if (response.ok) {
-              const details = await response.json();
+              const data = await response.json();
+              const details = data.details;
               const newItem = {
                 tmdbId: item.id.toString(),
                 title: details.title || details.name || "",
@@ -393,16 +469,32 @@ export function HomeApp() {
           </div>
         ) : publicWatchlists.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {publicWatchlists.slice(0, 10).map((watchlist) => (
-              <WatchlistCard
-                key={watchlist._id}
-                watchlist={watchlist}
-                content={content}
-                href={`/account/watchlist/${watchlist._id}`}
-                showMenu={false}
-                showOwner={true}
-              />
-            ))}
+            {publicWatchlists.slice(0, 10).map((watchlist) => {
+              // Calculate isOwner by comparing user email with watchlist owner email
+              const ownerEmail =
+                typeof watchlist.ownerId === "string"
+                  ? null
+                  : watchlist.ownerId?.email;
+              const isOwner = user?.email === ownerEmail;
+
+              // Check if this watchlist is in user's saved watchlists
+              const isSaved = userWatchlists.some(
+                (uw) => uw._id === watchlist._id && !uw.isOwner,
+              );
+              const showSavedBadge = !isOwner && isSaved;
+
+              return (
+                <WatchlistCard
+                  key={watchlist._id}
+                  watchlist={watchlist}
+                  content={content}
+                  href={`/account/watchlist/${watchlist._id}`}
+                  showMenu={false}
+                  showOwner={true}
+                  showSavedBadge={showSavedBadge}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-lg border border-border bg-card p-12 text-center">
@@ -458,30 +550,31 @@ export function HomeApp() {
                   <Eye className="h-4 w-4" />
                 </button>
 
-                {/* Add button (only if authenticated) */}
-                {user && (
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                      <button
-                        className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
-                        disabled={addingTo === item.id}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </DropdownMenu.Trigger>
+                {/* Add button with dropdown - always visible */}
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
+                      disabled={addingTo === item.id}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </DropdownMenu.Trigger>
 
-                    <DropdownMenu.Portal>
-                      <DropdownMenu.Content
-                        className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
-                        sideOffset={5}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                          {content.watchlists.addToWatchlist}
-                        </DropdownMenu.Label>
-                        {userWatchlists.length > 0 ? (
-                          userWatchlists.map((watchlist) => (
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                      sideOffset={5}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                        {content.watchlists.addToWatchlist}
+                      </DropdownMenu.Label>
+                      {userWatchlists.filter((w) => w.isOwner).length > 0 ? (
+                        userWatchlists
+                          .filter((w) => w.isOwner)
+                          .map((watchlist) => (
                             <DropdownMenu.Item
                               key={watchlist._id}
                               className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -492,15 +585,14 @@ export function HomeApp() {
                               {watchlist.name}
                             </DropdownMenu.Item>
                           ))
-                        ) : (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            {content.watchlists.noWatchlist}
-                          </div>
-                        )}
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  </DropdownMenu.Root>
-                )}
+                      ) : (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          {content.watchlists.noWatchlist}
+                        </div>
+                      )}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               </div>
             </div>
           ))}

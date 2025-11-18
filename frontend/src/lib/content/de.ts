@@ -128,6 +128,12 @@ export const de: Content = {
       duplicate: "In meinen Bereich duplizieren",
       inviteCollaborator: "Mitarbeiter einladen",
     },
+    contextMenu: {
+      addToWatchlist: "Zu Watchlist hinzufügen",
+      removeFromWatchlist: "Aus Watchlist entfernen",
+      moveToFirst: "An erste Position verschieben",
+      moveToLast: "An letzte Position verschieben",
+    },
     addToWatchlist: "Zu einer Watchlist hinzufügen",
     noWatchlist: "Keine Watchlist",
   },
@@ -379,6 +385,11 @@ export const de: Content = {
       placeholder: "Geben Sie Ihren Benutzernamen ein",
       hint: "3-20 Zeichen. Nur Buchstaben, Zahlen und Unterstriche.",
       updateButton: "Aktualisieren",
+      validation: {
+        lengthError: "Benutzername muss zwischen 3 und 20 Zeichen lang sein",
+        formatError: "Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten",
+        alreadyTaken: "Benutzername bereits vergeben",
+      },
     },
     passwordSection: {
       title: "Passwort",
@@ -391,6 +402,17 @@ export const de: Content = {
       confirmPasswordPlaceholder: "Neues Passwort",
       changeButton: "Passwort ändern",
     },
+    deleteSection: {
+      title: "Konto löschen",
+      description: "Unwiderrufliche Aktion. Alle Ihre Daten werden gelöscht.",
+      dialogTitle: "Ihr Konto löschen",
+      dialogDescription: "Unwiderrufliche Aktion. Alle Ihre Daten werden gelöscht.",
+      confirmationLabel: "Geben Sie 'confirmer' ein, um fortzufahren",
+      confirmationPlaceholder: "confirmer",
+      deleteButton: "Konto löschen",
+      deleting: "Löschen...",
+      cancel: "Abbrechen",
+    },
     toasts: {
       usernameUpdated: "Benutzername aktualisiert",
       usernameUpdatedDesc: "Ihr Benutzername wurde erfolgreich aktualisiert.",
@@ -400,6 +422,9 @@ export const de: Content = {
       passwordMismatch: "Die neuen Passwörter stimmen nicht überein",
       updateFailed: "Fehler beim Aktualisieren des Benutzernamens",
       passwordChangeFailed: "Fehler beim Ändern des Passworts",
+      accountDeleted: "Konto gelöscht",
+      accountDeletedDesc: "Ihr Konto wurde erfolgreich gelöscht.",
+      accountDeleteFailed: "Fehler beim Löschen des Kontos",
     },
   },
 };

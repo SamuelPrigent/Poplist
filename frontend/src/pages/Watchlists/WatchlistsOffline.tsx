@@ -150,7 +150,9 @@ export function WatchlistsOffline() {
       setLoading(true);
       const localWatchlists = getLocalWatchlists();
       // Only show watchlists created locally (ownerId === "offline")
-      const ownedWatchlists = localWatchlists.filter(w => w.ownerId === "offline");
+      const ownedWatchlists = localWatchlists.filter(
+        (w) => w.ownerId === "offline",
+      );
       setWatchlists(ownedWatchlists);
     } catch (error) {
       console.error("Failed to load watchlists from localStorage:", error);
@@ -190,7 +192,7 @@ export function WatchlistsOffline() {
 
   return (
     <div className="container mx-auto mb-32 px-4 py-8">
-      <div className="mb-8 mt-9 flex items-center justify-between">
+      <div className="mb-3 mt-9 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-white">
             {content.watchlists.title}
@@ -229,7 +231,7 @@ export function WatchlistsOffline() {
       )}
 
       {/* Data Source Badge */}
-      <div className="mb-6">
+      <div className="mb-7">
         <div className="flex w-fit items-center gap-1">
           <p className="text-sm font-light text-slate-300">
             {content.watchlists.notLoggedInWarning}
@@ -244,9 +246,7 @@ export function WatchlistsOffline() {
             <EmptyMedia variant="icon">
               <Film className="h-8 w-8 text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>
-              {content.watchlists.noWatchlists}
-            </EmptyTitle>
+            <EmptyTitle>{content.watchlists.noWatchlists}</EmptyTitle>
             <EmptyDescription>
               {content.watchlists.createWatchlistDescription}
             </EmptyDescription>

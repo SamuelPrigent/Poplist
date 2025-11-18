@@ -42,6 +42,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
+import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/cn";
 import { WatchProviderList } from "./WatchProviderBubble";
 import { Button } from "@/components/ui/button";
@@ -53,11 +54,13 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
+import { generateAndCacheThumbnail } from "@/lib/thumbnailGenerator";
 
 interface WatchlistItemsTableProps {
   watchlist: Watchlist;
   onUpdate: () => void;
   isOwner?: boolean;
+  offline?: boolean;
 }
 
 // Extend RowData for custom meta
@@ -80,6 +83,11 @@ interface DraggableRowProps {
   totalItems: number;
   isDragDisabled: boolean;
   isOwner: boolean;
+  content: any;
+  watchlists: Watchlist[];
+  addingTo: string | null;
+  handleAddToWatchlist: (watchlistId: string, item: WatchlistItem) => void;
+  currentWatchlistId: string;
 }
 
 function DraggableRow({
@@ -94,6 +102,11 @@ function DraggableRow({
   totalItems,
   isDragDisabled,
   isOwner,
+  content,
+  watchlists,
+  addingTo,
+  handleAddToWatchlist,
+  currentWatchlistId,
 }: DraggableRowProps) {
   const {
     attributes,
@@ -152,46 +165,75 @@ function DraggableRow({
 
                     <DropdownMenu.Portal>
                       <DropdownMenu.Content
-                        className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                        className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
                         sideOffset={5}
                       >
-                        <DropdownMenu.Item
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                          disabled
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          <span>Add to Watchlist</span>
-                          <span className="ml-auto text-xs text-muted-foreground">
-                            →
-                          </span>
-                        </DropdownMenu.Item>
+                        <DropdownMenu.Sub>
+                          <DropdownMenu.SubTrigger className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                            <Plus className="mr-2.5 h-4 w-4" />
+                            <span>{content.watchlists.contextMenu.addToWatchlist}</span>
+                            <span className="ml-auto text-xs text-muted-foreground">
+                              →
+                            </span>
+                          </DropdownMenu.SubTrigger>
+                          <DropdownMenu.Portal>
+                            <DropdownMenu.SubContent
+                              className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                              sideOffset={5}
+                            >
+                              <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                {content.watchlists.addToWatchlist}
+                              </DropdownMenu.Label>
+                              {watchlists.filter(w => w._id !== currentWatchlistId && w.isOwner).length > 0 ? (
+                                watchlists
+                                  .filter(w => w._id !== currentWatchlistId && w.isOwner)
+                                  .map((watchlist) => (
+                                    <DropdownMenu.Item
+                                      key={watchlist._id}
+                                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                                      onSelect={() =>
+                                        handleAddToWatchlist(watchlist._id, item)
+                                      }
+                                      disabled={addingTo === item.tmdbId}
+                                    >
+                                      {watchlist.name}
+                                    </DropdownMenu.Item>
+                                  ))
+                              ) : (
+                                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                                  {content.watchlists.noWatchlist}
+                                </div>
+                              )}
+                            </DropdownMenu.SubContent>
+                          </DropdownMenu.Portal>
+                        </DropdownMenu.Sub>
 
                         <DropdownMenu.Item
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                           onSelect={() => handleRemoveItem(item.tmdbId)}
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Remove from Watchlist</span>
+                          <Trash2 className="mr-2.5 h-4 w-4" />
+                          <span>{content.watchlists.contextMenu.removeFromWatchlist}</span>
                         </DropdownMenu.Item>
 
-                        <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                        <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
 
                         <DropdownMenu.Item
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                           onSelect={() => handleMoveItem(item.tmdbId, "first")}
                           disabled={index === 0}
                         >
-                          <MoveUp className="mr-2 h-4 w-4" />
-                          <span>Move to First Position</span>
+                          <MoveUp className="mr-2.5 h-4 w-4" />
+                          <span>{content.watchlists.contextMenu.moveToFirst}</span>
                         </DropdownMenu.Item>
 
                         <DropdownMenu.Item
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                           onSelect={() => handleMoveItem(item.tmdbId, "last")}
                           disabled={index === totalItems - 1}
                         >
-                          <MoveDown className="mr-2 h-4 w-4" />
-                          <span>Move to Last Position</span>
+                          <MoveDown className="mr-2.5 h-4 w-4" />
+                          <span>{content.watchlists.contextMenu.moveToLast}</span>
                         </DropdownMenu.Item>
                       </DropdownMenu.Content>
                     </DropdownMenu.Portal>
@@ -224,19 +266,35 @@ export function WatchlistItemsTable({
   watchlist,
   //   onUpdate,
   isOwner = true,
+  offline = false,
 }: WatchlistItemsTableProps) {
   const { content } = useLanguageStore();
+  const { isAuthenticated } = useAuth();
   const [items, setItems] = useState<WatchlistItem[]>(watchlist.items);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [loadingItem, setLoadingItem] = useState<string | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
+  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
+  const [addingTo, setAddingTo] = useState<string | null>(null);
 
   // Sync with parent when watchlist changes
   useEffect(() => {
     setItems(watchlist.items);
   }, [watchlist.items]);
+
+  // Fetch user watchlists if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      watchlistAPI
+        .getMine()
+        .then((data) => {
+          setWatchlists(data.watchlists);
+        })
+        .catch(console.error);
+    }
+  }, [isAuthenticated]);
 
   // Setup drag sensors
   const sensors = useSensors(
@@ -264,13 +322,48 @@ export function WatchlistItemsTable({
     return mins > 0 ? `${hours}h ${mins} min` : `${hours}h`;
   };
 
+  const handleAddToWatchlist = async (
+    watchlistId: string,
+    item: WatchlistItem,
+  ) => {
+    try {
+      setAddingTo(item.tmdbId);
+      await watchlistAPI.addItem(watchlistId, {
+        tmdbId: item.tmdbId,
+        type: item.type,
+        language: "fr-FR",
+        region: "FR",
+      });
+      // Could show success toast here
+    } catch (error) {
+      console.error("Failed to add to watchlist:", error);
+      // Could show error toast here
+    } finally {
+      setAddingTo(null);
+    }
+  };
+
   const handleRemoveItem = async (tmdbId: string) => {
     try {
       setLoadingItem(tmdbId);
       // Update local state immediately
-      setItems((prev) => prev.filter((item) => item.tmdbId !== tmdbId));
+      const newItems = items.filter((item) => item.tmdbId !== tmdbId);
+      setItems(newItems);
+
       // Call API
       await watchlistAPI.removeItem(watchlist._id, tmdbId);
+
+      // Regenerate thumbnail if watchlist has no custom image
+      if (!watchlist.imageUrl && newItems.length > 0) {
+        const posterUrls = newItems
+          .slice(0, 4)
+          .map((item) => item.posterUrl)
+          .filter(Boolean);
+        if (posterUrls.length > 0) {
+          await generateAndCacheThumbnail(watchlist._id, posterUrls);
+        }
+      }
+
       // Don't call onUpdate() to avoid refetching and losing scroll position
     } catch (error) {
       console.error("Failed to remove item:", error);
@@ -300,6 +393,18 @@ export function WatchlistItemsTable({
 
       // Call API
       await watchlistAPI.moveItem(watchlist._id, tmdbId, position);
+
+      // Regenerate thumbnail if watchlist has no custom image
+      if (!watchlist.imageUrl && newItems.length > 0) {
+        const posterUrls = newItems
+          .slice(0, 4)
+          .map((item) => item.posterUrl)
+          .filter(Boolean);
+        if (posterUrls.length > 0) {
+          await generateAndCacheThumbnail(watchlist._id, posterUrls);
+        }
+      }
+
       // Don't call onUpdate() to avoid refetching and losing scroll position
     } catch (error) {
       console.error("Failed to move item:", error);
@@ -325,6 +430,18 @@ export function WatchlistItemsTable({
       try {
         const orderedTmdbIds = newItems.map((item) => item.tmdbId);
         await watchlistAPI.reorderItems(watchlist._id, orderedTmdbIds);
+
+        // Regenerate thumbnail if watchlist has no custom image
+        if (!watchlist.imageUrl && newItems.length > 0) {
+          const posterUrls = newItems
+            .slice(0, 4)
+            .map((item) => item.posterUrl)
+            .filter(Boolean);
+          if (posterUrls.length > 0) {
+            await generateAndCacheThumbnail(watchlist._id, posterUrls);
+          }
+        }
+
         // Don't call onUpdate() to avoid refetching and resetting the local state
       } catch (error) {
         console.error("Failed to reorder items:", error);
@@ -612,6 +729,11 @@ export function WatchlistItemsTable({
                     totalItems={displayItems.length}
                     isDragDisabled={!isCustomOrder || !isOwner}
                     isOwner={isOwner}
+                    content={content}
+                    watchlists={watchlists}
+                    addingTo={addingTo}
+                    handleAddToWatchlist={handleAddToWatchlist}
+                    currentWatchlistId={watchlist._id}
                   />
                 ))}
               </SortableContext>

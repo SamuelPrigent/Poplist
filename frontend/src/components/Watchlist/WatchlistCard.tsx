@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Film, MoreVertical, Edit, Trash2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import type { DraggableAttributes } from "@dnd-kit/core";
+import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
@@ -14,12 +16,13 @@ interface WatchlistCardProps {
   showMenu?: boolean;
   showOwner?: boolean;
   showVisibility?: boolean;
+  showSavedBadge?: boolean;
   categoryGradient?: string;
   draggableProps?: {
     ref: (node: HTMLElement | null) => void;
     style?: React.CSSProperties;
-    attributes?: Record<string, unknown>;
-    listeners?: Record<string, unknown>;
+    attributes?: DraggableAttributes;
+    listeners?: DraggableSyntheticListeners;
   };
 }
 
@@ -32,6 +35,7 @@ export function WatchlistCard({
   showMenu = true,
   showOwner = false,
   showVisibility = false,
+  showSavedBadge = false,
   categoryGradient,
   draggableProps,
 }: WatchlistCardProps) {
@@ -77,12 +81,23 @@ export function WatchlistCard({
       </div>
 
       {/* Text Info */}
-      <h3
-        onClick={handleClick}
-        className="line-clamp-2 text-sm font-semibold text-white"
-      >
-        {watchlist.name}
-      </h3>
+      <div className="flex items-center gap-2">
+        {/* Saved Badge - Indicates this is a followed watchlist */}
+        {showSavedBadge && (
+          <img
+            src="/src/assets/checkGreenFull.svg"
+            alt="Suivi"
+            className="h-4 w-4 flex-shrink-0"
+          />
+        )}
+
+        <h3
+          onClick={handleClick}
+          className="line-clamp-2 text-sm font-semibold text-white"
+        >
+          {watchlist.name}
+        </h3>
+      </div>
 
       {showOwner && (
         <p className="mt-1 text-xs text-muted-foreground" onClick={handleClick}>
@@ -94,8 +109,8 @@ export function WatchlistCard({
       )}
 
       {showVisibility && (
-        <div className="mt-2 text-xs">
-          <span onClick={handleClick} className="text-muted-foreground">
+        <div className="mt-1 text-xs text-muted-foreground">
+          <span onClick={handleClick}>
             {watchlist.isPublic
               ? content.watchlists.public
               : content.watchlists.private}
@@ -117,7 +132,7 @@ export function WatchlistCard({
             <DropdownMenu.Trigger asChild>
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+                className="ml-auto flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
               >
                 <MoreVertical className="h-4 w-4" />
               </button>

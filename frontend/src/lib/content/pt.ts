@@ -128,6 +128,12 @@ export const pt: Content = {
       duplicate: "Duplicar no meu espaço",
       inviteCollaborator: "Convidar um colaborador",
     },
+    contextMenu: {
+      addToWatchlist: "Adicionar à watchlist",
+      removeFromWatchlist: "Remover da watchlist",
+      moveToFirst: "Mover para primeira posição",
+      moveToLast: "Mover para última posição",
+    },
     addToWatchlist: "Adicionar a uma watchlist",
     noWatchlist: "Nenhuma watchlist",
   },
@@ -379,6 +385,11 @@ export const pt: Content = {
       placeholder: "Introduza o seu nome de utilizador",
       hint: "3-20 caracteres. Apenas letras, números e sublinhados.",
       updateButton: "Atualizar",
+      validation: {
+        lengthError: "O nome de utilizador deve ter entre 3 e 20 caracteres",
+        formatError: "O nome de utilizador só pode conter letras, números e sublinhados",
+        alreadyTaken: "Nome de utilizador já em uso",
+      },
     },
     passwordSection: {
       title: "Palavra-passe",
@@ -391,6 +402,17 @@ export const pt: Content = {
       confirmPasswordPlaceholder: "Nova palavra-passe",
       changeButton: "Alterar palavra-passe",
     },
+    deleteSection: {
+      title: "Eliminar conta",
+      description: "Ação irreversível. Todos os seus dados serão eliminados.",
+      dialogTitle: "Eliminar a sua conta",
+      dialogDescription: "Ação irreversível. Todos os seus dados serão eliminados.",
+      confirmationLabel: "Digite 'confirmar' para continuar",
+      confirmationPlaceholder: "confirmar",
+      deleteButton: "Eliminar conta",
+      deleting: "A eliminar...",
+      cancel: "Cancelar",
+    },
     toasts: {
       usernameUpdated: "Nome de utilizador atualizado",
       usernameUpdatedDesc: "O seu nome de utilizador foi atualizado com sucesso.",
@@ -400,6 +422,9 @@ export const pt: Content = {
       passwordMismatch: "As novas palavras-passe não correspondem",
       updateFailed: "Falha ao atualizar o nome de utilizador",
       passwordChangeFailed: "Falha ao alterar a palavra-passe",
+      accountDeleted: "Conta eliminada",
+      accountDeletedDesc: "A sua conta foi eliminada com sucesso.",
+      accountDeleteFailed: "Falha ao eliminar a conta",
     },
   },
 };

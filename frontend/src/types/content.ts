@@ -113,6 +113,12 @@ export interface Content {
       duplicate: string;
       inviteCollaborator: string;
     };
+    contextMenu: {
+      addToWatchlist: string;
+      removeFromWatchlist: string;
+      moveToFirst: string;
+      moveToLast: string;
+    };
     addToWatchlist: string;
     noWatchlist: string;
   };
@@ -319,16 +325,16 @@ export interface Content {
     title: string;
     subtitle: string;
     list: {
-      movies: { name: string; description: string; };
-      series: { name: string; description: string; };
-      netflix: { name: string; description: string; };
-      "prime-video": { name: string; description: string; };
-      "disney-plus": { name: string; description: string; };
-      anime: { name: string; description: string; };
-      action: { name: string; description: string; };
-      documentaries: { name: string; description: string; };
-      enfant: { name: string; description: string; };
-      jeunesse: { name: string; description: string; };
+      movies: { name: string; description: string };
+      series: { name: string; description: string };
+      netflix: { name: string; description: string };
+      "prime-video": { name: string; description: string };
+      "disney-plus": { name: string; description: string };
+      anime: { name: string; description: string };
+      action: { name: string; description: string };
+      documentaries: { name: string; description: string };
+      enfant: { name: string; description: string };
+      jeunesse: { name: string; description: string };
     };
   };
   footer: {
@@ -346,6 +352,11 @@ export interface Content {
       placeholder: string;
       hint: string;
       updateButton: string;
+      validation: {
+        lengthError: string;
+        formatError: string;
+        alreadyTaken: string;
+      };
     };
     passwordSection: {
       title: string;
@@ -358,15 +369,29 @@ export interface Content {
       confirmPasswordPlaceholder: string;
       changeButton: string;
     };
+    deleteSection: {
+      title: string;
+      description: string;
+      dialogTitle: string;
+      dialogDescription: string;
+      confirmationLabel: string;
+      confirmationPlaceholder: string;
+      deleteButton: string;
+      deleting: string;
+      cancel: string;
+    };
     toasts: {
       usernameUpdated: string;
       usernameUpdatedDesc: string;
       passwordChanged: string;
       passwordChangedDesc: string;
+      accountDeleted: string;
+      accountDeletedDesc: string;
       error: string;
       passwordMismatch: string;
       updateFailed: string;
       passwordChangeFailed: string;
+      accountDeleteFailed: string;
     };
   };
 }

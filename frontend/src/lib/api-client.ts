@@ -175,6 +175,12 @@ export const authAPI = {
       method: "PUT",
       body: { language },
     }),
+
+  deleteAccount: (confirmation: string) =>
+    request("/auth/profile/account", {
+      method: "DELETE",
+      body: { confirmation },
+    }),
 };
 
 // Watchlist API
@@ -208,12 +214,15 @@ export interface Watchlist {
   name: string;
   description?: string;
   imageUrl?: string;
+  thumbnailUrl?: string; // Auto-generated 2x2 poster grid (Cloudinary)
   isPublic: boolean;
   categories?: string[];
   collaborators: string[];
   items: WatchlistItem[];
   createdAt: string;
   updatedAt: string;
+  followersCount?: number; // Number of users who saved/follow this watchlist
+  likedBy: string[]; // Array of user IDs who liked/saved this watchlist
   isSaved?: boolean; // Indicates if this watchlist is followed/saved by the current user
   isOwner?: boolean; // Indicates if the current user is the owner of this watchlist
 }
@@ -416,12 +425,12 @@ export const watchlistAPI = {
     request(`/watchlists/by-category/${category}`),
 
   saveWatchlist: (id: string): Promise<{ message: string }> =>
-    request(`/watchlists/${id}/save`, {
+    request(`/watchlists/${id}/like-and-save`, {
       method: "POST",
     }),
 
   unsaveWatchlist: (id: string): Promise<{ message: string }> =>
-    request(`/watchlists/${id}/unsave`, {
+    request(`/watchlists/${id}/unlike-and-unsave`, {
       method: "DELETE",
     }),
 

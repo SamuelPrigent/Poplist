@@ -21,5 +21,9 @@ router.get('/me', requireAuth, authController.me);
 router.put('/profile/username', requireAuth, authController.updateUsername);
 router.put('/profile/password', requireAuth, authController.changePassword);
 router.put('/profile/language', requireAuth, authController.updateLanguage);
+router.delete('/profile/account', requireAuth, authController.deleteAccount);
+
+// Username availability check (public route)
+router.get('/username/check/:username', authController.checkUsernameAvailability);
 
 export default router;

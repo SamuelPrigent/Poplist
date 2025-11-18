@@ -52,6 +52,7 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
+import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 
 interface WatchlistItemsTableProps {
   watchlist: Watchlist;
@@ -77,6 +78,7 @@ interface DraggableRowProps {
   handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
   totalItems: number;
   isDragDisabled: boolean;
+  content: any;
 }
 
 function DraggableRow({
@@ -90,6 +92,7 @@ function DraggableRow({
   handleMoveItem,
   totalItems,
   isDragDisabled,
+  content,
 }: DraggableRowProps) {
   const {
     attributes,
@@ -162,46 +165,46 @@ function DraggableRow({
 
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                    className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
                     sideOffset={5}
                   >
                     <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                       disabled
                     >
-                      <Plus className="mr-2 h-4 w-4" />
-                      <span>Add to Watchlist</span>
+                      <Plus className="mr-2.5 h-4 w-4" />
+                      <span>{content.watchlists.contextMenu.addToWatchlist}</span>
                       <span className="ml-auto text-xs text-muted-foreground">
                         →
                       </span>
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                       onSelect={() => handleRemoveItem(item.tmdbId)}
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Remove from Watchlist</span>
+                      <Trash2 className="mr-2.5 h-4 w-4" />
+                      <span>{content.watchlists.contextMenu.removeFromWatchlist}</span>
                     </DropdownMenu.Item>
 
-                    <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                    <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
 
                     <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                       onSelect={() => handleMoveItem(item.tmdbId, "first")}
                       disabled={index === 0}
                     >
-                      <MoveUp className="mr-2 h-4 w-4" />
-                      <span>Move to First Position</span>
+                      <MoveUp className="mr-2.5 h-4 w-4" />
+                      <span>{content.watchlists.contextMenu.moveToFirst}</span>
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                       onSelect={() => handleMoveItem(item.tmdbId, "last")}
                       disabled={index === totalItems - 1}
                     >
-                      <MoveDown className="mr-2 h-4 w-4" />
-                      <span>Move to Last Position</span>
+                      <MoveDown className="mr-2.5 h-4 w-4" />
+                      <span>{content.watchlists.contextMenu.moveToLast}</span>
                     </DropdownMenu.Item>
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
@@ -279,6 +282,9 @@ export function WatchlistItemsTableOffline({
 
     watchlists[watchlistIndex].items = updatedItems;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
+
+    // Invalidate thumbnail cache so it regenerates with new items
+    deleteCachedThumbnail(watchlist._id);
   };
 
   const handleRemoveItem = async (tmdbId: string) => {
@@ -616,6 +622,7 @@ export function WatchlistItemsTableOffline({
                   handleMoveItem={handleMoveItem}
                   totalItems={displayItems.length}
                   isDragDisabled={!isCustomOrder}
+                  content={content}
                 />
               ))}
             </SortableContext>

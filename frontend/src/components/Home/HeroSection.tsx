@@ -18,7 +18,11 @@ interface HeroSectionProps {
   watchlistsUrl: string;
 }
 
-export function HeroSection({ content, trending, watchlistsUrl }: HeroSectionProps) {
+export function HeroSection({
+  content,
+  trending,
+  watchlistsUrl,
+}: HeroSectionProps) {
   // Create organized watchlist groups with cycling through available items
   const createWatchlistGroup = (items: TrendingItem[], startIdx: number) => {
     if (items.length === 0) return [];
@@ -77,7 +81,9 @@ export function HeroSection({ content, trending, watchlistsUrl }: HeroSectionPro
         <div className="mb-8 flex flex-wrap items-center justify-center gap-4">
           <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 backdrop-blur-sm">
             <ListChecks className="h-4 w-4 text-blue-400" />
-            <span className="text-sm text-gray-300">{content.home.hero.pills.organize}</span>
+            <span className="text-sm text-gray-300">
+              {content.home.hero.pills.organize}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 backdrop-blur-sm">
             <Users className="h-4 w-4 text-purple-400" />
@@ -87,7 +93,9 @@ export function HeroSection({ content, trending, watchlistsUrl }: HeroSectionPro
           </div>
           <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 backdrop-blur-sm">
             <Sparkles className="h-4 w-4 text-yellow-400" />
-            <span className="text-sm text-gray-300">{content.home.hero.pills.discover}</span>
+            <span className="text-sm text-gray-300">
+              {content.home.hero.pills.discover}
+            </span>
           </div>
         </div>
 
@@ -106,10 +114,13 @@ export function HeroSection({ content, trending, watchlistsUrl }: HeroSectionPro
         </p>
 
         {/* CTA Button - Gray */}
-        <Link to={watchlistsUrl}>
+        <Link
+          //   className="rounded-full p-[0.4rem] shadow-[rgb(189_189_189/_25%)_0px_30px_60px_-12px_inset,_rgba(0,0,0,0.3)_0px_18px_36px_-18px_inset]"
+          to={watchlistsUrl}
+        >
           <Button
             size="default"
-            className="bg-gray-200 font-semibold text-black transition-colors hover:bg-gray-300"
+            className="rounded-full bg-gray-200 px-6 py-[1.4rem] font-semibold text-black transition-colors hover:bg-gray-300"
           >
             {content.home.hero.cta}
           </Button>

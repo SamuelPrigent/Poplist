@@ -18,7 +18,7 @@ interface MediaItem {
   vote_average: number;
 }
 
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const GENRES = {
   movie: [
@@ -153,11 +153,12 @@ export function Explore() {
           });
 
           if (filterType === "trending") {
-            // Use trending endpoint (doesn't support genre filtering)
-            url = `https://api.themoviedb.org/3/trending/${mediaType}/day`;
+            // Use backend cached trending endpoint (doesn't support genre filtering)
+            url = `${API_URL}/tmdb/trending/day`;
+            // Note: Trending always returns "all" (movies + TV), but we filter by mediaType on frontend
           } else if (selectedGenre) {
-            // Use discover endpoint for genre filtering
-            url = `https://api.themoviedb.org/3/discover/${mediaType}`;
+            // Use backend cached discover endpoint for genre filtering
+            url = `${API_URL}/tmdb/discover/${mediaType}`;
             params.append("with_genres", selectedGenre.toString());
 
             // Set appropriate sort_by based on filter type
@@ -168,16 +169,12 @@ export function Explore() {
               params.append("vote_count.gte", "200");
             }
           } else {
-            // Use direct popular/top_rated endpoints when no genre filter
-            url = `https://api.themoviedb.org/3/${mediaType}/${filterType}`;
+            // Use backend cached popular/top_rated endpoints when no genre filter
+            url = `${API_URL}/tmdb/${mediaType}/${filterType}`;
           }
 
-          const response = await fetch(`${url}?${params}`, {
-            headers: {
-              Authorization: `Bearer ${TMDB_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-          });
+          // Use backend cached routes - no TMDB API key needed
+          const response = await fetch(`${url}?${params}`);
 
           const data = await response.json();
           allResults = [...allResults, ...(data.results || [])];
@@ -367,8 +364,8 @@ export function Explore() {
                             <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                               {content.watchlists.addToWatchlist}
                             </DropdownMenu.Label>
-                            {watchlists.length > 0 ? (
-                              watchlists.map((watchlist) => (
+                            {watchlists.filter(w => w.isOwner).length > 0 ? (
+                              watchlists.filter(w => w.isOwner).map((watchlist) => (
                                 <DropdownMenu.Item
                                   key={watchlist._id}
                                   className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"

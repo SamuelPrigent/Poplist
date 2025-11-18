@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { watchlistAPI } from "@/lib/api-client";
 import type { Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
+import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 
 interface AddItemModalProps {
   open: boolean;
@@ -149,6 +150,9 @@ export function AddItemModal({
         });
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
+
+        // Invalidate thumbnail cache so it regenerates with new item
+        deleteCachedThumbnail(watchlist._id);
       } else {
         // Online mode: add via API
         await watchlistAPI.addItem(watchlist._id, {

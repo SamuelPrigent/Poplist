@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { authAPI, setAuthErrorHandler } from "@/lib/api-client";
 import { AuthContext, type AuthContextValue, type User } from "./auth-context";
 import { useLanguageStore, type Language } from "@/store/language";
+import { mergeLocalWatchlistsToDB } from "@/features/watchlists/localStorage";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -51,11 +52,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await authAPI.login(email, password);
     setUser((response as { user: User }).user);
+
+    // Merge local watchlists to database after successful login
+    try {
+      await mergeLocalWatchlistsToDB();
+    } catch (error) {
+      console.error("Failed to merge local watchlists after login:", error);
+      // Don't throw - login was successful, just log the error
+    }
   };
 
   const signup = async (email: string, password: string) => {
     const response = await authAPI.signup(email, password);
     setUser((response as { user: User }).user);
+
+    // Merge local watchlists to database after successful signup
+    try {
+      await mergeLocalWatchlistsToDB();
+    } catch (error) {
+      console.error("Failed to merge local watchlists after signup:", error);
+      // Don't throw - signup was successful, just log the error
+    }
   };
 
   const logout = async () => {
@@ -76,6 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authAPI.changePassword(oldPassword, newPassword);
   };
 
+  const deleteAccount = async (confirmation: string) => {
+    await authAPI.deleteAccount(confirmation);
+    setUser(null);
+  };
+
   const value: AuthContextValue = {
     user,
     isLoading,
@@ -86,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetch,
     updateUsername,
     changePassword,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

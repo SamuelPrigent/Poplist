@@ -10,8 +10,11 @@ import {
   EditWatchlistDialog,
   type EditWatchlistDialogRef,
 } from "@/components/Watchlist/EditWatchlistDialog";
+import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import pointIcon from "@/assets/points.svg";
 import { useLanguageStore } from "@/store/language";
 
 export function WatchlistDetail() {
@@ -24,6 +27,7 @@ export function WatchlistDetail() {
   const [notFound, setNotFound] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const editDialogRef = useRef<EditWatchlistDialogRef>(null);
@@ -198,6 +202,42 @@ export function WatchlistDetail() {
             </Button>
           ) : null
         }
+        menuButton={
+          isOwner ? (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="select-none rounded-full p-3 transition-all hover:scale-105 outline-none focus:outline-none focus-visible:outline-none data-[state=open]:outline-none data-[state=closed]:outline-none">
+                  <img
+                    src={pointIcon}
+                    alt="Menu"
+                    className="h-8 w-8 opacity-60 brightness-0 invert transition-all hover:opacity-100"
+                  />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-background p-1 shadow-md"
+                  sideOffset={5}
+                >
+                  <DropdownMenu.Item
+                    className="flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
+                    onClick={() => setEditModalOpen(true)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span>{content.watchlists.editWatchlist}</span>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:bg-red-500/10"
+                    onClick={() => setDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>{content.watchlists.deleteWatchlist}</span>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          ) : null
+        }
         onEdit={isOwner ? () => setEditModalOpen(true) : undefined}
         onImageClick={isOwner ? handleImageClick : undefined}
         onShare={handleShare}
@@ -237,6 +277,17 @@ export function WatchlistDetail() {
           onOpenChange={setEditModalOpen}
           onSuccess={fetchWatchlist}
           watchlist={watchlist}
+          offline={false}
+        />
+      )}
+
+      {/* Delete Watchlist Dialog - only for owners */}
+      {isOwner && (
+        <DeleteWatchlistDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          watchlist={watchlist}
+          onSuccess={() => navigate("/account/watchlists")}
           offline={false}
         />
       )}

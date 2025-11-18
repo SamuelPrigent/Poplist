@@ -3,13 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
 import { useLanguageStore } from "@/store/language";
+import { useAuth } from "@/context/auth-context";
 import { scrollToTop } from "@/lib/utils";
 import { Film, ArrowLeft } from "lucide-react";
 
 export function CommunityWatchlists() {
   const { content } = useLanguageStore();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
+  const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,21 +24,36 @@ export function CommunityWatchlists() {
     scrollToTop();
   };
 
+  const fetchWatchlists = async () => {
+    try {
+      // Fetch all public watchlists with higher limit for community page
+      const data = await watchlistAPI.getPublicWatchlists(1000);
+      setWatchlists(data.watchlists || []);
+    } catch (error) {
+      console.error("Failed to fetch community watchlists:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchWatchlists = async () => {
-      try {
-        // Use the same endpoint as HomeApp but without limit to get all public watchlists
-        const data = await watchlistAPI.getPublicWatchlists();
-        setWatchlists(data.watchlists || []);
-      } catch (error) {
-        console.error("Failed to fetch community watchlists:", error);
-      } finally {
-        setLoading(false);
+    const fetchData = async () => {
+      // Fetch public watchlists
+      await fetchWatchlists();
+
+      // Fetch user's watchlists if authenticated
+      if (user) {
+        try {
+          const userData = await watchlistAPI.getMine();
+          setUserWatchlists(userData.watchlists || []);
+        } catch (error) {
+          console.error("Failed to fetch user watchlists:", error);
+        }
       }
     };
 
-    fetchWatchlists();
-  }, []);
+    fetchData();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -73,16 +91,32 @@ export function CommunityWatchlists() {
           </div>
         ) : watchlists.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {watchlists.map((watchlist) => (
-              <WatchlistCard
-                key={watchlist._id}
-                watchlist={watchlist}
-                content={content}
-                href={`/account/watchlist/${watchlist._id}`}
-                showMenu={false}
-                showOwner={true}
-              />
-            ))}
+            {watchlists.map((watchlist) => {
+              // Calculate isOwner by comparing user email with watchlist owner email
+              const ownerEmail =
+                typeof watchlist.ownerId === "string"
+                  ? null
+                  : watchlist.ownerId?.email;
+              const isOwner = user?.email === ownerEmail;
+
+              // Check if this watchlist is in user's saved watchlists
+              const isSaved = userWatchlists.some(
+                (uw) => uw._id === watchlist._id && !uw.isOwner
+              );
+              const showSavedBadge = !isOwner && isSaved;
+
+              return (
+                <WatchlistCard
+                  key={watchlist._id}
+                  watchlist={watchlist}
+                  content={content}
+                  href={`/account/watchlist/${watchlist._id}`}
+                  showMenu={false}
+                  showOwner={true}
+                  showSavedBadge={showSavedBadge}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-lg border border-border bg-card p-12 text-center">

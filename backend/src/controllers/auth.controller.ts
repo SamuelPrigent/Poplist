@@ -549,3 +549,85 @@ export async function changePassword(req: Request, res: Response): Promise<void>
     throw error;
   }
 }
+
+const deleteAccountSchema = z.object({
+  confirmation: z.literal('confirmer'),
+});
+
+export async function deleteAccount(req: Request, res: Response): Promise<void> {
+  try {
+    const { confirmation } = deleteAccountSchema.parse(req.body);
+
+    if (!req.user?.sub) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const userId = req.user.sub;
+
+    // Import Watchlist model dynamically to avoid circular dependency
+    const { Watchlist } = await import('../models/Watchlist.model.js');
+
+    // Remove user from all watchlists' likedBy arrays
+    await Watchlist.updateMany(
+      { likedBy: userId },
+      {
+        $pull: { likedBy: userId },
+        $inc: { followersCount: -1 }
+      }
+    );
+
+    // Remove this user's watchlists from other users' savedWatchlists arrays
+    const userWatchlists = await Watchlist.find({ ownerId: userId }).select('_id');
+    const watchlistIds = userWatchlists.map(w => w._id);
+
+    await User.updateMany(
+      { savedWatchlists: { $in: watchlistIds } },
+      { $pull: { savedWatchlists: { $in: watchlistIds } } }
+    );
+
+    // Delete all user's watchlists
+    await Watchlist.deleteMany({ ownerId: userId });
+
+    // Clear auth cookies before deleting user
+    clearAuthCookies(res);
+
+    // Delete user account
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid confirmation text' });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function checkUsernameAvailability(req: Request, res: Response): Promise<void> {
+  try {
+    const { username } = req.params;
+
+    // Validate username format
+    if (!username || username.length < 3 || username.length > 20) {
+      res.status(400).json({ error: 'Username must be between 3 and 20 characters' });
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
+      return;
+    }
+
+    // Check if username exists
+    const existingUser = await User.findOne({ username });
+
+    res.json({
+      available: !existingUser,
+      username,
+    });
+  } catch (error) {
+    throw error;
+  }
+}

@@ -56,7 +56,9 @@ export function ItemDetailsModal({
         setDetails(data);
       } catch (err) {
         console.error("Failed to fetch item details:", err);
-        setError(errorMessage);
+        // Don't show error - item doesn't exist on TMDB
+        setError(null);
+        setDetails(null);
       } finally {
         setLoading(false);
       }
@@ -161,11 +163,13 @@ export function ItemDetailsModal({
                 {content.watchlists.itemDetails.loading}
               </div>
             </div>
-          ) : error ? (
+          ) : !details ? (
             <div className="flex min-h-[400px] items-center justify-center">
-              <div className="text-red-500">{error}</div>
+              <div className="text-muted-foreground">
+                {content.watchlists.itemDetails.notAvailable}
+              </div>
             </div>
-          ) : details ? (
+          ) : (
             <>
               {/* Backdrop Background */}
               <div className="relative overflow-hidden">
@@ -364,7 +368,7 @@ export function ItemDetailsModal({
                 </div>
               </div>
             </>
-          ) : null}
+          )}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

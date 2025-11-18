@@ -71,8 +71,7 @@ export const fr: Content = {
     editWatchlist: "Modifier la watchlist",
     editWatchlistDescription: "Modifiez les informations de votre watchlist.",
     deleteWatchlist: "Supprimer la watchlist",
-    deleteWatchlistConfirm:
-      'Êtes-vous sûr de vouloir supprimer "{name}" ? Cette action est irréversible.',
+    deleteWatchlistConfirm: 'Êtes-vous sûr de vouloir supprimer "{name}" ?',
     deleteWatchlistWarning:
       "Cette watchlist contient {count} élément(s) qui seront également supprimés.",
     saving: "Enregistrement...",
@@ -130,6 +129,12 @@ export const fr: Content = {
       unsave: "Retirer de la bibliothèque",
       duplicate: "Dupliquer dans mon espace",
       inviteCollaborator: "Inviter un collaborateur",
+    },
+    contextMenu: {
+      addToWatchlist: "Ajouter à une watchlist",
+      removeFromWatchlist: "Retirer de la watchlist",
+      moveToFirst: "Déplacer en première position",
+      moveToLast: "Déplacer en dernière position",
     },
     addToWatchlist: "Ajouter à une watchlist",
     noWatchlist: "Aucune watchlist",
@@ -420,6 +425,11 @@ export const fr: Content = {
       placeholder: "Entrez votre nom d'utilisateur",
       hint: "3-20 caractères. Lettres, chiffres et underscores uniquement.",
       updateButton: "Mettre à jour",
+      validation: {
+        lengthError: "Le nom d'utilisateur doit contenir entre 3 et 20 caractères",
+        formatError: "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
+        alreadyTaken: "Le nom d'utilisateur est déjà pris",
+      },
     },
     passwordSection: {
       title: "Mot de passe",
@@ -433,16 +443,32 @@ export const fr: Content = {
       confirmPasswordPlaceholder: "Nouveau mot de passe",
       changeButton: "Changer le mot de passe",
     },
+    deleteSection: {
+      title: "Supprimer le compte",
+      description:
+        "Action irréversible. Toutes vos données seront supprimées.",
+      dialogTitle: "Supprimer votre compte",
+      dialogDescription:
+        "Action irréversible. Toutes vos données seront supprimées.",
+      confirmationLabel: "Tapez 'confirmer' pour continuer",
+      confirmationPlaceholder: "confirmer",
+      deleteButton: "Supprimer le compte",
+      deleting: "Suppression...",
+      cancel: "Annuler",
+    },
     toasts: {
       usernameUpdated: "Nom d'utilisateur mis à jour",
       usernameUpdatedDesc:
         "Votre nom d'utilisateur a été mis à jour avec succès.",
       passwordChanged: "Mot de passe changé",
       passwordChangedDesc: "Votre mot de passe a été changé avec succès.",
+      accountDeleted: "Compte supprimé",
+      accountDeletedDesc: "Votre compte a été supprimé avec succès.",
       error: "Erreur",
       passwordMismatch: "Les nouveaux mots de passe ne correspondent pas",
       updateFailed: "Échec de la mise à jour du nom d'utilisateur",
       passwordChangeFailed: "Échec du changement de mot de passe",
+      accountDeleteFailed: "Échec de la suppression du compte",
     },
   },
 };

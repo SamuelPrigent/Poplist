@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { WATCHLIST_CATEGORIES, getCategoryInfo, type WatchlistCategory } from "@/types/categories";
+import { generateAndCacheThumbnail, deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 
 interface EditWatchlistDialogProps {
   open: boolean;
@@ -122,7 +123,7 @@ export const EditWatchlistDialog = forwardRef<
         );
 
         if (index !== -1) {
-          watchlists[index] = {
+          const updatedWatchlist = {
             ...watchlists[index],
             name: name.trim(),
             description: description.trim() || undefined,
@@ -131,7 +132,25 @@ export const EditWatchlistDialog = forwardRef<
             categories: categories.length > 0 ? categories : undefined,
             updatedAt: new Date().toISOString(),
           };
+          watchlists[index] = updatedWatchlist;
           localStorage.setItem("watchlists", JSON.stringify(watchlists));
+
+          // Handle thumbnail changes
+          if (imagePreview === null && watchlist.imageUrl) {
+            // User removed custom image - regenerate automatic thumbnail
+            if (updatedWatchlist.items && updatedWatchlist.items.length > 0) {
+              const posterUrls = updatedWatchlist.items
+                .slice(0, 4)
+                .map((item: any) => item.posterUrl)
+                .filter(Boolean);
+              if (posterUrls.length > 0) {
+                await generateAndCacheThumbnail(watchlist._id, posterUrls);
+              }
+            }
+          } else if (imagePreview && imagePreview !== watchlist.imageUrl) {
+            // User uploaded a new image - delete cached thumbnail
+            deleteCachedThumbnail(watchlist._id);
+          }
         }
 
         onSuccess();
@@ -164,8 +183,20 @@ export const EditWatchlistDialog = forwardRef<
 
         // Handle image changes
         if (imagePreview === null && watchlist.imageUrl) {
-          // User removed the image - delete from Cloudinary
+          // User removed the image - delete from Cloudinary and regenerate thumbnail
           await watchlistAPI.deleteCover(watchlist._id);
+
+          // Regenerate automatic thumbnail
+          const updatedWatchlist = await watchlistAPI.getById(watchlist._id);
+          if (updatedWatchlist.watchlist.items.length > 0) {
+            const posterUrls = updatedWatchlist.watchlist.items
+              .slice(0, 4)
+              .map((item: any) => item.posterUrl)
+              .filter(Boolean);
+            if (posterUrls.length > 0) {
+              await generateAndCacheThumbnail(watchlist._id, posterUrls);
+            }
+          }
         } else if (
           imageFile &&
           imagePreview &&
@@ -173,6 +204,9 @@ export const EditWatchlistDialog = forwardRef<
         ) {
           // User uploaded a new image (old one will be auto-deleted by backend)
           await watchlistAPI.uploadCover(watchlist._id, imagePreview);
+
+          // Delete cached thumbnail since we now have a custom image
+          deleteCachedThumbnail(watchlist._id);
         }
 
         onSuccess();

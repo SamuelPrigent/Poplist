@@ -34,19 +34,34 @@ export async function mergeLocalWatchlistsToDB(): Promise<void> {
 
   console.log(`Merging ${localWatchlists.length} local watchlists to database...`);
 
-  const promises = localWatchlists.map((watchlist) =>
-    watchlistAPI.create({
+  const promises = localWatchlists.map((watchlist) => {
+    // Transform items to ensure proper format
+    const items = (watchlist.items || []).map((item: any) => ({
+      tmdbId: item.tmdbId || item.id?.toString() || '',
+      title: item.title || '',
+      posterUrl: item.posterUrl || item.poster_path || '',
+      type: item.type || 'movie',
+      platformList: item.platformList || [],
+      runtime: item.runtime,
+      numberOfSeasons: item.numberOfSeasons || item.number_of_seasons,
+      numberOfEpisodes: item.numberOfEpisodes || item.number_of_episodes,
+      addedAt: item.addedAt || new Date(),
+    }));
+
+    return watchlistAPI.create({
       name: watchlist.name,
       description: watchlist.description,
       isPublic: watchlist.isPublic,
-      items: watchlist.items,
+      categories: watchlist.categories || [],
+      items: items,
       fromLocalStorage: true,
-    })
-  );
+    });
+  });
 
   try {
     await Promise.all(promises);
-    clearLocalWatchlists();
+    // Don't clear localStorage - keep it as a permanent backup
+    // Users might want to create multiple accounts or recreate after errors
     console.log('Successfully merged local watchlists to database');
   } catch (error) {
     console.error('Failed to merge local watchlists:', error);
