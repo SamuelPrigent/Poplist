@@ -9,40 +9,31 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X, Pencil, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { watchlistAPI, type Watchlist, type WatchlistItem } from "@/lib/api-client";
+import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
-import {
-  WATCHLIST_CATEGORIES,
-  getCategoryInfo,
-  type WatchlistCategory,
-} from "@/types/categories";
 import {
   generateAndCacheThumbnail,
   deleteCachedThumbnail,
 } from "@/lib/thumbnailGenerator";
 
-interface EditWatchlistDialogProps {
+interface EditWatchlistDialogOfflineProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   watchlist: Watchlist;
-  offline?: boolean;
 }
 
-export interface EditWatchlistDialogRef {
+export interface EditWatchlistDialogOfflineRef {
   openFilePicker: () => void;
 }
 
-export const EditWatchlistDialog = forwardRef<
-  EditWatchlistDialogRef,
-  EditWatchlistDialogProps
->(({ open, onOpenChange, onSuccess, watchlist, offline = false }, ref) => {
+export const EditWatchlistDialogOffline = forwardRef<
+  EditWatchlistDialogOfflineRef,
+  EditWatchlistDialogOfflineProps
+>(({ open, onOpenChange, onSuccess, watchlist }, ref) => {
   const { content } = useLanguageStore();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
-  const [categories, setCategories] = useState<WatchlistCategory[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,31 +46,14 @@ export const EditWatchlistDialog = forwardRef<
     },
   }));
 
-  const toggleCategory = (category: WatchlistCategory) => {
-    setCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
-    );
-  };
-
   // Initialize form with watchlist data when dialog opens
   useEffect(() => {
     if (open && watchlist) {
       setName(watchlist.name);
       setDescription(watchlist.description || "");
-      setIsPublic(watchlist.isPublic);
-      setCategories((watchlist.categories || []) as WatchlistCategory[]);
       setImagePreview(watchlist.imageUrl || null);
     }
   }, [open, watchlist]);
-
-  // Clear categories when watchlist becomes private
-  useEffect(() => {
-    if (!isPublic && categories.length > 0) {
-      setCategories([]);
-    }
-  }, [isPublic, categories.length]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,7 +71,6 @@ export const EditWatchlistDialog = forwardRef<
       return;
     }
 
-    setImageFile(file);
     setError(null);
 
     // Create preview
@@ -120,83 +93,30 @@ export const EditWatchlistDialog = forwardRef<
     setLoading(true);
 
     try {
-      if (offline) {
-        // Offline mode: update in localStorage
-        const watchlists = JSON.parse(
-          localStorage.getItem("watchlists") || "[]",
-        );
-        const index = watchlists.findIndex(
-          (w: Watchlist) => w._id === watchlist._id,
-        );
+      // Offline mode: update in localStorage
+      const watchlists = JSON.parse(
+        localStorage.getItem("watchlists") || "[]",
+      );
+      const index = watchlists.findIndex(
+        (w: Watchlist) => w._id === watchlist._id,
+      );
 
-        if (index !== -1) {
-          const updatedWatchlist = {
-            ...watchlists[index],
-            name: name.trim(),
-            description: description.trim() || undefined,
-            imageUrl: imagePreview || undefined,
-            isPublic,
-            categories: categories.length > 0 ? categories : undefined,
-            updatedAt: new Date().toISOString(),
-          };
-          watchlists[index] = updatedWatchlist;
-          localStorage.setItem("watchlists", JSON.stringify(watchlists));
-
-          // Handle thumbnail changes
-          if (imagePreview === null && watchlist.imageUrl) {
-            // User removed custom image - regenerate automatic thumbnail
-            if (updatedWatchlist.items && updatedWatchlist.items.length > 0) {
-              const posterUrls = updatedWatchlist.items
-                .slice(0, 4)
-                .map((item: WatchlistItem) => item.posterUrl)
-                .filter(Boolean);
-              if (posterUrls.length > 0) {
-                await generateAndCacheThumbnail(watchlist._id, posterUrls);
-              }
-            }
-          } else if (imagePreview && imagePreview !== watchlist.imageUrl) {
-            // User uploaded a new image - delete cached thumbnail
-            deleteCachedThumbnail(watchlist._id);
-          }
-        }
-
-        onSuccess();
-        onOpenChange(false);
-      } else {
-        // Online mode: update via API
-        const updates: {
-          name: string;
-          description?: string;
-          isPublic: boolean;
-          categories?: WatchlistCategory[];
-        } = {
+      if (index !== -1) {
+        const updatedWatchlist = {
+          ...watchlists[index],
           name: name.trim(),
-          isPublic,
+          description: description.trim() || undefined,
+          imageUrl: imagePreview || undefined,
+          updatedAt: new Date().toISOString(),
         };
+        watchlists[index] = updatedWatchlist;
+        localStorage.setItem("watchlists", JSON.stringify(watchlists));
 
-        // Explicitly set description (empty string to clear it)
-        if (description.trim() === "") {
-          updates.description = "";
-        } else {
-          updates.description = description.trim();
-        }
-
-        // Add categories if any are selected
-        if (categories.length > 0) {
-          updates.categories = categories;
-        }
-
-        await watchlistAPI.update(watchlist._id, updates);
-
-        // Handle image changes
+        // Handle thumbnail changes
         if (imagePreview === null && watchlist.imageUrl) {
-          // User removed the image - delete from Cloudinary and regenerate thumbnail
-          await watchlistAPI.deleteCover(watchlist._id);
-
-          // Regenerate automatic thumbnail
-          const updatedWatchlist = await watchlistAPI.getById(watchlist._id);
-          if (updatedWatchlist.watchlist.items.length > 0) {
-            const posterUrls = updatedWatchlist.watchlist.items
+          // User removed custom image - regenerate automatic thumbnail
+          if (updatedWatchlist.items && updatedWatchlist.items.length > 0) {
+            const posterUrls = updatedWatchlist.items
               .slice(0, 4)
               .map((item: WatchlistItem) => item.posterUrl)
               .filter(Boolean);
@@ -204,21 +124,14 @@ export const EditWatchlistDialog = forwardRef<
               await generateAndCacheThumbnail(watchlist._id, posterUrls);
             }
           }
-        } else if (
-          imageFile &&
-          imagePreview &&
-          imagePreview !== watchlist.imageUrl
-        ) {
-          // User uploaded a new image (old one will be auto-deleted by backend)
-          await watchlistAPI.uploadCover(watchlist._id, imagePreview);
-
-          // Delete cached thumbnail since we now have a custom image
+        } else if (imagePreview && imagePreview !== watchlist.imageUrl) {
+          // User uploaded a new image - delete cached thumbnail
           deleteCachedThumbnail(watchlist._id);
         }
-
-        onSuccess();
-        onOpenChange(false);
       }
+
+      onSuccess();
+      onOpenChange(false);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to update watchlist",
@@ -262,9 +175,7 @@ export const EditWatchlistDialog = forwardRef<
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
                         <Pencil className="h-8 w-8 text-white" />
                         <span className="mt-2 text-sm text-white">
-                          {/* {content.watchlists.selectPhoto ||
-                            "Sélectionner une photo"} */}
-                          {"Sélectionner une photo"}
+                          Sélectionner une photo
                         </span>
                       </div>
                       {/* Remove button */}
@@ -272,7 +183,6 @@ export const EditWatchlistDialog = forwardRef<
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setImageFile(null);
                           setImagePreview(null);
                         }}
                         className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity hover:bg-black/80 group-hover:opacity-100"
@@ -284,9 +194,7 @@ export const EditWatchlistDialog = forwardRef<
                     <div className="flex h-full w-full flex-col items-center justify-center bg-muted/50 transition-colors group-hover:bg-muted">
                       <ImageIcon className="h-12 w-12 text-muted-foreground" />
                       <span className="mt-2 text-sm text-muted-foreground">
-                        {/* {content.watchlists.selectPhoto ||
-                          "Sélectionner une photo"} */}
-                        {"Sélectionner une photo"}
+                        Sélectionner une photo
                       </span>
                     </div>
                   )}
@@ -338,53 +246,6 @@ export const EditWatchlistDialog = forwardRef<
               </div>
             </div>
 
-            {/* Public Checkbox */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isPublic"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
-                disabled={loading}
-                className="h-4 w-4 rounded border-input bg-background text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <label
-                htmlFor="isPublic"
-                className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {content.watchlists.makePublic}
-              </label>
-            </div>
-
-            {/* Categories Selection - Only shown if public */}
-            {isPublic && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  {content.watchlists.categories}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {WATCHLIST_CATEGORIES.map((category) => (
-                    <button
-                      key={category}
-                      type="button"
-                      onClick={() => toggleCategory(category)}
-                      disabled={loading}
-                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                        categories.includes(category)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      {getCategoryInfo(category, content).name}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {content.watchlists.categoriesDescription}
-                </p>
-              </div>
-            )}
-
             <div className="flex justify-end">
               <Button type="submit" disabled={loading}>
                 {loading ? content.watchlists.saving : content.watchlists.save}
@@ -409,4 +270,4 @@ export const EditWatchlistDialog = forwardRef<
   );
 });
 
-EditWatchlistDialog.displayName = "EditWatchlistDialog";
+EditWatchlistDialogOffline.displayName = "EditWatchlistDialogOffline";

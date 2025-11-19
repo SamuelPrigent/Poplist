@@ -54,6 +54,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty";
 import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
+import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 
 interface WatchlistItemsTableProps {
   watchlist: Watchlist;
@@ -77,8 +78,11 @@ interface DraggableRowProps {
   setHoveredRow: (id: string | null) => void;
   handleRemoveItem: (tmdbId: string) => void;
   handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
+  handleAddToWatchlist: (tmdbId: string, targetWatchlistId: string) => void;
+  otherWatchlists: Watchlist[];
   totalItems: number;
   isDragDisabled: boolean;
+  canEdit: boolean;
   content: Content;
 }
 
@@ -91,8 +95,11 @@ function DraggableRow({
   setHoveredRow,
   handleRemoveItem,
   handleMoveItem,
+  handleAddToWatchlist,
+  otherWatchlists,
   totalItems,
   isDragDisabled,
+  canEdit,
   content,
 }: DraggableRowProps) {
   const {
@@ -148,72 +155,144 @@ function DraggableRow({
               className="px-4 py-3"
               onClick={(e) => e.stopPropagation()}
             >
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    className={cn(
-                      "cursor-pointer rounded-full p-1 transition-opacity hover:bg-muted",
-                      hoveredRow === item.tmdbId
-                        ? "opacity-100"
-                        : "opacity-0 group-hover:opacity-100",
-                    )}
-                    disabled={loadingItem === item.tmdbId}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </DropdownMenu.Trigger>
-
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
-                    sideOffset={5}
-                  >
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      disabled
+              {canEdit ? (
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      className={cn(
+                        "cursor-pointer rounded-full p-1 transition-opacity hover:bg-muted",
+                        hoveredRow === item.tmdbId
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100",
+                      )}
+                      disabled={loadingItem === item.tmdbId}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Plus className="mr-2.5 h-4 w-4" />
-                      <span>
-                        {content.watchlists.contextMenu.addToWatchlist}
-                      </span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        →
-                      </span>
-                    </DropdownMenu.Item>
+                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </DropdownMenu.Trigger>
 
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onSelect={() => handleRemoveItem(item.tmdbId)}
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
+                      sideOffset={5}
                     >
-                      <Trash2 className="mr-2.5 h-4 w-4" />
-                      <span>
-                        {content.watchlists.contextMenu.removeFromWatchlist}
-                      </span>
-                    </DropdownMenu.Item>
+                      <DropdownMenu.Sub>
+                        <DropdownMenu.SubTrigger className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                          <Plus className="mr-2.5 h-4 w-4" />
+                          <span>
+                            {content.watchlists.contextMenu.addToWatchlist}
+                          </span>
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            →
+                          </span>
+                        </DropdownMenu.SubTrigger>
+                        <DropdownMenu.Portal>
+                          <DropdownMenu.SubContent
+                            className="z-50 max-h-[300px] min-w-[220px] overflow-y-auto rounded-xl border border-border bg-popover p-1.5 shadow-xl"
+                            sideOffset={8}
+                          >
+                            {otherWatchlists.length === 0 ? (
+                              <div className="px-3 py-2.5 text-sm text-muted-foreground">
+                                Aucune autre watchlist
+                              </div>
+                            ) : (
+                              otherWatchlists.map((wl) => (
+                                <DropdownMenu.Item
+                                  key={wl._id}
+                                  className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent"
+                                  onSelect={() =>
+                                    handleAddToWatchlist(item.tmdbId, wl._id)
+                                  }
+                                >
+                                  <span className="truncate">{wl.name}</span>
+                                </DropdownMenu.Item>
+                              ))
+                            )}
+                          </DropdownMenu.SubContent>
+                        </DropdownMenu.Portal>
+                      </DropdownMenu.Sub>
 
-                    <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
+                      <DropdownMenu.Item
+                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onSelect={() => handleRemoveItem(item.tmdbId)}
+                      >
+                        <Trash2 className="mr-2.5 h-4 w-4" />
+                        <span>
+                          {content.watchlists.contextMenu.removeFromWatchlist}
+                        </span>
+                      </DropdownMenu.Item>
 
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onSelect={() => handleMoveItem(item.tmdbId, "first")}
-                      disabled={index === 0}
+                      <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
+
+                      <DropdownMenu.Item
+                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onSelect={() => handleMoveItem(item.tmdbId, "first")}
+                        disabled={index === 0}
+                      >
+                        <MoveUp className="mr-2.5 h-4 w-4" />
+                        <span>{content.watchlists.contextMenu.moveToFirst}</span>
+                      </DropdownMenu.Item>
+
+                      <DropdownMenu.Item
+                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onSelect={() => handleMoveItem(item.tmdbId, "last")}
+                        disabled={index === totalItems - 1}
+                      >
+                        <MoveDown className="mr-2.5 h-4 w-4" />
+                        <span>{content.watchlists.contextMenu.moveToLast}</span>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              ) : (
+                // Watchlist not owned (imported) - simple "+" button to add to owned watchlists
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-md bg-muted/50 transition-opacity hover:bg-muted",
+                        hoveredRow === item.tmdbId
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100",
+                      )}
+                      disabled={loadingItem === item.tmdbId}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <MoveUp className="mr-2.5 h-4 w-4" />
-                      <span>{content.watchlists.contextMenu.moveToFirst}</span>
-                    </DropdownMenu.Item>
+                      <Plus className="h-4 w-4 text-white" />
+                    </button>
+                  </DropdownMenu.Trigger>
 
-                    <DropdownMenu.Item
-                      className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onSelect={() => handleMoveItem(item.tmdbId, "last")}
-                      disabled={index === totalItems - 1}
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
+                      sideOffset={5}
                     >
-                      <MoveDown className="mr-2.5 h-4 w-4" />
-                      <span>{content.watchlists.contextMenu.moveToLast}</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                      <DropdownMenu.Label className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+                        {content.watchlists.addToWatchlist}
+                      </DropdownMenu.Label>
+                      {otherWatchlists.length === 0 ? (
+                        <div className="px-3 py-2.5 text-sm text-muted-foreground">
+                          Aucune watchlist
+                        </div>
+                      ) : (
+                        otherWatchlists.map((wl) => (
+                          <DropdownMenu.Item
+                            key={wl._id}
+                            className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                            onSelect={() =>
+                              handleAddToWatchlist(item.tmdbId, wl._id)
+                            }
+                            disabled={loadingItem === item.tmdbId}
+                          >
+                            {wl.name}
+                          </DropdownMenu.Item>
+                        ))
+                      )}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              )}
             </td>
           );
         }
@@ -243,11 +322,25 @@ export function WatchlistItemsTableOffline({
   const [loadingItem, setLoadingItem] = useState<string | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
+  const [otherWatchlists, setOtherWatchlists] = useState<Watchlist[]>([]);
+
+  // Determine if user can edit this watchlist (owned)
+  const canEdit = watchlist.ownerId === "offline";
 
   // Sync with parent when watchlist changes
   useEffect(() => {
     setItems(watchlist.items);
   }, [watchlist.items]);
+
+  // Load other watchlists for "Add to watchlist" feature
+  useEffect(() => {
+    const allWatchlists = getLocalWatchlists();
+    // Filter to exclude current watchlist and only show owned offline watchlists
+    const filtered = allWatchlists.filter(
+      (wl) => wl._id !== watchlist._id && wl.ownerId === "offline",
+    );
+    setOtherWatchlists(filtered);
+  }, [watchlist._id]);
 
   // Setup drag sensors
   const sensors = useSensors(
@@ -333,6 +426,53 @@ export function WatchlistItemsTableOffline({
       alert("Failed to move item");
       // Revert on error
       setItems(watchlist.items);
+    } finally {
+      setLoadingItem(null);
+    }
+  };
+
+  const handleAddToWatchlist = async (
+    tmdbId: string,
+    targetWatchlistId: string,
+  ) => {
+    try {
+      setLoadingItem(tmdbId);
+
+      // Find the item to add
+      const itemToAdd = items.find((item) => item.tmdbId === tmdbId);
+      if (!itemToAdd) return;
+
+      // Load all watchlists from localStorage
+      const localWatchlists = localStorage.getItem(STORAGE_KEY);
+      if (!localWatchlists) return;
+
+      const watchlists: Watchlist[] = JSON.parse(localWatchlists);
+      const targetIndex = watchlists.findIndex((w) => w._id === targetWatchlistId);
+      if (targetIndex === -1) return;
+
+      // Check if item already exists in target watchlist
+      const itemExists = watchlists[targetIndex].items.some(
+        (item) => item.tmdbId === tmdbId,
+      );
+
+      if (itemExists) {
+        return;
+      }
+
+      // Add item to target watchlist
+      watchlists[targetIndex].items.push({
+        ...itemToAdd,
+        addedAt: new Date().toISOString(),
+      });
+      watchlists[targetIndex].updatedAt = new Date().toISOString();
+
+      // Update localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
+
+      // Invalidate thumbnail cache for target watchlist
+      deleteCachedThumbnail(targetWatchlistId);
+    } catch (error) {
+      console.error("Failed to add item to watchlist:", error);
     } finally {
       setLoadingItem(null);
     }
@@ -625,8 +765,11 @@ export function WatchlistItemsTableOffline({
                   setHoveredRow={setHoveredRow}
                   handleRemoveItem={handleRemoveItem}
                   handleMoveItem={handleMoveItem}
+                  handleAddToWatchlist={handleAddToWatchlist}
+                  otherWatchlists={otherWatchlists}
                   totalItems={displayItems.length}
                   isDragDisabled={!isCustomOrder}
+                  canEdit={canEdit}
                   content={content}
                 />
               ))}

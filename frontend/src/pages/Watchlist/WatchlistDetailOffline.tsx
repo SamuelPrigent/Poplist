@@ -1,20 +1,18 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Watchlist } from "@/lib/api-client";
-import { WatchlistHeader } from "@/components/Watchlist/WatchlistHeader";
 import { WatchlistItemsTableOffline } from "@/components/Watchlist/WatchlistItemsTableOffline";
 import { AddItemModal } from "@/components/Watchlist/AddItemModal";
 import {
-  EditWatchlistDialog,
-  type EditWatchlistDialogRef,
-} from "@/components/Watchlist/EditWatchlistDialog";
+  EditWatchlistDialogOffline,
+  type EditWatchlistDialogOfflineRef,
+} from "@/components/Watchlist/EditWatchlistDialogOffline";
 import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
 import { Button } from "@/components/ui/button";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import pointIcon from "@/assets/points.svg";
+import { Plus, ArrowLeft, Film, Pencil } from "lucide-react";
 import { useLanguageStore } from "@/store/language";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
+import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 
 export function WatchlistDetailOffline() {
   const { id } = useParams<{ id: string }>();
@@ -26,7 +24,7 @@ export function WatchlistDetailOffline() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const editDialogRef = useRef<EditWatchlistDialogRef>(null);
+  const editDialogRef = useRef<EditWatchlistDialogOfflineRef>(null);
 
   const fetchWatchlist = useCallback(() => {
     if (!id) return;
@@ -53,6 +51,20 @@ export function WatchlistDetailOffline() {
   useEffect(() => {
     fetchWatchlist();
   }, [fetchWatchlist]);
+
+  const handleImageClick = () => {
+    setEditModalOpen(true);
+    // Open file picker after a short delay to ensure modal is open
+    setTimeout(() => {
+      editDialogRef.current?.openFilePicker();
+    }, 300);
+  };
+
+  // Get cover image (custom or auto-generated thumbnail)
+  // Always call hooks at the top level, before any early returns
+  const generatedThumbnail = useWatchlistThumbnail(watchlist);
+  const coverImage = watchlist?.imageUrl || generatedThumbnail;
+  const itemCount = watchlist?.items.length || 0;
 
   if (loading) {
     return (
@@ -100,63 +112,105 @@ export function WatchlistDetailOffline() {
     );
   }
 
-  const handleImageClick = () => {
-    setEditModalOpen(true);
-    // Open file picker after a short delay to ensure modal is open
-    setTimeout(() => {
-      editDialogRef.current?.openFilePicker();
-    }, 300);
-  };
+  // Watchlist is guaranteed to be non-null here (after early returns)
+  if (!watchlist) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background">
-      <WatchlistHeader
-        watchlist={watchlist}
-        actionButton={
-          <Button onClick={() => setAddModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            {content.watchlists.addItem}
-          </Button>
-        }
-        menuButton={
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button className="select-none rounded-full p-3 outline-none transition-all hover:scale-105 focus:outline-none focus-visible:outline-none data-[state=closed]:outline-none data-[state=open]:outline-none">
-                <img
-                  src={pointIcon}
-                  alt="Menu"
-                  className="h-8 w-8 opacity-60 brightness-0 invert transition-all hover:opacity-100"
-                />
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-background p-1 shadow-md"
-                sideOffset={5}
-              >
-                <DropdownMenu.Item
-                  className="flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
-                  onClick={() => setEditModalOpen(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                  <span>{content.watchlists.editWatchlist}</span>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  className="flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:bg-red-500/10"
-                  onClick={() => setDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span>{content.watchlists.deleteWatchlist}</span>
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        }
-        onEdit={() => setEditModalOpen(true)}
-        onImageClick={handleImageClick}
-      />
+      {/* Inline Header - Simplified for Offline */}
+      <div className="relative w-full overflow-hidden">
+        {/* Background Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-background/60 to-background" />
 
-      <div className="container mx-auto px-4 py-8">
+        <div className="container relative mx-auto px-4 pt-8">
+          {/* Back Button */}
+          <div className="mb-8">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>{content.watchlists.back}</span>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+            {/* Cover Image */}
+            <div className="flex-shrink-0">
+              <div
+                className="group relative h-56 w-56 cursor-pointer overflow-hidden rounded-lg shadow-2xl"
+                onClick={handleImageClick}
+              >
+                {coverImage ? (
+                  <>
+                    <img
+                      src={coverImage}
+                      alt={watchlist?.name || "Watchlist"}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Pencil className="h-10 w-10 text-white" />
+                      <span className="mt-2 text-sm font-medium text-white">
+                        Sélectionner une photo
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-muted/50">
+                    <Film className="h-24 w-24 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Info Section with Add Button */}
+            <div className="flex flex-1 flex-col justify-between space-y-4 md:min-h-[224px]">
+              {/* Empty spacer to push content down */}
+              <div className="flex-1" />
+
+              {/* Bottom section with title, description and button */}
+              <div className="flex items-end justify-between gap-6">
+                <div className="flex-1 space-y-4">
+                  <h1
+                    className="cursor-pointer text-4xl font-bold text-white transition-colors hover:text-primary md:text-7xl"
+                    onClick={() => setEditModalOpen(true)}
+                  >
+                    {watchlist?.name || ""}
+                  </h1>
+
+                  {watchlist?.description && (
+                    <p className="text-[14px] text-muted-foreground">
+                      {watchlist.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>
+                      {itemCount}{" "}
+                      {itemCount === 1
+                        ? content.watchlists.item
+                        : content.watchlists.items}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Add button aligned with bottom */}
+                <div className="flex-shrink-0 pb-1">
+                  <Button onClick={() => setAddModalOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                    {content.watchlists.addItem}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto mt-4 px-4 py-8">
         <WatchlistItemsTableOffline watchlist={watchlist} />
       </div>
 
@@ -170,13 +224,12 @@ export function WatchlistDetailOffline() {
       />
 
       {/* Edit Watchlist Modal */}
-      <EditWatchlistDialog
+      <EditWatchlistDialogOffline
         ref={editDialogRef}
         open={editModalOpen}
         onOpenChange={setEditModalOpen}
         onSuccess={fetchWatchlist}
         watchlist={watchlist}
-        offline={true}
       />
 
       {/* Delete Watchlist Dialog */}

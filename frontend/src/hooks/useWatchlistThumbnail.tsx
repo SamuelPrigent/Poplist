@@ -28,23 +28,19 @@ function isOfflineWatchlist(watchlist: Watchlist): boolean {
   return !/^[0-9a-fA-F]{24}$/.test(id);
 }
 
-export function useWatchlistThumbnail(watchlist: Watchlist): string | null {
+export function useWatchlistThumbnail(watchlist: Watchlist | null): string | null {
   const [localThumbnail, setLocalThumbnail] = useState<string | null>(null);
 
-  // Priority 1: Custom image
-  if (watchlist.imageUrl) {
-    return watchlist.imageUrl;
-  }
-
-  // Priority 2: Cloudinary thumbnail (online watchlists)
-  if (watchlist.thumbnailUrl) {
-    return watchlist.thumbnailUrl;
-  }
-
   // Priority 3: Generate local thumbnail for offline watchlists
-  const offline = isOfflineWatchlist(watchlist);
+  const offline = watchlist ? isOfflineWatchlist(watchlist) : false;
 
   useEffect(() => {
+    // Early return if watchlist is null
+    if (!watchlist) {
+      setLocalThumbnail(null);
+      return;
+    }
+
     if (!offline) {
       setLocalThumbnail(null);
       return;
@@ -86,8 +82,25 @@ export function useWatchlistThumbnail(watchlist: Watchlist): string | null {
     return () => {
       cancelled = true;
     };
-  }, [watchlist._id, JSON.stringify(watchlist.items.map(i => i.posterUrl).slice(0, 4)), offline]);
+  }, [watchlist?._id, watchlist ? JSON.stringify(watchlist.items.map(i => i.posterUrl).slice(0, 4)) : null, offline]);
 
+  // Return priorities (after hooks have been called)
+  // Handle null watchlist
+  if (!watchlist) {
+    return null;
+  }
+
+  // Priority 1: Custom image
+  if (watchlist.imageUrl) {
+    return watchlist.imageUrl;
+  }
+
+  // Priority 2: Cloudinary thumbnail (online watchlists)
+  if (watchlist.thumbnailUrl) {
+    return watchlist.thumbnailUrl;
+  }
+
+  // Priority 3: Local generated thumbnail (offline watchlists)
   if (offline) {
     return localThumbnail;
   }

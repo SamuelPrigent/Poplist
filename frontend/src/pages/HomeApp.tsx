@@ -15,6 +15,7 @@ import { ItemDetailsModal } from "@/components/Watchlist/ItemDetailsModal";
 import { useLanguageStore } from "@/store/language";
 import { useAuth } from "@/context/auth-context";
 import { WATCHLIST_CATEGORIES, getCategoryInfo } from "@/types/categories";
+import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 
 interface TrendingItem {
   id: number;
@@ -60,15 +61,15 @@ export function HomeApp() {
   const fetchPublicWatchlists = async () => {
     try {
       const publicData = await watchlistAPI.getPublicWatchlists(10);
-      console.log(
-        "📦 [HomeApp.tsx] Public watchlists received from backend:",
-        publicData.watchlists?.map((w) => ({
-          name: w.name,
-          isOwner: w.isOwner,
-          isCollaborator: w.isCollaborator,
-          isSaved: w.isSaved,
-        })),
-      );
+      //   console.log(
+      //     "📦 [HomeApp.tsx] Public watchlists received from backend:",
+      //     publicData.watchlists?.map((w) => ({
+      //       name: w.name,
+      //       isOwner: w.isOwner,
+      //       isCollaborator: w.isCollaborator,
+      //       isSaved: w.isSaved,
+      //     })),
+      //   );
       setPublicWatchlists(publicData.watchlists || []);
     } catch (error) {
       console.error("Failed to fetch public watchlists:", error);
@@ -106,11 +107,9 @@ export function HomeApp() {
           userWatchlistsData = userData.watchlists || [];
           setUserWatchlists(userWatchlistsData);
         } else {
-          const localWatchlists = localStorage.getItem("watchlists");
-          if (localWatchlists) {
-            userWatchlistsData = JSON.parse(localWatchlists) as Watchlist[];
-            setUserWatchlists(userWatchlistsData);
-          }
+          // Offline mode: get watchlists with ownership flags
+          userWatchlistsData = getLocalWatchlistsWithOwnership();
+          setUserWatchlists(userWatchlistsData);
         }
 
         // Simplified recommendations: Fetch multiple pages for more variety
@@ -118,7 +117,9 @@ export function HomeApp() {
         const randomPage1 = Math.floor(Math.random() * 5) + 1; // Random page 1-5
         const randomPage2 = Math.floor(Math.random() * 5) + 1; // Random page 1-5
 
-        console.log(`📺 [Recommendations] Fetching trending pages: ${randomPage1} and ${randomPage2}`);
+        // console.log(
+        //   `📺 [Recommendations] Fetching trending pages: ${randomPage1} and ${randomPage2}`,
+        // );
 
         const [trendingData1, trendingData2] = await Promise.all([
           tmdbAPI.getTrending("day", randomPage1),
@@ -133,14 +134,18 @@ export function HomeApp() {
 
         // Remove duplicates by ID
         const uniqueTrending = Array.from(
-          new Map(allTrending.map(item => [item.id, item])).values()
+          new Map(allTrending.map((item) => [item.id, item])).values(),
         );
 
         // Filter trending items by quality criteria
         const trendingFiltered = uniqueTrending
           .filter((item: TrendingItem) => item.poster_path)
-          .filter((item: TrendingItem) => item.vote_average && item.vote_average >= 6)
-          .filter((item: TrendingItem) => item.vote_count && item.vote_count > 100)
+          .filter(
+            (item: TrendingItem) => item.vote_average && item.vote_average >= 6,
+          )
+          .filter(
+            (item: TrendingItem) => item.vote_count && item.vote_count > 100,
+          )
           .filter((item: TrendingItem) => {
             const dateStr = item.release_date || item.first_air_date;
             if (!dateStr) return false;
@@ -153,10 +158,15 @@ export function HomeApp() {
         const maxOffset = Math.max(0, trendingFiltered.length - 5);
         const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
 
-        console.log(`📺 [Recommendations] Filtered ${trendingFiltered.length} items, using offset ${randomOffset} (range: ${randomOffset}-${randomOffset + 4})`);
+        // console.log(
+        //   `📺 [Recommendations] Filtered ${trendingFiltered.length} items, using offset ${randomOffset} (range: ${randomOffset}-${randomOffset + 4})`,
+        // );
 
         // Take exactly 5 consecutive items starting from random offset
-        const selectedRecommendations = trendingFiltered.slice(randomOffset, randomOffset + 5);
+        const selectedRecommendations = trendingFiltered.slice(
+          randomOffset,
+          randomOffset + 5,
+        );
         setRecommendations(selectedRecommendations);
 
         // Fetch category counts for all categories
@@ -246,8 +256,12 @@ export function HomeApp() {
 
               if (!itemExists) {
                 watchlists[watchlistIndex].items.push(newItem);
+                watchlists[watchlistIndex].updatedAt = new Date().toISOString();
                 localStorage.setItem("watchlists", JSON.stringify(watchlists));
-                setUserWatchlists([...watchlists]);
+
+                // Reload with ownership flags to maintain correct state
+                const updatedWatchlists = getLocalWatchlistsWithOwnership();
+                setUserWatchlists(updatedWatchlists);
               }
             }
           }
@@ -286,7 +300,7 @@ export function HomeApp() {
   // Security: Ensure recommendations never exceed 5 items
   const safeRecommendations = useMemo(
     () => recommendations.slice(0, 5),
-    [recommendations]
+    [recommendations],
   );
 
   return (
@@ -438,14 +452,14 @@ export function HomeApp() {
               // Show collaborative badge: user is a collaborator
               const showCollaborativeBadge = isCollaborator;
 
-              console.log(`🏠 [HomeApp] Rendering "${watchlist.name}":`, {
-                isOwner,
-                isCollaborator,
-                isSaved,
-                showSavedBadge,
-                showCollaborativeBadge,
-                hasUserWatchlist: !!userWatchlist,
-              });
+              //   console.log(`🏠 [HomeApp] Rendering "${watchlist.name}":`, {
+              //     isOwner,
+              //     isCollaborator,
+              //     isSaved,
+              //     showSavedBadge,
+              //     showCollaborativeBadge,
+              //     hasUserWatchlist: !!userWatchlist,
+              //   });
 
               return (
                 <WatchlistCard

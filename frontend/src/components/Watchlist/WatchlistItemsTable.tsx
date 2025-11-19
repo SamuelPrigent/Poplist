@@ -259,7 +259,64 @@ function DraggableRow({
                       </DropdownMenu.Content>
                     </DropdownMenu.Portal>
                   </DropdownMenu.Root>
-                ) : null
+                ) : (
+                  // Watchlist followed (saved/liked) - simple "+" button to add to own watchlists
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                      <button
+                        className={cn(
+                          "flex h-8 w-8 items-center justify-center rounded-md bg-muted/50 transition-opacity hover:bg-muted",
+                          hoveredRow === item.tmdbId
+                            ? "opacity-100"
+                            : "opacity-0 group-hover:opacity-100",
+                        )}
+                        disabled={addingTo === item.tmdbId}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Plus className="h-4 w-4 text-white" />
+                      </button>
+                    </DropdownMenu.Trigger>
+
+                    <DropdownMenu.Portal>
+                      <DropdownMenu.Content
+                        className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
+                        sideOffset={5}
+                      >
+                        <DropdownMenu.Label className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+                          {content.watchlists.addToWatchlist}
+                        </DropdownMenu.Label>
+                        {watchlists.filter(
+                          (w) =>
+                            w._id !== currentWatchlistId &&
+                            (w.isOwner || w.isCollaborator),
+                        ).length > 0 ? (
+                          watchlists
+                            .filter(
+                              (w) =>
+                                w._id !== currentWatchlistId &&
+                                (w.isOwner || w.isCollaborator),
+                            )
+                            .map((watchlist) => (
+                              <DropdownMenu.Item
+                                key={watchlist._id}
+                                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                                onSelect={() =>
+                                  handleAddToWatchlist(watchlist._id, item)
+                                }
+                                disabled={addingTo === item.tmdbId}
+                              >
+                                {watchlist.name}
+                              </DropdownMenu.Item>
+                            ))
+                        ) : (
+                          <div className="px-3 py-2.5 text-sm text-muted-foreground">
+                            {content.watchlists.noWatchlist}
+                          </div>
+                        )}
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
+                )
               ) : (
                 // Informations column
                 flexRender(cell.column.columnDef.cell, cell.getContext())
@@ -359,10 +416,8 @@ export function WatchlistItemsTable({
         language: "fr-FR",
         region: "FR",
       });
-      // Could show success toast here
     } catch (error) {
       console.error("Failed to add to watchlist:", error);
-      // Could show error toast here
     } finally {
       setAddingTo(null);
     }

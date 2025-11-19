@@ -5,6 +5,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { watchlistAPI, type Watchlist } from "@/lib/api-client";
 import { useAuth } from "@/context/auth-context";
 import { useLanguageStore } from "@/store/language";
+import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ItemDetailsModal } from "@/components/Watchlist/ItemDetailsModal";
 import { Button } from "@/components/ui/button";
@@ -115,7 +116,7 @@ export function Explore() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  // Fetch user watchlists if authenticated
+  // Fetch user watchlists (authenticated or offline)
   useEffect(() => {
     if (isAuthenticated) {
       watchlistAPI
@@ -124,6 +125,10 @@ export function Explore() {
           setWatchlists(data.watchlists);
         })
         .catch(console.error);
+    } else {
+      // Offline mode: get watchlists with ownership flags
+      const localWatchlists = getLocalWatchlistsWithOwnership();
+      setWatchlists(localWatchlists);
     }
   }, [isAuthenticated]);
 
@@ -214,16 +219,56 @@ export function Explore() {
   ) => {
     try {
       setAddingTo(mediaItem.id);
-      await watchlistAPI.addItem(watchlistId, {
-        tmdbId: mediaItem.id.toString(),
-        type: mediaType,
-        language: "fr-FR",
-        region: "FR",
-      });
-      // Could show success toast here
+
+      if (isAuthenticated) {
+        // Online mode: add via API
+        await watchlistAPI.addItem(watchlistId, {
+          tmdbId: mediaItem.id.toString(),
+          type: mediaType,
+          language: "fr-FR",
+          region: "FR",
+        });
+      } else {
+        // Offline mode: add to localStorage
+        const localWatchlists = localStorage.getItem("watchlists");
+        if (localWatchlists) {
+          const watchlists: Watchlist[] = JSON.parse(localWatchlists);
+          const watchlistIndex = watchlists.findIndex(
+            (w) => w._id === watchlistId,
+          );
+
+          if (watchlistIndex !== -1) {
+            // Check if item already exists
+            const itemExists = watchlists[watchlistIndex].items.some(
+              (item) => item.tmdbId === mediaItem.id.toString(),
+            );
+
+            if (!itemExists) {
+              // Construct basic item
+              const newItem = {
+                tmdbId: mediaItem.id.toString(),
+                title: mediaItem.title || mediaItem.name || "",
+                posterUrl: mediaItem.poster_path
+                  ? `https://image.tmdb.org/t/p/w500${mediaItem.poster_path}`
+                  : "",
+                type: mediaType,
+                platformList: [],
+                addedAt: new Date().toISOString(),
+              };
+
+              watchlists[watchlistIndex].items.push(newItem);
+              watchlists[watchlistIndex].updatedAt = new Date().toISOString();
+              localStorage.setItem("watchlists", JSON.stringify(watchlists));
+
+              // Reload with ownership flags to maintain correct state
+              const updatedWatchlists = getLocalWatchlistsWithOwnership();
+              setWatchlists(updatedWatchlists);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("Failed to add to watchlist:", error);
-      // Could show error toast here
     } finally {
       setAddingTo(null);
     }
@@ -341,8 +386,8 @@ export function Explore() {
                     )}
                   </div>
 
-                  {/* Add button (only if authenticated) */}
-                  {isAuthenticated && (
+                  {/* Add button (if authenticated or has offline watchlists) */}
+                  {(isAuthenticated || watchlists.length > 0) && (
                     <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
                       <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>

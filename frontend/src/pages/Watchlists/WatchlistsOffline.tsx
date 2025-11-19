@@ -9,7 +9,7 @@ import type { Content } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { OfflineIcon } from "@/components/icons/OfflineIcon";
 import { CreateWatchlistDialog } from "@/components/Watchlist/CreateWatchlistDialog";
-import { EditWatchlistDialog } from "@/components/Watchlist/EditWatchlistDialog";
+import { EditWatchlistDialogOffline } from "@/components/Watchlist/EditWatchlistDialogOffline";
 import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
@@ -20,6 +20,24 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
+import {
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+  type DragEndEvent,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const STORAGE_KEY = "watchlists";
 
@@ -28,6 +46,12 @@ interface WatchlistCardOfflineProps {
   onEdit: (watchlist: Watchlist) => void;
   onDelete: (watchlist: Watchlist) => void;
   content: Content;
+  draggableProps?: {
+    ref: (node: HTMLElement | null) => void;
+    style: React.CSSProperties;
+    attributes: React.HTMLAttributes<HTMLElement>;
+    listeners: React.DOMAttributes<HTMLElement> | undefined;
+  };
 }
 
 function WatchlistCardOffline({
@@ -35,12 +59,19 @@ function WatchlistCardOffline({
   onEdit,
   onDelete,
   content,
+  draggableProps,
 }: WatchlistCardOfflineProps) {
   const navigate = useNavigate();
   const thumbnailUrl = useWatchlistThumbnail(watchlist);
 
   return (
-    <div className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]">
+    <div
+      ref={draggableProps?.ref}
+      style={draggableProps?.style}
+      {...(draggableProps?.attributes || {})}
+      {...(draggableProps?.listeners || {})}
+      className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
+    >
       {/* Cover Image */}
       <div
         onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
@@ -134,6 +165,52 @@ function WatchlistCardOffline({
   );
 }
 
+interface SortableWatchlistCardOfflineProps {
+  watchlist: Watchlist;
+  onEdit: (watchlist: Watchlist) => void;
+  onDelete: (watchlist: Watchlist) => void;
+}
+
+function SortableWatchlistCardOffline({
+  watchlist,
+  onEdit,
+  onDelete,
+}: SortableWatchlistCardOfflineProps) {
+  const { content } = useLanguageStore();
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: watchlist._id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <WatchlistCardOffline
+      watchlist={watchlist}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      content={content}
+      draggableProps={{
+        ref: setNodeRef,
+        style,
+        attributes,
+        listeners,
+      }}
+    />
+  );
+}
+
 export function WatchlistsOffline() {
   const { content } = useLanguageStore();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
@@ -145,20 +222,85 @@ export function WatchlistsOffline() {
     null,
   );
 
+  // Setup drag sensors
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   const fetchWatchlists = () => {
     try {
       setLoading(true);
       const localWatchlists = getLocalWatchlists();
       // Only show watchlists created locally (ownerId === "offline")
-      const ownedWatchlists = localWatchlists.filter(
+      let ownedWatchlists = localWatchlists.filter(
         (w) => w.ownerId === "offline",
       );
+
+      // Sort by order if it exists, otherwise by creation date (oldest first)
+      ownedWatchlists = ownedWatchlists.sort((a, b) => {
+        // If both have order, sort by order
+        if ((a as any).order !== undefined && (b as any).order !== undefined) {
+          return (a as any).order - (b as any).order;
+        }
+        // If only one has order, it comes first
+        if ((a as any).order !== undefined) return -1;
+        if ((b as any).order !== undefined) return 1;
+        // Otherwise sort by creation date (oldest first)
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+
       setWatchlists(ownedWatchlists);
     } catch (error) {
       console.error("Failed to load watchlists from localStorage:", error);
       setWatchlists([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = watchlists.findIndex((w) => w._id === active.id);
+      const newIndex = watchlists.findIndex((w) => w._id === over.id);
+
+      const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
+      setWatchlists(newWatchlists);
+
+      // Add order field to each watchlist and save to localStorage
+      try {
+        const allWatchlists = getLocalWatchlists();
+        const watchlistsWithOrder = newWatchlists.map((w, index) => ({
+          ...w,
+          order: index,
+        }));
+
+        // Update only the reordered watchlists in the full list
+        const updatedAllWatchlists = allWatchlists.map(w => {
+          const reordered = watchlistsWithOrder.find(rw => rw._id === w._id);
+          return reordered || w;
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAllWatchlists));
+      } catch (error) {
+        console.error("Failed to save watchlist order:", error);
+        // Revert on error
+        setWatchlists(watchlists);
+      }
     }
   };
 
@@ -212,12 +354,11 @@ export function WatchlistsOffline() {
 
       {selectedWatchlist && (
         <>
-          <EditWatchlistDialog
+          <EditWatchlistDialogOffline
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
             onSuccess={fetchWatchlists}
             watchlist={selectedWatchlist}
-            offline={true}
           />
           <DeleteWatchlistDialog
             open={deleteDialogOpen}
@@ -252,23 +393,33 @@ export function WatchlistsOffline() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {watchlists.map((watchlist) => (
-            <WatchlistCardOffline
-              key={watchlist._id}
-              watchlist={watchlist}
-              onEdit={(wl) => {
-                setSelectedWatchlist(wl);
-                setEditDialogOpen(true);
-              }}
-              onDelete={(wl) => {
-                setSelectedWatchlist(wl);
-                setDeleteDialogOpen(true);
-              }}
-              content={content}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={watchlists.map((w) => w._id)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {watchlists.map((watchlist) => (
+                <SortableWatchlistCardOffline
+                  key={watchlist._id}
+                  watchlist={watchlist}
+                  onEdit={(wl) => {
+                    setSelectedWatchlist(wl);
+                    setEditDialogOpen(true);
+                  }}
+                  onDelete={(wl) => {
+                    setSelectedWatchlist(wl);
+                    setDeleteDialogOpen(true);
+                  }}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

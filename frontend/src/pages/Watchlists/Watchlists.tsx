@@ -130,15 +130,15 @@ export function Watchlists() {
     try {
       setLoading(true);
       const data = await watchlistAPI.getMine();
-      console.log(
-        "📦 [Watchlists.tsx] Watchlists received from backend:",
-        data.watchlists.map((w) => ({
-          name: w.name,
-          isOwner: w.isOwner,
-          isCollaborator: w.isCollaborator,
-          isSaved: w.isSaved,
-        })),
-      );
+      //   console.log(
+      //     "📦 [Watchlists.tsx] Watchlists received from backend:",
+      //     data.watchlists.map((w) => ({
+      //       name: w.name,
+      //       isOwner: w.isOwner,
+      //       isCollaborator: w.isCollaborator,
+      //       isSaved: w.isSaved,
+      //     })),
+      //   );
       setWatchlists(data.watchlists);
     } catch (error) {
       console.error("Failed to fetch watchlists:", error);
@@ -197,23 +197,23 @@ export function Watchlists() {
 
     // "Mes watchlists" filter: show owned watchlists AND collaborative watchlists
     if (showOwned && (isOwner || isCollaborator)) {
-      console.log(
-        `✅ [Filter] "${watchlist.name}" shown in "Mes watchlists" (isOwner=${isOwner}, isCollaborator=${isCollaborator})`,
-      );
+      //   console.log(
+      //     `✅ [Filter] "${watchlist.name}" shown in "Mes watchlists" (isOwner=${isOwner}, isCollaborator=${isCollaborator})`,
+      //   );
       return true;
     }
 
     // "Suivies" filter: show followed watchlists (not owned, not collaborative)
     if (showSaved && isSaved && !isOwner && !isCollaborator) {
-      console.log(
-        `✅ [Filter] "${watchlist.name}" shown in "Suivies" (isSaved=${isSaved})`,
-      );
+      //   console.log(
+      //     `✅ [Filter] "${watchlist.name}" shown in "Suivies" (isSaved=${isSaved})`,
+      //   );
       return true;
     }
 
-    console.log(
-      `❌ [Filter] "${watchlist.name}" filtered out (isOwner=${isOwner}, isCollaborator=${isCollaborator}, isSaved=${isSaved}, showOwned=${showOwned}, showSaved=${showSaved})`,
-    );
+    // console.log(
+    //   `❌ [Filter] "${watchlist.name}" filtered out (isOwner=${isOwner}, isCollaborator=${isCollaborator}, isSaved=${isSaved}, showOwned=${showOwned}, showSaved=${showSaved})`,
+    // );
     return false;
   });
 
