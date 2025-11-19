@@ -24,17 +24,20 @@ interface TrendingItem {
   backdrop_path?: string;
   media_type: "movie" | "tv";
   vote_average?: number;
+  vote_count?: number;
   overview?: string;
+  release_date?: string;
+  first_air_date?: string;
 }
 
-interface TMDBSearchResult {
+interface TMDBResult {
   id: number;
   title?: string;
   name?: string;
   poster_path?: string;
   backdrop_path?: string;
-  media_type?: "movie" | "tv";
   vote_average?: number;
+  vote_count?: number;
   overview?: string;
   release_date?: string;
   first_air_date?: string;
@@ -70,11 +73,38 @@ export function HomeApp() {
   const fetchPublicWatchlists = async () => {
     try {
       const publicData = await watchlistAPI.getPublicWatchlists(10);
+      console.log(
+        "📦 [HomeApp.tsx] Public watchlists received from backend:",
+        publicData.watchlists?.map((w) => ({
+          name: w.name,
+          isOwner: w.isOwner,
+          isCollaborator: w.isCollaborator,
+          isSaved: w.isSaved,
+        })),
+      );
       setPublicWatchlists(publicData.watchlists || []);
     } catch (error) {
       console.error("Failed to fetch public watchlists:", error);
     }
   };
+
+  // Scroll to top on component mount and disable automatic scroll restoration
+  useEffect(() => {
+    // Disable browser's automatic scroll restoration
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    // Force scroll to top immediately
+    window.scrollTo(0, 0);
+
+    // Cleanup: restore default behavior when component unmounts
+    return () => {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,48 +142,131 @@ export function HomeApp() {
           // Use similar items from random items in user's watchlists
           const API_URL =
             import.meta.env.VITE_API_URL || "http://localhost:3000";
-          const randomItems = allItems
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 3); // Pick 3 random items
 
-          const similarPromises = randomItems.map(async (item) => {
-            try {
-              // Use backend cached route instead of direct TMDB call
-              const response = await fetch(
-                `${API_URL}/tmdb/${item.type}/${item.tmdbId}/similar?language=fr-FR&page=1`,
-              );
-              const data = await response.json();
-              return (data.results || []).map((result: TMDBSearchResult) => ({
-                ...result,
-                media_type: item.type,
-              }));
-            } catch (error) {
-              console.error(`Failed to fetch similar items:`, error);
-              return [];
+          // Helper function to filter items by quality criteria
+          const filterQualityItems = (
+            items: TrendingItem[],
+          ): TrendingItem[] => {
+            return items
+              .filter((item) => item.poster_path) // Only keep items with poster
+              .filter((item) => item.vote_average && item.vote_average >= 6) // Only keep items with rating >= 6
+              .filter((item) => item.vote_count && item.vote_count > 100) // Only keep items with > 100 votes
+              .filter((item) => {
+                // Only keep items released after 2015
+                const dateStr = item.release_date || item.first_air_date;
+                if (!dateStr) return false;
+                const year = parseInt(dateStr.split("-")[0]);
+                return year > 2015;
+              });
+          };
+
+          // Shuffle all items
+          const shuffledItems = [...allItems].sort(() => Math.random() - 0.5);
+          const accumulatedResults: TrendingItem[] = [];
+          const seenIds = new Set<number>();
+          let itemsToTry = 0;
+          const batchSize = 3; // Try 3 items at a time
+
+          // Keep fetching until we have 5 results or run out of items
+          while (
+            accumulatedResults.length < 5 &&
+            itemsToTry < shuffledItems.length
+          ) {
+            const batch = shuffledItems.slice(
+              itemsToTry,
+              itemsToTry + batchSize,
+            );
+            itemsToTry += batchSize;
+
+            const similarPromises = batch.map(async (item) => {
+              try {
+                // Use backend cached route instead of direct TMDB call
+                const response = await fetch(
+                  `${API_URL}/tmdb/${item.type}/${item.tmdbId}/similar?language=fr-FR&page=1`,
+                );
+                const data = await response.json();
+                return (data.results || []).map(
+                  (result: TMDBResult): TrendingItem => ({
+                    ...result,
+                    media_type: item.type,
+                  }),
+                );
+              } catch (error) {
+                console.error(`Failed to fetch similar items:`, error);
+                return [];
+              }
+            });
+
+            const similarResults = await Promise.all(similarPromises);
+            const batchSimilar = similarResults.flat();
+
+            // Filter by quality and remove duplicates
+            const filteredBatch = filterQualityItems(batchSimilar).filter(
+              (item) => !seenIds.has(item.id),
+            );
+
+            // Add new items and mark as seen (stop as soon as we reach 5)
+            for (const item of filteredBatch) {
+              if (accumulatedResults.length >= 5) break;
+              accumulatedResults.push(item);
+              seenIds.add(item.id);
             }
-          });
 
-          const similarResults = await Promise.all(similarPromises);
-          const allSimilar = similarResults.flat();
+            // Exit the while loop if we've reached 5 items
+            if (accumulatedResults.length >= 5) break;
+          }
 
-          // Remove duplicates and limit to 5
-          const uniqueSimilar = allSimilar.filter(
-            (item, index, self) =>
-              index === self.findIndex((t) => t.id === item.id),
-          );
-
-          // If we got similar items, use them. Otherwise fallback to trending
-          if (uniqueSimilar.length > 0) {
-            setRecommendations(uniqueSimilar.slice(0, 5));
-          } else {
-            // Fallback to trending if similar items failed
+          // If we have less than 5 similar items, complement with trending
+          if (accumulatedResults.length < 5) {
             const trendingData = await tmdbAPI.getTrending("day");
-            setRecommendations((trendingData.results || []).slice(0, 5));
+            const trendingFiltered = (trendingData.results || [])
+              .filter((item: TrendingItem) => item.poster_path)
+              .filter(
+                (item: TrendingItem) =>
+                  item.vote_average && item.vote_average >= 6,
+              )
+              .filter(
+                (item: TrendingItem) =>
+                  item.vote_count && item.vote_count > 100,
+              )
+              .filter((item: TrendingItem) => {
+                const dateStr = item.release_date || item.first_air_date;
+                if (!dateStr) return false;
+                const year = parseInt(dateStr.split("-")[0]);
+                return year > 2015;
+              })
+              .filter((item: TrendingItem) => !seenIds.has(item.id)); // Don't add duplicates
+
+            // Add trending items to fill up to exactly 5, not more
+            const needed = Math.max(0, 5 - accumulatedResults.length);
+            const trendingToAdd = trendingFiltered.slice(0, needed);
+
+            // Combine and ensure we never exceed 5 items
+            const combined = [...accumulatedResults, ...trendingToAdd];
+            setRecommendations(combined.slice(0, 5));
+          } else {
+            // If we have 5 or more, take only the first 5
+            setRecommendations(accumulatedResults.slice(0, 5));
           }
         } else {
           // Fallback to trending if no items in watchlists
           const trendingData = await tmdbAPI.getTrending("day");
-          setRecommendations((trendingData.results || []).slice(0, 5));
+          const trendingFiltered = (trendingData.results || [])
+            .filter((item: TrendingItem) => item.poster_path)
+            .filter(
+              (item: TrendingItem) =>
+                item.vote_average && item.vote_average >= 6,
+            )
+            .filter(
+              (item: TrendingItem) => item.vote_count && item.vote_count > 100,
+            )
+            .filter((item: TrendingItem) => {
+              const dateStr = item.release_date || item.first_air_date;
+              if (!dateStr) return false;
+              const year = parseInt(dateStr.split("-")[0]);
+              return year > 2015;
+            });
+          setRecommendations(trendingFiltered.slice(0, 5));
         }
 
         // Fetch category counts for all categories
@@ -415,20 +528,28 @@ export function HomeApp() {
         ) : publicWatchlists.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {publicWatchlists.slice(0, 10).map((watchlist) => {
-              // Calculate isOwner by comparing user email with watchlist owner email
-              const ownerEmail =
-                typeof watchlist.ownerId === "string"
-                  ? null
-                  : watchlist.ownerId?.email;
-              const isOwner = user?.email === ownerEmail;
+              // Use same approach as CommunityWatchlists: cross-reference with user's watchlists
+              const userWatchlist = userWatchlists.find(
+                (uw) => uw._id === watchlist._id,
+              );
+              const isOwner = userWatchlist?.isOwner ?? false;
+              const isCollaborator = userWatchlist?.isCollaborator ?? false;
+              const isSaved =
+                userWatchlist && !userWatchlist.isOwner && !isCollaborator;
 
-              // Find this watchlist in user's watchlists to check status
-              const userWatchlist = userWatchlists.find((uw) => uw._id === watchlist._id);
-              const isCollaborator = userWatchlist?.isCollaborator === true;
-              const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
-
-              const showSavedBadge = !isOwner && isSaved;
+              // Show saved badge: not owner, not collaborator, but saved/followed
+              const showSavedBadge = !isOwner && !isCollaborator && isSaved;
+              // Show collaborative badge: user is a collaborator
               const showCollaborativeBadge = isCollaborator;
+
+              console.log(`🏠 [HomeApp] Rendering "${watchlist.name}":`, {
+                isOwner,
+                isCollaborator,
+                isSaved,
+                showSavedBadge,
+                showCollaborativeBadge,
+                hasUserWatchlist: !!userWatchlist,
+              });
 
               return (
                 <WatchlistCard
@@ -519,9 +640,11 @@ export function HomeApp() {
                       <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                         {content.watchlists.addToWatchlist}
                       </DropdownMenu.Label>
-                      {userWatchlists.filter((w) => w.isOwner).length > 0 ? (
+                      {userWatchlists.filter(
+                        (w) => w.isOwner || w.isCollaborator,
+                      ).length > 0 ? (
                         userWatchlists
-                          .filter((w) => w.isOwner)
+                          .filter((w) => w.isOwner || w.isCollaborator)
                           .map((watchlist) => (
                             <DropdownMenu.Item
                               key={watchlist._id}

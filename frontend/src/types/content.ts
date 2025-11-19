@@ -364,6 +364,29 @@ export interface Content {
     title: string;
     subtitle: string;
     userInformation: string;
+    avatarSection: {
+      title: string;
+      description: string;
+      uploadButton: string;
+      changeButton: string;
+      deleteButton: string;
+      uploading: string;
+      deleting: string;
+      hint: string;
+      validation: {
+        invalidFileType: string;
+        fileTooLarge: string;
+        uploadFailed: string;
+        deleteFailed: string;
+        readFailed: string;
+      };
+      toasts: {
+        updated: string;
+        updatedDesc: string;
+        deleted: string;
+        deletedDesc: string;
+      };
+    };
     usernameSection: {
       title: string;
       description: string;

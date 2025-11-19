@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Film, Star } from "lucide-react";
 
 interface MoviePosterProps {
@@ -19,6 +20,7 @@ export function MoviePoster({
   onClick,
 }: MoviePosterProps) {
   const displayTitle = title || name;
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div
@@ -26,12 +28,13 @@ export function MoviePoster({
       className="group cursor-pointer"
     >
       <div className="relative mb-3 aspect-[2/3] overflow-hidden rounded-lg bg-muted shadow-lg">
-        {posterPath ? (
+        {posterPath && !imageError ? (
           <img
             src={`https://image.tmdb.org/t/p/w500${posterPath}`}
             alt={displayTitle}
             className="h-full w-full object-cover"
             loading="lazy"
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

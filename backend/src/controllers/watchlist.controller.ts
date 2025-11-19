@@ -110,14 +110,18 @@ export async function getMyWatchlists(req: Request, res: Response): Promise<void
     // Find all watchlists where user is owner or collaborator
     const ownedOrCollaborated = await Watchlist.find({
       $or: [{ ownerId: userId }, { collaborators: userId }],
-    });
+    })
+      .populate('ownerId', 'email username avatarUrl')
+      .populate('collaborators', 'email username avatarUrl');
 
     // Find all saved watchlists
     const saved =
       user.savedWatchlists.length > 0
         ? await Watchlist.find({
             _id: { $in: user.savedWatchlists },
-          }).populate('ownerId', 'username email')
+          })
+            .populate('ownerId', 'email username avatarUrl')
+            .populate('collaborators', 'email username avatarUrl')
         : [];
 
     // Merge and deduplicate (prioritize owned/collaborated watchlists over saved)
@@ -128,15 +132,27 @@ export async function getMyWatchlists(req: Request, res: Response): Promise<void
     ownedOrCollaborated.forEach(w => {
       const idStr = (w._id as Types.ObjectId).toString();
       const watchlistObj: any = w.toObject();
-      // Check if user is the owner
-      const ownerId = (w.ownerId as Types.ObjectId).toString();
+      // Check if user is the owner (handle populated ownerId)
+      const ownerId =
+        (w.ownerId as any)?._id?.toString() || (w.ownerId as Types.ObjectId).toString();
       const isOwner = ownerId === userId;
       watchlistObj.isOwner = isOwner;
-      // Check if user is a collaborator
-      const isCollaborator = w.collaborators.some(id => id.toString() === userId);
+      // Check if user is a collaborator (handle populated collaborators)
+      const isCollaborator = w.collaborators.some(collab => {
+        const collabId = (collab as any)?._id?.toString() || collab?.toString();
+        return collabId === userId;
+      });
       watchlistObj.isCollaborator = isCollaborator;
       // Mark as saved if it's also in the saved list
       watchlistObj.isSaved = savedIds.has(idStr);
+
+      //   console.log(`📊 [getMine] Watchlist "${w.name}":`, {
+      //     isOwner,
+      //     isCollaborator,
+      //     isSaved: savedIds.has(idStr),
+      //     collaboratorsCount: w.collaborators.length,
+      //   });
+
       watchlistsMap.set(idStr, watchlistObj);
     });
 
@@ -148,9 +164,23 @@ export async function getMyWatchlists(req: Request, res: Response): Promise<void
         watchlistObj.isOwner = false; // User is not owner (it's a followed watchlist)
         watchlistObj.isCollaborator = false;
         watchlistObj.isSaved = true;
+
+        // console.log(`📊 [getMine] Saved watchlist "${w.name}":`, {
+        //   isOwner: false,
+        //   isCollaborator: false,
+        //   isSaved: true,
+        // });
+
         watchlistsMap.set(idStr, watchlistObj);
       }
     });
+
+    // console.log(`📊 [getMine] Summary:`, {
+    //   userId,
+    //   ownedOrCollaboratedCount: ownedOrCollaborated.length,
+    //   savedCount: saved.length,
+    //   totalUniqueWatchlists: watchlistsMap.size,
+    // });
 
     // Auto-repair logic: Ensure all watchlists are in watchlistsOrder
     const allWatchlistIds = Array.from(watchlistsMap.keys());
@@ -459,7 +489,9 @@ export async function getPublicWatchlist(req: Request, res: Response): Promise<v
       return;
     }
 
-    const watchlist = await Watchlist.findById(id).populate('ownerId', 'email username');
+    const watchlist = await Watchlist.findById(id)
+      .populate('ownerId', 'email username avatarUrl')
+      .populate('collaborators', 'email username avatarUrl');
 
     if (!watchlist) {
       res.status(404).json({ error: 'Watchlist not found' });
@@ -486,14 +518,15 @@ export async function getPublicWatchlists(req: Request, res: Response): Promise<
     const watchlists = await Watchlist.find({
       isPublic: true,
     })
-      .populate('ownerId', 'username email')
+      .populate('ownerId', 'email username avatarUrl')
+      .populate('collaborators', 'email username avatarUrl')
       .sort({ followersCount: -1, createdAt: -1 }) // Sort by followers (desc), then by date (desc)
       .limit(limit)
       .select(
-        '_id name description imageUrl thumbnailUrl items ownerId createdAt followersCount likedBy'
+        '_id name description imageUrl thumbnailUrl items ownerId collaborators createdAt followersCount likedBy'
       );
 
-    // If user is authenticated, add isOwner and isSaved flags
+    // If user is authenticated, add isOwner, isCollaborator, and isSaved flags
     if (userId) {
       const user = await User.findById(userId);
       const savedIds = new Set((user?.savedWatchlists || []).map(id => id.toString()));
@@ -501,9 +534,32 @@ export async function getPublicWatchlists(req: Request, res: Response): Promise<
       const watchlistsWithFlags = watchlists.map(w => {
         const watchlistObj: any = w.toObject();
         const ownerId = (w.ownerId as any)?._id?.toString() || w.ownerId?.toString();
-        watchlistObj.isOwner = ownerId === userId;
-        watchlistObj.isSaved = savedIds.has((w._id as Types.ObjectId).toString());
+        const isOwner = ownerId === userId;
+        // Check if user is a collaborator
+        const isCollaborator = w.collaborators.some(collab => {
+          const collabId = (collab as any)?._id?.toString() || collab?.toString();
+          return collabId === userId;
+        });
+        const isSaved = savedIds.has((w._id as Types.ObjectId).toString());
+
+        watchlistObj.isOwner = isOwner;
+        watchlistObj.isCollaborator = isCollaborator;
+        watchlistObj.isSaved = isSaved;
+
+        console.log(`📊 [getPublicWatchlists] Watchlist "${w.name}":`, {
+          isOwner,
+          isCollaborator,
+          isSaved,
+          collaboratorsCount: w.collaborators.length,
+        });
+
         return watchlistObj;
+      });
+
+      console.log(`📊 [getPublicWatchlists] Summary:`, {
+        userId,
+        totalPublicWatchlists: watchlists.length,
+        savedWatchlistsCount: user?.savedWatchlists.length || 0,
       });
 
       res.json({ watchlists: watchlistsWithFlags });
@@ -530,9 +586,12 @@ export async function getWatchlistsByCategory(req: Request, res: Response): Prom
       isPublic: true,
       categories: category,
     })
-      .populate('ownerId', 'username email')
+      .populate('ownerId', 'email username avatarUrl')
+      .populate('collaborators', 'email username avatarUrl')
       .sort({ createdAt: -1 })
-      .select('_id name description imageUrl thumbnailUrl items categories ownerId createdAt');
+      .select(
+        '_id name description imageUrl thumbnailUrl items categories ownerId collaborators createdAt'
+      );
 
     res.json({ watchlists });
   } catch (error) {
@@ -573,8 +632,8 @@ export async function getWatchlistById(req: Request, res: Response): Promise<voi
     }
 
     const watchlist = await Watchlist.findById(id)
-      .populate('ownerId', 'email username')
-      .populate('collaborators', 'email username');
+      .populate('ownerId', 'email username avatarUrl')
+      .populate('collaborators', 'email username avatarUrl');
 
     if (!watchlist) {
       res.status(404).json({ error: 'Watchlist not found' });
@@ -1684,9 +1743,7 @@ export async function leaveWatchlist(req: Request, res: Response): Promise<void>
       );
 
       // Remove from watchlistsOrder
-      user.watchlistsOrder = user.watchlistsOrder.filter(
-        wId => wId.toString() !== id
-      );
+      user.watchlistsOrder = user.watchlistsOrder.filter(wId => wId.toString() !== id);
 
       await user.save();
     }

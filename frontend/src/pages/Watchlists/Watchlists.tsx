@@ -81,7 +81,7 @@ function SortableWatchlistCard({
       onDelete={isOwner ? onDelete : undefined}
       showMenu={isOwner}
       showVisibility={true}
-      showSavedBadge={!isOwner && watchlist.isSaved}
+      showSavedBadge={!isOwner && !watchlist.isCollaborator && watchlist.isSaved}
       showCollaborativeBadge={watchlist.isCollaborator === true}
       draggableProps={{
         ref: setNodeRef,
@@ -128,14 +128,15 @@ export function Watchlists() {
     try {
       setLoading(true);
       const data = await watchlistAPI.getMine();
-      //   console.log(
-      //     "📦 Watchlists received from backend:",
-      //     data.watchlists.map((w) => ({
-      //       name: w.name,
-      //       isOwner: w.isOwner,
-      //       isSaved: w.isSaved,
-      //     })),
-      //   );
+      console.log(
+        "📦 [Watchlists.tsx] Watchlists received from backend:",
+        data.watchlists.map((w) => ({
+          name: w.name,
+          isOwner: w.isOwner,
+          isCollaborator: w.isCollaborator,
+          isSaved: w.isSaved,
+        })),
+      );
       setWatchlists(data.watchlists);
     } catch (error) {
       console.error("Failed to fetch watchlists:", error);
@@ -187,16 +188,25 @@ export function Watchlists() {
 
   // Filter watchlists based on selected filters
   const filteredWatchlists = watchlists.filter((watchlist) => {
-    // Use isOwner flag from backend
+    // Use flags from backend
     const isOwner = watchlist.isOwner ?? false;
+    const isCollaborator = watchlist.isCollaborator ?? false;
+    const isSaved = watchlist.isSaved ?? false;
 
-    // If user is owner, show in "Mes watchlists" category
-    // If user is not owner (followed watchlist), show in "Suivies" category
-    if (isOwner) {
-      return showOwned;
-    } else {
-      return showSaved;
+    // "Mes watchlists" filter: show owned watchlists AND collaborative watchlists
+    if (showOwned && (isOwner || isCollaborator)) {
+      console.log(`✅ [Filter] "${watchlist.name}" shown in "Mes watchlists" (isOwner=${isOwner}, isCollaborator=${isCollaborator})`);
+      return true;
     }
+
+    // "Suivies" filter: show followed watchlists (not owned, not collaborative)
+    if (showSaved && isSaved && !isOwner && !isCollaborator) {
+      console.log(`✅ [Filter] "${watchlist.name}" shown in "Suivies" (isSaved=${isSaved})`);
+      return true;
+    }
+
+    console.log(`❌ [Filter] "${watchlist.name}" filtered out (isOwner=${isOwner}, isCollaborator=${isCollaborator}, isSaved=${isSaved}, showOwned=${showOwned}, showSaved=${showSaved})`);
+    return false;
   });
 
   return (

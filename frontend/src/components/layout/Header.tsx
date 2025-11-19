@@ -77,7 +77,17 @@ export function Header() {
                   onClick={() => navigate("/profile")}
                   className="flex items-center gap-2 rounded-full bg-muted/50 px-4 py-1.5 transition-colors hover:bg-muted"
                 >
-                  <UserIcon className="h-4 w-4" />
+                  <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full bg-muted">
+                    {user?.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt={user.username}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="h-3.5 w-3.5" />
+                    )}
+                  </div>
                   <span className="text-sm font-medium">{user?.username}</span>
                 </button>
                 <Button variant="ghost" size="icon" onClick={handleLogout}>

@@ -5,6 +5,7 @@ export interface User {
   email: string;
   username: string;
   language?: string;
+  avatarUrl?: string;
   roles: string[];
   hasPassword?: boolean;
 }

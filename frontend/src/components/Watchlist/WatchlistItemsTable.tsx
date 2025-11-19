@@ -185,9 +185,9 @@ function DraggableRow({
                               <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                                 {content.watchlists.addToWatchlist}
                               </DropdownMenu.Label>
-                              {watchlists.filter(w => w._id !== currentWatchlistId && w.isOwner).length > 0 ? (
+                              {watchlists.filter(w => w._id !== currentWatchlistId && (w.isOwner || w.isCollaborator)).length > 0 ? (
                                 watchlists
-                                  .filter(w => w._id !== currentWatchlistId && w.isOwner)
+                                  .filter(w => w._id !== currentWatchlistId && (w.isOwner || w.isCollaborator))
                                   .map((watchlist) => (
                                     <DropdownMenu.Item
                                       key={watchlist._id}

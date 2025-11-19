@@ -73,6 +73,9 @@ export function WatchlistHeader({
   const ownerUsername = isWatchlistOwner(watchlist.ownerId)
     ? watchlist.ownerId.username || watchlist.ownerId.email
     : null;
+  const ownerAvatarUrl = isWatchlistOwner(watchlist.ownerId)
+    ? (watchlist.ownerId as WatchlistOwner & { avatarUrl?: string }).avatarUrl
+    : null;
 
   return (
     <div className="relative w-full overflow-hidden">
@@ -154,8 +157,16 @@ export function WatchlistHeader({
                     <div className="flex items-center">
                       {/* user + username */}
                       <div className="flex items-center gap-1">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
-                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-muted">
+                          {ownerAvatarUrl ? (
+                            <img
+                              src={ownerAvatarUrl}
+                              alt={ownerUsername || "Owner"}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <User className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
                         </div>
                         <span className="font-semibold capitalize text-white">
                           {ownerUsername}
@@ -178,10 +189,18 @@ export function WatchlistHeader({
                             .map((collaborator) => (
                               <div
                                 key={collaborator._id}
-                                className="flex h-6 w-6 items-center justify-center rounded-full bg-muted ring-2 ring-background"
+                                className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-muted ring-2 ring-background"
                                 title={collaborator.username}
                               >
-                                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                                {(collaborator as Collaborator & { avatarUrl?: string }).avatarUrl ? (
+                                  <img
+                                    src={(collaborator as Collaborator & { avatarUrl?: string }).avatarUrl}
+                                    alt={collaborator.username}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <User className="h-3.5 w-3.5 text-muted-foreground" />
+                                )}
                               </div>
                             ))}
                           {(watchlist.collaborators as Collaborator[]).filter(

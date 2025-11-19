@@ -13,6 +13,7 @@ export interface IUser extends Document {
   passwordHash?: string;
   googleId?: string;
   language?: string;
+  avatarUrl?: string;
   roles: string[];
   refreshTokens: RefreshToken[];
   savedWatchlists: mongoose.Types.ObjectId[]; // References to saved public watchlists
@@ -54,6 +55,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: 'fr',
     },
+    avatarUrl: { type: String },
     roles: {
       type: [String],
       default: ['user'],

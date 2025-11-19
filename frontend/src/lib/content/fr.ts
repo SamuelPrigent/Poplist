@@ -436,6 +436,30 @@ export const fr: Content = {
     title: "Paramètres du profil",
     subtitle: "Gérez les paramètres et préférences de votre compte",
     userInformation: "Informations utilisateur",
+    avatarSection: {
+      title: "Photo de profil",
+      description:
+        "Téléchargez une photo de profil pour personnaliser votre compte",
+      uploadButton: "Télécharger",
+      changeButton: "Modifier",
+      deleteButton: "Supprimer",
+      uploading: "Téléchargement...",
+      deleting: "Suppression...",
+      hint: "Recommandé : Image carrée, 5 Mo maximum",
+      validation: {
+        invalidFileType: "Veuillez sélectionner un fichier image valide",
+        fileTooLarge: "La taille de l'image doit être inférieure à 5 Mo",
+        uploadFailed: "Échec du téléchargement de l'avatar",
+        deleteFailed: "Échec de la suppression de l'avatar",
+        readFailed: "Échec de la lecture du fichier image",
+      },
+      toasts: {
+        updated: "Avatar mis à jour",
+        updatedDesc: "Votre avatar a été mis à jour avec succès",
+        deleted: "Avatar supprimé",
+        deletedDesc: "Votre avatar a été supprimé avec succès",
+      },
+    },
     usernameSection: {
       title: "Nom d'utilisateur",
       description:

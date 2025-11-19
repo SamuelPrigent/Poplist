@@ -116,7 +116,10 @@ export function WatchlistCard({
       </div>
 
       {showOwner && (
-        <p className="mt-1 text-xs text-muted-foreground" onClick={handleClick}>
+        <p
+          className="mt-1 text-xs capitalize text-muted-foreground"
+          onClick={handleClick}
+        >
           par{" "}
           {typeof watchlist.ownerId === "object"
             ? watchlist.ownerId.username || "Anonyme"

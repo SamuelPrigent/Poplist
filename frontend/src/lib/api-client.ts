@@ -1,3 +1,5 @@
+import type { User } from "@/context/auth-context";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Helper to get TMDB image URL through proxy to avoid CORS issues
@@ -460,6 +462,25 @@ export const watchlistAPI = {
   duplicateWatchlist: (id: string): Promise<{ watchlist: Watchlist }> =>
     request(`/watchlists/${id}/duplicate`, {
       method: "POST",
+    }),
+};
+
+// User API
+export const userAPI = {
+  uploadAvatar: (imageData: string): Promise<{ user: User; avatarUrl: string }> =>
+    request("/user/upload-avatar", {
+      method: "POST",
+      body: { imageData },
+    }),
+
+  deleteAvatar: (): Promise<{ message: string; user: User }> =>
+    request("/user/avatar", {
+      method: "DELETE",
+    }),
+
+  getProfile: (): Promise<{ user: User }> =>
+    request("/user/profile", {
+      method: "GET",
     }),
 };
 

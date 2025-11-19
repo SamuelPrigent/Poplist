@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, AlertTriangle, X, Check } from "lucide-react";
+import { Loader2, AlertTriangle, X, Check, User, Upload, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguageStore } from "@/store/language";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useNavigate } from "react-router-dom";
+import { userAPI } from "@/lib/api-client";
 
 export function Profile() {
-  const { user, updateUsername, changePassword, deleteAccount } = useAuth();
+  const { user, updateUsername, changePassword, deleteAccount, refetch } = useAuth();
   const { toast } = useToast();
   const { content } = useLanguageStore();
   const navigate = useNavigate();
@@ -32,6 +33,10 @@ export function Profile() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Avatar state
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarDeleting, setAvatarDeleting] = useState(false);
 
   // Username availability check with debounce
   const checkUsernameAvailability = useCallback(async (usernameToCheck: string) => {
@@ -171,6 +176,94 @@ export function Profile() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: content.profile.toasts.error,
+        description: content.profile.avatarSection.validation.invalidFileType,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: content.profile.toasts.error,
+        description: content.profile.avatarSection.validation.fileTooLarge,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64String = reader.result as string;
+          await userAPI.uploadAvatar(base64String);
+
+          // Refresh user data to get the new avatar URL
+          await refetch();
+
+          toast({
+            title: content.profile.avatarSection.toasts.updated,
+            description: content.profile.avatarSection.toasts.updatedDesc,
+          });
+        } catch (error) {
+          toast({
+            title: content.profile.toasts.error,
+            description:
+              error instanceof Error
+                ? error.message
+                : content.profile.avatarSection.validation.uploadFailed,
+            variant: "destructive",
+          });
+        } finally {
+          setAvatarUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: content.profile.toasts.error,
+        description: content.profile.avatarSection.validation.readFailed,
+        variant: "destructive",
+      });
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    setAvatarDeleting(true);
+    try {
+      await userAPI.deleteAvatar();
+
+      // Refresh user data to remove the avatar URL
+      await refetch();
+
+      toast({
+        title: content.profile.avatarSection.toasts.deleted,
+        description: content.profile.avatarSection.toasts.deletedDesc,
+      });
+    } catch (error) {
+      toast({
+        title: content.profile.toasts.error,
+        description:
+          error instanceof Error ? error.message : content.profile.avatarSection.validation.deleteFailed,
+        variant: "destructive",
+      });
+    } finally {
+      setAvatarDeleting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto mb-28 mt-6 px-4 py-8">
       <div className="mx-auto max-w-2xl space-y-6">
@@ -180,6 +273,97 @@ export function Profile() {
             {content.profile.subtitle}
           </p>
         </div>
+
+        {/* Avatar Section */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold">{content.profile.avatarSection.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {content.profile.avatarSection.description}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-6">
+                {/* Avatar Display */}
+                <div className="relative">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.username}
+                      className="h-24 w-24 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
+                      <User className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Avatar Actions */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <label htmlFor="avatar-upload">
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                        disabled={avatarUploading || avatarDeleting}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={avatarUploading || avatarDeleting}
+                        onClick={() =>
+                          document.getElementById("avatar-upload")?.click()
+                        }
+                      >
+                        {avatarUploading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {content.profile.avatarSection.uploading}
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="mr-2 h-4 w-4" />
+                            {user?.avatarUrl ? content.profile.avatarSection.changeButton : content.profile.avatarSection.uploadButton}
+                          </>
+                        )}
+                      </Button>
+                    </label>
+
+                    {user?.avatarUrl && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={avatarUploading || avatarDeleting}
+                        onClick={handleAvatarDelete}
+                      >
+                        {avatarDeleting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {content.profile.avatarSection.deleting}
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {content.profile.avatarSection.deleteButton}
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {content.profile.avatarSection.hint}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Username Section */}
         <Card>
