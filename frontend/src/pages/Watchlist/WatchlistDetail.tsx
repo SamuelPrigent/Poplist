@@ -156,21 +156,45 @@ export function WatchlistDetail() {
   };
 
   const handleToggleSave = async () => {
-    if (!id || !isAuthenticated || isOwner) return;
+    if (!id || !isAuthenticated || isOwner || !watchlist) return;
+
+    // Store previous state for rollback
+    const previousIsSaved = isSaved;
+    const previousLikedBy = watchlist.likedBy;
+    const previousWatchlist = { ...watchlist };
 
     try {
-      if (isSaved) {
+      // Optimistic update - update UI immediately
+      const newIsSaved = !isSaved;
+      setIsSaved(newIsSaved);
+
+      // Update likedBy count optimistically
+      const updatedWatchlist = {
+        ...watchlist,
+        likedBy: newIsSaved
+          ? [...watchlist.likedBy, user!.email] // Add user (mock ID)
+          : watchlist.likedBy.filter(() => watchlist.likedBy.length > 0).slice(0, -1), // Remove one
+      };
+      setWatchlist(updatedWatchlist);
+
+      // Make API call
+      if (previousIsSaved) {
         await watchlistAPI.unsaveWatchlist(id);
-        setIsSaved(false);
         toast.success("Watchlist retirée");
       } else {
         await watchlistAPI.saveWatchlist(id);
-        setIsSaved(true);
         toast.success("Watchlist ajoutée");
       }
     } catch (error) {
       console.error("❌ Failed to toggle save watchlist:", error);
       toast.error("Impossible de modifier la watchlist");
+
+      // Rollback on error
+      setIsSaved(previousIsSaved);
+      setWatchlist({
+        ...previousWatchlist,
+        likedBy: previousLikedBy,
+      });
     }
   };
 
