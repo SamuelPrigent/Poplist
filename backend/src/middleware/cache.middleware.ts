@@ -44,9 +44,9 @@ export const cacheMiddleware = (cacheDurationDays: number = 30) => {
         return res.json(cached.responseData);
       }
 
-      console.log(`\n🔴 ===== CACHE MISS =====`);
-      console.log(`📍 URL: ${requestUrl}`);
-      console.log(`🔴 ====================\n`);
+      //   console.log(`\n🔴 ===== CACHE MISS =====`);
+      //   console.log(`📍 URL: ${requestUrl}`);
+      //   console.log(`🔴 ====================\n`);
 
       // Pas de cache, continuer vers le controller
       res.setHeader('X-Cache', 'MISS');

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ListChecks, Users, Sparkles, Star } from "lucide-react";
+import {
+  //   ListChecks,
+  Users,
+  Star,
+  Check,
+  Sparkles,
+} from "lucide-react";
 import { tmdbAPI } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,7 +98,7 @@ export function Landing() {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
-                  <ListChecks className="h-5 w-5 text-sky-400" />
+                  <Users className="h-5 w-5 text-sky-400" />
                 </div>
                 <div>
                   <h3 className="mb-2 text-base font-semibold text-white">
@@ -120,7 +126,7 @@ export function Landing() {
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
-                  <Users className="h-5 w-5 text-sky-400" />
+                  <Check className="h-5 w-5 text-sky-400" />
                 </div>
                 <div>
                   <h3 className="mb-2 text-base font-semibold text-white">

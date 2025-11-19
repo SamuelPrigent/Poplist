@@ -174,9 +174,9 @@ export const fr: Content = {
     features: {
       organize: {
         tagline: "Organisation",
-        title: "Création de watchlistes",
+        title: "Création de listes collaboratives",
         description:
-          "Créez votre collection personnelle de films et séries incontournables.",
+          "Créez des listes personnelles ou collaboratives de films et séries.",
       },
       discover: {
         tagline: "Découverte",
@@ -186,8 +186,9 @@ export const fr: Content = {
       },
       share: {
         tagline: "Partage",
-        title: "Suivez des watchlists d'autres utilisateurs",
-        description: "Ajoutez des watchlists à votre espace personnel.",
+        title: "Suivez les watchlists de la communauté",
+        description:
+          "Ajouter les watchlists d'autres utilisateurs à votre espace personnel.",
       },
     },
     startInSeconds: {

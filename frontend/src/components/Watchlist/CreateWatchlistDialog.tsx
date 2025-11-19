@@ -134,7 +134,7 @@ export function CreateWatchlistDialog({
         setImageFile(null);
         setImagePreview(null);
 
-        onSuccess();
+        onSuccess(watchlist);
         onOpenChange(false);
       }
     } catch (err) {

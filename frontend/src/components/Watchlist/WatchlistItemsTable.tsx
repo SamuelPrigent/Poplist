@@ -759,7 +759,7 @@ export function WatchlistItemsTable({
 
   return (
     <>
-      <div className="mb-32 overflow-hidden rounded-lg border border-border bg-card">
+      <div className="mb-32 overflow-hidden rounded-lg bg-card">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

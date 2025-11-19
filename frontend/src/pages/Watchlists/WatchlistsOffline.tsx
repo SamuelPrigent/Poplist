@@ -310,8 +310,8 @@ export function WatchlistsOffline() {
 
   const handleCreateSuccess = (newWatchlist?: Watchlist) => {
     if (newWatchlist) {
-      // Save to localStorage
-      const updatedWatchlists = [...watchlists, newWatchlist];
+      // Save to localStorage - add new watchlist at the beginning
+      const updatedWatchlists = [newWatchlist, ...watchlists];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedWatchlists));
     }
     fetchWatchlists();

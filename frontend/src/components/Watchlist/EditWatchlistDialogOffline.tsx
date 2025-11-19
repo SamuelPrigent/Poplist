@@ -94,9 +94,7 @@ export const EditWatchlistDialogOffline = forwardRef<
 
     try {
       // Offline mode: update in localStorage
-      const watchlists = JSON.parse(
-        localStorage.getItem("watchlists") || "[]",
-      );
+      const watchlists = JSON.parse(localStorage.getItem("watchlists") || "[]");
       const index = watchlists.findIndex(
         (w: Watchlist) => w._id === watchlist._id,
       );

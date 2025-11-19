@@ -30,7 +30,7 @@ export const es: Content = {
 
   // Watchlists Page
   watchlists: {
-    title: "Tus listas",
+    title: "Biblioteca",
     createWatchlist: "Nueva lista",
     createWatchlistDescription:
       "Crea una nueva lista para organizar tus películas y series.",
@@ -173,9 +173,9 @@ export const es: Content = {
     features: {
       organize: {
         tagline: "Organización",
-        title: "Crear listas de seguimiento",
+        title: "Creación de listas colaborativas",
         description:
-          "Crea tu colección personal de películas y series imprescindibles.",
+          "Crea listas personales o colaborativas de películas y series.",
       },
       discover: {
         tagline: "Descubrimiento",
@@ -185,8 +185,8 @@ export const es: Content = {
       },
       share: {
         tagline: "Compartir",
-        title: "Sigue las listas de otros usuarios",
-        description: "Añade listas de seguimiento a tu espacio personal.",
+        title: "Sigue las watchlists de la comunidad",
+        description: "Añade las watchlists de otros usuarios a tu espacio personal.",
       },
     },
     startInSeconds: {
@@ -236,9 +236,9 @@ export const es: Content = {
   // Home Page
   home: {
     hero: {
-      title: "Descubre, crea y comparte tus listas.",
+      title: "Tus Watchlists perfectamente organizadas",
       subtitle: "Tu universo del cine, organizado y compartido con amigos.",
-      cta: "Crear una lista",
+      cta: "Crear una watchlist",
       pills: {
         organize: "Organiza tus películas",
         share: "Comparte con tus amigos",

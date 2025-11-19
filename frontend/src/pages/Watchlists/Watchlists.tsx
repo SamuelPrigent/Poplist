@@ -173,6 +173,29 @@ export function Watchlists() {
     fetchWatchlists();
   }, []);
 
+  const handleCreateSuccess = async (newWatchlist?: Watchlist) => {
+    if (newWatchlist) {
+      // Fetch updated watchlists
+      await fetchWatchlists();
+
+      // After fetch, reorder to put new watchlist first
+      setWatchlists((currentWatchlists) => {
+        const withoutNew = currentWatchlists.filter(w => w._id !== newWatchlist._id);
+        const reordered = [newWatchlist, ...withoutNew];
+
+        // Persist new order to backend
+        const orderedWatchlistIds = reordered.map(w => w._id);
+        watchlistAPI.reorderWatchlists(orderedWatchlistIds).catch(error => {
+          console.error("Failed to reorder watchlists:", error);
+        });
+
+        return reordered;
+      });
+    } else {
+      fetchWatchlists();
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -263,7 +286,7 @@ export function Watchlists() {
       <CreateWatchlistDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSuccess={fetchWatchlists}
+        onSuccess={handleCreateSuccess}
       />
 
       {selectedWatchlist && (
