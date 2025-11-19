@@ -31,8 +31,8 @@ export const fr: Content = {
 
   // Watchlists Page
   watchlists: {
-    title: "Vos watchlists",
-    createWatchlist: "Créer",
+    title: "Bibliothèque",
+    createWatchlist: "Nouvelle watchlist",
     createWatchlistDescription:
       "Créez une nouvelle watchlist pour organiser vos films et séries.",
     notLoggedInWarning: "Données locales",
@@ -43,7 +43,9 @@ export const fr: Content = {
     adjustFilters: "Ajustez les filtres pour voir plus de watchlists",
     items: "éléments",
     item: "élément",
-    public: "Public",
+    headerPublic: "Liste publique",
+    headerPrivate: "Liste privée",
+    public: "Publique",
     private: "Privé",
     loading: "Chargement...",
     accountDataBadge: "Données du compte utilisateur",
@@ -138,7 +140,8 @@ export const fr: Content = {
     },
     collaborators: {
       addTitle: "Ajouter un collaborateur",
-      addDescription: "Entrez le nom d'utilisateur pour inviter un collaborateur",
+      addDescription:
+        "Entrez le nom d'utilisateur pour inviter un collaborateur",
       usernamePlaceholder: "Nom d'utilisateur",
       add: "Ajouter",
       adding: "Ajout...",
@@ -149,7 +152,8 @@ export const fr: Content = {
       removeSuccess: "Collaborateur retiré",
       removeError: "Impossible de retirer le collaborateur",
       leaveTitle: "Quitter la watchlist ?",
-      leaveDescription: "Êtes-vous sûr de vouloir quitter cette watchlist ? Vous perdrez vos droits de collaborateur.",
+      leaveDescription:
+        "Êtes-vous sûr de vouloir quitter cette watchlist ? Vous perdrez vos droits de collaborateur.",
       leave: "Quitter",
       leaving: "Sortie...",
       leaveSuccess: "Vous avez quitté la watchlist",
@@ -250,7 +254,7 @@ export const fr: Content = {
     },
     categories: {
       title: "Watchlists par thème",
-      subtitle: "Sélection WatchlistHub",
+      subtitle: "Catégorie WatchlistHub",
       seeMore: "Voir plus",
       items: {
         // Ligne 1 - Par type et plateforme
@@ -347,8 +351,8 @@ export const fr: Content = {
       noImage: "Pas d'image",
     },
     recommendations: {
-      title: "Des titres qui pourraient vous plaire",
-      subtitle: "Basé sur les tendances actuelles",
+      title: "Tendances du moment",
+      subtitle: "Les titres qui cartonnent cette semaine.",
       seeMore: "Voir tout",
     },
   },
@@ -469,8 +473,10 @@ export const fr: Content = {
       hint: "3-20 caractères. Lettres, chiffres et underscores uniquement.",
       updateButton: "Mettre à jour",
       validation: {
-        lengthError: "Le nom d'utilisateur doit contenir entre 3 et 20 caractères",
-        formatError: "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
+        lengthError:
+          "Le nom d'utilisateur doit contenir entre 3 et 20 caractères",
+        formatError:
+          "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
         alreadyTaken: "Le nom d'utilisateur est déjà pris",
       },
     },
@@ -488,8 +494,7 @@ export const fr: Content = {
     },
     deleteSection: {
       title: "Supprimer le compte",
-      description:
-        "Action irréversible. Toutes vos données seront supprimées.",
+      description: "Action irréversible. Toutes vos données seront supprimées.",
       dialogTitle: "Supprimer votre compte",
       dialogDescription:
         "Action irréversible. Toutes vos données seront supprimées.",

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { watchlistAPI } from "@/lib/api-client";
 import type { Watchlist } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
-import { Plus, Film } from "lucide-react";
+import { Film } from "lucide-react";
 import { useLanguageStore } from "@/store/language";
 import { useWatchlistFiltersStore } from "@/store/watchlistFilters";
 import { CreateWatchlistDialog } from "@/components/Watchlist/CreateWatchlistDialog";
@@ -81,7 +81,9 @@ function SortableWatchlistCard({
       onDelete={isOwner ? onDelete : undefined}
       showMenu={isOwner}
       showVisibility={true}
-      showSavedBadge={!isOwner && !watchlist.isCollaborator && watchlist.isSaved}
+      showSavedBadge={
+        !isOwner && !watchlist.isCollaborator && watchlist.isSaved
+      }
       showCollaborativeBadge={watchlist.isCollaborator === true}
       draggableProps={{
         ref: setNodeRef,
@@ -195,56 +197,67 @@ export function Watchlists() {
 
     // "Mes watchlists" filter: show owned watchlists AND collaborative watchlists
     if (showOwned && (isOwner || isCollaborator)) {
-      console.log(`✅ [Filter] "${watchlist.name}" shown in "Mes watchlists" (isOwner=${isOwner}, isCollaborator=${isCollaborator})`);
+      console.log(
+        `✅ [Filter] "${watchlist.name}" shown in "Mes watchlists" (isOwner=${isOwner}, isCollaborator=${isCollaborator})`,
+      );
       return true;
     }
 
     // "Suivies" filter: show followed watchlists (not owned, not collaborative)
     if (showSaved && isSaved && !isOwner && !isCollaborator) {
-      console.log(`✅ [Filter] "${watchlist.name}" shown in "Suivies" (isSaved=${isSaved})`);
+      console.log(
+        `✅ [Filter] "${watchlist.name}" shown in "Suivies" (isSaved=${isSaved})`,
+      );
       return true;
     }
 
-    console.log(`❌ [Filter] "${watchlist.name}" filtered out (isOwner=${isOwner}, isCollaborator=${isCollaborator}, isSaved=${isSaved}, showOwned=${showOwned}, showSaved=${showSaved})`);
+    console.log(
+      `❌ [Filter] "${watchlist.name}" filtered out (isOwner=${isOwner}, isCollaborator=${isCollaborator}, isSaved=${isSaved}, showOwned=${showOwned}, showSaved=${showSaved})`,
+    );
     return false;
   });
 
   return (
     <div className="container mx-auto mb-32 px-4 py-8">
-      <div className="mb-4 mt-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-3xl font-bold text-white">
-            {content.watchlists.title}
-          </h1>
+      {/* Title */}
+      <div className="mb-6 mt-5">
+        <h1 className="mb-1 text-3xl font-bold text-white">
+          {content.watchlists.title}
+        </h1>
+        <div className="text-muted-foreground">
+          {content.home.library.subtitle}
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4" />
-          {content.watchlists.createWatchlist}
-        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          onClick={toggleOwned}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            showOwned
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
-        >
-          {content.watchlists.myWatchlists || "Mes watchlists"}
-        </button>
-        <button
-          onClick={toggleSaved}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            showSaved
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
-        >
-          {content.watchlists.followed || "Suivies"}
-        </button>
+      {/* Filters and Create Button */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleOwned}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              showOwned
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {content.watchlists.myWatchlists || "Mes watchlists"}
+          </button>
+          <button
+            onClick={toggleSaved}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              showSaved
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {content.watchlists.followed || "Suivies"}
+          </button>
+        </div>
+
+        <Button onClick={() => setDialogOpen(true)}>
+          {/* <Plus className="h-4 w-4" /> */}
+          {content.watchlists.createWatchlist}
+        </Button>
       </div>
 
       <CreateWatchlistDialog

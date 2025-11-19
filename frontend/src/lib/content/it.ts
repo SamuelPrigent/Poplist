@@ -31,7 +31,7 @@ export const it: Content = {
   // Watchlists Page
   watchlists: {
     title: "Le tue watchlist",
-    createWatchlist: "Crea",
+    createWatchlist: "Nuova lista",
     createWatchlistDescription:
       "Crea una nuova watchlist per organizzare i tuoi film e serie.",
     notLoggedInWarning: "Dati locali",
@@ -42,13 +42,16 @@ export const it: Content = {
     adjustFilters: "Regola i filtri per vedere più watchlist",
     items: "elementi",
     item: "elemento",
+    headerPublic: "Lista pubblica",
+    headerPrivate: "Lista privata",
     public: "Pubblico",
     private: "Privato",
     loading: "Caricamento...",
     accountDataBadge: "Dati dell'account utente",
     preview: "Anteprima",
     categories: "Categorie / Tag",
-    categoriesDescription: "Seleziona una o più categorie per facilitare la scoperta della tua watchlist",
+    categoriesDescription:
+      "Seleziona una o più categorie per facilitare la scoperta della tua watchlist",
     name: "Nome",
     namePlaceholder: "La mia watchlist",
     description: "Descrizione",
@@ -147,7 +150,8 @@ export const it: Content = {
       removeSuccess: "Collaboratore rimosso",
       removeError: "Impossibile rimuovere il collaboratore",
       leaveTitle: "Lasciare la watchlist?",
-      leaveDescription: "Sei sicuro di voler lasciare questa watchlist? Perderai i tuoi diritti di collaboratore.",
+      leaveDescription:
+        "Sei sicuro di voler lasciare questa watchlist? Perderai i tuoi diritti di collaboratore.",
       leave: "Lascia",
       leaving: "Uscita...",
       leaveSuccess: "Hai lasciato la watchlist",
@@ -161,7 +165,8 @@ export const it: Content = {
     hero: {
       tagline: "Pianifica, segui e goditi i tuoi film insieme",
       title: "Le tue Watchlist perfettamente organizzate",
-      subtitle: "Organizza le tue serate TV e condividi le tue scoperte con i tuoi amici",
+      subtitle:
+        "Organizza le tue serate TV e condividi le tue scoperte con i tuoi amici",
       cta: "Crea una watchlist",
     },
     features: {
@@ -185,18 +190,22 @@ export const it: Content = {
     },
     startInSeconds: {
       title: "Inizia in secondi",
-      subtitle: "Nessuna configurazione complicata, solo tu e i tuoi contenuti preferiti",
+      subtitle:
+        "Nessuna configurazione complicata, solo tu e i tuoi contenuti preferiti",
       step1: {
         title: "Crea la tua watchlist",
-        description: "Inizia con \"I miei film preferiti\" o diventa nostalgico con \"Film dell'infanzia\".",
+        description:
+          'Inizia con "I miei film preferiti" o diventa nostalgico con "Film dell\'infanzia".',
       },
       step2: {
         title: "Aggiungi film",
-        description: "Cerca un film o una serie usando una parola chiave e aggiungilo alla tua watchlist attuale.",
+        description:
+          "Cerca un film o una serie usando una parola chiave e aggiungilo alla tua watchlist attuale.",
       },
       step3: {
         title: "Condividi con i tuoi amici",
-        description: "Rendi le tue watchlist \"pubbliche\" e condividile facilmente con un link.",
+        description:
+          'Rendi le tue watchlist "pubbliche" e condividile facilmente con un link.',
       },
     },
     testimonials: {
@@ -217,7 +226,8 @@ export const it: Content = {
     },
     finalCta: {
       title: "Inizia a creare le tue watchlist facilmente",
-      subtitle: "Unisciti a WatchlistHub e organizza i tuoi contenuti preferiti in pochi clic.",
+      subtitle:
+        "Unisciti a WatchlistHub e organizza i tuoi contenuti preferiti in pochi clic.",
       button: "Crea la mia watchlist",
       disclaimer: "Applicazione gratuita • Nessuna carta richiesta",
     },
@@ -227,7 +237,8 @@ export const it: Content = {
   home: {
     hero: {
       title: "Scopri, crea e condividi le tue watchlist.",
-      subtitle: "Il tuo universo cinematografico, organizzato e condiviso con gli amici.",
+      subtitle:
+        "Il tuo universo cinematografico, organizzato e condiviso con gli amici.",
       cta: "Crea una watchlist",
       pills: {
         organize: "Organizza i tuoi film",
@@ -339,8 +350,8 @@ export const it: Content = {
       noImage: "Nessuna immagine",
     },
     recommendations: {
-      title: "Titoli che potrebbero piacerti",
-      subtitle: "Basato sulle tendenze attuali",
+      title: "Tendenze del momento",
+      subtitle: "I titoli di tendenza questa settimana.",
       seeMore: "Vedi tutto",
     },
   },
@@ -376,13 +387,28 @@ export const it: Content = {
       movies: { name: "Film", description: "I migliori film del momento" },
       series: { name: "Serie", description: "Serie da non perdere" },
       netflix: { name: "Netflix", description: "Perle di Netflix" },
-      "prime-video": { name: "Prime Video", description: "Esclusive Amazon Prime" },
-      "disney-plus": { name: "Disney+", description: "L'universo Disney, Pixar, Marvel e Star Wars" },
-      anime: { name: "Animazione", description: "Le migliori serie animate e film manga adattati" },
+      "prime-video": {
+        name: "Prime Video",
+        description: "Esclusive Amazon Prime",
+      },
+      "disney-plus": {
+        name: "Disney+",
+        description: "L'universo Disney, Pixar, Marvel e Star Wars",
+      },
+      anime: {
+        name: "Animazione",
+        description: "Le migliori serie animate e film manga adattati",
+      },
       action: { name: "Azione", description: "Classici e nuovi film d'azione" },
-      documentaries: { name: "Documentari", description: "Documentari accattivanti ed educativi" },
+      documentaries: {
+        name: "Documentari",
+        description: "Documentari accattivanti ed educativi",
+      },
       enfant: { name: "Bambini", description: "Film e serie per bambini" },
-      jeunesse: { name: "Giovani", description: "Film e serie per adolescenti e giovani adulti" },
+      jeunesse: {
+        name: "Giovani",
+        description: "Film e serie per adolescenti e giovani adulti",
+      },
     },
   },
 
@@ -399,7 +425,8 @@ export const it: Content = {
     userInformation: "Informazioni utente",
     avatarSection: {
       title: "Foto del profilo",
-      description: "Carica una foto del profilo per personalizzare il tuo account",
+      description:
+        "Carica una foto del profilo per personalizzare il tuo account",
       uploadButton: "Carica",
       changeButton: "Modifica",
       deleteButton: "Elimina",
@@ -422,20 +449,23 @@ export const it: Content = {
     },
     usernameSection: {
       title: "Nome utente",
-      description: "Aggiorna il tuo nome utente. È così che gli altri ti vedranno.",
+      description:
+        "Aggiorna il tuo nome utente. È così che gli altri ti vedranno.",
       label: "Nome utente",
       placeholder: "Inserisci il tuo nome utente",
       hint: "3-20 caratteri. Solo lettere, numeri e trattini bassi.",
       updateButton: "Aggiorna",
       validation: {
         lengthError: "Il nome utente deve essere compreso tra 3 e 20 caratteri",
-        formatError: "Il nome utente può contenere solo lettere, numeri e trattini bassi",
+        formatError:
+          "Il nome utente può contenere solo lettere, numeri e trattini bassi",
         alreadyTaken: "Nome utente già in uso",
       },
     },
     passwordSection: {
       title: "Password",
-      description: "Cambia la tua password. Assicurati che sia lunga almeno 8 caratteri.",
+      description:
+        "Cambia la tua password. Assicurati che sia lunga almeno 8 caratteri.",
       currentPasswordLabel: "Password",
       currentPasswordPlaceholder: "Inserisci la tua password attuale",
       newPasswordLabel: "Nuova password",
@@ -446,9 +476,11 @@ export const it: Content = {
     },
     deleteSection: {
       title: "Elimina account",
-      description: "Azione irreversibile. Tutti i tuoi dati verranno eliminati.",
+      description:
+        "Azione irreversibile. Tutti i tuoi dati verranno eliminati.",
       dialogTitle: "Elimina il tuo account",
-      dialogDescription: "Azione irreversibile. Tutti i tuoi dati verranno eliminati.",
+      dialogDescription:
+        "Azione irreversibile. Tutti i tuoi dati verranno eliminati.",
       confirmationLabel: "Digita 'confirmer' per continuare",
       confirmationPlaceholder: "confirmer",
       deleteButton: "Elimina account",
@@ -457,7 +489,8 @@ export const it: Content = {
     },
     toasts: {
       usernameUpdated: "Nome utente aggiornato",
-      usernameUpdatedDesc: "Il tuo nome utente è stato aggiornato con successo.",
+      usernameUpdatedDesc:
+        "Il tuo nome utente è stato aggiornato con successo.",
       passwordChanged: "Password cambiata",
       passwordChangedDesc: "La tua password è stata cambiata con successo.",
       error: "Errore",

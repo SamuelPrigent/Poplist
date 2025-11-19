@@ -131,13 +131,13 @@ export function WatchlistHeader({
           {/* Info */}
           <div className="flex flex-1 flex-col justify-end space-y-4">
             {watchlist.isPublic && (
-              <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                {content.watchlists.public}
+              <span className="text-sm font-normal text-muted-foreground">
+                {content.watchlists.headerPublic}
               </span>
             )}
 
             <h1
-              className={`text-4xl font-bold text-white md:text-6xl ${onEdit ? "cursor-pointer transition-colors hover:text-primary" : ""}`}
+              className={`text-4xl font-bold text-white md:text-7xl ${onEdit ? "cursor-pointer transition-colors hover:text-primary" : ""}`}
               onClick={onEdit}
             >
               {watchlist.name}
@@ -192,9 +192,19 @@ export function WatchlistHeader({
                                 className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-muted ring-2 ring-background"
                                 title={collaborator.username}
                               >
-                                {(collaborator as Collaborator & { avatarUrl?: string }).avatarUrl ? (
+                                {(
+                                  collaborator as Collaborator & {
+                                    avatarUrl?: string;
+                                  }
+                                ).avatarUrl ? (
                                   <img
-                                    src={(collaborator as Collaborator & { avatarUrl?: string }).avatarUrl}
+                                    src={
+                                      (
+                                        collaborator as Collaborator & {
+                                          avatarUrl?: string;
+                                        }
+                                      ).avatarUrl
+                                    }
                                     alt={collaborator.username}
                                     className="h-full w-full object-cover"
                                   />

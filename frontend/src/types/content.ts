@@ -34,6 +34,8 @@ export interface Content {
     adjustFilters: string;
     items: string;
     item: string;
+    headerPublic: string;
+    headerPrivate: string;
     public: string;
     private: string;
     loading: string;

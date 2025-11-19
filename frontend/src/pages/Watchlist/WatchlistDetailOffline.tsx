@@ -121,7 +121,7 @@ export function WatchlistDetailOffline() {
         menuButton={
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="select-none rounded-full p-3 transition-all hover:scale-105 outline-none focus:outline-none focus-visible:outline-none data-[state=open]:outline-none data-[state=closed]:outline-none">
+              <button className="select-none rounded-full p-3 outline-none transition-all hover:scale-105 focus:outline-none focus-visible:outline-none data-[state=closed]:outline-none data-[state=open]:outline-none">
                 <img
                   src={pointIcon}
                   alt="Menu"

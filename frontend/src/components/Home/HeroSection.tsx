@@ -120,7 +120,7 @@ export function HeroSection({
         >
           <Button
             size="default"
-            className="rounded-full bg-gray-200 px-6 py-[1.4rem] font-semibold text-black transition-colors hover:bg-gray-300"
+            className="bg-gray-200 px-6 py-[1.4rem] font-semibold text-black transition-colors hover:bg-gray-300"
           >
             {content.home.hero.cta}
           </Button>

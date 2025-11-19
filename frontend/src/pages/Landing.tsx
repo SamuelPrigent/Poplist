@@ -340,7 +340,7 @@ export function Landing() {
           >
             <Button
               size="lg"
-              className="rounded-full bg-gray-200 px-7 py-5 text-base font-semibold text-black transition-colors hover:bg-gray-300"
+              className="bg-gray-200 px-7 py-5 text-base font-semibold text-black transition-colors hover:bg-gray-300"
             >
               {content.landing.finalCta.button}
             </Button>

@@ -14,7 +14,8 @@ export const pt: Content = {
   // Auth Drawer
   auth: {
     loginTitle: "Entrar",
-    loginDescription: "Bem-vindo de volta! Inicie sessão para aceder às suas watchlists.",
+    loginDescription:
+      "Bem-vindo de volta! Inicie sessão para aceder às suas watchlists.",
     signupTitle: "Registar",
     signupDescription: "Crie uma conta para guardar as suas watchlists.",
     continueWithGoogle: "Continuar com Google",
@@ -31,7 +32,7 @@ export const pt: Content = {
   // Watchlists Page
   watchlists: {
     title: "As suas watchlists",
-    createWatchlist: "Criar",
+    createWatchlist: "Nova lista",
     createWatchlistDescription:
       "Crie uma nova watchlist para organizar os seus filmes e séries.",
     notLoggedInWarning: "Dados locais",
@@ -42,13 +43,16 @@ export const pt: Content = {
     adjustFilters: "Ajuste os filtros para ver mais watchlists",
     items: "itens",
     item: "item",
+    headerPublic: "Lista pública",
+    headerPrivate: "Lista privada",
     public: "Público",
     private: "Privado",
     loading: "A carregar...",
     accountDataBadge: "Dados da conta de utilizador",
     preview: "Pré-visualização",
     categories: "Categorias / Etiquetas",
-    categoriesDescription: "Selecione uma ou mais categorias para facilitar a descoberta da sua watchlist",
+    categoriesDescription:
+      "Selecione uma ou mais categorias para facilitar a descoberta da sua watchlist",
     name: "Nome",
     namePlaceholder: "A minha watchlist",
     description: "Descrição",
@@ -78,7 +82,8 @@ export const pt: Content = {
     deleting: "A eliminar...",
     delete: "Eliminar",
     addItem: "Adicionar",
-    searchMoviesAndSeries: "Pesquise e adicione filmes ou séries à sua watchlist",
+    searchMoviesAndSeries:
+      "Pesquise e adicione filmes ou séries à sua watchlist",
     searchPlaceholder: "Pesquisar um filme ou série...",
     searching: "A pesquisar...",
     noResults: "Nenhum resultado encontrado",
@@ -147,7 +152,8 @@ export const pt: Content = {
       removeSuccess: "Colaborador removido",
       removeError: "Falha ao remover colaborador",
       leaveTitle: "Sair da watchlist?",
-      leaveDescription: "Tem certeza de que deseja sair desta watchlist? Você perderá seus direitos de colaborador.",
+      leaveDescription:
+        "Tem certeza de que deseja sair desta watchlist? Você perderá seus direitos de colaborador.",
       leave: "Sair",
       leaving: "Saindo...",
       leaveSuccess: "Você saiu da watchlist",
@@ -161,15 +167,15 @@ export const pt: Content = {
     hero: {
       tagline: "Planeje, acompanhe e aproveite seus filmes juntos",
       title: "Suas Watchlists perfeitamente organizadas",
-      subtitle: "Organize suas noites de TV e compartilhe suas descobertas com seus amigos",
+      subtitle:
+        "Organize suas noites de TV e compartilhe suas descobertas com seus amigos",
       cta: "Criar uma watchlist",
     },
     features: {
       organize: {
         tagline: "Organização",
         title: "Criar listas de observação",
-        description:
-          "Crie sua coleção pessoal de filmes e séries imperdíveis.",
+        description: "Crie sua coleção pessoal de filmes e séries imperdíveis.",
       },
       discover: {
         tagline: "Descoberta",
@@ -185,18 +191,22 @@ export const pt: Content = {
     },
     startInSeconds: {
       title: "Comece em segundos",
-      subtitle: "Sem configuração complicada, apenas você e seu conteúdo favorito",
+      subtitle:
+        "Sem configuração complicada, apenas você e seu conteúdo favorito",
       step1: {
         title: "Crie sua watchlist",
-        description: "Comece com \"Meus filmes favoritos\" ou fique nostálgico com \"Filmes de infância\".",
+        description:
+          'Comece com "Meus filmes favoritos" ou fique nostálgico com "Filmes de infância".',
       },
       step2: {
         title: "Adicione filmes",
-        description: "Procure um filme ou série usando uma palavra-chave e adicione-o à sua watchlist atual.",
+        description:
+          "Procure um filme ou série usando uma palavra-chave e adicione-o à sua watchlist atual.",
       },
       step3: {
         title: "Compartilhe com seus amigos",
-        description: "Torne suas watchlists \"públicas\" e compartilhe-as facilmente com um link.",
+        description:
+          'Torne suas watchlists "públicas" e compartilhe-as facilmente com um link.',
       },
     },
     testimonials: {
@@ -217,7 +227,8 @@ export const pt: Content = {
     },
     finalCta: {
       title: "Comece a criar suas watchlists facilmente",
-      subtitle: "Junte-se ao WatchlistHub e organize seus conteúdos favoritos em poucos cliques.",
+      subtitle:
+        "Junte-se ao WatchlistHub e organize seus conteúdos favoritos em poucos cliques.",
       button: "Criar minha watchlist",
       disclaimer: "Aplicativo gratuito • Não é necessário cartão",
     },
@@ -227,7 +238,8 @@ export const pt: Content = {
   home: {
     hero: {
       title: "Descubra, crie e partilhe as suas watchlists.",
-      subtitle: "O seu universo cinematográfico, organizado e partilhado com amigos.",
+      subtitle:
+        "O seu universo cinematográfico, organizado e partilhado com amigos.",
       cta: "Criar uma watchlist",
       pills: {
         organize: "Organize seus filmes",
@@ -339,8 +351,8 @@ export const pt: Content = {
       noImage: "Sem imagem",
     },
     recommendations: {
-      title: "Títulos que você pode gostar",
-      subtitle: "Baseado nas tendências atuais",
+      title: "Tendências do momento",
+      subtitle: "Os títulos em alta esta semana.",
       seeMore: "Ver tudo",
     },
   },
@@ -376,13 +388,31 @@ export const pt: Content = {
       movies: { name: "Filmes", description: "Os melhores filmes do momento" },
       series: { name: "Séries", description: "Séries imperdíveis" },
       netflix: { name: "Netflix", description: "Pérolas da Netflix" },
-      "prime-video": { name: "Prime Video", description: "Exclusivos Amazon Prime" },
-      "disney-plus": { name: "Disney+", description: "O universo Disney, Pixar, Marvel e Star Wars" },
-      anime: { name: "Animação", description: "As melhores séries animadas e filmes de mangá adaptados" },
+      "prime-video": {
+        name: "Prime Video",
+        description: "Exclusivos Amazon Prime",
+      },
+      "disney-plus": {
+        name: "Disney+",
+        description: "O universo Disney, Pixar, Marvel e Star Wars",
+      },
+      anime: {
+        name: "Animação",
+        description: "As melhores séries animadas e filmes de mangá adaptados",
+      },
       action: { name: "Ação", description: "Clássicos e novos filmes de ação" },
-      documentaries: { name: "Documentários", description: "Documentários cativantes e educativos" },
-      enfant: { name: "Infantil", description: "Filmes e séries para crianças" },
-      jeunesse: { name: "Jovens", description: "Filmes e séries para adolescentes e jovens adultos" },
+      documentaries: {
+        name: "Documentários",
+        description: "Documentários cativantes e educativos",
+      },
+      enfant: {
+        name: "Infantil",
+        description: "Filmes e séries para crianças",
+      },
+      jeunesse: {
+        name: "Jovens",
+        description: "Filmes e séries para adolescentes e jovens adultos",
+      },
     },
   },
 
@@ -422,20 +452,23 @@ export const pt: Content = {
     },
     usernameSection: {
       title: "Nome de utilizador",
-      description: "Atualize o seu nome de utilizador. É assim que os outros o verão.",
+      description:
+        "Atualize o seu nome de utilizador. É assim que os outros o verão.",
       label: "Nome de utilizador",
       placeholder: "Introduza o seu nome de utilizador",
       hint: "3-20 caracteres. Apenas letras, números e sublinhados.",
       updateButton: "Atualizar",
       validation: {
         lengthError: "O nome de utilizador deve ter entre 3 e 20 caracteres",
-        formatError: "O nome de utilizador só pode conter letras, números e sublinhados",
+        formatError:
+          "O nome de utilizador só pode conter letras, números e sublinhados",
         alreadyTaken: "Nome de utilizador já em uso",
       },
     },
     passwordSection: {
       title: "Palavra-passe",
-      description: "Altere a sua palavra-passe. Certifique-se de que tem pelo menos 8 caracteres.",
+      description:
+        "Altere a sua palavra-passe. Certifique-se de que tem pelo menos 8 caracteres.",
       currentPasswordLabel: "Palavra-passe",
       currentPasswordPlaceholder: "Introduza a sua palavra-passe atual",
       newPasswordLabel: "Nova palavra-passe",
@@ -448,7 +481,8 @@ export const pt: Content = {
       title: "Eliminar conta",
       description: "Ação irreversível. Todos os seus dados serão eliminados.",
       dialogTitle: "Eliminar a sua conta",
-      dialogDescription: "Ação irreversível. Todos os seus dados serão eliminados.",
+      dialogDescription:
+        "Ação irreversível. Todos os seus dados serão eliminados.",
       confirmationLabel: "Digite 'confirmar' para continuar",
       confirmationPlaceholder: "confirmar",
       deleteButton: "Eliminar conta",
@@ -457,7 +491,8 @@ export const pt: Content = {
     },
     toasts: {
       usernameUpdated: "Nome de utilizador atualizado",
-      usernameUpdatedDesc: "O seu nome de utilizador foi atualizado com sucesso.",
+      usernameUpdatedDesc:
+        "O seu nome de utilizador foi atualizado com sucesso.",
       passwordChanged: "Palavra-passe alterada",
       passwordChangedDesc: "A sua palavra-passe foi alterada com sucesso.",
       error: "Erro",

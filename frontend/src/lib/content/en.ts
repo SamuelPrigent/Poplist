@@ -31,7 +31,7 @@ export const en: Content = {
   // Watchlists Page
   watchlists: {
     title: "Your watchlists",
-    createWatchlist: "Create",
+    createWatchlist: "New watchlist",
     createWatchlistDescription:
       "Create a new watchlist to organize your movies and series.",
     notLoggedInWarning: "Local data",
@@ -42,13 +42,16 @@ export const en: Content = {
     adjustFilters: "Adjust the filters to see more watchlists",
     items: "items",
     item: "item",
+    headerPublic: "Public list",
+    headerPrivate: "Private list",
     public: "Public",
     private: "Private",
     loading: "Loading...",
     accountDataBadge: "User account data",
     preview: "Preview",
     categories: "Categories / Tags",
-    categoriesDescription: "Select one or more categories to make your watchlist easier to discover",
+    categoriesDescription:
+      "Select one or more categories to make your watchlist easier to discover",
     name: "Name",
     namePlaceholder: "My watchlist",
     description: "Description",
@@ -147,7 +150,8 @@ export const en: Content = {
       removeSuccess: "Collaborator removed",
       removeError: "Failed to remove collaborator",
       leaveTitle: "Leave watchlist?",
-      leaveDescription: "Are you sure you want to leave this watchlist? You will lose your collaborator rights.",
+      leaveDescription:
+        "Are you sure you want to leave this watchlist? You will lose your collaborator rights.",
       leave: "Leave",
       leaving: "Leaving...",
       leaveSuccess: "You left the watchlist",
@@ -161,7 +165,8 @@ export const en: Content = {
     hero: {
       tagline: "Plan, track and enjoy your movies together",
       title: "Your Watchlists perfectly organized",
-      subtitle: "Organize your TV nights and share your discoveries with your friends",
+      subtitle:
+        "Organize your TV nights and share your discoveries with your friends",
       cta: "Create a watchlist",
     },
     features: {
@@ -188,15 +193,18 @@ export const en: Content = {
       subtitle: "No complicated setup, just you and your favorite content",
       step1: {
         title: "Create your watchlist",
-        description: "Start with \"My Favorite Movies\" or get nostalgic with \"Childhood Films\".",
+        description:
+          'Start with "My Favorite Movies" or get nostalgic with "Childhood Films".',
       },
       step2: {
         title: "Add movies",
-        description: "Search for a movie or series using a keyword and add it to your current watchlist.",
+        description:
+          "Search for a movie or series using a keyword and add it to your current watchlist.",
       },
       step3: {
         title: "Share with your friends",
-        description: "Make your watchlists \"public\" and easily share them with a link.",
+        description:
+          'Make your watchlists "public" and easily share them with a link.',
       },
     },
     testimonials: {
@@ -217,7 +225,8 @@ export const en: Content = {
     },
     finalCta: {
       title: "Start creating your watchlists easily",
-      subtitle: "Join WatchlistHub and organize your favorite content in just a few clicks.",
+      subtitle:
+        "Join WatchlistHub and organize your favorite content in just a few clicks.",
       button: "Create my watchlist",
       disclaimer: "Free application • No card required",
     },
@@ -339,8 +348,8 @@ export const en: Content = {
       noImage: "No Image",
     },
     recommendations: {
-      title: "Titles You Might Like",
-      subtitle: "Based on current trends",
+      title: "Trending Now",
+      subtitle: "Titles trending this week.",
       seeMore: "See all",
     },
   },
@@ -376,13 +385,28 @@ export const en: Content = {
       movies: { name: "Movies", description: "The best movies of the moment" },
       series: { name: "Series", description: "Series not to be missed" },
       netflix: { name: "Netflix", description: "Netflix gems" },
-      "prime-video": { name: "Prime Video", description: "Amazon Prime exclusives" },
-      "disney-plus": { name: "Disney+", description: "The Disney, Pixar, Marvel and Star Wars universe" },
-      anime: { name: "Animation", description: "The best animated series and adapted manga films" },
+      "prime-video": {
+        name: "Prime Video",
+        description: "Amazon Prime exclusives",
+      },
+      "disney-plus": {
+        name: "Disney+",
+        description: "The Disney, Pixar, Marvel and Star Wars universe",
+      },
+      anime: {
+        name: "Animation",
+        description: "The best animated series and adapted manga films",
+      },
       action: { name: "Action", description: "Classics and new action films" },
-      documentaries: { name: "Documentaries", description: "Captivating and educational documentaries" },
+      documentaries: {
+        name: "Documentaries",
+        description: "Captivating and educational documentaries",
+      },
       enfant: { name: "Kids", description: "Movies and series for children" },
-      jeunesse: { name: "Youth", description: "Movies and series for teens and young adults" },
+      jeunesse: {
+        name: "Youth",
+        description: "Movies and series for teens and young adults",
+      },
     },
   },
 
@@ -429,7 +453,8 @@ export const en: Content = {
       updateButton: "Update",
       validation: {
         lengthError: "Username must be between 3 and 20 characters",
-        formatError: "Username can only contain letters, numbers, and underscores",
+        formatError:
+          "Username can only contain letters, numbers, and underscores",
         alreadyTaken: "Username already taken",
       },
     },
@@ -447,11 +472,9 @@ export const en: Content = {
     },
     deleteSection: {
       title: "Delete Account",
-      description:
-        "Irreversible action. All your data will be deleted.",
+      description: "Irreversible action. All your data will be deleted.",
       dialogTitle: "Delete Your Account",
-      dialogDescription:
-        "Irreversible action. All your data will be deleted.",
+      dialogDescription: "Irreversible action. All your data will be deleted.",
       confirmationLabel: "Type 'confirmer' to continue",
       confirmationPlaceholder: "confirmer",
       deleteButton: "Delete Account",

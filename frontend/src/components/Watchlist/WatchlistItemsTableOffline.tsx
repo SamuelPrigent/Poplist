@@ -40,6 +40,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
+import type { Content } from "@/types/content";
 import { useLanguageStore } from "@/store/language";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ interface DraggableRowProps {
   handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
   totalItems: number;
   isDragDisabled: boolean;
-  content: any;
+  content: Content;
 }
 
 function DraggableRow({
@@ -173,7 +174,9 @@ function DraggableRow({
                       disabled
                     >
                       <Plus className="mr-2.5 h-4 w-4" />
-                      <span>{content.watchlists.contextMenu.addToWatchlist}</span>
+                      <span>
+                        {content.watchlists.contextMenu.addToWatchlist}
+                      </span>
                       <span className="ml-auto text-xs text-muted-foreground">
                         →
                       </span>
@@ -184,7 +187,9 @@ function DraggableRow({
                       onSelect={() => handleRemoveItem(item.tmdbId)}
                     >
                       <Trash2 className="mr-2.5 h-4 w-4" />
-                      <span>{content.watchlists.contextMenu.removeFromWatchlist}</span>
+                      <span>
+                        {content.watchlists.contextMenu.removeFromWatchlist}
+                      </span>
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Separator className="my-1.5 h-px bg-border" />

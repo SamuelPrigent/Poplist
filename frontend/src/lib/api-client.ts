@@ -489,9 +489,9 @@ const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 export const tmdbAPI = {
-  getTrending: async (timeWindow: "day" | "week" = "day") => {
+  getTrending: async (timeWindow: "day" | "week" = "day", page: number = 1) => {
     const response = await fetch(
-      `${TMDB_BASE_URL}/trending/all/${timeWindow}`,
+      `${TMDB_BASE_URL}/trending/all/${timeWindow}?page=${page}`,
       {
         headers: {
           Authorization: `Bearer ${TMDB_API_KEY}`,

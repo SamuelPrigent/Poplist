@@ -14,9 +14,11 @@ export const de: Content = {
   // Auth Drawer
   auth: {
     loginTitle: "Anmelden",
-    loginDescription: "Willkommen zurück! Melden Sie sich an, um auf Ihre Watchlists zuzugreifen.",
+    loginDescription:
+      "Willkommen zurück! Melden Sie sich an, um auf Ihre Watchlists zuzugreifen.",
     signupTitle: "Registrieren",
-    signupDescription: "Erstellen Sie ein Konto, um Ihre Watchlists zu speichern.",
+    signupDescription:
+      "Erstellen Sie ein Konto, um Ihre Watchlists zu speichern.",
     continueWithGoogle: "Mit Google fortfahren",
     or: "Oder",
     email: "E-Mail",
@@ -31,7 +33,7 @@ export const de: Content = {
   // Watchlists Page
   watchlists: {
     title: "Ihre Watchlists",
-    createWatchlist: "Erstellen",
+    createWatchlist: "Neue watchlist",
     createWatchlistDescription:
       "Erstellen Sie eine neue Watchlist, um Ihre Filme und Serien zu organisieren.",
     notLoggedInWarning: "Lokale Daten",
@@ -42,13 +44,16 @@ export const de: Content = {
     adjustFilters: "Passen Sie die Filter an, um mehr Watchlists zu sehen",
     items: "Elemente",
     item: "Element",
+    headerPublic: "Öffentliche liste",
+    headerPrivate: "Private liste",
     public: "Öffentlich",
     private: "Privat",
     loading: "Lädt...",
     accountDataBadge: "Benutzerkontodaten",
     preview: "Vorschau",
     categories: "Kategorien / Tags",
-    categoriesDescription: "Wählen Sie eine oder mehrere Kategorien aus, um Ihre Watchlist leichter auffindbar zu machen",
+    categoriesDescription:
+      "Wählen Sie eine oder mehrere Kategorien aus, um Ihre Watchlist leichter auffindbar zu machen",
     name: "Name",
     namePlaceholder: "Meine Watchlist",
     description: "Beschreibung",
@@ -67,7 +72,8 @@ export const de: Content = {
       "Beginnen Sie damit, Filme und Serien zu Ihrer Watchlist hinzuzufügen, um Ihre Warteschlange zu organisieren.",
     edit: "Bearbeiten",
     editWatchlist: "Watchlist bearbeiten",
-    editWatchlistDescription: "Bearbeiten Sie die Informationen Ihrer Watchlist.",
+    editWatchlistDescription:
+      "Bearbeiten Sie die Informationen Ihrer Watchlist.",
     deleteWatchlist: "Watchlist löschen",
     deleteWatchlistConfirm:
       'Möchten Sie "{name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
@@ -78,11 +84,13 @@ export const de: Content = {
     deleting: "Wird gelöscht...",
     delete: "Löschen",
     addItem: "Hinzufügen",
-    searchMoviesAndSeries: "Suchen und fügen Sie Filme oder Serien zu Ihrer Watchlist hinzu",
+    searchMoviesAndSeries:
+      "Suchen und fügen Sie Filme oder Serien zu Ihrer Watchlist hinzu",
     searchPlaceholder: "Nach einem Film oder einer Serie suchen...",
     searching: "Sucht...",
     noResults: "Keine Ergebnisse gefunden",
-    startSearching: "Beginnen Sie mit der Eingabe, um nach Filmen und Serien zu suchen",
+    startSearching:
+      "Beginnen Sie mit der Eingabe, um nach Filmen und Serien zu suchen",
     add: "Hinzufügen",
     added: "Hinzugefügt",
     inWatchlist: "In Watchlist",
@@ -147,7 +155,8 @@ export const de: Content = {
       removeSuccess: "Mitarbeiter entfernt",
       removeError: "Mitarbeiter konnte nicht entfernt werden",
       leaveTitle: "Watchlist verlassen?",
-      leaveDescription: "Möchten Sie diese Watchlist wirklich verlassen? Sie verlieren Ihre Mitarbeiterrechte.",
+      leaveDescription:
+        "Möchten Sie diese Watchlist wirklich verlassen? Sie verlieren Ihre Mitarbeiterrechte.",
       leave: "Verlassen",
       leaving: "Wird verlassen...",
       leaveSuccess: "Sie haben die Watchlist verlassen",
@@ -161,7 +170,8 @@ export const de: Content = {
     hero: {
       tagline: "Planen, verfolgen und genießen Sie Ihre Filme gemeinsam",
       title: "Ihre Watchlists perfekt organisiert",
-      subtitle: "Organisieren Sie Ihre TV-Abende und teilen Sie Ihre Entdeckungen mit Ihren Freunden",
+      subtitle:
+        "Organisieren Sie Ihre TV-Abende und teilen Sie Ihre Entdeckungen mit Ihren Freunden",
       cta: "Watchlist erstellen",
     },
     features: {
@@ -180,23 +190,28 @@ export const de: Content = {
       share: {
         tagline: "Teilen",
         title: "Watchlists anderer Benutzer folgen",
-        description: "Fügen Sie Watchlists zu Ihrem persönlichen Bereich hinzu.",
+        description:
+          "Fügen Sie Watchlists zu Ihrem persönlichen Bereich hinzu.",
       },
     },
     startInSeconds: {
       title: "In Sekunden starten",
-      subtitle: "Keine komplizierte Einrichtung, nur Sie und Ihre Lieblingsinhalte",
+      subtitle:
+        "Keine komplizierte Einrichtung, nur Sie und Ihre Lieblingsinhalte",
       step1: {
         title: "Erstellen Sie Ihre Watchlist",
-        description: "Beginnen Sie mit \"Meine Lieblingsfilme\" oder werden Sie nostalgisch mit \"Kindheitsfilme\".",
+        description:
+          'Beginnen Sie mit "Meine Lieblingsfilme" oder werden Sie nostalgisch mit "Kindheitsfilme".',
       },
       step2: {
         title: "Filme hinzufügen",
-        description: "Suchen Sie mit einem Stichwort nach einem Film oder einer Serie und fügen Sie ihn zu Ihrer aktuellen Watchlist hinzu.",
+        description:
+          "Suchen Sie mit einem Stichwort nach einem Film oder einer Serie und fügen Sie ihn zu Ihrer aktuellen Watchlist hinzu.",
       },
       step3: {
         title: "Mit Freunden teilen",
-        description: "Machen Sie Ihre Watchlists \"öffentlich\" und teilen Sie sie einfach mit einem Link.",
+        description:
+          'Machen Sie Ihre Watchlists "öffentlich" und teilen Sie sie einfach mit einem Link.',
       },
     },
     testimonials: {
@@ -217,7 +232,8 @@ export const de: Content = {
     },
     finalCta: {
       title: "Beginnen Sie einfach mit der Erstellung Ihrer Watchlists",
-      subtitle: "Treten Sie WatchlistHub bei und organisieren Sie Ihre Lieblingsinhalte mit nur wenigen Klicks.",
+      subtitle:
+        "Treten Sie WatchlistHub bei und organisieren Sie Ihre Lieblingsinhalte mit nur wenigen Klicks.",
       button: "Meine Watchlist erstellen",
       disclaimer: "Kostenlose Anwendung • Keine Karte erforderlich",
     },
@@ -339,15 +355,16 @@ export const de: Content = {
       noImage: "Kein Bild",
     },
     recommendations: {
-      title: "Titel, die Ihnen gefallen könnten",
-      subtitle: "Basierend auf aktuellen Trends",
+      title: "Gerade im Trend",
+      subtitle: "Die angesagtesten Titel dieser Woche.",
       seeMore: "Alle anzeigen",
     },
   },
 
   explore: {
     title: "Erkunden",
-    subtitle: "Entdecken Sie neue Watchlists, die von der Community geteilt werden",
+    subtitle:
+      "Entdecken Sie neue Watchlists, die von der Community geteilt werden",
     searchPlaceholder: "Nach einer Watchlist suchen...",
     filters: {
       all: "Alle",
@@ -374,15 +391,33 @@ export const de: Content = {
     subtitle: "Erkunden Sie Watchlists nach Thema",
     list: {
       movies: { name: "Filme", description: "Die besten Filme des Moments" },
-      series: { name: "Serien", description: "Serien, die Sie nicht verpassen sollten" },
+      series: {
+        name: "Serien",
+        description: "Serien, die Sie nicht verpassen sollten",
+      },
       netflix: { name: "Netflix", description: "Netflix-Perlen" },
-      "prime-video": { name: "Prime Video", description: "Amazon Prime Exklusivtitel" },
-      "disney-plus": { name: "Disney+", description: "Das Disney-, Pixar-, Marvel- und Star Wars-Universum" },
-      anime: { name: "Animation", description: "Die besten Animationsserien und adaptierten Manga-Filme" },
+      "prime-video": {
+        name: "Prime Video",
+        description: "Amazon Prime Exklusivtitel",
+      },
+      "disney-plus": {
+        name: "Disney+",
+        description: "Das Disney-, Pixar-, Marvel- und Star Wars-Universum",
+      },
+      anime: {
+        name: "Animation",
+        description: "Die besten Animationsserien und adaptierten Manga-Filme",
+      },
       action: { name: "Action", description: "Klassiker und neue Actionfilme" },
-      documentaries: { name: "Dokumentarfilme", description: "Fesselnde und lehrreiche Dokumentarfilme" },
+      documentaries: {
+        name: "Dokumentarfilme",
+        description: "Fesselnde und lehrreiche Dokumentarfilme",
+      },
       enfant: { name: "Kinder", description: "Filme und Serien für Kinder" },
-      jeunesse: { name: "Jugend", description: "Filme und Serien für Jugendliche und junge Erwachsene" },
+      jeunesse: {
+        name: "Jugend",
+        description: "Filme und Serien für Jugendliche und junge Erwachsene",
+      },
     },
   },
 
@@ -399,7 +434,8 @@ export const de: Content = {
     userInformation: "Benutzerinformationen",
     avatarSection: {
       title: "Profilbild",
-      description: "Laden Sie ein Profilbild hoch, um Ihr Konto zu personalisieren",
+      description:
+        "Laden Sie ein Profilbild hoch, um Ihr Konto zu personalisieren",
       uploadButton: "Hochladen",
       changeButton: "Ändern",
       deleteButton: "Löschen",
@@ -422,20 +458,23 @@ export const de: Content = {
     },
     usernameSection: {
       title: "Benutzername",
-      description: "Aktualisieren Sie Ihren Benutzernamen. So werden Sie von anderen gesehen.",
+      description:
+        "Aktualisieren Sie Ihren Benutzernamen. So werden Sie von anderen gesehen.",
       label: "Benutzername",
       placeholder: "Geben Sie Ihren Benutzernamen ein",
       hint: "3-20 Zeichen. Nur Buchstaben, Zahlen und Unterstriche.",
       updateButton: "Aktualisieren",
       validation: {
         lengthError: "Benutzername muss zwischen 3 und 20 Zeichen lang sein",
-        formatError: "Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten",
+        formatError:
+          "Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten",
         alreadyTaken: "Benutzername bereits vergeben",
       },
     },
     passwordSection: {
       title: "Passwort",
-      description: "Ändern Sie Ihr Passwort. Stellen Sie sicher, dass es mindestens 8 Zeichen lang ist.",
+      description:
+        "Ändern Sie Ihr Passwort. Stellen Sie sicher, dass es mindestens 8 Zeichen lang ist.",
       currentPasswordLabel: "Passwort",
       currentPasswordPlaceholder: "Geben Sie Ihr aktuelles Passwort ein",
       newPasswordLabel: "Neues Passwort",
@@ -448,7 +487,8 @@ export const de: Content = {
       title: "Konto löschen",
       description: "Unwiderrufliche Aktion. Alle Ihre Daten werden gelöscht.",
       dialogTitle: "Ihr Konto löschen",
-      dialogDescription: "Unwiderrufliche Aktion. Alle Ihre Daten werden gelöscht.",
+      dialogDescription:
+        "Unwiderrufliche Aktion. Alle Ihre Daten werden gelöscht.",
       confirmationLabel: "Geben Sie 'confirmer' ein, um fortzufahren",
       confirmationPlaceholder: "confirmer",
       deleteButton: "Konto löschen",

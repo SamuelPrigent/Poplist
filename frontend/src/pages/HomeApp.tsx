@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Film, Plus, Eye } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -23,19 +23,6 @@ interface TrendingItem {
   poster_path?: string;
   backdrop_path?: string;
   media_type: "movie" | "tv";
-  vote_average?: number;
-  vote_count?: number;
-  overview?: string;
-  release_date?: string;
-  first_air_date?: string;
-}
-
-interface TMDBResult {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string;
-  backdrop_path?: string;
   vote_average?: number;
   vote_count?: number;
   overview?: string;
@@ -126,148 +113,51 @@ export function HomeApp() {
           }
         }
 
-        // Collect all items from user's watchlists
-        const allItems: { tmdbId: string; type: "movie" | "tv" }[] = [];
-        userWatchlistsData.forEach((watchlist) => {
-          watchlist.items.forEach((item) => {
-            allItems.push({
-              tmdbId: item.tmdbId,
-              type: item.type,
-            });
+        // Simplified recommendations: Fetch multiple pages for more variety
+        // Randomly select 2 pages to fetch for diversity
+        const randomPage1 = Math.floor(Math.random() * 5) + 1; // Random page 1-5
+        const randomPage2 = Math.floor(Math.random() * 5) + 1; // Random page 1-5
+
+        console.log(`📺 [Recommendations] Fetching trending pages: ${randomPage1} and ${randomPage2}`);
+
+        const [trendingData1, trendingData2] = await Promise.all([
+          tmdbAPI.getTrending("day", randomPage1),
+          tmdbAPI.getTrending("day", randomPage2),
+        ]);
+
+        // Combine results from both pages
+        const allTrending = [
+          ...(trendingData1.results || []),
+          ...(trendingData2.results || []),
+        ];
+
+        // Remove duplicates by ID
+        const uniqueTrending = Array.from(
+          new Map(allTrending.map(item => [item.id, item])).values()
+        );
+
+        // Filter trending items by quality criteria
+        const trendingFiltered = uniqueTrending
+          .filter((item: TrendingItem) => item.poster_path)
+          .filter((item: TrendingItem) => item.vote_average && item.vote_average >= 6)
+          .filter((item: TrendingItem) => item.vote_count && item.vote_count > 100)
+          .filter((item: TrendingItem) => {
+            const dateStr = item.release_date || item.first_air_date;
+            if (!dateStr) return false;
+            const year = parseInt(dateStr.split("-")[0]);
+            return year > 2015;
           });
-        });
 
-        // Fetch recommendations based on user's items or trending
-        if (allItems.length > 0) {
-          // Use similar items from random items in user's watchlists
-          const API_URL =
-            import.meta.env.VITE_API_URL || "http://localhost:3000";
+        // Generate random offset to vary results on each load
+        // Ensure we have at least 5 items after the offset
+        const maxOffset = Math.max(0, trendingFiltered.length - 5);
+        const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
 
-          // Helper function to filter items by quality criteria
-          const filterQualityItems = (
-            items: TrendingItem[],
-          ): TrendingItem[] => {
-            return items
-              .filter((item) => item.poster_path) // Only keep items with poster
-              .filter((item) => item.vote_average && item.vote_average >= 6) // Only keep items with rating >= 6
-              .filter((item) => item.vote_count && item.vote_count > 100) // Only keep items with > 100 votes
-              .filter((item) => {
-                // Only keep items released after 2015
-                const dateStr = item.release_date || item.first_air_date;
-                if (!dateStr) return false;
-                const year = parseInt(dateStr.split("-")[0]);
-                return year > 2015;
-              });
-          };
+        console.log(`📺 [Recommendations] Filtered ${trendingFiltered.length} items, using offset ${randomOffset} (range: ${randomOffset}-${randomOffset + 4})`);
 
-          // Shuffle all items
-          const shuffledItems = [...allItems].sort(() => Math.random() - 0.5);
-          const accumulatedResults: TrendingItem[] = [];
-          const seenIds = new Set<number>();
-          let itemsToTry = 0;
-          const batchSize = 3; // Try 3 items at a time
-
-          // Keep fetching until we have 5 results or run out of items
-          while (
-            accumulatedResults.length < 5 &&
-            itemsToTry < shuffledItems.length
-          ) {
-            const batch = shuffledItems.slice(
-              itemsToTry,
-              itemsToTry + batchSize,
-            );
-            itemsToTry += batchSize;
-
-            const similarPromises = batch.map(async (item) => {
-              try {
-                // Use backend cached route instead of direct TMDB call
-                const response = await fetch(
-                  `${API_URL}/tmdb/${item.type}/${item.tmdbId}/similar?language=fr-FR&page=1`,
-                );
-                const data = await response.json();
-                return (data.results || []).map(
-                  (result: TMDBResult): TrendingItem => ({
-                    ...result,
-                    media_type: item.type,
-                  }),
-                );
-              } catch (error) {
-                console.error(`Failed to fetch similar items:`, error);
-                return [];
-              }
-            });
-
-            const similarResults = await Promise.all(similarPromises);
-            const batchSimilar = similarResults.flat();
-
-            // Filter by quality and remove duplicates
-            const filteredBatch = filterQualityItems(batchSimilar).filter(
-              (item) => !seenIds.has(item.id),
-            );
-
-            // Add new items and mark as seen (stop as soon as we reach 5)
-            for (const item of filteredBatch) {
-              if (accumulatedResults.length >= 5) break;
-              accumulatedResults.push(item);
-              seenIds.add(item.id);
-            }
-
-            // Exit the while loop if we've reached 5 items
-            if (accumulatedResults.length >= 5) break;
-          }
-
-          // If we have less than 5 similar items, complement with trending
-          if (accumulatedResults.length < 5) {
-            const trendingData = await tmdbAPI.getTrending("day");
-            const trendingFiltered = (trendingData.results || [])
-              .filter((item: TrendingItem) => item.poster_path)
-              .filter(
-                (item: TrendingItem) =>
-                  item.vote_average && item.vote_average >= 6,
-              )
-              .filter(
-                (item: TrendingItem) =>
-                  item.vote_count && item.vote_count > 100,
-              )
-              .filter((item: TrendingItem) => {
-                const dateStr = item.release_date || item.first_air_date;
-                if (!dateStr) return false;
-                const year = parseInt(dateStr.split("-")[0]);
-                return year > 2015;
-              })
-              .filter((item: TrendingItem) => !seenIds.has(item.id)); // Don't add duplicates
-
-            // Add trending items to fill up to exactly 5, not more
-            const needed = Math.max(0, 5 - accumulatedResults.length);
-            const trendingToAdd = trendingFiltered.slice(0, needed);
-
-            // Combine and ensure we never exceed 5 items
-            const combined = [...accumulatedResults, ...trendingToAdd];
-            setRecommendations(combined.slice(0, 5));
-          } else {
-            // If we have 5 or more, take only the first 5
-            setRecommendations(accumulatedResults.slice(0, 5));
-          }
-        } else {
-          // Fallback to trending if no items in watchlists
-          const trendingData = await tmdbAPI.getTrending("day");
-          const trendingFiltered = (trendingData.results || [])
-            .filter((item: TrendingItem) => item.poster_path)
-            .filter(
-              (item: TrendingItem) =>
-                item.vote_average && item.vote_average >= 6,
-            )
-            .filter(
-              (item: TrendingItem) => item.vote_count && item.vote_count > 100,
-            )
-            .filter((item: TrendingItem) => {
-              const dateStr = item.release_date || item.first_air_date;
-              if (!dateStr) return false;
-              const year = parseInt(dateStr.split("-")[0]);
-              return year > 2015;
-            });
-          setRecommendations(trendingFiltered.slice(0, 5));
-        }
+        // Take exactly 5 consecutive items starting from random offset
+        const selectedRecommendations = trendingFiltered.slice(randomOffset, randomOffset + 5);
+        setRecommendations(selectedRecommendations);
 
         // Fetch category counts for all categories
         const categoryIds = [
@@ -391,6 +281,12 @@ export function HomeApp() {
         username: "WatchlistHub",
       };
     },
+  );
+
+  // Security: Ensure recommendations never exceed 5 items
+  const safeRecommendations = useMemo(
+    () => recommendations.slice(0, 5),
+    [recommendations]
   );
 
   return (
@@ -595,7 +491,7 @@ export function HomeApp() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          {recommendations.slice(0, 5).map((item) => (
+          {safeRecommendations.map((item) => (
             <div key={item.id} className="group relative">
               <MoviePoster
                 id={item.id}

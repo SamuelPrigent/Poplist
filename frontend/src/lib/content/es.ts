@@ -31,7 +31,7 @@ export const es: Content = {
   // Watchlists Page
   watchlists: {
     title: "Tus listas",
-    createWatchlist: "Crear",
+    createWatchlist: "Nueva lista",
     createWatchlistDescription:
       "Crea una nueva lista para organizar tus películas y series.",
     notLoggedInWarning: "Datos locales",
@@ -42,13 +42,16 @@ export const es: Content = {
     adjustFilters: "Ajusta los filtros para ver más listas",
     items: "elementos",
     item: "elemento",
+    headerPublic: "Lista pública",
+    headerPrivate: "Lista privada",
     public: "Público",
     private: "Privado",
     loading: "Cargando...",
     accountDataBadge: "Datos de la cuenta de usuario",
     preview: "Vista previa",
     categories: "Categorías / Etiquetas",
-    categoriesDescription: "Selecciona una o más categorías para facilitar el descubrimiento de tu lista",
+    categoriesDescription:
+      "Selecciona una o más categorías para facilitar el descubrimiento de tu lista",
     name: "Nombre",
     namePlaceholder: "Mi lista",
     description: "Descripción",
@@ -136,7 +139,8 @@ export const es: Content = {
     },
     collaborators: {
       addTitle: "Añadir Colaborador",
-      addDescription: "Introduce el nombre de usuario para invitar a un colaborador",
+      addDescription:
+        "Introduce el nombre de usuario para invitar a un colaborador",
       usernamePlaceholder: "Nombre de usuario",
       add: "Añadir",
       adding: "Añadiendo...",
@@ -147,7 +151,8 @@ export const es: Content = {
       removeSuccess: "Colaborador eliminado",
       removeError: "Error al eliminar colaborador",
       leaveTitle: "¿Salir de la watchlist?",
-      leaveDescription: "¿Estás seguro de que quieres salir de esta watchlist? Perderás tus derechos de colaborador.",
+      leaveDescription:
+        "¿Estás seguro de que quieres salir de esta watchlist? Perderás tus derechos de colaborador.",
       leave: "Salir",
       leaving: "Saliendo...",
       leaveSuccess: "Has salido de la watchlist",
@@ -161,7 +166,8 @@ export const es: Content = {
     hero: {
       tagline: "Planifica, sigue y disfruta de tus películas juntos",
       title: "Tus Watchlists perfectamente organizadas",
-      subtitle: "Organiza tus noches de TV y comparte tus descubrimientos con tus amigos",
+      subtitle:
+        "Organiza tus noches de TV y comparte tus descubrimientos con tus amigos",
       cta: "Crear una watchlist",
     },
     features: {
@@ -188,15 +194,18 @@ export const es: Content = {
       subtitle: "Sin configuración complicada, solo tú y tu contenido favorito",
       step1: {
         title: "Crea tu watchlist",
-        description: "Comienza con \"Mis películas favoritas\" o ponte nostálgico con \"Películas de infancia\".",
+        description:
+          'Comienza con "Mis películas favoritas" o ponte nostálgico con "Películas de infancia".',
       },
       step2: {
         title: "Añade películas",
-        description: "Busca una película o serie usando una palabra clave y añádela a tu watchlist actual.",
+        description:
+          "Busca una película o serie usando una palabra clave y añádela a tu watchlist actual.",
       },
       step3: {
         title: "Compártela con tus amigos",
-        description: "Haz tus watchlists \"públicas\" y compártelas fácilmente con un enlace.",
+        description:
+          'Haz tus watchlists "públicas" y compártelas fácilmente con un enlace.',
       },
     },
     testimonials: {
@@ -217,7 +226,8 @@ export const es: Content = {
     },
     finalCta: {
       title: "Comienza a crear tus watchlists fácilmente",
-      subtitle: "Únete a WatchlistHub y organiza tu contenido favorito en unos pocos clics.",
+      subtitle:
+        "Únete a WatchlistHub y organiza tu contenido favorito en unos pocos clics.",
       button: "Crear mi watchlist",
       disclaimer: "Aplicación gratuita • No se requiere tarjeta",
     },
@@ -339,8 +349,8 @@ export const es: Content = {
       noImage: "Sin imagen",
     },
     recommendations: {
-      title: "Títulos que te podrían gustar",
-      subtitle: "Basado en las tendencias actuales",
+      title: "Tendencias del momento",
+      subtitle: "Los títulos que están de moda esta semana.",
       seeMore: "Ver todo",
     },
   },
@@ -373,16 +383,41 @@ export const es: Content = {
     title: "Categorías",
     subtitle: "Explora listas por tema",
     list: {
-      movies: { name: "Películas", description: "Las mejores películas del momento" },
+      movies: {
+        name: "Películas",
+        description: "Las mejores películas del momento",
+      },
       series: { name: "Series", description: "Series que no te puedes perder" },
       netflix: { name: "Netflix", description: "Joyas de Netflix" },
-      "prime-video": { name: "Prime Video", description: "Exclusivas de Amazon Prime" },
-      "disney-plus": { name: "Disney+", description: "El universo Disney, Pixar, Marvel y Star Wars" },
-      anime: { name: "Animación", description: "Las mejores series animadas y películas de manga adaptadas" },
-      action: { name: "Acción", description: "Clásicos y nuevas películas de acción" },
-      documentaries: { name: "Documentales", description: "Documentales cautivadores y educativos" },
-      enfant: { name: "Infantil", description: "Películas y series para niños" },
-      jeunesse: { name: "Juvenil", description: "Películas y series para adolescentes y adultos jóvenes" },
+      "prime-video": {
+        name: "Prime Video",
+        description: "Exclusivas de Amazon Prime",
+      },
+      "disney-plus": {
+        name: "Disney+",
+        description: "El universo Disney, Pixar, Marvel y Star Wars",
+      },
+      anime: {
+        name: "Animación",
+        description:
+          "Las mejores series animadas y películas de manga adaptadas",
+      },
+      action: {
+        name: "Acción",
+        description: "Clásicos y nuevas películas de acción",
+      },
+      documentaries: {
+        name: "Documentales",
+        description: "Documentales cautivadores y educativos",
+      },
+      enfant: {
+        name: "Infantil",
+        description: "Películas y series para niños",
+      },
+      jeunesse: {
+        name: "Juvenil",
+        description: "Películas y series para adolescentes y adultos jóvenes",
+      },
     },
   },
 
@@ -422,20 +457,23 @@ export const es: Content = {
     },
     usernameSection: {
       title: "Nombre de usuario",
-      description: "Actualiza tu nombre de usuario. Así es como te verán los demás.",
+      description:
+        "Actualiza tu nombre de usuario. Así es como te verán los demás.",
       label: "Nombre de usuario",
       placeholder: "Introduce tu nombre de usuario",
       hint: "3-20 caracteres. Solo letras, números y guiones bajos.",
       updateButton: "Actualizar",
       validation: {
         lengthError: "El nombre de usuario debe tener entre 3 y 20 caracteres",
-        formatError: "El nombre de usuario solo puede contener letras, números y guiones bajos",
+        formatError:
+          "El nombre de usuario solo puede contener letras, números y guiones bajos",
         alreadyTaken: "El nombre de usuario ya está en uso",
       },
     },
     passwordSection: {
       title: "Contraseña",
-      description: "Cambia tu contraseña. Asegúrate de que tenga al menos 8 caracteres.",
+      description:
+        "Cambia tu contraseña. Asegúrate de que tenga al menos 8 caracteres.",
       currentPasswordLabel: "Contraseña",
       currentPasswordPlaceholder: "Introduce tu contraseña actual",
       newPasswordLabel: "Nueva contraseña",
@@ -448,7 +486,8 @@ export const es: Content = {
       title: "Eliminar cuenta",
       description: "Acción irreversible. Todos tus datos serán eliminados.",
       dialogTitle: "Eliminar tu cuenta",
-      dialogDescription: "Acción irreversible. Todos tus datos serán eliminados.",
+      dialogDescription:
+        "Acción irreversible. Todos tus datos serán eliminados.",
       confirmationLabel: "Escribe 'confirmar' para continuar",
       confirmationPlaceholder: "confirmar",
       deleteButton: "Eliminar cuenta",
@@ -457,7 +496,8 @@ export const es: Content = {
     },
     toasts: {
       usernameUpdated: "Nombre de usuario actualizado",
-      usernameUpdatedDesc: "Tu nombre de usuario se ha actualizado correctamente.",
+      usernameUpdatedDesc:
+        "Tu nombre de usuario se ha actualizado correctamente.",
       passwordChanged: "Contraseña cambiada",
       passwordChangedDesc: "Tu contraseña se ha cambiado correctamente.",
       error: "Error",

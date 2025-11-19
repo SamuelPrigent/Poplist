@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Watchlist } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
-import { Plus, Film, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { Film, MoreVertical, Edit, Trash2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
@@ -199,7 +199,6 @@ export function WatchlistsOffline() {
           </h1>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4" />
           {content.watchlists.createWatchlist}
         </Button>
       </div>

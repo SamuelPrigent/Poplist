@@ -40,6 +40,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
+import type { Content } from "@/types/content";
 import { watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { useAuth } from "@/context/auth-context";
@@ -84,7 +85,7 @@ interface DraggableRowProps {
   totalItems: number;
   isDragDisabled: boolean;
   canEdit: boolean;
-  content: any;
+  content: Content;
   watchlists: Watchlist[];
   addingTo: string | null;
   handleAddToWatchlist: (watchlistId: string, item: WatchlistItem) => void;
@@ -172,7 +173,9 @@ function DraggableRow({
                         <DropdownMenu.Sub>
                           <DropdownMenu.SubTrigger className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
                             <Plus className="mr-2.5 h-4 w-4" />
-                            <span>{content.watchlists.contextMenu.addToWatchlist}</span>
+                            <span>
+                              {content.watchlists.contextMenu.addToWatchlist}
+                            </span>
                             <span className="ml-auto text-xs text-muted-foreground">
                               →
                             </span>
@@ -185,15 +188,26 @@ function DraggableRow({
                               <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                                 {content.watchlists.addToWatchlist}
                               </DropdownMenu.Label>
-                              {watchlists.filter(w => w._id !== currentWatchlistId && (w.isOwner || w.isCollaborator)).length > 0 ? (
+                              {watchlists.filter(
+                                (w) =>
+                                  w._id !== currentWatchlistId &&
+                                  (w.isOwner || w.isCollaborator),
+                              ).length > 0 ? (
                                 watchlists
-                                  .filter(w => w._id !== currentWatchlistId && (w.isOwner || w.isCollaborator))
+                                  .filter(
+                                    (w) =>
+                                      w._id !== currentWatchlistId &&
+                                      (w.isOwner || w.isCollaborator),
+                                  )
                                   .map((watchlist) => (
                                     <DropdownMenu.Item
                                       key={watchlist._id}
                                       className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                                       onSelect={() =>
-                                        handleAddToWatchlist(watchlist._id, item)
+                                        handleAddToWatchlist(
+                                          watchlist._id,
+                                          item,
+                                        )
                                       }
                                       disabled={addingTo === item.tmdbId}
                                     >
@@ -214,7 +228,9 @@ function DraggableRow({
                           onSelect={() => handleRemoveItem(item.tmdbId)}
                         >
                           <Trash2 className="mr-2.5 h-4 w-4" />
-                          <span>{content.watchlists.contextMenu.removeFromWatchlist}</span>
+                          <span>
+                            {content.watchlists.contextMenu.removeFromWatchlist}
+                          </span>
                         </DropdownMenu.Item>
 
                         <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
@@ -225,7 +241,9 @@ function DraggableRow({
                           disabled={index === 0}
                         >
                           <MoveUp className="mr-2.5 h-4 w-4" />
-                          <span>{content.watchlists.contextMenu.moveToFirst}</span>
+                          <span>
+                            {content.watchlists.contextMenu.moveToFirst}
+                          </span>
                         </DropdownMenu.Item>
 
                         <DropdownMenu.Item
@@ -234,7 +252,9 @@ function DraggableRow({
                           disabled={index === totalItems - 1}
                         >
                           <MoveDown className="mr-2.5 h-4 w-4" />
-                          <span>{content.watchlists.contextMenu.moveToLast}</span>
+                          <span>
+                            {content.watchlists.contextMenu.moveToLast}
+                          </span>
                         </DropdownMenu.Item>
                       </DropdownMenu.Content>
                     </DropdownMenu.Portal>
@@ -268,7 +288,7 @@ export function WatchlistItemsTable({
   //   onUpdate,
   isOwner = true,
   isCollaborator = false,
-  offline: _offline = false,
+  //   offline: _offline = false,
 }: WatchlistItemsTableProps) {
   const { content } = useLanguageStore();
 
