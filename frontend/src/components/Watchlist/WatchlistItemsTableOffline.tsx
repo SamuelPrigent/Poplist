@@ -56,6 +56,42 @@ import {
 import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 
+// Bracket icon component (left/right arrows)
+function BracketIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      className={className}
+    >
+      <path
+        fill="currentColor"
+        d="M9.71 6.29a1 1 0 0 0-1.42 0l-5 5a1 1 0 0 0 0 1.42l5 5a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42L5.41 12l4.3-4.29a1 1 0 0 0 0-1.42m11 5l-5-5a1 1 0 0 0-1.42 1.42l4.3 4.29l-4.3 4.29a1 1 0 0 0 0 1.42a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0 0-1.42"
+      />
+    </svg>
+  );
+}
+
+// Sort icon component that shows bracket (neutral), arrow down (asc), or arrow up (desc)
+function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
+  if (sortState === "asc") {
+    return (
+      <ArrowDown className="h-4 w-4 text-green-500 transition-all duration-150" />
+    );
+  }
+  if (sortState === "desc") {
+    return (
+      <ArrowUp className="h-4 w-4 text-green-500 transition-all duration-150" />
+    );
+  }
+  // Neutral state: bracket rotated 90deg to show up/down arrows
+  return (
+    <BracketIcon className="h-4 w-4 rotate-90 opacity-40 transition-all duration-150" />
+  );
+}
+
 interface WatchlistItemsTableProps {
   watchlist: Watchlist;
   //   onUpdate: () => void;
@@ -117,6 +153,8 @@ function DraggableRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isLastRow = index === totalItems - 1;
+
   return (
     <tr
       ref={setNodeRef}
@@ -124,7 +162,8 @@ function DraggableRow({
       onMouseEnter={() => setHoveredRow(item.tmdbId)}
       onMouseLeave={() => setHoveredRow(null)}
       className={cn(
-        "group select-none border-b border-border transition-colors duration-150",
+        "group select-none transition-colors duration-150",
+        !isLastRow && "border-b border-border",
         hoveredRow === item.tmdbId && "bg-muted/30",
         !isDragDisabled && "cursor-grab active:cursor-grabbing",
       )}
@@ -505,7 +544,7 @@ export function WatchlistItemsTableOffline({
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
           return (
-            <button
+            <div
               onClick={() => {
                 if (!isSorted) {
                   column.toggleSorting(false); // asc
@@ -515,12 +554,25 @@ export function WatchlistItemsTableOffline({
                   column.clearSorting(); // custom order
                 }
               }}
-              className="flex items-center gap-2 hover:text-white"
+              className="flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              tabIndex={0}
+              role="button"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  if (!isSorted) {
+                    column.toggleSorting(false);
+                  } else if (isSorted === "asc") {
+                    column.toggleSorting(true);
+                  } else {
+                    column.clearSorting();
+                  }
+                }
+              }}
             >
               {content.watchlists.tableHeaders.title}
-              {isSorted === "asc" && <ArrowDown className="h-3 w-3" />}
-              {isSorted === "desc" && <ArrowUp className="h-3 w-3" />}
-            </button>
+              <SortIcon sortState={isSorted} />
+            </div>
           );
         },
         cell: (info) => {
@@ -607,7 +659,7 @@ export function WatchlistItemsTableOffline({
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
           return (
-            <button
+            <div
               onClick={() => {
                 if (!isSorted) {
                   column.toggleSorting(false); // asc (shortest to longest)
@@ -617,12 +669,25 @@ export function WatchlistItemsTableOffline({
                   column.clearSorting(); // custom order
                 }
               }}
-              className="flex items-center gap-2 hover:text-white"
+              className="flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              tabIndex={0}
+              role="button"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  if (!isSorted) {
+                    column.toggleSorting(false);
+                  } else if (isSorted === "asc") {
+                    column.toggleSorting(true);
+                  } else {
+                    column.clearSorting();
+                  }
+                }
+              }}
             >
               {content.watchlists.tableHeaders.duration}
-              {isSorted === "asc" && <ArrowDown className="h-3 w-3" />}
-              {isSorted === "desc" && <ArrowUp className="h-3 w-3" />}
-            </button>
+              <SortIcon sortState={isSorted} />
+            </div>
           );
         },
         cell: (info) => {
@@ -729,12 +794,13 @@ export function WatchlistItemsTableOffline({
             {table.getHeaderGroups().map((headerGroup) => (
               <tr
                 key={headerGroup.id}
-                className="border-b border-border bg-muted/30"
+                className="border-b border-border"
+                style={{ backgroundColor: "rgb(28 42 63 / 44%)" }}
               >
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground"
+                    className="select-none px-4 py-4 text-left text-sm font-semibold text-muted-foreground transition-colors duration-150"
                     style={{ width: header.column.getSize() }}
                   >
                     {header.isPlaceholder
