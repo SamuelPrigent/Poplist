@@ -25,7 +25,7 @@ export function MoviePoster({
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer"
+      className={onClick ? "group cursor-pointer" : "group"}
     >
       <div className="relative mb-3 aspect-[2/3] overflow-hidden rounded-lg bg-muted shadow-lg">
         {posterPath && !imageError ? (

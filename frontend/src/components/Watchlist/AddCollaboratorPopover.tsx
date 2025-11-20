@@ -202,7 +202,7 @@ export function AddCollaboratorPopover({
                       onClick={() =>
                         handleRemoveCollaborator(collaborator._id, collaborator.username)
                       }
-                      className="text-muted-foreground transition-colors hover:text-red-500"
+                      className="rounded text-muted-foreground transition-colors hover:text-red-500"
                       title={
                         content.watchlists.collaborators.remove || "Retirer"
                       }

@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useRef } from "react";
 import { Film, MoreVertical, Edit, Trash2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import type { DraggableAttributes } from "@dnd-kit/core";
@@ -6,6 +7,7 @@ import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+import { cn } from "@/lib/cn";
 import teamIcon from "@/assets/team.svg";
 
 interface WatchlistCardProps {
@@ -42,14 +44,41 @@ export function WatchlistCard({
   categoryGradient,
   draggableProps,
 }: WatchlistCardProps) {
-  const navigate = useNavigate();
   const thumbnailUrl = useWatchlistThumbnail(watchlist);
+  const editButtonRef = useRef<HTMLDivElement>(null);
+  const deleteButtonRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (draggableProps) {
+  // Only add onClick handlers for draggable cards
+  // Non-draggable cards use Link wrapper for navigation
+  const handleClick = draggableProps
+    ? (e: React.MouseEvent) => {
+        e.stopPropagation();
+        window.location.href = href;
+      }
+    : undefined;
+
+  // Handle Tab navigation inside dropdown to alternate between Edit and Delete
+  const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
       e.stopPropagation();
+
+      const editButton = editButtonRef.current;
+      const deleteButton = deleteButtonRef.current;
+
+      if (!editButton || !deleteButton) return;
+
+      // Check which element currently has focus
+      const activeElement = document.activeElement;
+
+      if (activeElement === editButton || editButton.contains(activeElement)) {
+        // Focus is on Edit, move to Delete
+        deleteButton.focus();
+      } else {
+        // Focus is on Delete (or nowhere), move to Edit
+        editButton.focus();
+      }
     }
-    navigate(href);
   };
 
   const cardContent = (
@@ -57,7 +86,10 @@ export function WatchlistCard({
       {/* Cover Image */}
       <div
         onClick={handleClick}
-        className="relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted"
+        className={cn(
+          "relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted",
+          draggableProps && "cursor-pointer"
+        )}
         style={categoryGradient ? { background: categoryGradient } : undefined}
       >
         {categoryGradient ? (
@@ -109,7 +141,10 @@ export function WatchlistCard({
 
         <h3
           onClick={handleClick}
-          className="line-clamp-2 text-sm font-semibold text-white"
+          className={cn(
+            "line-clamp-2 text-sm font-semibold text-white",
+            draggableProps && "cursor-pointer"
+          )}
         >
           {watchlist.name}
         </h3>
@@ -117,8 +152,11 @@ export function WatchlistCard({
 
       {showOwner && (
         <p
-          className="mt-1 text-xs capitalize text-muted-foreground"
           onClick={handleClick}
+          className={cn(
+            "mt-1 text-xs capitalize text-muted-foreground",
+            draggableProps && "cursor-pointer"
+          )}
         >
           par{" "}
           {typeof watchlist.ownerId === "object"
@@ -129,7 +167,10 @@ export function WatchlistCard({
 
       {showVisibility && (
         <div className="mt-1 text-xs text-muted-foreground">
-          <span onClick={handleClick}>
+          <span
+            onClick={handleClick}
+            className={cn(draggableProps && "cursor-pointer")}
+          >
             {watchlist.isPublic
               ? content.watchlists.public
               : content.watchlists.private}
@@ -138,7 +179,10 @@ export function WatchlistCard({
       )}
 
       <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-        <span onClick={handleClick}>
+        <span
+          onClick={handleClick}
+          className={cn(draggableProps && "cursor-pointer")}
+        >
           {watchlist.items.length}{" "}
           {watchlist.items.length === 1
             ? content.watchlists.item
@@ -147,11 +191,22 @@ export function WatchlistCard({
 
         {/* More Menu */}
         {showMenu && onEdit && onDelete && (
-          <DropdownMenu.Root>
+          <DropdownMenu.Root
+            onOpenChange={(open) => {
+              if (!open) {
+                // Remove focus when dropdown closes
+                setTimeout(() => {
+                  if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                  }
+                }, 0);
+              }
+            }}
+          >
             <DropdownMenu.Trigger asChild>
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="ml-auto flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+                className="ml-auto flex h-6 w-6 items-center justify-center rounded opacity-0 transition-all hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
               >
                 <MoreVertical className="h-4 w-4" />
               </button>
@@ -159,21 +214,26 @@ export function WatchlistCard({
 
             <DropdownMenu.Portal>
               <DropdownMenu.Content
-                className="z-50 min-w-[180px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                className="z-50 min-w-[180px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md"
                 sideOffset={5}
+                onKeyDown={handleDropdownKeyDown}
+                onOpenAutoFocus={(e) => {
+                  e.preventDefault();
+                  editButtonRef.current?.focus();
+                }}
               >
                 <DropdownMenu.Item
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  ref={editButtonRef}
+                  className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                   onSelect={() => onEdit(watchlist)}
                 >
                   <Edit className="mr-2 h-4 w-4" />
                   <span>{content.watchlists.edit}</span>
                 </DropdownMenu.Item>
 
-                <DropdownMenu.Separator className="my-1 h-px bg-border" />
-
                 <DropdownMenu.Item
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500"
+                  ref={deleteButtonRef}
+                  className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
                   onSelect={() => onDelete(watchlist)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -194,7 +254,7 @@ export function WatchlistCard({
         style={draggableProps.style}
         {...draggableProps.attributes}
         {...draggableProps.listeners}
-        className="group cursor-grab rounded-lg p-2 transition-colors hover:bg-[#36363780] active:cursor-grabbing"
+        className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
       >
         {cardContent}
       </div>
@@ -202,8 +262,11 @@ export function WatchlistCard({
   }
 
   return (
-    <div className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]">
+    <Link
+      to={href}
+      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
+    >
       {cardContent}
-    </div>
+    </Link>
   );
 }

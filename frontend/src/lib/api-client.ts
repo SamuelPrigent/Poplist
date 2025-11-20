@@ -297,13 +297,6 @@ export const watchlistAPI = {
       method: "DELETE",
     }),
 
-  createShareLink: (
-    id: string,
-  ): Promise<{ shareUrl: string; expiresAt: string }> =>
-    request(`/watchlists/${id}/share`, {
-      method: "POST",
-    }),
-
   addCollaborator: (
     id: string,
     username: string,

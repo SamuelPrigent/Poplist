@@ -44,31 +44,32 @@ export function Header() {
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <img src={play} className="h-4 w-4" alt="" />
-              <Link to="/" className="text-xl font-bold text-white">
+              <Link to="/" className="rounded text-xl font-bold text-white">
                 {content.header.appName}
               </Link>
             </div>
             <Link
               to="/home"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-white"
+              className="rounded text-sm font-medium text-muted-foreground transition-colors hover:text-white"
             >
               {content.header.home}
             </Link>
             <Link
               to="/explore"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-white"
+              className="rounded text-sm font-medium text-muted-foreground transition-colors hover:text-white"
             >
               {content.header.explore}
             </Link>
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/watchlists">
-              <Button variant="ghost" size="icon">
-                <Bookmark
-                  className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}
-                />
-              </Button>
+            <Link
+              to="/watchlists"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <Bookmark
+                className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}
+              />
             </Link>
 
             {isAuthenticated ? (

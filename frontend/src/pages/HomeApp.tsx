@@ -517,7 +517,7 @@ export function HomeApp() {
               />
 
               {/* Action buttons */}
-              <div className="absolute right-2 top-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute right-2 top-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                 {/* Preview button */}
                 <button
                   className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
@@ -530,7 +530,17 @@ export function HomeApp() {
                 </button>
 
                 {/* Add button with dropdown - always visible */}
-                <DropdownMenu.Root>
+                <DropdownMenu.Root
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      setTimeout(() => {
+                        if (document.activeElement instanceof HTMLElement) {
+                          document.activeElement.blur();
+                        }
+                      }, 0);
+                    }
+                  }}
+                >
                   <DropdownMenu.Trigger asChild>
                     <button
                       className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
@@ -543,7 +553,7 @@ export function HomeApp() {
 
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content
-                      className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+                      className="z-50 min-w-[200px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md"
                       sideOffset={5}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -558,7 +568,7 @@ export function HomeApp() {
                           .map((watchlist) => (
                             <DropdownMenu.Item
                               key={watchlist._id}
-                              className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                              className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                               onSelect={() =>
                                 handleAddToWatchlist(watchlist._id, item)
                               }

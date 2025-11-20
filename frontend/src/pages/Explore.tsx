@@ -366,9 +366,9 @@ export function Explore() {
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
               {media.map((item, index) => (
-                <div
+                <button
                   key={`${item.id}-${index}-${page}`}
-                  className="group relative cursor-pointer overflow-hidden rounded-lg transition-opacity"
+                  className="group relative cursor-pointer overflow-hidden rounded-lg text-left transition-opacity"
                   onClick={() => handleItemClick(item)}
                 >
                   {/* Poster */}
@@ -388,8 +388,18 @@ export function Explore() {
 
                   {/* Add button (if authenticated or has offline watchlists) */}
                   {(isAuthenticated || watchlists.length > 0) && (
-                    <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
-                      <DropdownMenu.Root>
+                    <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                      <DropdownMenu.Root
+                        onOpenChange={(open) => {
+                          if (!open) {
+                            setTimeout(() => {
+                              if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur();
+                              }
+                            }, 0);
+                          }
+                        }}
+                      >
                         <DropdownMenu.Trigger asChild>
                           <button
                             className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
@@ -444,7 +454,7 @@ export function Explore() {
                       </div>
                     )}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 

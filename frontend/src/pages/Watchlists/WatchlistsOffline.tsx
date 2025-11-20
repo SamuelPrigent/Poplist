@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Watchlist } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,29 @@ function WatchlistCardOffline({
 }: WatchlistCardOfflineProps) {
   const navigate = useNavigate();
   const thumbnailUrl = useWatchlistThumbnail(watchlist);
+  const editButtonRef = useRef<HTMLDivElement>(null);
+  const deleteButtonRef = useRef<HTMLDivElement>(null);
+
+  // Handle Tab navigation inside dropdown to alternate between Edit and Delete
+  const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const editButton = editButtonRef.current;
+      const deleteButton = deleteButtonRef.current;
+
+      if (!editButton || !deleteButton) return;
+
+      const activeElement = document.activeElement;
+
+      if (activeElement === editButton || editButton.contains(activeElement)) {
+        deleteButton.focus();
+      } else {
+        editButton.focus();
+      }
+    }
+  };
 
   return (
     <div
@@ -120,11 +143,21 @@ function WatchlistCardOffline({
         </span>
 
         {/* More Menu */}
-        <DropdownMenu.Root>
+        <DropdownMenu.Root
+          onOpenChange={(open) => {
+            if (!open) {
+              setTimeout(() => {
+                if (document.activeElement instanceof HTMLElement) {
+                  document.activeElement.blur();
+                }
+              }, 0);
+            }
+          }}
+        >
           <DropdownMenu.Trigger asChild>
             <button
               onClick={(e) => e.stopPropagation()}
-              className="flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+              className="flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
             >
               <MoreVertical className="h-4 w-4" />
             </button>
@@ -132,13 +165,18 @@ function WatchlistCardOffline({
 
           <DropdownMenu.Portal>
             <DropdownMenu.Content
-              className="z-50 min-w-[180px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+              className="z-50 min-w-[180px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md"
               sideOffset={5}
-              onCloseAutoFocus={(e) => e.preventDefault()}
+              onKeyDown={handleDropdownKeyDown}
+              onOpenAutoFocus={(e) => {
+                e.preventDefault();
+                editButtonRef.current?.focus();
+              }}
             >
               {/* Edit */}
               <DropdownMenu.Item
-                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                ref={editButtonRef}
+                className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                 onSelect={() => {
                   onEdit(watchlist);
                 }}
@@ -149,7 +187,8 @@ function WatchlistCardOffline({
 
               {/* Delete */}
               <DropdownMenu.Item
-                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500"
+                ref={deleteButtonRef}
+                className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
                 onSelect={() => {
                   onDelete(watchlist);
                 }}

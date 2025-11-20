@@ -239,9 +239,19 @@ export function WatchlistDetail() {
         }
         menuButton={
           isOwner ? (
-            <DropdownMenu.Root>
+            <DropdownMenu.Root
+              onOpenChange={(open) => {
+                if (!open) {
+                  setTimeout(() => {
+                    if (document.activeElement instanceof HTMLElement) {
+                      document.activeElement.blur();
+                    }
+                  }, 0);
+                }
+              }}
+            >
               <DropdownMenu.Trigger asChild>
-                <button className="select-none rounded-full p-3 transition-all hover:scale-105 outline-none focus:outline-none focus-visible:outline-none data-[state=open]:outline-none data-[state=closed]:outline-none">
+                <button className="select-none rounded p-3 transition-all hover:scale-105">
                   <img
                     src={pointIcon}
                     alt="Menu"
@@ -255,14 +265,14 @@ export function WatchlistDetail() {
                   sideOffset={5}
                 >
                   <DropdownMenu.Item
-                    className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                     onClick={() => setEditModalOpen(true)}
                   >
                     <Pencil className="h-4 w-4" />
                     <span>{content.watchlists.editWatchlist}</span>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
-                    className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:bg-red-500/10"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
                     onClick={() => setDeleteDialogOpen(true)}
                   >
                     <Trash2 className="h-4 w-4" />

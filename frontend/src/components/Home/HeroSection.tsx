@@ -115,15 +115,10 @@ export function HeroSection({
 
         {/* CTA Button - Gray */}
         <Link
-          //   className="rounded-full p-[0.4rem] shadow-[rgb(189_189_189/_25%)_0px_30px_60px_-12px_inset,_rgba(0,0,0,0.3)_0px_18px_36px_-18px_inset]"
           to={watchlistsUrl}
+          className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-gray-200 px-6 py-[1.4rem] text-sm font-semibold text-black transition-colors hover:bg-gray-300"
         >
-          <Button
-            size="default"
-            className="bg-gray-200 px-6 py-[1.4rem] font-semibold text-black transition-colors hover:bg-gray-300"
-          >
-            {content.home.hero.cta}
-          </Button>
+          {content.home.hero.cta}
         </Link>
       </div>
     </section>

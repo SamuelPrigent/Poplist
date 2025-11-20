@@ -341,15 +341,10 @@ export function Landing() {
             {content.landing.finalCta.subtitle}
           </p>
           <Link
-            // className="mx-auto flex w-fit rounded-full p-[0.4rem] shadow-[rgb(189_189_189/_25%)_0px_30px_60px_-12px_inset,_rgba(0,0,0,0.3)_0px_18px_36px_-18px_inset]"
             to={watchlistsUrl}
+            className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-gray-200 px-7 py-5 text-base font-semibold text-black transition-colors hover:bg-gray-300"
           >
-            <Button
-              size="lg"
-              className="bg-gray-200 px-7 py-5 text-base font-semibold text-black transition-colors hover:bg-gray-300"
-            >
-              {content.landing.finalCta.button}
-            </Button>
+            {content.landing.finalCta.button}
           </Link>
           <p className="mt-4 text-sm text-gray-400">
             {content.landing.finalCta.disclaimer}

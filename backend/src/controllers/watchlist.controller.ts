@@ -2,8 +2,6 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { Watchlist } from '../models/Watchlist.model.js';
 import { User } from '../models/User.model.js';
-import { OneTimeInvite } from '../models/OneTimeInvite.model.js';
-import { generateTokenId, hashToken } from '../lib/jwt.js';
 import { Types } from 'mongoose';
 import { enrichMediaData, searchMedia, getFullMediaDetails } from '../services/tmdb.service.js';
 import { v2 as cloudinary } from 'cloudinary';
@@ -427,54 +425,6 @@ export async function deleteWatchlist(req: Request, res: Response): Promise<void
     await Watchlist.findByIdAndDelete(id);
 
     res.json({ message: 'Watchlist deleted successfully' });
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function createShareLink(req: Request, res: Response): Promise<void> {
-  try {
-    const userId = req.user!.sub;
-    const { id } = req.params;
-
-    if (!isValidWatchlistId(id)) {
-      res.status(404).json({ error: 'Watchlist not found' });
-      return;
-    }
-
-    const watchlist = await Watchlist.findById(id);
-
-    if (!watchlist) {
-      res.status(404).json({ error: 'Watchlist not found' });
-      return;
-    }
-
-    // Only owner can create share links
-    if (watchlist.ownerId.toString() !== userId) {
-      res.status(403).json({ error: 'Only owner can create share links' });
-      return;
-    }
-
-    // Generate invite token
-    const token = generateTokenId();
-    const tokenHash = hashToken(token);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    const invite = await OneTimeInvite.create({
-      watchlistId: id,
-      tokenHash,
-      expiresAt,
-      used: false,
-      createdBy: userId,
-    });
-
-    const shareUrl = `${process.env.CLIENT_URL}/invite/${token}`;
-
-    res.json({
-      shareUrl,
-      expiresAt,
-      inviteId: invite._id,
-    });
   } catch (error) {
     throw error;
   }

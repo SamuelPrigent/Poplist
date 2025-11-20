@@ -41,4 +41,29 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Reset default browser focus (blue outline) */
+  *:focus {
+    outline: none;
+  }
+
+  /* Global focus-visible for keyboard navigation */
+  /* Buttons, links, and interactive elements get outline with offset */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    @apply outline outline-2 outline-white outline-offset-2 transition-all duration-150;
+  }
+
+  /* Inputs and textareas get border change (no outline) */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply border-white shadow-[0_0_0_1px_white] outline-none transition-all duration-150;
+  }
+
+  /* Checkboxes get outline with offset like buttons */
+  input[type="checkbox"]:focus-visible {
+    @apply outline outline-2 outline-white outline-offset-2 transition-all duration-150;
+  }
 }

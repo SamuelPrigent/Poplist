@@ -192,7 +192,7 @@ export function ItemDetailsModal({
                 )}
 
                 {/* Close Button - Fixed position */}
-                <DialogPrimitive.Close className="absolute right-4 top-4 z-20 rounded-full bg-black/60 p-2 text-white opacity-70 transition-opacity hover:opacity-100 focus:outline-none">
+                <DialogPrimitive.Close className="absolute right-4 top-4 z-20 rounded-full bg-black/60 p-2 text-white opacity-70 transition-opacity hover:opacity-100">
                   <X className="h-5 w-5" />
                   <span className="sr-only">Close</span>
                 </DialogPrimitive.Close>

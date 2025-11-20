@@ -332,7 +332,7 @@ export const EditWatchlistDialog = forwardRef<
                     placeholder={content.watchlists.descriptionPlaceholder}
                     maxLength={500}
                     disabled={loading}
-                    className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:flex-1"
+                    className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 md:flex-1"
                   />
                 </div>
               </div>
@@ -346,7 +346,7 @@ export const EditWatchlistDialog = forwardRef<
                 checked={isPublic}
                 onChange={(e) => setIsPublic(e.target.checked)}
                 disabled={loading}
-                className="h-4 w-4 rounded border-input bg-background text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-4 w-4 border-input bg-background text-primary disabled:cursor-not-allowed disabled:opacity-50"
               />
               <label
                 htmlFor="isPublic"
@@ -399,7 +399,7 @@ export const EditWatchlistDialog = forwardRef<
             )}
           </form>
 
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>

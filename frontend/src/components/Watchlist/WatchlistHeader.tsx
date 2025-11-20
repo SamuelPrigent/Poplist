@@ -87,7 +87,7 @@ export function WatchlistHeader({
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-white"
+            className="flex items-center gap-2 rounded text-sm text-muted-foreground transition-colors hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{content.watchlists.back}</span>
@@ -280,7 +280,7 @@ export function WatchlistHeader({
                         setTimeout(() => setShowSaveAnimation(false), 200);
                         await onSave();
                       }}
-                      className="group relative p-3 transition-all hover:scale-105"
+                      className="group relative rounded p-3 transition-all hover:scale-105"
                       title={
                         isSaved
                           ? content.watchlists.tooltips.unsave
@@ -327,7 +327,7 @@ export function WatchlistHeader({
                   {showDuplicateButton && onDuplicate && (
                     <button
                       onClick={onDuplicate}
-                      className="group p-3 transition-all hover:scale-105"
+                      className="group rounded p-3 transition-all hover:scale-105"
                       title={content.watchlists.tooltips.duplicate}
                     >
                       <Copy className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
@@ -336,7 +336,7 @@ export function WatchlistHeader({
                   {onShare && (
                     <button
                       onClick={onShare}
-                      className="group p-3 transition-all hover:scale-105"
+                      className="group rounded p-3 transition-all hover:scale-105"
                       title={content.watchlists.tooltips.share}
                     >
                       <img

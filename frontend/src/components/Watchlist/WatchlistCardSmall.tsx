@@ -26,9 +26,9 @@ export function WatchlistCardSmall({
   };
 
   return (
-    <div
+    <button
       onClick={handleClick}
-      className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-muted/30 p-3 transition-all hover:bg-muted/50"
+      className="group flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-muted/30 p-3 text-left transition-all hover:bg-muted/50"
     >
       {/* Thumbnail - Square */}
       <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
@@ -59,6 +59,6 @@ export function WatchlistCardSmall({
             : content.watchlists.items}
         </p>
       </div>
-    </div>
+    </button>
   );
 }

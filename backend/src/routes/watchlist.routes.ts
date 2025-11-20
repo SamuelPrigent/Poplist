@@ -16,9 +16,12 @@ router.put('/reorder', requireAuth, watchlistController.reorderWatchlists);
 router.get('/:id', requireAuth, watchlistController.getWatchlistById);
 router.put('/:id', requireAuth, watchlistController.updateWatchlist);
 router.delete('/:id', requireAuth, watchlistController.deleteWatchlist);
-router.post('/:id/share', requireAuth, watchlistController.createShareLink);
 router.post('/:id/collaborators', requireAuth, watchlistController.addCollaborator);
-router.delete('/:id/collaborators/:collaboratorId', requireAuth, watchlistController.removeCollaborator);
+router.delete(
+  '/:id/collaborators/:collaboratorId',
+  requireAuth,
+  watchlistController.removeCollaborator
+);
 router.post('/:id/leave', requireAuth, watchlistController.leaveWatchlist);
 
 // Item management routes

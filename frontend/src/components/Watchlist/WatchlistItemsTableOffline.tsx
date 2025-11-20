@@ -195,11 +195,21 @@ function DraggableRow({
               onClick={(e) => e.stopPropagation()}
             >
               {canEdit ? (
-                <DropdownMenu.Root>
+                <DropdownMenu.Root
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      setTimeout(() => {
+                        if (document.activeElement instanceof HTMLElement) {
+                          document.activeElement.blur();
+                        }
+                      }, 0);
+                    }
+                  }}
+                >
                   <DropdownMenu.Trigger asChild>
                     <button
                       className={cn(
-                        "cursor-pointer rounded-full p-1 transition-opacity hover:bg-muted",
+                        "cursor-pointer rounded p-1 transition-all hover:bg-muted focus-visible:opacity-100",
                         hoveredRow === item.tmdbId
                           ? "opacity-100"
                           : "opacity-0 group-hover:opacity-100",
@@ -217,7 +227,7 @@ function DraggableRow({
                       sideOffset={5}
                     >
                       <DropdownMenu.Sub>
-                        <DropdownMenu.SubTrigger className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                        <DropdownMenu.SubTrigger className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
                           <Plus className="mr-2.5 h-4 w-4" />
                           <span>
                             {content.watchlists.contextMenu.addToWatchlist}
@@ -239,7 +249,7 @@ function DraggableRow({
                               otherWatchlists.map((wl) => (
                                 <DropdownMenu.Item
                                   key={wl._id}
-                                  className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent"
+                                  className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent"
                                   onSelect={() =>
                                     handleAddToWatchlist(item.tmdbId, wl._id)
                                   }
@@ -253,7 +263,7 @@ function DraggableRow({
                       </DropdownMenu.Sub>
 
                       <DropdownMenu.Item
-                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                         onSelect={() => handleRemoveItem(item.tmdbId)}
                       >
                         <Trash2 className="mr-2.5 h-4 w-4" />
@@ -265,16 +275,18 @@ function DraggableRow({
                       <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
 
                       <DropdownMenu.Item
-                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                         onSelect={() => handleMoveItem(item.tmdbId, "first")}
                         disabled={index === 0}
                       >
                         <MoveUp className="mr-2.5 h-4 w-4" />
-                        <span>{content.watchlists.contextMenu.moveToFirst}</span>
+                        <span>
+                          {content.watchlists.contextMenu.moveToFirst}
+                        </span>
                       </DropdownMenu.Item>
 
                       <DropdownMenu.Item
-                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                         onSelect={() => handleMoveItem(item.tmdbId, "last")}
                         disabled={index === totalItems - 1}
                       >
@@ -286,7 +298,17 @@ function DraggableRow({
                 </DropdownMenu.Root>
               ) : (
                 // Watchlist not owned (imported) - simple "+" button to add to owned watchlists
-                <DropdownMenu.Root>
+                <DropdownMenu.Root
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      setTimeout(() => {
+                        if (document.activeElement instanceof HTMLElement) {
+                          document.activeElement.blur();
+                        }
+                      }, 0);
+                    }
+                  }}
+                >
                   <DropdownMenu.Trigger asChild>
                     <button
                       className={cn(
@@ -318,7 +340,7 @@ function DraggableRow({
                         otherWatchlists.map((wl) => (
                           <DropdownMenu.Item
                             key={wl._id}
-                            className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                            className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                             onSelect={() =>
                               handleAddToWatchlist(item.tmdbId, wl._id)
                             }
@@ -486,7 +508,9 @@ export function WatchlistItemsTableOffline({
       if (!localWatchlists) return;
 
       const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-      const targetIndex = watchlists.findIndex((w) => w._id === targetWatchlistId);
+      const targetIndex = watchlists.findIndex(
+        (w) => w._id === targetWatchlistId,
+      );
       if (targetIndex === -1) return;
 
       // Check if item already exists in target watchlist
@@ -795,7 +819,7 @@ export function WatchlistItemsTableOffline({
               <tr
                 key={headerGroup.id}
                 className="border-b border-border"
-                style={{ backgroundColor: "rgb(28 42 63 / 44%)" }}
+                style={{ backgroundColor: "rgb(51 59 70 / 27%)" }}
               >
                 {headerGroup.headers.map((header) => (
                   <th
