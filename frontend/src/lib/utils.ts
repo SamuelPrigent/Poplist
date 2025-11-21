@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+	return twMerge(clsx(inputs));
 }
 
 /**
@@ -10,9 +10,9 @@ export function cn(...inputs: ClassValue[]) {
  * @param behavior - The scroll behavior ('auto', 'smooth', or 'instant')
  */
 export function scrollToTop(behavior: ScrollBehavior = "instant"): void {
-  window.scrollTo({
-    top: 0,
-    left: 0,
-    behavior,
-  });
+	window.scrollTo({
+		top: 0,
+		left: 0,
+		behavior,
+	});
 }

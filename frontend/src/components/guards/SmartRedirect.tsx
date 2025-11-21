@@ -2,8 +2,8 @@ import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 
 interface SmartRedirectProps {
-  authenticatedPath: string;
-  unauthenticatedPath: string;
+	authenticatedPath: string;
+	unauthenticatedPath: string;
 }
 
 /**
@@ -12,27 +12,27 @@ interface SmartRedirectProps {
  * depending on whether the user is authenticated or not
  */
 export function SmartRedirect({
-  authenticatedPath,
-  unauthenticatedPath
+	authenticatedPath,
+	unauthenticatedPath,
 }: SmartRedirectProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+	const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-muted-foreground">Loading...</div>
-        </div>
-      </div>
-    );
-  }
+	if (isLoading) {
+		return (
+			<div className="container mx-auto px-4 py-8">
+				<div className="flex items-center justify-center py-12">
+					<div className="text-muted-foreground">Loading...</div>
+				</div>
+			</div>
+		);
+	}
 
-  return (
-    <Navigate
-      to={isAuthenticated ? authenticatedPath : unauthenticatedPath}
-      replace
-    />
-  );
+	return (
+		<Navigate
+			to={isAuthenticated ? authenticatedPath : unauthenticatedPath}
+			replace
+		/>
+	);
 }
 
 /**
@@ -40,24 +40,21 @@ export function SmartRedirect({
  * Preserves the watchlist ID in the URL
  */
 export function SmartWatchlistRedirect() {
-  const { id } = useParams<{ id: string }>();
-  const { isAuthenticated, isLoading } = useAuth();
+	const { id } = useParams<{ id: string }>();
+	const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-muted-foreground">Loading...</div>
-        </div>
-      </div>
-    );
-  }
+	if (isLoading) {
+		return (
+			<div className="container mx-auto px-4 py-8">
+				<div className="flex items-center justify-center py-12">
+					<div className="text-muted-foreground">Loading...</div>
+				</div>
+			</div>
+		);
+	}
 
-  const redirectPath = isAuthenticated ? `/account/watchlist/${id}` : `/local/watchlist/${id}`;
-  return (
-    <Navigate
-      to={redirectPath}
-      replace
-    />
-  );
+	const redirectPath = isAuthenticated
+		? `/account/watchlist/${id}`
+		: `/local/watchlist/${id}`;
+	return <Navigate to={redirectPath} replace />;
 }
