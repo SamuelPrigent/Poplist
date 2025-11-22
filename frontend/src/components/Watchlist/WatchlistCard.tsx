@@ -9,7 +9,6 @@ import { Link, useNavigate } from "react-router-dom";
 import teamIcon from "@/assets/team.svg";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 import type { Watchlist } from "@/lib/api-client";
-import { cn } from "@/lib/cn";
 import type { Content } from "@/types/content";
 
 interface WatchlistCardProps {
@@ -60,13 +59,6 @@ export function WatchlistCard({
 			}
 		: undefined;
 
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (handleClick && (e.key === "Enter" || e.key === " ")) {
-			e.preventDefault();
-			handleClick(e as unknown as React.MouseEvent);
-		}
-	};
-
 	// Handle Tab navigation inside dropdown to alternate between Edit and Delete
 	const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Tab") {
@@ -94,39 +86,65 @@ export function WatchlistCard({
 	const cardContent = (
 		<>
 			{/* Cover Image */}
-			<div
-				onClick={handleClick}
-				onKeyDown={handleClick ? handleKeyDown : undefined}
-				role={handleClick ? "button" : undefined}
-				tabIndex={handleClick ? 0 : undefined}
-				className={cn(
-					"relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted",
-					draggableProps && "cursor-pointer",
-				)}
-				style={categoryGradient ? { background: categoryGradient } : undefined}
-			>
-				{categoryGradient ? (
-					<div className="relative flex h-full w-full items-center justify-center p-4">
-						{/* Dark overlay for better text contrast */}
-						<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-						<span className="relative z-10 text-center text-lg font-bold text-white drop-shadow-lg">
-							{watchlist.name}
-						</span>
-					</div>
-				) : thumbnailUrl ? (
-					<img
-						src={thumbnailUrl}
-						alt={watchlist.name}
-						className="h-full w-full object-cover"
-						loading="lazy"
-						decoding="async"
-					/>
-				) : (
-					<div className="flex h-full w-full items-center justify-center">
-						<Film className="h-12 w-12 text-muted-foreground" />
-					</div>
-				)}
-			</div>
+			{/* Cover Image */}
+			{handleClick ? (
+				<button
+					type="button"
+					onClick={handleClick}
+					className="relative mb-3 aspect-[1/1] w-full cursor-pointer overflow-hidden rounded-md bg-muted text-left"
+				>
+					{categoryGradient ? (
+						<div className="relative flex h-full w-full items-center justify-center p-4">
+							{/* Dark overlay for better text contrast */}
+							<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+							<span className="relative z-10 text-center text-lg font-bold text-white drop-shadow-lg">
+								{watchlist.name}
+							</span>
+						</div>
+					) : thumbnailUrl ? (
+						<img
+							src={thumbnailUrl}
+							alt={watchlist.name}
+							className="h-full w-full object-cover"
+							loading="lazy"
+							decoding="async"
+						/>
+					) : (
+						<div className="flex h-full w-full items-center justify-center">
+							<Film className="h-12 w-12 text-muted-foreground" />
+						</div>
+					)}
+				</button>
+			) : (
+				<div
+					className="relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted"
+					style={
+						categoryGradient ? { background: categoryGradient } : undefined
+					}
+				>
+					{categoryGradient ? (
+						<div className="relative flex h-full w-full items-center justify-center p-4">
+							{/* Dark overlay for better text contrast */}
+							<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+							<span className="relative z-10 text-center text-lg font-bold text-white drop-shadow-lg">
+								{watchlist.name}
+							</span>
+						</div>
+					) : thumbnailUrl ? (
+						<img
+							src={thumbnailUrl}
+							alt={watchlist.name}
+							className="h-full w-full object-cover"
+							loading="lazy"
+							decoding="async"
+						/>
+					) : (
+						<div className="flex h-full w-full items-center justify-center">
+							<Film className="h-12 w-12 text-muted-foreground" />
+						</div>
+					)}
+				</div>
+			)}
 
 			{/* Text Info */}
 			<div className="flex items-center gap-1">
@@ -152,17 +170,18 @@ export function WatchlistCard({
 					</div>
 				)}
 
-				<h3
-					onClick={handleClick}
-					onKeyDown={handleClick ? handleKeyDown : undefined}
-					role={handleClick ? "button" : undefined}
-					tabIndex={handleClick ? 0 : undefined}
-					className={cn(
-						"line-clamp-2 text-sm font-semibold text-white",
-						draggableProps && "cursor-pointer",
+				<h3 className="line-clamp-2 text-sm font-semibold text-white">
+					{handleClick ? (
+						<button
+							type="button"
+							onClick={handleClick}
+							className="w-full cursor-pointer text-left hover:underline"
+						>
+							{watchlist.name}
+						</button>
+					) : (
+						watchlist.name
 					)}
-				>
-					{watchlist.name}
 				</h3>
 			</div>
 
@@ -173,16 +192,19 @@ export function WatchlistCard({
 					watchlist.ownerId !== null &&
 					"username" in watchlist.ownerId &&
 					watchlist.ownerId.username ? (
-						<span
+						<button
+							type="button"
 							onClick={(e) => {
 								e.preventDefault();
 								e.stopPropagation();
-								navigate(`/user/${(watchlist.ownerId as { username: string }).username}`);
+								navigate(
+									`/user/${(watchlist.ownerId as { username: string }).username}`,
+								);
 							}}
-							className="capitalize cursor-pointer hover:underline text-white"
+							className="cursor-pointer capitalize text-white hover:underline"
 						>
 							{watchlist.ownerId.username}
-						</span>
+						</button>
 					) : (
 						<span className="capitalize">Anonyme</span>
 					)}
@@ -191,30 +213,46 @@ export function WatchlistCard({
 
 			{showVisibility && (
 				<div className="mt-1 text-xs text-muted-foreground">
-					<span
-						onClick={handleClick}
-						onKeyDown={handleClick ? handleKeyDown : undefined}
-						role={handleClick ? "button" : undefined}
-						tabIndex={handleClick ? 0 : undefined}
-						className={cn(draggableProps && "cursor-pointer")}
-					>
-						{watchlist.isPublic
-							? content.watchlists.public
-							: content.watchlists.private}
-					</span>
+					{handleClick ? (
+						<button
+							type="button"
+							onClick={handleClick}
+							className="cursor-pointer text-muted-foreground hover:underline"
+						>
+							{watchlist.isPublic
+								? content.watchlists.public
+								: content.watchlists.private}
+						</button>
+					) : (
+						<span className="text-muted-foreground">
+							{watchlist.isPublic
+								? content.watchlists.public
+								: content.watchlists.private}
+						</span>
+					)}
 				</div>
 			)}
 
 			<div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-				<span
-					onClick={handleClick}
-					className={cn(draggableProps && "cursor-pointer")}
-				>
-					{watchlist.items.length}{" "}
-					{watchlist.items.length === 1
-						? content.watchlists.item
-						: content.watchlists.items}
-				</span>
+				{handleClick ? (
+					<button
+						type="button"
+						onClick={handleClick}
+						className="cursor-pointer text-muted-foreground hover:underline"
+					>
+						{watchlist.items.length}{" "}
+						{watchlist.items.length === 1
+							? content.watchlists.item
+							: content.watchlists.items}
+					</button>
+				) : (
+					<span className="text-muted-foreground">
+						{watchlist.items.length}{" "}
+						{watchlist.items.length === 1
+							? content.watchlists.item
+							: content.watchlists.items}
+					</span>
+				)}
 
 				{/* More Menu */}
 				{showMenu && onEdit && onDelete && (

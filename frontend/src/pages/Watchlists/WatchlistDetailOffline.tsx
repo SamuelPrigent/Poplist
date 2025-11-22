@@ -139,8 +139,9 @@ export function WatchlistDetailOffline() {
 					<div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
 						{/* Cover Image */}
 						<div className="flex-shrink-0">
-							<div
-								className="group relative h-56 w-56 cursor-pointer overflow-hidden rounded-lg shadow-2xl"
+							<button
+								type="button"
+								className="group relative h-56 w-56 overflow-hidden rounded-lg shadow-2xl"
 								onClick={handleImageClick}
 							>
 								{coverImage ? (
@@ -165,7 +166,7 @@ export function WatchlistDetailOffline() {
 										<Film className="h-24 w-24 text-muted-foreground" />
 									</div>
 								)}
-							</div>
+							</button>
 						</div>
 
 						{/* Info Section with Add Button */}
@@ -176,11 +177,14 @@ export function WatchlistDetailOffline() {
 							{/* Bottom section with title, description and button */}
 							<div className="flex items-end justify-between gap-6">
 								<div className="flex-1 space-y-4">
-									<h1
-										className="cursor-pointer text-4xl font-bold text-white transition-colors hover:text-primary md:text-7xl"
-										onClick={() => setEditModalOpen(true)}
-									>
-										{watchlist?.name || ""}
+									<h1 className="text-4xl font-bold text-white md:text-7xl">
+										<button
+											type="button"
+											onClick={() => setEditModalOpen(true)}
+											className="cursor-pointer text-left transition-colors hover:text-primary"
+										>
+											{watchlist?.name || ""}
+										</button>
 									</h1>
 
 									{watchlist?.description && (

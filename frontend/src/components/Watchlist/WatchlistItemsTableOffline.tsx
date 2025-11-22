@@ -38,7 +38,7 @@ import {
 	Plus,
 	Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -100,7 +100,6 @@ interface WatchlistItemsTableProps {
 // Extend RowData for custom meta
 declare module "@tanstack/react-table" {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	// biome-ignore lint/correctness/noUnusedVariables: Required for type inference
 	interface TableMeta<TData extends RowData> {
 		updateData: (rowIndex: number, columnId: string, value: unknown) => void;
 	}
@@ -424,13 +423,13 @@ export function WatchlistItemsTableOffline({
 		}),
 	);
 
-	const formatRuntime = (minutes: number | undefined) => {
+	const formatRuntime = useCallback((minutes: number | undefined) => {
 		if (!minutes) return "—";
 		if (minutes < 60) return `${minutes} min`;
 		const hours = Math.floor(minutes / 60);
 		const mins = minutes % 60;
 		return mins > 0 ? `${hours}h ${mins} min` : `${hours}h`;
-	};
+	}, []);
 
 	const STORAGE_KEY = "watchlists";
 

@@ -39,6 +39,8 @@ import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
 
+type WatchlistWithOrder = Watchlist & { order?: number };
+
 const STORAGE_KEY = "watchlists";
 
 interface WatchlistCardOfflineProps {
@@ -96,7 +98,8 @@ function WatchlistCardOffline({
 			className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
 		>
 			{/* Cover Image */}
-			<div
+			<button
+				type="button"
 				onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
 				className="relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted"
 			>
@@ -113,34 +116,39 @@ function WatchlistCardOffline({
 						<Film className="h-12 w-12 text-muted-foreground" />
 					</div>
 				)}
-			</div>
+			</button>
 
 			{/* Text Info */}
-			<h3
+			<button
+				type="button"
 				onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
-				className="line-clamp-2 text-sm font-semibold text-white"
+				className="line-clamp-2 w-full text-left text-sm font-semibold text-white"
 			>
 				{watchlist.name}
-			</h3>
+			</button>
 
 			<div className="mt-2 text-xs">
-				<span
+				<button
+					type="button"
 					onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
 					className="text-muted-foreground"
 				>
 					{watchlist.isPublic
 						? content.watchlists.public
 						: content.watchlists.private}
-				</span>
+				</button>
 			</div>
 
 			<div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-				<span onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}>
+				<button
+					type="button"
+					onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+				>
 					{watchlist.items.length}{" "}
 					{watchlist.items.length === 1
 						? content.watchlists.item
 						: content.watchlists.items}
-				</span>
+				</button>
 
 				{/* More Menu */}
 				<DropdownMenu.Root
@@ -287,13 +295,16 @@ export function WatchlistsOffline() {
 
 			// Sort by order if it exists, otherwise by creation date (oldest first)
 			ownedWatchlists = ownedWatchlists.sort((a, b) => {
+				const aWithOrder = a as WatchlistWithOrder;
+				const bWithOrder = b as WatchlistWithOrder;
+
 				// If both have order, sort by order
-				if ((a as any).order !== undefined && (b as any).order !== undefined) {
-					return (a as any).order - (b as any).order;
+				if (aWithOrder.order !== undefined && bWithOrder.order !== undefined) {
+					return aWithOrder.order - bWithOrder.order;
 				}
 				// If only one has order, it comes first
-				if ((a as any).order !== undefined) return -1;
-				if ((b as any).order !== undefined) return 1;
+				if (aWithOrder.order !== undefined) return -1;
+				if (bWithOrder.order !== undefined) return 1;
 				// Otherwise sort by creation date (oldest first)
 				return (
 					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()

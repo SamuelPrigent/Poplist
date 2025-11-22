@@ -97,12 +97,38 @@ export function WatchlistHeader({
 				<div className="flex flex-col gap-6 md:flex-row md:items-end md:gap-8">
 					{/* Cover Image */}
 					<div className="flex-shrink-0">
-						<div
-							className={`group relative h-56 w-56 overflow-hidden rounded-lg shadow-2xl ${onImageClick ? "cursor-pointer" : ""}`}
-							onClick={onImageClick}
-						>
-							{coverImage ? (
-								<>
+						{onImageClick ? (
+							<button
+								type="button"
+								className="group relative h-56 w-56 cursor-pointer overflow-hidden rounded-lg shadow-2xl"
+								onClick={onImageClick}
+							>
+								{coverImage ? (
+									<>
+										<img
+											src={coverImage}
+											alt={watchlist.name}
+											className="h-full w-full object-cover"
+											loading="lazy"
+											decoding="async"
+										/>
+										{/* Hover Overlay */}
+										<div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+											<Pencil className="h-10 w-10 text-white" />
+											<span className="mt-2 text-sm font-medium text-white">
+												{"Sélectionner une photo"}
+											</span>
+										</div>
+									</>
+								) : (
+									<div className="flex h-full w-full items-center justify-center bg-muted/50">
+										<Film className="h-24 w-24 text-muted-foreground" />
+									</div>
+								)}
+							</button>
+						) : (
+							<div className="group relative h-56 w-56 overflow-hidden rounded-lg shadow-2xl">
+								{coverImage ? (
 									<img
 										src={coverImage}
 										alt={watchlist.name}
@@ -110,22 +136,13 @@ export function WatchlistHeader({
 										loading="lazy"
 										decoding="async"
 									/>
-									{/* Hover Overlay - only if onImageClick is defined */}
-									{onImageClick && (
-										<div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
-											<Pencil className="h-10 w-10 text-white" />
-											<span className="mt-2 text-sm font-medium text-white">
-												{"Sélectionner une photo"}
-											</span>
-										</div>
-									)}
-								</>
-							) : (
-								<div className="flex h-full w-full items-center justify-center bg-muted/50">
-									<Film className="h-24 w-24 text-muted-foreground" />
-								</div>
-							)}
-						</div>
+								) : (
+									<div className="flex h-full w-full items-center justify-center bg-muted/50">
+										<Film className="h-24 w-24 text-muted-foreground" />
+									</div>
+								)}
+							</div>
+						)}
 					</div>
 
 					{/* Info */}
@@ -136,11 +153,18 @@ export function WatchlistHeader({
 							</span>
 						)}
 
-						<h1
-							className={`text-4xl font-bold text-white md:text-7xl ${onEdit ? "cursor-pointer transition-colors hover:text-primary" : ""}`}
-							onClick={onEdit}
-						>
-							{watchlist.name}
+						<h1 className="text-4xl font-bold text-white md:text-7xl">
+							{onEdit ? (
+								<button
+									type="button"
+									onClick={onEdit}
+									className="cursor-pointer text-left transition-colors hover:text-primary"
+								>
+									{watchlist.name}
+								</button>
+							) : (
+								watchlist.name
+							)}
 						</h1>
 
 						{watchlist.description && (
@@ -168,16 +192,13 @@ export function WatchlistHeader({
 														<User className="h-3.5 w-3.5 text-muted-foreground" />
 													)}
 												</div>
-												<span
-													onClick={() => {
-														if (isWatchlistOwner(watchlist.ownerId)) {
-															navigate(`/user/${ownerUsername}`);
-														}
-													}}
-													className={`font-semibold capitalize text-white ${isWatchlistOwner(watchlist.ownerId) ? "cursor-pointer hover:underline" : ""}`}
+												<button
+													type="button"
+													onClick={() => navigate(`/user/${ownerUsername}`)}
+													className="cursor-pointer font-semibold capitalize text-white hover:underline"
 												>
 													{ownerUsername}
-												</span>
+												</button>
 											</div>
 											{watchlist.collaborators &&
 												watchlist.collaborators.length > 0 && <div>,</div>}

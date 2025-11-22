@@ -158,17 +158,10 @@ export const EditWatchlistDialogOffline = forwardRef<
 						<div className="flex flex-col gap-6 md:flex-row">
 							{/* Cover Image */}
 							<div className="flex justify-center md:block">
-								<div
+								<button
+									type="button"
 									className="group relative aspect-square w-48 cursor-pointer overflow-hidden rounded-lg border border-border"
 									onClick={() => fileInputRef.current?.click()}
-									onKeyDown={(e) => {
-										if (e.key === "Enter" || e.key === " ") {
-											e.preventDefault();
-											fileInputRef.current?.click();
-										}
-									}}
-									role="button"
-									tabIndex={0}
 								>
 									{imagePreview ? (
 										<>
@@ -204,7 +197,7 @@ export const EditWatchlistDialogOffline = forwardRef<
 											</span>
 										</div>
 									)}
-								</div>
+								</button>
 								<input
 									ref={fileInputRef}
 									type="file"

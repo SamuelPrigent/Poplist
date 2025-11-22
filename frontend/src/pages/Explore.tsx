@@ -114,10 +114,11 @@ export function Explore() {
 		setSearchParams(newParams);
 	};
 
-	// Scroll to top on mount and page change
+	// Scroll to top on mount and whenever URL params change (page, filter, genre, etc.)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: We want to scroll on any param change
 	useEffect(() => {
 		window.scrollTo({ top: 0, behavior: "smooth" });
-	}, []);
+	}, [searchParams]);
 
 	// Fetch user watchlists (authenticated or offline)
 	useEffect(() => {

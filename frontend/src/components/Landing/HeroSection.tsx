@@ -17,6 +17,9 @@ interface HeroSectionProps {
 	watchlistsUrl: string;
 }
 
+const GRID_INDICES = Array.from({ length: 24 }, (_, i) => i);
+const POSTER_SLOTS = [0, 1, 2, 3];
+
 export function HeroSection({
 	content,
 	trending,
@@ -39,7 +42,7 @@ export function HeroSection({
 			<div className="absolute inset-0 opacity-20">
 				<div className="container mx-auto grid h-full grid-cols-6 gap-3 p-8">
 					{/* Create mini watchlist cards */}
-					{Array.from({ length: 24 }).map((_, groupIdx) => (
+					{GRID_INDICES.map((groupIdx) => (
 						<div
 							key={`watchlist-${groupIdx}`}
 							className="flex flex-col gap-1 rounded-lg border border-white/10 bg-slate-900/50 p-2 backdrop-blur-sm"
@@ -48,22 +51,30 @@ export function HeroSection({
 							<div className="mb-1 h-2 w-3/4 rounded bg-white/20"></div>
 							{/* Mini poster grid 2x2 */}
 							<div className="grid grid-cols-2 gap-0.5">
-								{createWatchlistGroup(trending, groupIdx * 4).map(
-									(item, idx) => (
-										<div
-											key={`poster-${groupIdx}-${idx}`}
-											className="aspect-[2/3] overflow-hidden rounded-sm bg-slate-800"
-										>
-											{item.poster_path && (
-												<img
-													src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
-													alt=""
-													className="h-full w-full object-cover opacity-60"
-												/>
-											)}
-										</div>
-									),
-								)}
+								{(() => {
+									const groupItems = createWatchlistGroup(
+										trending,
+										groupIdx * 4,
+									);
+									if (groupItems.length === 0) return null;
+									return POSTER_SLOTS.map((slotIdx) => {
+										const item = groupItems[slotIdx];
+										return (
+											<div
+												key={`poster-${groupIdx}-${slotIdx}`}
+												className="aspect-[2/3] overflow-hidden rounded-sm bg-slate-800"
+											>
+												{item?.poster_path && (
+													<img
+														src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
+														alt=""
+														className="h-full w-full object-cover opacity-60"
+													/>
+												)}
+											</div>
+										);
+									});
+								})()}
 							</div>
 						</div>
 					))}

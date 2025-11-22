@@ -38,17 +38,50 @@ export async function mergeLocalWatchlistsToDB(): Promise<void> {
 
 	const promises = localWatchlists.map((watchlist) => {
 		// Transform items to ensure proper format
-		const items = (watchlist.items || []).map((item: any) => ({
-			tmdbId: item.tmdbId || item.id?.toString() || "",
-			title: item.title || "",
-			posterUrl: item.posterUrl || item.poster_path || "",
-			type: item.type || "movie",
-			platformList: item.platformList || [],
-			runtime: item.runtime,
-			numberOfSeasons: item.numberOfSeasons || item.number_of_seasons,
-			numberOfEpisodes: item.numberOfEpisodes || item.number_of_episodes,
-			addedAt: item.addedAt || new Date(),
-		}));
+		const items = (watchlist.items || []).map((item: unknown) => {
+			const itemData = item as Record<string, unknown>;
+			const itemType = itemData.type as string;
+
+			// Handle platformList which can be Platform[] or string[] or undefined
+			const rawPlatforms = itemData.platformList as Array<unknown> | undefined;
+			const platformList = (rawPlatforms || []).map((p) => {
+				if (typeof p === "string") {
+					return { name: p, logoPath: "" };
+				}
+				return p as { name: string; logoPath: string };
+			});
+
+			// Handle addedAt which should be a string (ISO date)
+			const addedAt = itemData.addedAt;
+			const addedAtStr =
+				typeof addedAt === "string"
+					? addedAt
+					: addedAt instanceof Date
+						? addedAt.toISOString()
+						: new Date().toISOString();
+
+			return {
+				tmdbId:
+					(itemData.tmdbId as string) ||
+					(itemData.id as number)?.toString() ||
+					"",
+				title: (itemData.title as string) || "",
+				posterUrl:
+					(itemData.posterUrl as string) ||
+					(itemData.poster_path as string) ||
+					"",
+				type: (itemType === "tv" ? "tv" : "movie") as "movie" | "tv",
+				platformList,
+				runtime: itemData.runtime as number | undefined,
+				numberOfSeasons:
+					(itemData.numberOfSeasons as number) ||
+					(itemData.number_of_seasons as number),
+				numberOfEpisodes:
+					(itemData.numberOfEpisodes as number) ||
+					(itemData.number_of_episodes as number),
+				addedAt: addedAtStr,
+			};
+		});
 
 		return watchlistAPI.create({
 			name: watchlist.name,

@@ -118,13 +118,13 @@ export function ItemDetailsModal({
 
 		return (
 			<div className="flex items-center gap-1">
-				{[...Array(5)].map((_, i) => (
+				{[0, 1, 2, 3, 4].map((index) => (
 					<Star
-						key={`star-${i}`}
+						key={`star-${index}`}
 						className={`h-4 w-4 ${
-							i < fullStars
+							index < fullStars
 								? "fill-yellow-400 text-yellow-400"
-								: i === fullStars && hasHalfStar
+								: index === fullStars && hasHalfStar
 									? "fill-yellow-400/50 text-yellow-400"
 									: "text-muted-foreground"
 						}`}

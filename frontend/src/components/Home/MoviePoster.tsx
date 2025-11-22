@@ -22,21 +22,8 @@ export function MoviePoster({
 	const displayTitle = title || name;
 	const [imageError, setImageError] = useState(false);
 
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (onClick && (e.key === "Enter" || e.key === " ")) {
-			e.preventDefault();
-			onClick();
-		}
-	};
-
-	return (
-		<div
-			onClick={onClick}
-			onKeyDown={onClick ? handleKeyDown : undefined}
-			role={onClick ? "button" : undefined}
-			tabIndex={onClick ? 0 : undefined}
-			className={onClick ? "group cursor-pointer" : "group"}
-		>
+	const content = (
+		<>
 			<div className="relative mb-3 aspect-[2/3] overflow-hidden rounded-lg bg-muted shadow-lg">
 				{posterPath && !imageError ? (
 					<img
@@ -63,6 +50,20 @@ export function MoviePoster({
 			<h3 className="line-clamp-2 text-base font-semibold text-white">
 				{displayTitle}
 			</h3>
-		</div>
+		</>
 	);
+
+	if (onClick) {
+		return (
+			<button
+				type="button"
+				onClick={onClick}
+				className="group w-full cursor-pointer text-left"
+			>
+				{content}
+			</button>
+		);
+	}
+
+	return <div className="group">{content}</div>;
 }

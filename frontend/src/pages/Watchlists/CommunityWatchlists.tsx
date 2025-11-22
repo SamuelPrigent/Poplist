@@ -1,11 +1,13 @@
 import { ArrowLeft, Film } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
 import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { scrollToTop } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
+
+const SKELETONS = Array.from({ length: 10 }, (_, i) => i);
 
 export function CommunityWatchlists() {
 	const { content } = useLanguageStore();
@@ -24,7 +26,7 @@ export function CommunityWatchlists() {
 		scrollToTop();
 	};
 
-	const fetchWatchlists = async () => {
+	const fetchWatchlists = useCallback(async () => {
 		try {
 			// Fetch all public watchlists with higher limit for community page
 			const data = await watchlistAPI.getPublicWatchlists(1000);
@@ -34,7 +36,7 @@ export function CommunityWatchlists() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -53,7 +55,7 @@ export function CommunityWatchlists() {
 		};
 
 		fetchData();
-	}, [user]);
+	}, [user, fetchWatchlists]);
 
 	return (
 		<div className="min-h-screen bg-background pb-20">
@@ -83,9 +85,9 @@ export function CommunityWatchlists() {
 				{/* Watchlists Grid */}
 				{loading ? (
 					<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-						{[...Array(10)].map((_, i) => (
+						{SKELETONS.map((id) => (
 							<div
-								key={i}
+								key={id}
 								className="aspect-[1/1] animate-pulse rounded-lg bg-muted"
 							/>
 						))}
