@@ -520,4 +520,18 @@ export const fr: Content = {
 			accountDeleteFailed: "Échec de la suppression du compte",
 		},
 	},
+	userProfile: {
+		profile: "Profile",
+		publicWatchlists: "Playlists publiques",
+		watchlists: "watchlists",
+		watchlist: "watchlist",
+		noPublicWatchlists: "Aucune watchlist n'a été publiée.",
+		noPublicWatchlistsDescription:
+			"Cet utilisateur n'a pas encore publié de watchlist publique.",
+		loading: "Chargement du profil...",
+		notFound: "Utilisateur introuvable",
+		notFoundDescription:
+			"L'utilisateur que vous recherchez n'existe pas ou a été supprimé.",
+		backToHome: "Retour à l'accueil",
+	},
 };

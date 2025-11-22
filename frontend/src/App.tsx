@@ -18,6 +18,7 @@ import { Explore } from "./pages/Explore";
 import { HomeApp } from "./pages/HomeApp";
 import { Landing } from "./pages/Landing";
 import { Profile } from "./pages/Profile";
+import { UserProfile } from "./pages/User/UserProfile";
 import { WatchlistDetail } from "./pages/Watchlist/WatchlistDetail";
 import { WatchlistDetailOffline } from "./pages/Watchlist/WatchlistDetailOffline";
 import { Watchlists } from "./pages/Watchlists/Watchlists";
@@ -95,6 +96,9 @@ function App() {
 										</OfflineWatchlistRoute>
 									}
 								/>
+
+							{/* Public user profile - accessible by everyone */}
+							<Route path="/user/:username" element={<UserProfile />} />
 
 								{/* Catch-all route for 404 - redirect to home */}
 								<Route

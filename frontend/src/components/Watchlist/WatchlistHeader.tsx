@@ -168,7 +168,14 @@ export function WatchlistHeader({
 														<User className="h-3.5 w-3.5 text-muted-foreground" />
 													)}
 												</div>
-												<span className="font-semibold capitalize text-white">
+												<span
+													onClick={() => {
+														if (isWatchlistOwner(watchlist.ownerId)) {
+															navigate(`/user/${ownerUsername}`);
+														}
+													}}
+													className={`font-semibold capitalize text-white ${isWatchlistOwner(watchlist.ownerId) ? "cursor-pointer hover:underline" : ""}`}
+												>
 													{ownerUsername}
 												</span>
 											</div>

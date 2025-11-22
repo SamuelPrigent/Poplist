@@ -438,4 +438,16 @@ export interface Content {
 			accountDeleteFailed: string;
 		};
 	};
+	userProfile: {
+		profile: string;
+		publicWatchlists: string;
+		watchlists: string;
+		watchlist: string;
+		noPublicWatchlists: string;
+		noPublicWatchlistsDescription: string;
+		loading: string;
+		notFound: string;
+		notFoundDescription: string;
+		backToHome: string;
+	};
 }

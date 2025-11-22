@@ -5,7 +5,7 @@ import type {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Edit, Film, MoreVertical, Trash2 } from "lucide-react";
 import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import teamIcon from "@/assets/team.svg";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 import type { Watchlist } from "@/lib/api-client";
@@ -46,6 +46,7 @@ export function WatchlistCard({
 	categoryGradient,
 	draggableProps,
 }: WatchlistCardProps) {
+	const navigate = useNavigate();
 	const thumbnailUrl = useWatchlistThumbnail(watchlist);
 	const editButtonRef = useRef<HTMLDivElement>(null);
 	const deleteButtonRef = useRef<HTMLDivElement>(null);
@@ -166,20 +167,25 @@ export function WatchlistCard({
 			</div>
 
 			{showOwner && (
-				<p
-					onClick={handleClick}
-					onKeyDown={handleClick ? handleKeyDown : undefined}
-					role={handleClick ? "button" : undefined}
-					tabIndex={handleClick ? 0 : undefined}
-					className={cn(
-						"mt-1 text-xs capitalize text-muted-foreground",
-						draggableProps && "cursor-pointer",
-					)}
-				>
+				<p className="mt-1 text-xs text-muted-foreground">
 					par{" "}
-					{typeof watchlist.ownerId === "object"
-						? watchlist.ownerId.username || "Anonyme"
-						: "Anonyme"}
+					{typeof watchlist.ownerId === "object" &&
+					watchlist.ownerId !== null &&
+					"username" in watchlist.ownerId &&
+					watchlist.ownerId.username ? (
+						<span
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								navigate(`/user/${(watchlist.ownerId as { username: string }).username}`);
+							}}
+							className="capitalize cursor-pointer hover:underline text-white"
+						>
+							{watchlist.ownerId.username}
+						</span>
+					) : (
+						<span className="capitalize">Anonyme</span>
+					)}
 				</p>
 			)}
 

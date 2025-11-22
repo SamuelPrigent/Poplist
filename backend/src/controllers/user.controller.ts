@@ -223,3 +223,76 @@ export async function getProfile(req: Request, res: Response): Promise<void> {
 		});
 	}
 }
+
+// Get public user profile by username with their public watchlists
+export async function getUserProfileByUsername(
+	req: Request,
+	res: Response,
+): Promise<void> {
+	try {
+		const { username } = req.params;
+
+		// Find user by username
+		const user = await User.findOne({ username }).select(
+			"_id username avatarUrl watchlistsOrder",
+		);
+
+		if (!user) {
+			res.status(404).json({ error: "User not found" });
+			return;
+		}
+
+		// Import Watchlist model
+		const { Watchlist } = await import("../models/Watchlist.model.js");
+
+		// Get all public watchlists owned by this user
+		const publicWatchlists = await Watchlist.find({
+			ownerId: user._id,
+			isPublic: true,
+		})
+			.populate("ownerId", "username avatarUrl")
+			.populate("collaborators", "username avatarUrl")
+			.lean();
+
+		// Sort watchlists according to user's watchlistsOrder
+		const orderedWatchlists = publicWatchlists.sort((a, b) => {
+			const indexA = user.watchlistsOrder.findIndex(
+				(id) => id.toString() === a._id.toString(),
+			);
+			const indexB = user.watchlistsOrder.findIndex(
+				(id) => id.toString() === b._id.toString(),
+			);
+
+			// If both are in watchlistsOrder, sort by their order
+			if (indexA !== -1 && indexB !== -1) {
+				return indexA - indexB;
+			}
+
+			// If only A is in watchlistsOrder, A comes first
+			if (indexA !== -1) return -1;
+
+			// If only B is in watchlistsOrder, B comes first
+			if (indexB !== -1) return 1;
+
+			// If neither is in watchlistsOrder, sort by creation date (newest first)
+			return (
+				new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			);
+		});
+
+		res.json({
+			user: {
+				_id: user._id,
+				username: user.username,
+				avatarUrl: user.avatarUrl,
+			},
+			watchlists: orderedWatchlists,
+			totalPublicWatchlists: orderedWatchlists.length,
+		});
+	} catch (error) {
+		console.error("❌ Error fetching user profile by username:", error);
+		res.status(500).json({
+			error: "Failed to fetch user profile",
+		});
+	}
+}

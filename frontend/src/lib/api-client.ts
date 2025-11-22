@@ -207,6 +207,7 @@ export interface WatchlistOwner {
 	_id?: string;
 	email: string;
 	username?: string;
+	avatarUrl?: string;
 	[key: string]: unknown;
 }
 
@@ -214,6 +215,19 @@ export interface Collaborator {
 	_id: string;
 	email: string;
 	username: string;
+	avatarUrl?: string;
+}
+
+export interface UserProfilePublic {
+	_id: string;
+	username: string;
+	avatarUrl?: string;
+}
+
+export interface UserProfileResponse {
+	user: UserProfilePublic;
+	watchlists: Watchlist[];
+	totalPublicWatchlists: number;
 }
 
 export interface Watchlist {
@@ -480,6 +494,11 @@ export const userAPI = {
 
 	getProfile: (): Promise<{ user: User }> =>
 		request("/user/profile", {
+			method: "GET",
+		}),
+
+	getUserProfileByUsername: (username: string): Promise<UserProfileResponse> =>
+		request(`/user/profile/${username}`, {
 			method: "GET",
 		}),
 };

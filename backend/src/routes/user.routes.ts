@@ -4,7 +4,10 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-// All user routes require authentication
+// Public routes (no authentication required)
+router.get("/profile/:username", userController.getUserProfileByUsername);
+
+// Protected routes (authentication required)
 router.get("/profile", requireAuth, userController.getProfile);
 router.post("/upload-avatar", requireAuth, userController.uploadAvatar);
 router.delete("/avatar", requireAuth, userController.deleteAvatar);

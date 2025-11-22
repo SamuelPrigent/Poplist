@@ -506,4 +506,18 @@ export const pt: Content = {
 			accountDeleteFailed: "Falha ao eliminar a conta",
 		},
 	},
+	userProfile: {
+		profile: "Profile",
+		publicWatchlists: "Public Playlists",
+		watchlists: "watchlists",
+		watchlist: "watchlist",
+		noPublicWatchlists: "No watchlists published.",
+		noPublicWatchlistsDescription:
+			"This user hasn't published any public watchlists yet.",
+		loading: "Loading profile...",
+		notFound: "User not found",
+		notFoundDescription:
+			"The user you're looking for doesn't exist or has been deleted.",
+		backToHome: "Back to home",
+	},
 };
