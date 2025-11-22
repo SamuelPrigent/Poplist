@@ -3,7 +3,7 @@ import { Calendar, Clock, Star, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { type FullMediaDetails, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
-import { WatchProviderList } from "./WatchProviderBubble";
+import { WatchProviderList } from "../WatchProviderBubble";
 
 interface ItemDetailsModalProps {
 	open: boolean;

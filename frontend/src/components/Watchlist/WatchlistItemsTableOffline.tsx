@@ -53,7 +53,7 @@ import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
-import { ItemDetailsModal } from "./ItemDetailsModal";
+import { ItemDetailsModal } from "./modal/ItemDetailsModal";
 import { WatchProviderList } from "./WatchProviderBubble";
 
 // Bracket icon component (left/right arrows)

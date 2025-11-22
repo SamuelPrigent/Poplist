@@ -76,7 +76,7 @@ export function Header() {
 							<div className="flex items-center gap-2">
 								<button
 									type="button"
-									onClick={() => navigate("/profile")}
+									onClick={() => navigate("/account")}
 									className="flex items-center gap-2 rounded-full bg-muted/50 px-4 py-1.5 transition-colors hover:bg-muted"
 								>
 									<div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full bg-muted">

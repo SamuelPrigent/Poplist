@@ -11,16 +11,16 @@ import { Footer } from "./components/layout/Footer";
 import { Header } from "./components/layout/Header";
 import { ToasterLight } from "./components/ui/sonner-light";
 import { AuthProvider } from "./context/AuthContext";
-import { Categories } from "./pages/Categories";
-import { CategoryDetail } from "./pages/CategoryDetail";
-import { CommunityWatchlists } from "./pages/CommunityWatchlists";
+import { Account } from "./pages/Account";
+import { Categories } from "./pages/Categories/Categories";
+import { CategoryDetail } from "./pages/Categories/CategoryDetail";
 import { Explore } from "./pages/Explore";
 import { HomeApp } from "./pages/HomeApp";
 import { Landing } from "./pages/Landing";
-import { Profile } from "./pages/Profile";
 import { UserProfile } from "./pages/User/UserProfile";
-import { WatchlistDetail } from "./pages/Watchlist/WatchlistDetail";
-import { WatchlistDetailOffline } from "./pages/Watchlist/WatchlistDetailOffline";
+import { CommunityWatchlists } from "./pages/Watchlists/CommunityWatchlists";
+import { WatchlistDetail } from "./pages/Watchlists/WatchlistDetail";
+import { WatchlistDetailOffline } from "./pages/Watchlists/WatchlistDetailOffline";
 import { Watchlists } from "./pages/Watchlists/Watchlists";
 import { WatchlistsOffline } from "./pages/Watchlists/WatchlistsOffline";
 
@@ -45,10 +45,10 @@ function App() {
 
 								{/* Profile page */}
 								<Route
-									path="/profile"
+									path="/account"
 									element={
 										<ProtectedRoute>
-											<Profile />
+											<Account />
 										</ProtectedRoute>
 									}
 								/>
@@ -97,8 +97,8 @@ function App() {
 									}
 								/>
 
-							{/* Public user profile - accessible by everyone */}
-							<Route path="/user/:username" element={<UserProfile />} />
+								{/* Public user profile - accessible by everyone */}
+								<Route path="/user/:username" element={<UserProfile />} />
 
 								{/* Catch-all route for 404 - redirect to home */}
 								<Route

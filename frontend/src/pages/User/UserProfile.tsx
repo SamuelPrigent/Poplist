@@ -134,7 +134,7 @@ export function UserProfile() {
 							key={watchlist._id}
 							watchlist={watchlist}
 							content={content}
-							href={`/watchlist/${watchlist._id}`}
+							href={`/account/watchlist/${watchlist._id}`}
 							showVisibility={false}
 							showSavedBadge={false}
 							showCollaborativeBadge={false}

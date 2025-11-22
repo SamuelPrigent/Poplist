@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ItemDetailsModal } from "@/components/Watchlist/ItemDetailsModal";
+import { ItemDetailsModal } from "@/components/Watchlist/modal/ItemDetailsModal";
 import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";

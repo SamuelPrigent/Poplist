@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { userAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-export function Profile() {
+export function Account() {
 	const { user, updateUsername, changePassword, deleteAccount, refetch } =
 		useAuth();
 	const { toast } = useToast();

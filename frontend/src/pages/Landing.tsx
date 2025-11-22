@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { HeroSection } from "@/components/Home/HeroSection";
+import { HeroSection } from "@/components/Landing/HeroSection";
 import { RightSectionPreview } from "@/components/Landing/RightSectionPreview";
 import {
 	Accordion,

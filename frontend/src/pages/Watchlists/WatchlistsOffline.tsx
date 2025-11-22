@@ -18,7 +18,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Edit, Film, MoreVertical, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { OfflineIcon } from "@/components/icons/OfflineIcon";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,9 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { CreateWatchlistDialog } from "@/components/Watchlist/CreateWatchlistDialog";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
-import { EditWatchlistDialogOffline } from "@/components/Watchlist/EditWatchlistDialogOffline";
+import { CreateWatchlistDialog } from "@/components/Watchlist/modal/CreateWatchlistDialog";
+import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
+import { EditWatchlistDialogOffline } from "@/components/Watchlist/modal/EditWatchlistDialogOffline";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 import type { Watchlist } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
@@ -276,7 +276,7 @@ export function WatchlistsOffline() {
 		}),
 	);
 
-	const fetchWatchlists = () => {
+	const fetchWatchlists = useCallback(() => {
 		try {
 			setLoading(true);
 			const localWatchlists = getLocalWatchlists();
@@ -307,7 +307,7 @@ export function WatchlistsOffline() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
@@ -344,7 +344,7 @@ export function WatchlistsOffline() {
 
 	useEffect(() => {
 		fetchWatchlists();
-	}, []);
+	}, [fetchWatchlists]);
 
 	const handleCreateSuccess = (newWatchlist?: Watchlist) => {
 		if (newWatchlist) {

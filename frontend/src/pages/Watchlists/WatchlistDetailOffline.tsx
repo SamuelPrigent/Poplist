@@ -2,12 +2,12 @@ import { ArrowLeft, Film, Pencil, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { AddItemModal } from "@/components/Watchlist/AddItemModal";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
+import { AddItemModal } from "@/components/Watchlist/modal/AddItemModal";
+import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
 import {
 	EditWatchlistDialogOffline,
 	type EditWatchlistDialogOfflineRef,
-} from "@/components/Watchlist/EditWatchlistDialogOffline";
+} from "@/components/Watchlist/modal/EditWatchlistDialogOffline";
 import { WatchlistItemsTableOffline } from "@/components/Watchlist/WatchlistItemsTableOffline";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 import type { Watchlist } from "@/lib/api-client";
@@ -91,6 +91,7 @@ export function WatchlistDetailOffline() {
 							stroke="currentColor"
 							className="h-16 w-16 text-muted-foreground"
 						>
+							<title>Watchlist not found icon</title>
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"

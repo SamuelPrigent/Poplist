@@ -7,13 +7,13 @@ import cancelUserIcon from "@/assets/cancelUser.svg";
 import pointIcon from "@/assets/points.svg";
 import { Button } from "@/components/ui/button";
 import { AddCollaboratorPopover } from "@/components/Watchlist/AddCollaboratorPopover";
-import { AddItemModal } from "@/components/Watchlist/AddItemModal";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
+import { AddItemModal } from "@/components/Watchlist/modal/AddItemModal";
+import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
 import {
 	EditWatchlistDialog,
 	type EditWatchlistDialogRef,
-} from "@/components/Watchlist/EditWatchlistDialog";
-import { LeaveWatchlistDialog } from "@/components/Watchlist/LeaveWatchlistDialog";
+} from "@/components/Watchlist/modal/EditWatchlistDialog";
+import { LeaveWatchlistDialog } from "@/components/Watchlist/modal/LeaveWatchlistDialog";
 import { WatchlistHeader } from "@/components/Watchlist/WatchlistHeader";
 import { WatchlistItemsTable } from "@/components/Watchlist/WatchlistItemsTable";
 import { useAuth } from "@/context/auth-context";
@@ -116,6 +116,7 @@ export function WatchlistDetail() {
 							stroke="currentColor"
 							className="h-16 w-16 text-muted-foreground"
 						>
+							<title>Watchlist not found icon</title>
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
@@ -380,11 +381,11 @@ export function WatchlistDetail() {
 			)}
 
 			{/* Leave Watchlist Dialog - only for collaborators */}
-			{isCollaborator && !isOwner && (
+			{isCollaborator && !isOwner && id !== undefined && (
 				<LeaveWatchlistDialog
 					open={leaveDialogOpen}
 					onOpenChange={setLeaveDialogOpen}
-					watchlistId={id!}
+					watchlistId={id}
 					watchlistName={watchlist.name}
 				/>
 			)}

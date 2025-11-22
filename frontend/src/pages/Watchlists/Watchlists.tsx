@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Film } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -26,9 +26,9 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { CreateWatchlistDialog } from "@/components/Watchlist/CreateWatchlistDialog";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/DeleteWatchlistDialog";
-import { EditWatchlistDialog } from "@/components/Watchlist/EditWatchlistDialog";
+import { CreateWatchlistDialog } from "@/components/Watchlist/modal/CreateWatchlistDialog";
+import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
+import { EditWatchlistDialog } from "@/components/Watchlist/modal/EditWatchlistDialog";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
 import type { Watchlist } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
@@ -126,7 +126,7 @@ export function Watchlists() {
 		}),
 	);
 
-	const fetchWatchlists = async () => {
+	const fetchWatchlists = useCallback(async () => {
 		try {
 			setLoading(true);
 			const data = await watchlistAPI.getMine();
@@ -145,7 +145,7 @@ export function Watchlists() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	const handleDragEnd = async (event: DragEndEvent) => {
 		const { active, over } = event;
@@ -171,7 +171,7 @@ export function Watchlists() {
 
 	useEffect(() => {
 		fetchWatchlists();
-	}, []);
+	}, [fetchWatchlists]);
 
 	const handleCreateSuccess = async (newWatchlist?: Watchlist) => {
 		if (newWatchlist) {
