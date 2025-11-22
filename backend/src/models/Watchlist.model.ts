@@ -27,7 +27,6 @@ export interface IWatchlist extends Document {
 	categories?: string[]; // Tags/categories for filtering (e.g., 'netflix', 'action', 'comedy')
 	collaborators: Types.ObjectId[];
 	items: WatchlistItem[];
-	followersCount?: number; // Number of users who saved/follow this watchlist
 	likedBy: Types.ObjectId[]; // Array of user IDs who liked/saved this watchlist
 	createdAt: Date;
 	updatedAt: Date;
@@ -82,15 +81,11 @@ const watchlistSchema = new Schema<IWatchlist>(
 			type: [watchlistItemSchema],
 			default: [],
 		},
-		followersCount: {
-			type: Number,
-			default: 0,
-			index: true, // Index for sorting by popularity
-		},
 		likedBy: {
 			type: [Schema.Types.ObjectId],
 			ref: "User",
 			default: [],
+			index: true, // Index for sorting by popularity (array size)
 		},
 	},
 	{
@@ -101,7 +96,7 @@ const watchlistSchema = new Schema<IWatchlist>(
 // Compound index for efficient queries
 watchlistSchema.index({ ownerId: 1, createdAt: -1 });
 watchlistSchema.index({ categories: 1, isPublic: 1 }); // For filtering public watchlists by category
-watchlistSchema.index({ isPublic: 1, followersCount: -1, createdAt: -1 }); // For sorting public watchlists by popularity
+watchlistSchema.index({ isPublic: 1, createdAt: -1 }); // For filtering and sorting public watchlists
 
 export const Watchlist = mongoose.model<IWatchlist>(
 	"Watchlist",

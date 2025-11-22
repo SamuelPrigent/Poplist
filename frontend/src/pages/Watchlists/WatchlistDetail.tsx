@@ -228,7 +228,7 @@ export function WatchlistDetail() {
 		if (!watchlist || !watchlist.collaborators) return [];
 		// Filter out non-populated collaborators (if any are still IDs)
 		return watchlist.collaborators.filter(
-			(c): c is Collaborator => typeof c === "object" && c !== null,
+			(c): c is Collaborator => typeof c === "object" && c !== null
 		);
 	};
 

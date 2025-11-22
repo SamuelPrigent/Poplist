@@ -618,7 +618,6 @@ export async function deleteAccount(
 			{ likedBy: userId },
 			{
 				$pull: { likedBy: userId },
-				$inc: { followersCount: -1 },
 			},
 		);
 

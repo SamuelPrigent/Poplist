@@ -554,16 +554,62 @@ export async function getPublicWatchlists(
 		const limit = Math.min(parseInt(req.query.limit as string, 10) || 6, 1000); // Max 1000 for community page
 		const userId = req.user?.sub; // Optional: user may not be authenticated
 
-		const watchlists = await Watchlist.find({
-			isPublic: true,
-		})
-			.populate("ownerId", "email username avatarUrl")
-			.populate("collaborators", "email username avatarUrl")
-			.sort({ followersCount: -1, createdAt: -1 }) // Sort by followers (desc), then by date (desc)
-			.limit(limit)
-			.select(
-				"_id name description imageUrl thumbnailUrl items ownerId collaborators createdAt followersCount likedBy",
-			);
+		// Use aggregation to sort by likedBy array size (dynamic count)
+		const watchlists = await Watchlist.aggregate([
+			// Filter public watchlists only
+			{ $match: { isPublic: true } },
+			// Add a computed field for the number of likes
+			{
+				$addFields: {
+					followersCount: { $size: { $ifNull: ["$likedBy", []] } },
+				},
+			},
+			// Sort by followers count (desc), then by creation date (desc)
+			{ $sort: { followersCount: -1, createdAt: -1 } },
+			// Limit results
+			{ $limit: limit },
+			// Lookup (populate) ownerId
+			{
+				$lookup: {
+					from: "users",
+					localField: "ownerId",
+					foreignField: "_id",
+					as: "ownerId",
+				},
+			},
+			{ $unwind: { path: "$ownerId", preserveNullAndEmptyArrays: true } },
+			// Lookup (populate) collaborators
+			{
+				$lookup: {
+					from: "users",
+					localField: "collaborators",
+					foreignField: "_id",
+					as: "collaborators",
+				},
+			},
+			// Project only needed fields
+			{
+				$project: {
+					_id: 1,
+					name: 1,
+					description: 1,
+					imageUrl: 1,
+					thumbnailUrl: 1,
+					items: 1,
+					likedBy: 1,
+					createdAt: 1,
+					followersCount: 1, // Computed field
+					"ownerId._id": 1,
+					"ownerId.email": 1,
+					"ownerId.username": 1,
+					"ownerId.avatarUrl": 1,
+					"collaborators._id": 1,
+					"collaborators.email": 1,
+					"collaborators.username": 1,
+					"collaborators.avatarUrl": 1,
+				},
+			},
+		]);
 
 		// If user is authenticated, add isOwner, isCollaborator, and isSaved flags
 		if (userId) {
@@ -573,18 +619,18 @@ export async function getPublicWatchlists(
 			);
 
 			const watchlistsWithFlags = watchlists.map((w) => {
-				const baseObj = w.toObject() as WatchlistObject;
+				// Aggregate returns plain objects, not Mongoose documents
 				const ownerId = w.ownerId?._id?.toString() || w.ownerId?.toString();
 				const isOwner = ownerId === userId;
 				// Check if user is a collaborator
-				const isCollaborator = w.collaborators.some((collab) => {
-					const collabId = collab?._id?.toString() || collab?.toString();
+				const isCollaborator = w.collaborators.some((collab: { _id?: Types.ObjectId }) => {
+					const collabId = collab?._id?.toString();
 					return collabId === userId;
 				});
-				const isSaved = savedIds.has((w._id as Types.ObjectId).toString());
+				const isSaved = savedIds.has(w._id.toString());
 
 				const watchlistObj: WatchlistWithFlags = {
-					...baseObj,
+					...w,
 					isOwner,
 					isCollaborator,
 					isSaved,
@@ -1495,8 +1541,6 @@ export async function saveWatchlist(
 			watchlist.likedBy.push(userObjectId);
 		}
 
-		// Increment followersCount
-		watchlist.followersCount = (watchlist.followersCount || 0) + 1;
 		await watchlist.save();
 
 		return res.json({ message: "Watchlist saved successfully" });
@@ -1539,17 +1583,13 @@ export async function unsaveWatchlist(
 
 		await user.save();
 
-		// Remove user from likedBy array and decrement followersCount
+		// Remove user from likedBy array
 		if (isValidWatchlistId(id)) {
 			const watchlist = await Watchlist.findById(id);
 			if (watchlist) {
 				// Remove from likedBy array
 				watchlist.likedBy = watchlist.likedBy.filter(
 					(likedUserId) => likedUserId.toString() !== userId,
-				);
-				watchlist.followersCount = Math.max(
-					0,
-					(watchlist.followersCount || 0) - 1,
 				);
 				await watchlist.save();
 			}
