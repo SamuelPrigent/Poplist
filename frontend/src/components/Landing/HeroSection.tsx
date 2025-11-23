@@ -119,7 +119,7 @@ export function HeroSection({
 					</span>
 				</h1>
 
-				<p className="mb-12 max-w-2xl text-lg text-gray-300 md:text-xl">
+				<p className="mb-12 max-w-2xl text-xl text-gray-300">
 					{content.home.hero.subtitle}
 				</p>
 

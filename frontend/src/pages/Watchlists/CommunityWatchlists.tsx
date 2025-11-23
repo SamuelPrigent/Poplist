@@ -58,14 +58,14 @@ export function CommunityWatchlists() {
 	}, [user, fetchWatchlists]);
 
 	return (
-		<div className="min-h-screen bg-background pb-20">
+		<div className="bg-background min-h-screen pb-20">
 			<div className="container mx-auto px-4 py-12">
 				{/* Back Button */}
 				<div className="mb-8">
 					<button
 						type="button"
 						onClick={handleBackClick}
-						className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-white"
+						className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
 					>
 						<ArrowLeft className="h-4 w-4" />
 						<span>{content.watchlists.back}</span>
@@ -77,7 +77,7 @@ export function CommunityWatchlists() {
 					<h1 className="mb-4 text-4xl font-bold text-white">
 						Watchlists de la communauté
 					</h1>
-					<p className="text-lg text-muted-foreground">
+					<p className="text-muted-foreground text-lg">
 						Découvrez les collections partagées par nos utilisateurs
 					</p>
 				</div>
@@ -88,7 +88,7 @@ export function CommunityWatchlists() {
 						{SKELETONS.map((id) => (
 							<div
 								key={id}
-								className="aspect-[1/1] animate-pulse rounded-lg bg-muted"
+								className="bg-muted aspect-square animate-pulse rounded-lg"
 							/>
 						))}
 					</div>
@@ -104,7 +104,7 @@ export function CommunityWatchlists() {
 
 							// Find this watchlist in user's watchlists to check status
 							const userWatchlist = userWatchlists.find(
-								(uw) => uw._id === watchlist._id,
+								(uw) => uw._id === watchlist._id
 							);
 							const isCollaborator = userWatchlist?.isCollaborator === true;
 							const isSaved =
@@ -128,9 +128,9 @@ export function CommunityWatchlists() {
 						})}
 					</div>
 				) : (
-					<div className="rounded-lg border border-border bg-card p-12 text-center">
-						<Film className="mx-auto h-16 w-16 text-muted-foreground" />
-						<p className="mt-4 text-muted-foreground">
+					<div className="border-border bg-card rounded-lg border p-12 text-center">
+						<Film className="text-muted-foreground mx-auto h-16 w-16" />
+						<p className="text-muted-foreground mt-4">
 							Aucune watchlist publique pour le moment
 						</p>
 					</div>

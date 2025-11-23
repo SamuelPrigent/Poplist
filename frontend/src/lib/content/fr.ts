@@ -240,7 +240,7 @@ export const fr: Content = {
 		hero: {
 			//   title: "Découvre, crée et partage tes watchlists",
 			title: "Vos Watchlists parfaitement organisées",
-			subtitle: "Ton univers cinéma, organisée et partagé avec tes amis.",
+			subtitle: "Ton univers cinéma, organisé et partagé avec tes amis.",
 			cta: "Créer une watchlist",
 			pills: {
 				organize: "Organisez vos films",

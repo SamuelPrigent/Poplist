@@ -15,7 +15,7 @@ export function Categories() {
 	const { content } = useLanguageStore();
 	const navigate = useNavigate();
 	const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
-		{},
+		{}
 	);
 	const [loading, setLoading] = useState(true);
 
@@ -50,7 +50,7 @@ export function Categories() {
 							console.error(`Failed to fetch count for ${categoryId}:`, error);
 							counts[categoryId] = 0;
 						}
-					}),
+					})
 				);
 				setCategoryCounts(counts);
 			} catch (error) {
@@ -69,14 +69,14 @@ export function Categories() {
 	};
 
 	return (
-		<div className="min-h-screen bg-background pb-20">
+		<div className="bg-background min-h-screen pb-20">
 			<div className="container mx-auto px-4 py-12">
 				{/* Back Button */}
 				<div className="mb-8">
 					<button
 						type="button"
 						onClick={handleBackClick}
-						className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-white"
+						className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
 					>
 						<ArrowLeft className="h-4 w-4" />
 						<span>{content.watchlists.back}</span>
@@ -88,7 +88,7 @@ export function Categories() {
 					<h1 className="mb-4 text-4xl font-bold text-white">
 						Toutes les catégories
 					</h1>
-					<p className="text-lg text-muted-foreground">
+					<p className="text-muted-foreground text-lg">
 						Explorez nos collections thématiques
 					</p>
 				</div>
@@ -99,7 +99,7 @@ export function Categories() {
 						{[...Array(10)].map((_, i) => (
 							<div
 								key={i}
-								className="aspect-[1/1] animate-pulse rounded-lg bg-muted"
+								className="aspect-square] bg-muted animate-pulse rounded-lg"
 							/>
 						))}
 					</div>
@@ -118,7 +118,7 @@ export function Categories() {
 									type: "movie",
 									platformList: [],
 									addedAt: placeholderTimestamp,
-								}),
+								})
 							);
 
 							const mockWatchlist: Watchlist = {

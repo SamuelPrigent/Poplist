@@ -24,19 +24,8 @@ interface WatchlistHeaderProps {
 	collaboratorButton?: React.ReactNode;
 }
 
-/**
- * ⚠️ 4 HTTP CALLS APPROACH - TESTING
- *
- * This component now displays 4 separate poster images in a 2x2 grid instead of generating a base64 collage.
- * This allows the browser to:
- * - Use HTTP caching properly
- * - Load images in parallel
- * - Avoid localStorage quota issues
- * - Leverage TMDB CDN benefits
- */
-
 function isWatchlistOwner(
-	value: Watchlist["ownerId"],
+	value: Watchlist["ownerId"]
 ): value is WatchlistOwner {
 	return (
 		typeof value === "object" &&
@@ -79,15 +68,15 @@ export function WatchlistHeader({
 	return (
 		<div className="relative w-full overflow-hidden">
 			{/* Background Gradient */}
-			<div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-background/60 to-background" />
+			<div className="via-background/60 to-background absolute inset-0 bg-linear-to-b from-purple-900/20" />
 
-			<div className="container relative mx-auto px-4 pt-8">
+			<div className="relative container mx-auto px-4 pt-8">
 				{/* Back Button */}
 				<div className="mb-8">
 					<button
 						type="button"
 						onClick={() => navigate(-1)}
-						className="flex items-center gap-2 rounded text-sm text-muted-foreground transition-colors hover:text-white"
+						className="text-muted-foreground flex cursor-pointer items-center gap-2 rounded text-sm transition-colors hover:text-white"
 					>
 						<ArrowLeft className="h-4 w-4" />
 						<span>{content.watchlists.back}</span>
@@ -96,7 +85,7 @@ export function WatchlistHeader({
 
 				<div className="flex flex-col gap-6 md:flex-row md:items-end md:gap-8">
 					{/* Cover Image */}
-					<div className="flex-shrink-0">
+					<div className="shrink-0">
 						{onImageClick ? (
 							<button
 								type="button"
@@ -121,8 +110,8 @@ export function WatchlistHeader({
 										</div>
 									</>
 								) : (
-									<div className="flex h-full w-full items-center justify-center bg-muted/50">
-										<Film className="h-24 w-24 text-muted-foreground" />
+									<div className="bg-muted/50 flex h-full w-full items-center justify-center">
+										<Film className="text-muted-foreground h-24 w-24" />
 									</div>
 								)}
 							</button>
@@ -137,8 +126,8 @@ export function WatchlistHeader({
 										decoding="async"
 									/>
 								) : (
-									<div className="flex h-full w-full items-center justify-center bg-muted/50">
-										<Film className="h-24 w-24 text-muted-foreground" />
+									<div className="bg-muted/50 flex h-full w-full items-center justify-center">
+										<Film className="text-muted-foreground h-24 w-24" />
 									</div>
 								)}
 							</div>
@@ -148,7 +137,7 @@ export function WatchlistHeader({
 					{/* Info */}
 					<div className="flex flex-1 flex-col justify-end space-y-4">
 						{watchlist.isPublic && (
-							<span className="text-sm font-normal text-muted-foreground">
+							<span className="text-muted-foreground text-sm font-normal">
 								{content.watchlists.headerPublic}
 							</span>
 						)}
@@ -158,7 +147,7 @@ export function WatchlistHeader({
 								<button
 									type="button"
 									onClick={onEdit}
-									className="cursor-pointer text-left transition-colors hover:text-primary"
+									className="hover:text-primary cursor-pointer text-left transition-colors"
 								>
 									{watchlist.name}
 								</button>
@@ -168,12 +157,12 @@ export function WatchlistHeader({
 						</h1>
 
 						{watchlist.description && (
-							<p className="text-[14px] text-muted-foreground">
+							<p className="text-muted-foreground text-[14px]">
 								{watchlist.description}
 							</p>
 						)}
 
-						<div className="flex items-center gap-2 text-sm text-muted-foreground">
+						<div className="text-muted-foreground flex items-center gap-2 text-sm">
 							{ownerUsername && (
 								<>
 									{/* flex c */}
@@ -181,7 +170,7 @@ export function WatchlistHeader({
 										<div className="flex items-center">
 											{/* user + username */}
 											<div className="flex items-center gap-1">
-												<div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-muted">
+												<div className="bg-muted flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
 													{ownerAvatarUrl ? (
 														<img
 															src={ownerAvatarUrl}
@@ -189,13 +178,13 @@ export function WatchlistHeader({
 															className="h-full w-full object-cover"
 														/>
 													) : (
-														<User className="h-3.5 w-3.5 text-muted-foreground" />
+														<User className="text-muted-foreground h-3.5 w-3.5" />
 													)}
 												</div>
 												<button
 													type="button"
 													onClick={() => navigate(`/user/${ownerUsername}`)}
-													className="cursor-pointer font-semibold capitalize text-white hover:underline"
+													className="cursor-pointer font-semibold text-white capitalize hover:underline"
 												>
 													{ownerUsername}
 												</button>
@@ -211,13 +200,13 @@ export function WatchlistHeader({
 													{(watchlist.collaborators as Collaborator[])
 														.filter(
 															(c): c is Collaborator =>
-																typeof c === "object" && c !== null,
+																typeof c === "object" && c !== null
 														)
 														.slice(0, 3)
 														.map((collaborator) => (
 															<div
 																key={collaborator._id}
-																className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-muted ring-2 ring-background"
+																className="bg-muted ring-background flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ring-2"
 																title={collaborator.username}
 															>
 																{(
@@ -237,16 +226,16 @@ export function WatchlistHeader({
 																		className="h-full w-full object-cover"
 																	/>
 																) : (
-																	<User className="h-3.5 w-3.5 text-muted-foreground" />
+																	<User className="text-muted-foreground h-3.5 w-3.5" />
 																)}
 															</div>
 														))}
 													{(watchlist.collaborators as Collaborator[]).filter(
 														(c): c is Collaborator =>
-															typeof c === "object" && c !== null,
+															typeof c === "object" && c !== null
 													).length > 3 && (
 														<div
-															className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium ring-2 ring-background"
+															className="bg-muted ring-background flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ring-2"
 															title={`+${(watchlist.collaborators as Collaborator[]).filter((c): c is Collaborator => typeof c === "object" && c !== null).length - 3} collaborateurs`}
 														>
 															+
@@ -254,7 +243,7 @@ export function WatchlistHeader({
 																watchlist.collaborators as Collaborator[]
 															).filter(
 																(c): c is Collaborator =>
-																	typeof c === "object" && c !== null,
+																	typeof c === "object" && c !== null
 															).length - 3}
 														</div>
 													)}
@@ -382,9 +371,7 @@ export function WatchlistHeader({
 							)}
 
 							{/* Right: Action Button (e.g., Add Item) */}
-							{actionButton && (
-								<div className="flex-shrink-0">{actionButton}</div>
-							)}
+							{actionButton && <div className="shrink-0">{actionButton}</div>}
 						</div>
 					);
 				})()}

@@ -25,11 +25,6 @@ export function CategoryDetail() {
 		scrollToTop();
 	}, []);
 
-	const handleBackClick = () => {
-		navigate("/home");
-		scrollToTop();
-	};
-
 	useEffect(() => {
 		const fetchData = async () => {
 			if (!id) return;
@@ -60,9 +55,9 @@ export function CategoryDetail() {
 
 	if (!categoryInfo) {
 		return (
-			<div className="min-h-screen bg-background pb-20">
+			<div className="bg-background min-h-screen pb-20">
 				<div className="container mx-auto px-4 py-12">
-					<div className="rounded-lg border border-border bg-card p-12 text-center">
+					<div className="border-border bg-card rounded-lg border p-12 text-center">
 						<p className="text-muted-foreground">Catégorie non trouvée</p>
 					</div>
 				</div>
@@ -71,7 +66,7 @@ export function CategoryDetail() {
 	}
 
 	return (
-		<div className="min-h-screen bg-background pb-20">
+		<div className="bg-background min-h-screen pb-20">
 			{/* Header with subtle gradient */}
 			<div className="relative w-full">
 				<div
@@ -81,13 +76,13 @@ export function CategoryDetail() {
 					}}
 				>
 					{/* Content */}
-					<div className="container relative mx-auto flex h-full flex-col justify-start px-4 pt-[1.7rem]">
+					<div className="relative container mx-auto flex h-full flex-col justify-start px-4 pt-[1.7rem]">
 						{/* Back Button */}
 						<div className="mb-6">
 							<button
 								type="button"
-								onClick={handleBackClick}
-								className="flex items-center gap-2 text-sm text-white/80 transition-colors hover:text-white"
+								onClick={() => navigate(-1)}
+								className="flex cursor-pointer items-center gap-2 text-sm text-white/80 transition-colors hover:text-white"
 							>
 								<ArrowLeft className="h-4 w-4" />
 								<span>{content.watchlists.back}</span>
@@ -116,7 +111,7 @@ export function CategoryDetail() {
 							{[...Array(10)].map((_, i) => (
 								<div
 									key={i}
-									className="aspect-[1/1] animate-pulse rounded-lg bg-muted"
+									className="bg-muted aspect-square animate-pulse rounded-lg"
 								/>
 							))}
 						</div>
@@ -132,7 +127,7 @@ export function CategoryDetail() {
 
 								// Check if this watchlist is in user's watchlists
 								const userWatchlist = userWatchlists.find(
-									(uw) => uw._id === watchlist._id,
+									(uw) => uw._id === watchlist._id
 								);
 								const isCollaborator = userWatchlist?.isCollaborator === true;
 								const isSaved =
@@ -155,9 +150,9 @@ export function CategoryDetail() {
 							})}
 						</div>
 					) : (
-						<div className="rounded-lg border border-border bg-card p-12 text-center">
-							<Film className="mx-auto h-16 w-16 text-muted-foreground" />
-							<p className="mt-4 text-muted-foreground">
+						<div className="border-border bg-card rounded-lg border p-12 text-center">
+							<Film className="text-muted-foreground mx-auto h-16 w-16" />
+							<p className="text-muted-foreground mt-4">
 								Aucune watchlist dans cette catégorie pour le moment
 							</p>
 						</div>
