@@ -29,6 +29,7 @@ import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
+import type { Content } from "@/types/content";
 
 interface MediaItem {
 	id: number;
@@ -47,37 +48,38 @@ const SKELETON_KEYS = Array.from({ length: 36 }, (_, i) => `skeleton-${i + 1}`);
 // Generate years from 2026 to 1895 (first film)
 const YEARS = Array.from({ length: 2026 - 1895 + 1 }, (_, i) => 2026 - i);
 
-const GENRES = {
+// Function to get genres with translated names
+const getGenres = (content: Content) => ({
 	movie: [
-		{ id: 28, name: "Action" },
-		{ id: 12, name: "Aventure" },
-		{ id: 16, name: "Animation" },
-		{ id: 35, name: "Comédie" },
-		{ id: 80, name: "Crime" },
-		{ id: 99, name: "Documentaire" },
-		{ id: 18, name: "Drame" },
-		{ id: 10751, name: "Familial" },
-		{ id: 14, name: "Fantastique" },
-		{ id: 27, name: "Horreur" },
-		{ id: 10749, name: "Romance" },
-		{ id: 878, name: "Science-Fiction" },
-		{ id: 53, name: "Thriller" },
+		{ id: 28, name: content.explore.genres.action },
+		{ id: 12, name: content.explore.genres.adventure },
+		{ id: 16, name: content.explore.genres.animation },
+		{ id: 35, name: content.explore.genres.comedy },
+		{ id: 80, name: content.explore.genres.crime },
+		{ id: 99, name: content.explore.genres.documentary },
+		{ id: 18, name: content.explore.genres.drama },
+		{ id: 10751, name: content.explore.genres.family },
+		{ id: 14, name: content.explore.genres.fantasy },
+		{ id: 27, name: content.explore.genres.horror },
+		{ id: 10749, name: content.explore.genres.romance },
+		{ id: 878, name: content.explore.genres.scienceFiction },
+		{ id: 53, name: content.explore.genres.thriller },
 	],
 	tv: [
-		{ id: 10759, name: "Action & Aventure" },
-		{ id: 16, name: "Animation" },
-		{ id: 35, name: "Comédie" },
-		{ id: 80, name: "Crime" },
-		{ id: 99, name: "Documentaire" },
-		{ id: 18, name: "Drame" },
-		{ id: 10751, name: "Familial" },
-		{ id: 10762, name: "Enfants" },
-		{ id: 9648, name: "Mystère" },
-		{ id: 10765, name: "Science-Fiction & Fantastique" },
-		{ id: 10766, name: "Feuilleton" },
-		{ id: 37, name: "Western" },
+		{ id: 10759, name: content.explore.genres.actionAdventure },
+		{ id: 16, name: content.explore.genres.animation },
+		{ id: 35, name: content.explore.genres.comedy },
+		{ id: 80, name: content.explore.genres.crime },
+		{ id: 99, name: content.explore.genres.documentary },
+		{ id: 18, name: content.explore.genres.drama },
+		{ id: 10751, name: content.explore.genres.family },
+		{ id: 10762, name: content.explore.genres.kids },
+		{ id: 9648, name: content.explore.genres.mystery },
+		{ id: 10765, name: content.explore.genres.sciFiFantasy },
+		{ id: 10766, name: content.explore.genres.soap },
+		{ id: 37, name: content.explore.genres.western },
 	],
-};
+});
 
 export function Explore() {
 	const { content } = useLanguageStore();
@@ -427,16 +429,17 @@ export function Explore() {
 
 	// Get available genres based on selected media types
 	const availableGenres = useMemo(() => {
+		const genres = getGenres(content);
 		if (mediaTypes.length === 2) {
-			const combined = [...GENRES.movie, ...GENRES.tv];
+			const combined = [...genres.movie, ...genres.tv];
 			// Deduplicate by id
 			const uniqueGenres = Array.from(
 				new Map(combined.map((g) => [g.id, g])).values()
 			);
 			return uniqueGenres;
 		}
-		return mediaTypes[0] === "movie" ? GENRES.movie : GENRES.tv;
-	}, [mediaTypes]);
+		return mediaTypes[0] === "movie" ? genres.movie : genres.tv;
+	}, [mediaTypes, content]);
 
 	return (
 		<div className="bg-background mb-24 min-h-screen py-12">
@@ -509,7 +512,7 @@ export function Explore() {
 											: "text-muted-foreground hover:text-foreground bg-transparent"
 									)}
 								>
-									Populaires
+									{content.explore.filters.popular}
 								</button>
 								<button
 									type="button"
@@ -521,7 +524,7 @@ export function Explore() {
 											: "text-muted-foreground hover:text-foreground bg-transparent"
 									)}
 								>
-									Mieux notés
+									{content.explore.filters.bestRated}
 								</button>
 							</div>
 						</div>
@@ -538,15 +541,15 @@ export function Explore() {
 									aria-expanded={openYearFrom}
 									className="w-[200px] cursor-pointer justify-between"
 								>
-									{yearFrom || "Année minimum"}
+									{yearFrom || content.explore.filters.yearMin}
 									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-[200px] p-0">
 								<Command>
-									<CommandInput placeholder="Rechercher..." />
+									<CommandInput placeholder={content.explore.filters.search} />
 									<CommandList>
-										<CommandEmpty>Aucune année trouvée.</CommandEmpty>
+										<CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
 										<CommandGroup>
 											{availableYearsFrom.map((year) => (
 												<CommandItem
@@ -585,15 +588,15 @@ export function Explore() {
 									aria-expanded={openYearTo}
 									className="w-[200px] cursor-pointer justify-between"
 								>
-									{yearTo || "Année maximum"}
+									{yearTo || content.explore.filters.yearMax}
 									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-[200px] p-0">
 								<Command>
-									<CommandInput placeholder="Rechercher..." />
+									<CommandInput placeholder={content.explore.filters.search} />
 									<CommandList>
-										<CommandEmpty>Aucune année trouvée.</CommandEmpty>
+										<CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
 										<CommandGroup>
 											{availableYearsTo.map((year) => (
 												<CommandItem
@@ -634,7 +637,7 @@ export function Explore() {
 									setYearTo("");
 								}}
 							>
-								Effacer les années
+								{content.explore.filters.clearYears}
 							</Button>
 						)}
 					</div>

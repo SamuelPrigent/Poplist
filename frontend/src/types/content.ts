@@ -329,6 +329,34 @@ export interface Content {
 			series: string;
 			trending: string;
 			topRated: string;
+			popular: string;
+			bestRated: string;
+			yearMin: string;
+			yearMax: string;
+			search: string;
+			noYearFound: string;
+			clearYears: string;
+		};
+		genres: {
+			action: string;
+			adventure: string;
+			animation: string;
+			comedy: string;
+			crime: string;
+			documentary: string;
+			drama: string;
+			family: string;
+			fantasy: string;
+			horror: string;
+			romance: string;
+			scienceFiction: string;
+			thriller: string;
+			actionAdventure: string;
+			kids: string;
+			mystery: string;
+			sciFiFantasy: string;
+			soap: string;
+			western: string;
 		};
 		sortBy: {
 			label: string;
