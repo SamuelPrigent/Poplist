@@ -56,7 +56,7 @@ export function HomeApp() {
 	const [publicWatchlists, setPublicWatchlists] = useState<Watchlist[]>([]);
 	const [recommendations, setRecommendations] = useState<TrendingItem[]>([]);
 	const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
-		{},
+		{}
 	);
 	const [loading, setLoading] = useState(true);
 	const [addingTo, setAddingTo] = useState<number | null>(null);
@@ -142,17 +142,17 @@ export function HomeApp() {
 
 				// Remove duplicates by ID
 				const uniqueTrending = Array.from(
-					new Map(allTrending.map((item) => [item.id, item])).values(),
+					new Map(allTrending.map((item) => [item.id, item])).values()
 				);
 
 				// Filter trending items by quality criteria
 				const trendingFiltered = uniqueTrending
 					.filter((item: TrendingItem) => item.poster_path)
 					.filter(
-						(item: TrendingItem) => item.vote_average && item.vote_average >= 6,
+						(item: TrendingItem) => item.vote_average && item.vote_average >= 6
 					)
 					.filter(
-						(item: TrendingItem) => item.vote_count && item.vote_count > 100,
+						(item: TrendingItem) => item.vote_count && item.vote_count > 100
 					)
 					.filter((item: TrendingItem) => {
 						const dateStr = item.release_date || item.first_air_date;
@@ -173,7 +173,7 @@ export function HomeApp() {
 				// Take exactly 5 consecutive items starting from random offset
 				const selectedRecommendations = trendingFiltered.slice(
 					randomOffset,
-					randomOffset + 5,
+					randomOffset + 5
 				);
 				setRecommendations(selectedRecommendations);
 
@@ -197,7 +197,7 @@ export function HomeApp() {
 							console.error(`Failed to fetch count for ${categoryId}:`, error);
 							counts[categoryId] = 0;
 						}
-					}),
+					})
 				);
 				setCategoryCounts(counts);
 			} catch (error) {
@@ -212,7 +212,7 @@ export function HomeApp() {
 
 	const handleAddToWatchlist = async (
 		watchlistId: string,
-		item: TrendingItem,
+		item: TrendingItem
 	) => {
 		try {
 			setAddingTo(item.id);
@@ -231,7 +231,7 @@ export function HomeApp() {
 				if (localWatchlists) {
 					const watchlists: Watchlist[] = JSON.parse(localWatchlists);
 					const watchlistIndex = watchlists.findIndex(
-						(w) => w._id === watchlistId,
+						(w) => w._id === watchlistId
 					);
 
 					if (watchlistIndex !== -1) {
@@ -240,7 +240,7 @@ export function HomeApp() {
 							import.meta.env.VITE_API_URL || "http://localhost:3000";
 						const type = item.media_type || "movie";
 						const response = await fetch(
-							`${API_URL}/watchlists/items/${item.id}/${type}/details?language=fr-FR`,
+							`${API_URL}/watchlists/items/${item.id}/${type}/details?language=fr-FR`
 						);
 
 						if (response.ok) {
@@ -259,7 +259,7 @@ export function HomeApp() {
 
 							// Check if item already exists
 							const itemExists = watchlists[watchlistIndex].items.some(
-								(existingItem) => existingItem.tmdbId === newItem.tmdbId,
+								(existingItem) => existingItem.tmdbId === newItem.tmdbId
 							);
 
 							if (!itemExists) {
@@ -302,17 +302,17 @@ export function HomeApp() {
 				itemCount: categoryCounts[categoryId] || 0,
 				username: "WatchlistHub",
 			};
-		},
+		}
 	);
 
 	// Security: Ensure recommendations never exceed 5 items
 	const safeRecommendations = useMemo(
 		() => recommendations.slice(0, 5),
-		[recommendations],
+		[recommendations]
 	);
 
 	return (
-		<div className="min-h-screen bg-background pb-20">
+		<div className="bg-background min-h-screen pb-20">
 			{/* My Watchlists - Library Section */}
 			{userWatchlists.length > 0 && (
 				<section className="container mx-auto px-4 py-12">
@@ -321,13 +321,13 @@ export function HomeApp() {
 							<h2 className="text-2xl font-bold text-white">
 								{content.home.library.title}
 							</h2>
-							<p className="mt-1 text-sm text-muted-foreground">
+							<p className="text-muted-foreground mt-1 text-sm">
 								{content.home.library.subtitle}
 							</p>
 						</div>
 						<Link
 							to={user ? "/account/watchlists" : "/local/watchlists"}
-							className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+							className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
 						>
 							{content.home.library.seeAll}
 						</Link>
@@ -356,13 +356,13 @@ export function HomeApp() {
 						<h2 className="text-2xl font-bold text-white">
 							{content.home.categories.title}
 						</h2>
-						<p className="mt-1 text-sm text-muted-foreground">
+						<p className="text-muted-foreground mt-1 text-sm">
 							{content.home.categories.subtitle}
 						</p>
 					</div>
 					<Link
 						to="/categories"
-						className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
 					>
 						{content.home.categories.seeMore}
 					</Link>
@@ -380,7 +380,7 @@ export function HomeApp() {
 								type: "movie",
 								platformList: [],
 								addedAt: placeholderTimestamp,
-							}),
+							})
 						);
 
 						const mockWatchlist: Watchlist = {
@@ -422,13 +422,13 @@ export function HomeApp() {
 						<h2 className="text-2xl font-bold text-white">
 							{content.home.popularWatchlists.title}
 						</h2>
-						<p className="mt-1 text-sm text-muted-foreground">
+						<p className="text-muted-foreground mt-1 text-sm">
 							{content.home.popularWatchlists.subtitle}
 						</p>
 					</div>
 					<Link
 						to="/community-watchlists"
-						className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
 					>
 						{content.home.popularWatchlists.seeMore}
 					</Link>
@@ -439,7 +439,7 @@ export function HomeApp() {
 						{POPULAR_WATCHLIST_SKELETON_KEYS.map((skeletonKey) => (
 							<div
 								key={skeletonKey}
-								className="aspect-[1/1] animate-pulse rounded-lg bg-muted"
+								className="bg-muted aspect-square animate-pulse rounded-lg"
 							/>
 						))}
 					</div>
@@ -448,7 +448,7 @@ export function HomeApp() {
 						{publicWatchlists.slice(0, 10).map((watchlist) => {
 							// Use same approach as CommunityWatchlists: cross-reference with user's watchlists
 							const userWatchlist = userWatchlists.find(
-								(uw) => uw._id === watchlist._id,
+								(uw) => uw._id === watchlist._id
 							);
 							const isOwner = userWatchlist?.isOwner ?? false;
 							const isCollaborator = userWatchlist?.isCollaborator ?? false;
@@ -475,9 +475,9 @@ export function HomeApp() {
 						})}
 					</div>
 				) : (
-					<div className="rounded-lg border border-border bg-card p-12 text-center">
-						<Film className="mx-auto h-16 w-16 text-muted-foreground" />
-						<p className="mt-4 text-muted-foreground">
+					<div className="border-border bg-card rounded-lg border p-12 text-center">
+						<Film className="text-muted-foreground mx-auto h-16 w-16" />
+						<p className="text-muted-foreground mt-4">
 							{content.home.popularWatchlists.noWatchlists}
 						</p>
 					</div>
@@ -491,13 +491,13 @@ export function HomeApp() {
 						<h2 className="text-2xl font-bold text-white">
 							{content.home.recommendations.title}
 						</h2>
-						<p className="mt-1 text-sm text-muted-foreground">
+						<p className="text-muted-foreground mt-1 text-sm">
 							{content.home.recommendations.subtitle}
 						</p>
 					</div>
 					<Link
 						to="/explore"
-						className="rounded-full bg-muted/50 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
 					>
 						{content.home.recommendations.seeMore}
 					</Link>
@@ -516,11 +516,11 @@ export function HomeApp() {
 							/>
 
 							{/* Action buttons */}
-							<div className="absolute right-2 top-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+							<div className="absolute top-2 right-2 flex gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
 								{/* Preview button */}
 								<button
 									type="button"
-									className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
+									className="cursor-pointer rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
 									onClick={(e) => {
 										e.stopPropagation();
 										handleOpenDetails(item);
@@ -544,7 +544,7 @@ export function HomeApp() {
 									<DropdownMenu.Trigger asChild>
 										<button
 											type="button"
-											className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
+											className="cursor-pointer rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
 											disabled={addingTo === item.id}
 											onClick={(e) => e.stopPropagation()}
 										>
@@ -554,22 +554,22 @@ export function HomeApp() {
 
 									<DropdownMenu.Portal>
 										<DropdownMenu.Content
-											className="z-50 min-w-[200px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md"
+											className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-xl border p-1 shadow-md"
 											sideOffset={5}
 											onClick={(e) => e.stopPropagation()}
 										>
-											<DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+											<DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-semibold">
 												{content.watchlists.addToWatchlist}
 											</DropdownMenu.Label>
 											{userWatchlists.filter(
-												(w) => w.isOwner || w.isCollaborator,
+												(w) => w.isOwner || w.isCollaborator
 											).length > 0 ? (
 												userWatchlists
 													.filter((w) => w.isOwner || w.isCollaborator)
 													.map((watchlist) => (
 														<DropdownMenu.Item
 															key={watchlist._id}
-															className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+															className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
 															onSelect={() =>
 																handleAddToWatchlist(watchlist._id, item)
 															}
@@ -578,7 +578,7 @@ export function HomeApp() {
 														</DropdownMenu.Item>
 													))
 											) : (
-												<div className="px-2 py-1.5 text-sm text-muted-foreground">
+												<div className="text-muted-foreground px-2 py-1.5 text-sm">
 													{content.watchlists.noWatchlist}
 												</div>
 											)}

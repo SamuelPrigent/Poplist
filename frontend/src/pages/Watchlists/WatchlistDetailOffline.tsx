@@ -82,14 +82,14 @@ export function WatchlistDetailOffline() {
 		return (
 			<div className="container mx-auto px-4 py-8">
 				<div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
-					<div className="rounded-full bg-muted p-6">
+					<div className="bg-muted rounded-full p-6">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
 							viewBox="0 0 24 24"
 							strokeWidth={1.5}
 							stroke="currentColor"
-							className="h-16 w-16 text-muted-foreground"
+							className="text-muted-foreground h-16 w-16"
 						>
 							<title>Watchlist not found icon</title>
 							<path
@@ -101,7 +101,7 @@ export function WatchlistDetailOffline() {
 					</div>
 					<div className="text-center">
 						<h1 className="text-2xl font-bold">Watchlist introuvable</h1>
-						<p className="mt-2 text-muted-foreground">
+						<p className="text-muted-foreground mt-2">
 							Cette watchlist n'existe pas ou a été supprimée.
 						</p>
 					</div>
@@ -117,19 +117,19 @@ export function WatchlistDetailOffline() {
 	if (!watchlist) return null;
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background">
+		<div className="from-background via-background/95 to-background min-h-screen bg-linear-to-b">
 			{/* Inline Header - Simplified for Offline */}
 			<div className="relative w-full overflow-hidden">
 				{/* Background Gradient */}
-				<div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-background/60 to-background" />
+				<div className="via-background/60 to-background absolute inset-0 bg-linear-to-b from-purple-900/20" />
 
-				<div className="container relative mx-auto px-4 pt-8">
+				<div className="relative container mx-auto px-4 pt-8">
 					{/* Back Button */}
 					<div className="mb-8">
 						<button
 							type="button"
 							onClick={() => navigate(-1)}
-							className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-white"
+							className="text-muted-foreground flex items-center gap-2 text-sm transition-colors hover:text-white"
 						>
 							<ArrowLeft className="h-4 w-4" />
 							<span>{content.watchlists.back}</span>
@@ -138,7 +138,7 @@ export function WatchlistDetailOffline() {
 
 					<div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
 						{/* Cover Image */}
-						<div className="flex-shrink-0">
+						<div className="shrink-0">
 							<button
 								type="button"
 								className="group relative h-56 w-56 overflow-hidden rounded-lg shadow-2xl"
@@ -162,8 +162,8 @@ export function WatchlistDetailOffline() {
 										</div>
 									</>
 								) : (
-									<div className="flex h-full w-full items-center justify-center bg-muted/50">
-										<Film className="h-24 w-24 text-muted-foreground" />
+									<div className="bg-muted/50 flex h-full w-full items-center justify-center">
+										<Film className="text-muted-foreground h-24 w-24" />
 									</div>
 								)}
 							</button>
@@ -181,19 +181,19 @@ export function WatchlistDetailOffline() {
 										<button
 											type="button"
 											onClick={() => setEditModalOpen(true)}
-											className="cursor-pointer text-left transition-colors hover:text-primary"
+											className="hover:text-primary cursor-pointer text-left transition-colors"
 										>
 											{watchlist?.name || ""}
 										</button>
 									</h1>
 
 									{watchlist?.description && (
-										<p className="text-[14px] text-muted-foreground">
+										<p className="text-muted-foreground text-[14px]">
 											{watchlist.description}
 										</p>
 									)}
 
-									<div className="flex items-center gap-2 text-sm text-muted-foreground">
+									<div className="text-muted-foreground flex items-center gap-2 text-sm">
 										<span>
 											{itemCount}{" "}
 											{itemCount === 1
@@ -204,8 +204,11 @@ export function WatchlistDetailOffline() {
 								</div>
 
 								{/* Add button aligned with bottom */}
-								<div className="flex-shrink-0 pb-1">
-									<Button onClick={() => setAddModalOpen(true)}>
+								<div className="shrink-0 pb-1">
+									<Button
+										className="corner-squircle rounded-2xl"
+										onClick={() => setAddModalOpen(true)}
+									>
 										<Plus className="h-4 w-4" />
 										{content.watchlists.addItem}
 									</Button>

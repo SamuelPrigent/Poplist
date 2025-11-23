@@ -37,7 +37,7 @@ export function HeroSection({
 	};
 
 	return (
-		<section className="relative min-h-[80vh] overflow-hidden bg-gradient-to-br from-slate-900 to-background">
+		<section className="to-background relative min-h-[80vh] overflow-hidden bg-linear-to-br from-slate-900">
 			{/* Organized Watchlist Background Grid - Static */}
 			<div className="absolute inset-0 opacity-20">
 				<div className="container mx-auto grid h-full grid-cols-6 gap-3 p-8">
@@ -54,7 +54,7 @@ export function HeroSection({
 								{(() => {
 									const groupItems = createWatchlistGroup(
 										trending,
-										groupIdx * 4,
+										groupIdx * 4
 									);
 									if (groupItems.length === 0) return null;
 									return POSTER_SLOTS.map((slotIdx) => {
@@ -62,7 +62,7 @@ export function HeroSection({
 										return (
 											<div
 												key={`poster-${groupIdx}-${slotIdx}`}
-												className="aspect-[2/3] overflow-hidden rounded-sm bg-slate-800"
+												className="aspect-2/3 overflow-hidden rounded-sm bg-slate-800"
 											>
 												{item?.poster_path && (
 													<img
@@ -82,7 +82,7 @@ export function HeroSection({
 			</div>
 
 			{/* Gradient Overlays */}
-			<div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background"></div>
+			<div className="via-background/60 to-background pointer-events-none absolute inset-0 bg-linear-to-b from-transparent"></div>
 			<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
 
 			{/* Hero Content */}
@@ -110,7 +110,7 @@ export function HeroSection({
 				</div>
 
 				{/* Main Title */}
-				<h1 className="mb-6 max-w-4xl text-5xl font-bold leading-tight md:text-7xl">
+				<h1 className="mb-6 max-w-4xl text-5xl leading-tight font-bold md:text-7xl">
 					<span className="text-white">
 						{content.home.hero.title.split(" ").slice(0, 2).join(" ")}
 					</span>{" "}
@@ -126,7 +126,7 @@ export function HeroSection({
 				{/* CTA Button - Gray */}
 				<Link
 					to={watchlistsUrl}
-					className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-gray-200 px-6 py-[1.4rem] text-sm font-semibold text-black transition-colors hover:bg-gray-300"
+					className="corner-squircle inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-6 py-[1.4rem] text-sm font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"
 				>
 					{content.home.hero.cta}
 				</Link>

@@ -54,7 +54,7 @@ export function Landing() {
 	}, []);
 
 	return (
-		<div className="min-h-screen bg-background">
+		<div className="bg-background min-h-screen">
 			{/* Hero Section */}
 			<HeroSection
 				content={content}
@@ -69,7 +69,7 @@ export function Landing() {
 						{trending.slice(0, 6).map((item) => (
 							<div
 								key={item.id}
-								className="aspect-[2/3] overflow-hidden rounded-lg shadow-lg transition-transform hover:scale-105"
+								className="aspect-2/3 overflow-hidden rounded-lg shadow-lg transition-transform hover:scale-105"
 							>
 								{item.poster_path && (
 									<img
@@ -85,11 +85,11 @@ export function Landing() {
 			</section>
 
 			{/* Features Section */}
-			<section className="container mx-auto px-4 pb-28 pt-24">
+			<section className="container mx-auto px-4 pt-24 pb-28">
 				<div className="mx-auto grid max-w-[88%] items-center gap-16 lg:grid-cols-[55%_45%]">
 					{/* Left: Features */}
 					<div>
-						<h2 className="mb-4 text-3xl font-bold leading-tight text-white">
+						<h2 className="mb-4 text-3xl leading-tight font-bold text-white">
 							{content.landing.hero.tagline}
 						</h2>
 						<p className="mb-10 text-lg text-gray-400">
@@ -98,7 +98,7 @@ export function Landing() {
 
 						<div className="space-y-4">
 							<div className="flex gap-4">
-								<div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
+								<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500/20">
 									<Users className="h-5 w-5 text-sky-400" />
 								</div>
 								<div>
@@ -112,7 +112,7 @@ export function Landing() {
 							</div>
 
 							<div className="flex gap-4">
-								<div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
+								<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500/20">
 									<Sparkles className="h-5 w-5 text-sky-400" />
 								</div>
 								<div>
@@ -126,7 +126,7 @@ export function Landing() {
 							</div>
 
 							<div className="flex gap-4">
-								<div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-sky-500/20">
+								<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500/20">
 									<Check className="h-5 w-5 text-sky-400" />
 								</div>
 								<div>
@@ -167,7 +167,7 @@ export function Landing() {
 						<h3 className="mb-3 text-xl font-semibold text-sky-400">
 							{content.landing.startInSeconds.step1.title}
 						</h3>
-						<p className="text-balance text-[16px] text-gray-300">
+						<p className="text-[16px] text-balance text-gray-300">
 							{content.landing.startInSeconds.step1.description}
 						</p>
 					</div>
@@ -181,7 +181,7 @@ export function Landing() {
 						<h3 className="mb-3 text-xl font-semibold text-purple-400">
 							{content.landing.startInSeconds.step2.title}
 						</h3>
-						<p className="text-balance text-[16px] text-gray-300">
+						<p className="text-[16px] text-balance text-gray-300">
 							{content.landing.startInSeconds.step2.description}
 						</p>
 					</div>
@@ -195,7 +195,7 @@ export function Landing() {
 						<h3 className="mb-3 text-xl font-semibold text-yellow-400">
 							{content.landing.startInSeconds.step3.title}
 						</h3>
-						<p className="text-balance text-[16px] text-gray-300">
+						<p className="text-[16px] text-balance text-gray-300">
 							{content.landing.startInSeconds.step3.description}
 						</p>
 					</div>
@@ -215,7 +215,7 @@ export function Landing() {
 					</div>
 
 					<div className="grid gap-8 md:grid-cols-3">
-						<div className="rounded-lg border border-border bg-background p-6">
+						<div className="border-border bg-background rounded-lg border p-6">
 							<div className="mb-4 flex gap-1">
 								{STAR_KEYS.map((starKey) => (
 									<Star
@@ -232,7 +232,7 @@ export function Landing() {
 							</p>
 						</div>
 
-						<div className="rounded-lg border border-border bg-background p-6">
+						<div className="border-border bg-background rounded-lg border p-6">
 							<div className="mb-4 flex gap-1">
 								{STAR_KEYS.map((starKey) => (
 									<Star
@@ -249,7 +249,7 @@ export function Landing() {
 							</p>
 						</div>
 
-						<div className="rounded-lg border border-border bg-background p-6">
+						<div className="border-border bg-background rounded-lg border p-6">
 							<div className="mb-4 flex gap-1">
 								{STAR_KEYS.map((starKey) => (
 									<Star
@@ -333,7 +333,7 @@ export function Landing() {
 			</section>
 
 			{/* Final CTA */}
-			<section className="bg-gradient-to-br from-slate-900/50 via-slate-900/60 to-yellow-900/20 py-24">
+			<section className="bg-linear-to-br from-slate-900/50 via-slate-900/60 to-yellow-900/20 py-24">
 				<div className="container mx-auto px-4 text-center">
 					<h2 className="mb-6 text-4xl font-bold text-white">
 						{content.landing.finalCta.title}
@@ -343,7 +343,7 @@ export function Landing() {
 					</p>
 					<Link
 						to={watchlistsUrl}
-						className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-gray-200 px-7 py-5 text-base font-semibold text-black transition-colors hover:bg-gray-300"
+						className="corner-squircle inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-7 py-5 text-base font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"
 					>
 						{content.landing.finalCta.button}
 					</Link>

@@ -39,7 +39,7 @@ export function CreateWatchlistDialog({
 		setCategories((prev) =>
 			prev.includes(category)
 				? prev.filter((c) => c !== category)
-				: [...prev, category],
+				: [...prev, category]
 		);
 	};
 
@@ -143,7 +143,7 @@ export function CreateWatchlistDialog({
 			}
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to create watchlist",
+				err instanceof Error ? err.message : "Failed to create watchlist"
 			);
 		} finally {
 			setLoading(false);
@@ -164,13 +164,13 @@ export function CreateWatchlistDialog({
 	return (
 		<DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
 			<DialogPrimitive.Portal>
-				<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
-					<div className="flex flex-col space-y-1.5">
+				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80" />
+				<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg">
+					<div className="mb-4 flex flex-col space-y-1.5">
 						<DialogPrimitive.Title className="text-lg font-semibold">
 							{content.watchlists.createWatchlist}
 						</DialogPrimitive.Title>
-						<DialogPrimitive.Description className="text-sm text-muted-foreground">
+						<DialogPrimitive.Description className="text-muted-foreground text-sm">
 							{content.watchlists.createWatchlistDescription}
 						</DialogPrimitive.Description>
 					</div>
@@ -207,7 +207,7 @@ export function CreateWatchlistDialog({
 								maxLength={500}
 								disabled={loading}
 								rows={3}
-								className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+								className="border-input bg-background placeholder:text-muted-foreground flex w-full rounded-md border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
 							/>
 						</div>
 
@@ -219,11 +219,11 @@ export function CreateWatchlistDialog({
 								checked={isPublic}
 								onChange={(e) => setIsPublic(e.target.checked)}
 								disabled={loading}
-								className="h-4 w-4 rounded border-input bg-background text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+								className="border-input bg-background text-primary focus-visible:ring-ring h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 							/>
 							<label
 								htmlFor="isPublic"
-								className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+								className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 							>
 								{content.watchlists.makePublic}
 							</label>
@@ -252,7 +252,7 @@ export function CreateWatchlistDialog({
 										</button>
 									))}
 								</div>
-								<p className="text-xs text-muted-foreground">
+								<p className="text-muted-foreground text-xs">
 									{content.watchlists.categoriesDescription}
 								</p>
 							</div>
@@ -266,9 +266,9 @@ export function CreateWatchlistDialog({
 							>
 								{content.watchlists.coverImage}
 							</label>
-							<div className="flex items-center gap-4">
+							<div className="mt-2 flex items-center gap-4">
 								{imagePreview ? (
-									<div className="relative h-24 w-24 overflow-hidden rounded-md border border-border">
+									<div className="border-border relative h-24 w-24 overflow-hidden rounded-md border">
 										<img
 											src={imagePreview}
 											alt="Preview"
@@ -280,7 +280,7 @@ export function CreateWatchlistDialog({
 												setImageFile(null);
 												setImagePreview(null);
 											}}
-											className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+											className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
 										>
 											<X className="h-3 w-3" />
 										</button>
@@ -290,9 +290,9 @@ export function CreateWatchlistDialog({
 										type="button"
 										onClick={() => fileInputRef.current?.click()}
 										disabled={loading}
-										className="flex h-24 w-24 items-center justify-center rounded-md border border-dashed border-border bg-muted/50 hover:bg-muted disabled:opacity-50"
+										className="border-border bg-muted/50 hover:bg-muted flex h-24 w-24 items-center justify-center rounded-md border border-dashed disabled:opacity-50"
 									>
-										<ImageIcon className="h-6 w-6 text-muted-foreground" />
+										<ImageIcon className="text-muted-foreground h-6 w-6" />
 									</button>
 								)}
 								<div className="flex-1">
@@ -308,7 +308,7 @@ export function CreateWatchlistDialog({
 											? content.watchlists.changeImage
 											: content.watchlists.uploadImage}
 									</Button>
-									<p className="mt-1 text-xs text-muted-foreground">
+									<p className="text-muted-foreground mt-1 text-xs">
 										{content.watchlists.imageUploadHint}
 									</p>
 								</div>
@@ -348,7 +348,7 @@ export function CreateWatchlistDialog({
 						</div>
 					</form>
 
-					<DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
+					<DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
 						<X className="h-4 w-4" />
 						<span className="sr-only">Close</span>
 					</DialogPrimitive.Close>

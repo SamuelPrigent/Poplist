@@ -1,6 +1,90 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "@toolwind/corner-shape";
+
+@theme {
+	--color-border: hsl(217.2 32.6% 17.5%);
+	--color-input: hsl(217.2 32.6% 17.5%);
+	--color-ring: hsl(212.7 26.8% 83.9%);
+	--color-background: hsl(222.2 84% 4.9%);
+	--color-foreground: hsl(210 40% 98%);
+
+	--color-primary: hsl(210 40% 98%);
+	--color-primary-foreground: hsl(222.2 47.4% 11.2%);
+
+	--color-secondary: hsl(217.2 32.6% 17.5%);
+	--color-secondary-foreground: hsl(210 40% 98%);
+
+	--color-destructive: hsl(0 62.8% 30.6%);
+	--color-destructive-foreground: hsl(210 40% 98%);
+
+	--color-muted: hsl(217.2 32.6% 17.5%);
+	--color-muted-foreground: hsl(215 20.2% 65.1%);
+
+	--color-accent: hsl(217.2 32.6% 17.5%);
+	--color-accent-foreground: hsl(210 40% 98%);
+
+	--color-popover: hsl(222.2 84% 4.9%);
+	--color-popover-foreground: hsl(210 40% 98%);
+
+	--color-card: hsl(222.2 84% 4.9%);
+	--color-card-foreground: hsl(210 40% 98%);
+
+	--radius-lg: 0.5rem;
+	--radius-md: calc(0.5rem - 2px);
+	--radius-sm: calc(0.5rem - 4px);
+
+	--animate-accordion-down: accordion-down 0.2s ease-out;
+	--animate-accordion-up: accordion-up 0.2s ease-out;
+	--animate-slide-right: slide-right 60s linear infinite;
+	--animate-slide-left: slide-left 60s linear infinite;
+	--animate-fade-in: fade-in 0.2s ease-out;
+
+	@keyframes accordion-down {
+		from {
+			height: 0;
+		}
+		to {
+			height: var(--radix-accordion-content-height);
+		}
+	}
+
+	@keyframes accordion-up {
+		from {
+			height: var(--radix-accordion-content-height);
+		}
+		to {
+			height: 0;
+		}
+	}
+
+	@keyframes slide-right {
+		0% {
+			transform: translateX(0);
+		}
+		100% {
+			transform: translateX(-50%);
+		}
+	}
+
+	@keyframes slide-left {
+		0% {
+			transform: translateX(-50%);
+		}
+		100% {
+			transform: translateX(0);
+		}
+	}
+
+	@keyframes fade-in {
+		0% {
+			opacity: 0;
+		}
+		100% {
+			opacity: 1;
+		}
+	}
+}
 
 @layer base {
 	:root {
@@ -52,18 +136,18 @@
 	button:focus-visible,
 	a:focus-visible,
 	[role="button"]:focus-visible {
-		@apply outline outline-2 outline-white outline-offset-2 transition-all duration-150;
+		@apply outline-2 outline-offset-2 outline-white transition-all duration-150;
 	}
 
 	/* Inputs and textareas get border change (no outline) */
 	input:focus,
 	textarea:focus,
 	select:focus {
-		@apply border-white shadow-[0_0_0_1px_white] outline-none transition-all duration-150;
+		@apply border-white shadow-[0_0_0_1px_white] transition-all duration-150 outline-none;
 	}
 
 	/* Checkboxes get outline with offset like buttons */
 	input[type="checkbox"]:focus-visible {
-		@apply outline outline-2 outline-white outline-offset-2 transition-all duration-150;
+		@apply outline-2 outline-offset-2 outline-white transition-all duration-150;
 	}
 }

@@ -63,7 +63,7 @@ export const EditWatchlistDialog = forwardRef<
 		setCategories((prev) =>
 			prev.includes(category)
 				? prev.filter((c) => c !== category)
-				: [...prev, category],
+				: [...prev, category]
 		);
 	};
 
@@ -127,10 +127,10 @@ export const EditWatchlistDialog = forwardRef<
 			if (offline) {
 				// Offline mode: update in localStorage
 				const watchlists = JSON.parse(
-					localStorage.getItem("watchlists") || "[]",
+					localStorage.getItem("watchlists") || "[]"
 				);
 				const index = watchlists.findIndex(
-					(w: Watchlist) => w._id === watchlist._id,
+					(w: Watchlist) => w._id === watchlist._id
 				);
 
 				if (index !== -1) {
@@ -225,7 +225,7 @@ export const EditWatchlistDialog = forwardRef<
 			}
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to update watchlist",
+				err instanceof Error ? err.message : "Failed to update watchlist"
 			);
 		} finally {
 			setLoading(false);
@@ -235,13 +235,13 @@ export const EditWatchlistDialog = forwardRef<
 	return (
 		<DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
 			<DialogPrimitive.Portal>
-				<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-[620px] translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80" />
+				<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-[620px] translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg">
 					<div className="flex flex-col space-y-1.5">
 						<DialogPrimitive.Title className="text-lg font-semibold">
 							{content.watchlists.editWatchlist}
 						</DialogPrimitive.Title>
-						<DialogPrimitive.Description className="text-sm text-muted-foreground">
+						<DialogPrimitive.Description className="text-muted-foreground text-sm">
 							{content.watchlists.editWatchlistDescription}
 						</DialogPrimitive.Description>
 					</div>
@@ -253,7 +253,7 @@ export const EditWatchlistDialog = forwardRef<
 							<div className="flex justify-center md:block">
 								<button
 									type="button"
-									className="group relative aspect-square w-48 cursor-pointer overflow-hidden rounded-lg border border-border"
+									className="group border-border relative aspect-square w-48 cursor-pointer overflow-hidden rounded-lg border"
 									onClick={() => fileInputRef.current?.click()}
 								>
 									{imagePreview ? (
@@ -280,15 +280,15 @@ export const EditWatchlistDialog = forwardRef<
 													setImageFile(null);
 													setImagePreview(null);
 												}}
-												className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity hover:bg-black/80 group-hover:opacity-100"
+												className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
 											>
 												<X className="h-4 w-4" />
 											</button>
 										</>
 									) : (
-										<div className="flex h-full w-full flex-col items-center justify-center bg-muted/50 transition-colors group-hover:bg-muted">
-											<ImageIcon className="h-12 w-12 text-muted-foreground" />
-											<span className="mt-2 text-sm text-muted-foreground">
+										<div className="bg-muted/50 group-hover:bg-muted flex h-full w-full flex-col items-center justify-center transition-colors">
+											<ImageIcon className="text-muted-foreground h-12 w-12" />
+											<span className="text-muted-foreground mt-2 text-sm">
 												{/* {content.watchlists.selectPhoto ||
                           "Sélectionner une photo"} */}
 												{"Sélectionner une photo"}
@@ -337,7 +337,7 @@ export const EditWatchlistDialog = forwardRef<
 										placeholder={content.watchlists.descriptionPlaceholder}
 										maxLength={500}
 										disabled={loading}
-										className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 md:flex-1"
+										className="border-input bg-background placeholder:text-muted-foreground w-full resize-none rounded-md border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 md:flex-1"
 									/>
 								</div>
 							</div>
@@ -351,11 +351,11 @@ export const EditWatchlistDialog = forwardRef<
 								checked={isPublic}
 								onChange={(e) => setIsPublic(e.target.checked)}
 								disabled={loading}
-								className="h-4 w-4 border-input bg-background text-primary disabled:cursor-not-allowed disabled:opacity-50"
+								className="border-input bg-background text-primary h-4 w-4 disabled:cursor-not-allowed disabled:opacity-50"
 							/>
 							<label
 								htmlFor="isPublic"
-								className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+								className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 							>
 								{content.watchlists.makePublic}
 							</label>
@@ -384,7 +384,7 @@ export const EditWatchlistDialog = forwardRef<
 										</button>
 									))}
 								</div>
-								<p className="text-xs text-muted-foreground">
+								<p className="text-muted-foreground text-xs">
 									{content.watchlists.categoriesDescription}
 								</p>
 							</div>
@@ -404,7 +404,7 @@ export const EditWatchlistDialog = forwardRef<
 						)}
 					</form>
 
-					<DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
+					<DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
 						<X className="h-4 w-4" />
 						<span className="sr-only">Close</span>
 					</DialogPrimitive.Close>

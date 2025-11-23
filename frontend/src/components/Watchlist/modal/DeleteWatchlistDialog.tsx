@@ -35,10 +35,10 @@ export function DeleteWatchlistDialog({
 			if (offline) {
 				// Offline mode: delete from localStorage
 				const watchlists = JSON.parse(
-					localStorage.getItem("watchlists") || "[]",
+					localStorage.getItem("watchlists") || "[]"
 				);
 				const filtered = watchlists.filter(
-					(w: Watchlist) => w._id !== watchlist._id,
+					(w: Watchlist) => w._id !== watchlist._id
 				);
 				localStorage.setItem("watchlists", JSON.stringify(filtered));
 
@@ -66,7 +66,7 @@ export function DeleteWatchlistDialog({
 			}
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to delete watchlist",
+				err instanceof Error ? err.message : "Failed to delete watchlist"
 			);
 		} finally {
 			setLoading(false);
@@ -81,8 +81,8 @@ export function DeleteWatchlistDialog({
 	return (
 		<DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
 			<DialogPrimitive.Portal>
-				<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80" />
+				<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg">
 					<div className="flex flex-col space-y-3">
 						<div className="flex items-center gap-3">
 							<div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
@@ -93,10 +93,10 @@ export function DeleteWatchlistDialog({
 							</DialogPrimitive.Title>
 						</div>
 
-						<DialogPrimitive.Description className="text-sm text-muted-foreground">
+						<DialogPrimitive.Description className="text-muted-foreground text-sm">
 							{content.watchlists.deleteWatchlistConfirm.replace(
 								"{name}",
-								watchlist.name,
+								watchlist.name
 							)}
 						</DialogPrimitive.Description>
 
@@ -130,7 +130,7 @@ export function DeleteWatchlistDialog({
 						</Button>
 					</div>
 
-					<DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
+					<DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
 						<X className="h-4 w-4" />
 						<span className="sr-only">Close</span>
 					</DialogPrimitive.Close>

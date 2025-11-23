@@ -49,7 +49,7 @@ export function ItemDetailsModal({
 				const { details: data } = await watchlistAPI.getItemDetails(
 					tmdbId,
 					type,
-					languageCode,
+					languageCode
 				);
 				setDetails(data);
 			} catch (err) {
@@ -143,8 +143,8 @@ export function ItemDetailsModal({
 	return (
 		<DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
 			<DialogPrimitive.Portal>
-				<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 max-h-[90vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border border-border bg-background shadow-lg duration-200 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
+				<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 max-h-[90vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none">
 					{/* Hidden Title and Description for accessibility - always rendered */}
 					<DialogPrimitive.Title className="sr-only">
 						{details?.title || content.watchlists.itemDetails.mediaDetails}
@@ -175,7 +175,7 @@ export function ItemDetailsModal({
 								{details.backdropUrl ? (
 									<>
 										{/* Image */}
-										<div className="absolute inset-x-0 top-0 z-0 h-[17rem]">
+										<div className="absolute inset-x-0 top-0 z-0 h-68">
 											<img
 												src={details.backdropUrl}
 												alt={details.title}
@@ -183,24 +183,24 @@ export function ItemDetailsModal({
 											/>
 										</div>
 										{/* Gradient overlay - independent and extended */}
-										<div className="absolute inset-x-0 top-0 z-[1] h-[calc(17rem+2px)] bg-gradient-to-b from-black/90 via-black/80 via-80% to-background" />
+										<div className="to-background absolute inset-x-0 top-0 z-1 h-[calc(17rem+2px)] bg-linear-to-b from-black/90 via-black/80 via-80%" />
 									</>
 								) : (
-									<div className="absolute inset-0 z-0 bg-muted" />
+									<div className="bg-muted absolute inset-0 z-0" />
 								)}
 
 								{/* Close Button - Fixed position */}
-								<DialogPrimitive.Close className="absolute right-4 top-4 z-20 rounded-full bg-black/60 p-2 text-white opacity-70 transition-opacity hover:opacity-100">
+								<DialogPrimitive.Close className="absolute top-4 right-4 z-20 cursor-pointer rounded-full bg-black/60 p-2 text-white opacity-70 transition-opacity hover:opacity-100">
 									<X className="h-5 w-5" />
 									<span className="sr-only">Close</span>
 								</DialogPrimitive.Close>
 
 								{/* Content over backdrop */}
-								<div className="relative z-10 min-h-[70vh] px-6 pb-6 pt-6">
+								<div className="relative z-10 min-h-[70vh] px-6 pt-6 pb-6">
 									<div className="flex gap-5">
 										{/* Poster */}
-										<div className="flex-shrink-0">
-											<div className="h-48 w-32 overflow-hidden rounded-lg bg-muted">
+										<div className="shrink-0">
+											<div className="bg-muted h-48 w-32 overflow-hidden rounded-lg">
 												{details.posterUrl ? (
 													<img
 														src={details.posterUrl}
@@ -208,7 +208,7 @@ export function ItemDetailsModal({
 														className="h-full w-full object-cover"
 													/>
 												) : (
-													<div className="flex h-full items-center justify-center text-muted-foreground">
+													<div className="text-muted-foreground flex h-full items-center justify-center">
 														{content.watchlists.itemDetails.notAvailable}
 													</div>
 												)}
@@ -267,7 +267,7 @@ export function ItemDetailsModal({
 													{details.genres.map((genre) => (
 														<span
 															key={genre}
-															className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs"
+															className="border-border bg-muted/50 rounded-full border px-3 py-1 text-xs"
 														>
 															{genre}
 														</span>
@@ -283,7 +283,7 @@ export function ItemDetailsModal({
 													</h3>
 													<p
 														ref={overviewRef}
-														className={`text-sm leading-relaxed text-muted-foreground ${!isOverviewExpanded ? "line-clamp-5" : ""}`}
+														className={`text-muted-foreground text-sm leading-relaxed ${!isOverviewExpanded ? "line-clamp-5" : ""}`}
 													>
 														{details.overview}
 													</p>
@@ -291,7 +291,7 @@ export function ItemDetailsModal({
 														<button
 															type="button"
 															onClick={() => setIsOverviewExpanded(true)}
-															className="mt-2 text-sm font-bold text-muted-foreground underline transition-colors hover:text-foreground"
+															className="text-muted-foreground hover:text-foreground mt-2 text-sm font-bold underline transition-colors"
 														>
 															{content.watchlists.itemDetails.seeMore}
 														</button>
@@ -308,7 +308,7 @@ export function ItemDetailsModal({
 															: content.watchlists.itemDetails.creator}
 														:
 													</span>{" "}
-													<span className="text-sm text-muted-foreground">
+													<span className="text-muted-foreground text-sm">
 														{details.director}
 													</span>
 												</div>
@@ -341,7 +341,7 @@ export function ItemDetailsModal({
 														key={`${actor.name}-${actor.character}`}
 														className="flex gap-3"
 													>
-														<div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
+														<div className="bg-muted h-16 w-16 shrink-0 overflow-hidden rounded-lg">
 															{actor.profileUrl ? (
 																<img
 																	src={actor.profileUrl}
@@ -349,7 +349,7 @@ export function ItemDetailsModal({
 																	className="h-full w-full object-cover"
 																/>
 															) : (
-																<div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+																<div className="text-muted-foreground flex h-full items-center justify-center text-xs">
 																	{content.watchlists.itemDetails.notAvailable}
 																</div>
 															)}
@@ -358,7 +358,7 @@ export function ItemDetailsModal({
 															<div className="text-sm font-medium">
 																{actor.name}
 															</div>
-															<div className="text-xs text-muted-foreground/80">
+															<div className="text-muted-foreground/80 text-xs">
 																{localizeCharacter(actor.character)}
 															</div>
 														</div>

@@ -39,7 +39,7 @@ export function Header() {
 
 	return (
 		<>
-			<header className="border-b border-border bg-background">
+			<header className="border-border bg-background border-b">
 				<div className="container mx-auto flex h-16 items-center justify-between px-4">
 					<div className="flex items-center gap-6">
 						<div className="flex items-center gap-2">
@@ -50,13 +50,13 @@ export function Header() {
 						</div>
 						<Link
 							to="/home"
-							className="rounded text-sm font-medium text-muted-foreground transition-colors hover:text-white"
+							className="text-muted-foreground rounded text-sm font-medium transition-colors hover:text-white"
 						>
 							{content.header.home}
 						</Link>
 						<Link
 							to="/explore"
-							className="rounded text-sm font-medium text-muted-foreground transition-colors hover:text-white"
+							className="text-muted-foreground rounded text-sm font-medium transition-colors hover:text-white"
 						>
 							{content.header.explore}
 						</Link>
@@ -65,7 +65,7 @@ export function Header() {
 					<div className="flex items-center gap-4">
 						<Link
 							to="/watchlists"
-							className="inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors"
 						>
 							<Bookmark
 								className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}
@@ -77,9 +77,9 @@ export function Header() {
 								<button
 									type="button"
 									onClick={() => navigate("/account")}
-									className="flex items-center gap-2 rounded-full bg-muted/50 px-4 py-1.5 transition-colors hover:bg-muted"
+									className="bg-muted/50 hover:bg-muted flex cursor-pointer items-center gap-2 rounded-full px-4 py-1.5 transition-colors"
 								>
-									<div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full bg-muted">
+									<div className="bg-muted flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
 										{user?.avatarUrl ? (
 											<img
 												src={user.avatarUrl}
@@ -98,10 +98,19 @@ export function Header() {
 							</div>
 						) : (
 							<>
-								<Button variant="outline" onClick={openLogin}>
+								<Button
+									className="corner-squircle rounded-lg"
+									variant="outline"
+									onClick={openLogin}
+								>
 									{content.header.login}
 								</Button>
-								<Button onClick={openSignup}>{content.header.signup}</Button>
+								<Button
+									className="corner-squircle rounded-lg"
+									onClick={openSignup}
+								>
+									{content.header.signup}
+								</Button>
 							</>
 						)}
 					</div>

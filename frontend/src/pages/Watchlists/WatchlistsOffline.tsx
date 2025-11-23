@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Edit, Film, MoreVertical, Trash2 } from "lucide-react";
+import { Edit, Film, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { OfflineIcon } from "@/components/icons/OfflineIcon";
@@ -101,7 +101,7 @@ function WatchlistCardOffline({
 			<button
 				type="button"
 				onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
-				className="relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted"
+				className="bg-muted relative mb-3 aspect-square w-full overflow-hidden rounded-md"
 			>
 				{thumbnailUrl ? (
 					<img
@@ -113,7 +113,7 @@ function WatchlistCardOffline({
 					/>
 				) : (
 					<div className="flex h-full w-full items-center justify-center">
-						<Film className="h-12 w-12 text-muted-foreground" />
+						<Film className="text-muted-foreground h-12 w-12" />
 					</div>
 				)}
 			</button>
@@ -139,7 +139,7 @@ function WatchlistCardOffline({
 				</button>
 			</div>
 
-			<div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+			<div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
 				<button
 					type="button"
 					onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
@@ -166,7 +166,7 @@ function WatchlistCardOffline({
 						<button
 							type="button"
 							onClick={(e) => e.stopPropagation()}
-							className="flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
+							className="hover:bg-muted flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
 						>
 							<MoreVertical className="h-4 w-4" />
 						</button>
@@ -174,14 +174,14 @@ function WatchlistCardOffline({
 
 					<DropdownMenu.Portal>
 						<DropdownMenu.Content
-							className="z-50 min-w-[180px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md"
+							className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1 shadow-md"
 							sideOffset={5}
 							onKeyDown={handleDropdownKeyDown}
 						>
 							{/* Edit */}
 							<DropdownMenu.Item
 								ref={editButtonRef}
-								className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+								className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
 								onSelect={() => {
 									onEdit(watchlist);
 								}}
@@ -193,7 +193,7 @@ function WatchlistCardOffline({
 							{/* Delete */}
 							<DropdownMenu.Item
 								ref={deleteButtonRef}
-								className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
+								className="relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm text-red-500 transition-colors outline-none select-none hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
 								onSelect={() => {
 									onDelete(watchlist);
 								}}
@@ -263,7 +263,7 @@ export function WatchlistsOffline() {
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [selectedWatchlist, setSelectedWatchlist] = useState<Watchlist | null>(
-		null,
+		null
 	);
 
 	// Setup drag sensors
@@ -281,7 +281,7 @@ export function WatchlistsOffline() {
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
-		}),
+		})
 	);
 
 	const fetchWatchlists = useCallback(() => {
@@ -290,7 +290,7 @@ export function WatchlistsOffline() {
 			const localWatchlists = getLocalWatchlists();
 			// Only show watchlists created locally (ownerId === "offline")
 			let ownedWatchlists = localWatchlists.filter(
-				(w) => w.ownerId === "offline",
+				(w) => w.ownerId === "offline"
 			);
 
 			// Sort by order if it exists, otherwise by creation date (oldest first)
@@ -383,13 +383,17 @@ export function WatchlistsOffline() {
 
 	return (
 		<div className="container mx-auto mb-32 px-4 py-8">
-			<div className="mb-3 mt-9 flex items-center justify-between">
+			<div className="mt-9 mb-3 flex items-center justify-between">
 				<div className="flex items-center gap-4">
 					<h1 className="text-3xl font-bold text-white">
 						{content.watchlists.title}
 					</h1>
 				</div>
-				<Button onClick={() => setDialogOpen(true)}>
+				<Button
+					className="corner-squircle rounded-2xl"
+					onClick={() => setDialogOpen(true)}
+				>
+					<Plus className="h-4 w-4" />
 					{content.watchlists.createWatchlist}
 				</Button>
 			</div>
@@ -433,7 +437,7 @@ export function WatchlistsOffline() {
 				<Empty>
 					<EmptyHeader>
 						<EmptyMedia variant="icon">
-							<Film className="h-8 w-8 text-muted-foreground" />
+							<Film className="text-muted-foreground h-8 w-8" />
 						</EmptyMedia>
 						<EmptyTitle>{content.watchlists.noWatchlists}</EmptyTitle>
 						<EmptyDescription>

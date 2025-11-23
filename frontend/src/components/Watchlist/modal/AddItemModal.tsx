@@ -88,7 +88,7 @@ export function AddItemModal({
 				setLoading(false);
 			}
 		},
-		[languageCode, region],
+		[languageCode, region]
 	);
 
 	const onSearchChange = (value: string) => {
@@ -131,7 +131,7 @@ export function AddItemModal({
 
 				const watchlists: Watchlist[] = JSON.parse(localWatchlists);
 				const watchlistIndex = watchlists.findIndex(
-					(w) => w._id === watchlist._id,
+					(w) => w._id === watchlist._id
 				);
 
 				if (watchlistIndex === -1) return;
@@ -199,20 +199,20 @@ export function AddItemModal({
 	return (
 		<DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
 			<DialogPrimitive.Portal>
-				<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-[1000px] translate-x-[-50%] translate-y-[-50%] rounded-lg border border-border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
+				<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-[1000px] translate-x-[-50%] translate-y-[-50%] rounded-lg border shadow-lg duration-200">
 					<div className="flex max-h-[80vh] flex-col">
 						{/* Header */}
-						<div className="flex items-center justify-between border-b border-border p-6">
+						<div className="border-border flex items-center justify-between border-b p-6">
 							<div>
 								<DialogPrimitive.Title className="text-xl font-semibold">
 									{content.watchlists.addItem}
 								</DialogPrimitive.Title>
-								<DialogPrimitive.Description className="mt-1 text-sm text-muted-foreground">
+								<DialogPrimitive.Description className="text-muted-foreground mt-1 text-sm">
 									{content.watchlists.searchMoviesAndSeries}
 								</DialogPrimitive.Description>
 							</div>
-							<DialogPrimitive.Close className="rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
+							<DialogPrimitive.Close className="cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
 								<X className="h-5 w-5" />
 								<span className="sr-only">Close</span>
 							</DialogPrimitive.Close>
@@ -221,7 +221,7 @@ export function AddItemModal({
 						{/* Search Bar */}
 						<div className="p-6 pb-4">
 							<div className="relative">
-								<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+								<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
 								<Input
 									type="text"
 									placeholder={content.watchlists.searchPlaceholder}
@@ -241,7 +241,7 @@ export function AddItemModal({
 						>
 							{loading && (
 								<div className="flex items-center justify-center py-12">
-									<div className="text-sm text-muted-foreground">
+									<div className="text-muted-foreground text-sm">
 										{content.watchlists.searching}
 									</div>
 								</div>
@@ -249,7 +249,7 @@ export function AddItemModal({
 
 							{!loading && searchQuery && searchResults.length === 0 && (
 								<div className="flex items-center justify-center py-12">
-									<div className="text-sm text-muted-foreground">
+									<div className="text-muted-foreground text-sm">
 										{content.watchlists.noResults}
 									</div>
 								</div>
@@ -257,7 +257,7 @@ export function AddItemModal({
 
 							{!loading && !searchQuery && (
 								<div className="flex items-center justify-center py-12">
-									<div className="text-sm text-muted-foreground">
+									<div className="text-muted-foreground text-sm">
 										{content.watchlists.startSearching}
 									</div>
 								</div>
@@ -292,11 +292,11 @@ export function AddItemModal({
 												<div
 													className={cn(
 														"group flex items-center gap-4 rounded-md p-3 transition-colors",
-														!isDisabled && "hover:bg-muted/50",
+														!isDisabled && "hover:bg-muted/50"
 													)}
 												>
 													{/* Poster */}
-													<div className="h-24 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+													<div className="bg-muted h-24 w-16 shrink-0 overflow-hidden rounded-md">
 														{posterUrl ? (
 															<img
 																src={posterUrl}
@@ -305,7 +305,7 @@ export function AddItemModal({
 																className="h-full w-full object-cover"
 															/>
 														) : (
-															<div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+															<div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
 																N/A
 															</div>
 														)}
@@ -317,8 +317,8 @@ export function AddItemModal({
 															{item.title || item.name}
 														</h3>
 
-														<div className="flex items-center gap-2 text-sm text-muted-foreground">
-															<span className="rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium">
+														<div className="text-muted-foreground flex items-center gap-2 text-sm">
+															<span className="bg-muted rounded-sm px-1.5 py-0.5 text-xs font-medium">
 																{getMediaType(item.media_type)}
 															</span>
 															{year && (
@@ -340,7 +340,7 @@ export function AddItemModal({
 													</div>
 
 													{/* Add Button */}
-													<div className="flex-shrink-0">
+													<div className="shrink-0">
 														<Button
 															variant="outline"
 															onClick={() => handleAddItem(item)}
@@ -349,7 +349,7 @@ export function AddItemModal({
 																"transition-transform",
 																isDisabled
 																	? "w-[84.04px] border-none bg-green-800/35 p-0 text-[#0bd42c]"
-																	: "",
+																	: ""
 															)}
 														>
 															{isDisabled

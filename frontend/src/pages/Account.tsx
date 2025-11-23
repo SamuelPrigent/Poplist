@@ -30,7 +30,7 @@ export function Account() {
 	const [username, setUsername] = useState(user?.username || "");
 	const [usernameLoading, setUsernameLoading] = useState(false);
 	const [usernameCheckError, setUsernameCheckError] = useState<string | null>(
-		null,
+		null
 	);
 	const [usernameChecking, setUsernameChecking] = useState(false);
 
@@ -61,14 +61,14 @@ export function Account() {
 			// Validate format first
 			if (usernameToCheck.length < 3 || usernameToCheck.length > 20) {
 				setUsernameCheckError(
-					content.profile.usernameSection.validation.lengthError,
+					content.profile.usernameSection.validation.lengthError
 				);
 				return;
 			}
 
 			if (!/^[a-zA-Z0-9_]+$/.test(usernameToCheck)) {
 				setUsernameCheckError(
-					content.profile.usernameSection.validation.formatError,
+					content.profile.usernameSection.validation.formatError
 				);
 				return;
 			}
@@ -76,13 +76,13 @@ export function Account() {
 			setUsernameChecking(true);
 			try {
 				const response = await fetch(
-					`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/auth/username/check/${usernameToCheck}`,
+					`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/auth/username/check/${usernameToCheck}`
 				);
 				const data = await response.json();
 
 				if (!data.available) {
 					setUsernameCheckError(
-						content.profile.usernameSection.validation.alreadyTaken,
+						content.profile.usernameSection.validation.alreadyTaken
 					);
 				} else {
 					setUsernameCheckError(null);
@@ -94,7 +94,7 @@ export function Account() {
 				setUsernameChecking(false);
 			}
 		},
-		[user?.username, content],
+		[user?.username, content]
 	);
 
 	// Debounced username check
@@ -288,11 +288,11 @@ export function Account() {
 	};
 
 	return (
-		<div className="container mx-auto mb-28 mt-6 px-4 py-8">
+		<div className="container mx-auto mt-6 mb-28 px-4 py-8">
 			<div className="mx-auto max-w-2xl space-y-6">
 				<div>
 					<h1 className="text-3xl font-bold">{content.profile.title}</h1>
-					<p className="mt-2 text-muted-foreground">
+					<p className="text-muted-foreground mt-2">
 						{content.profile.subtitle}
 					</p>
 				</div>
@@ -305,7 +305,7 @@ export function Account() {
 								<h3 className="font-semibold">
 									{content.profile.avatarSection.title}
 								</h3>
-								<p className="mt-1 text-sm text-muted-foreground">
+								<p className="text-muted-foreground mt-1 text-sm">
 									{content.profile.avatarSection.description}
 								</p>
 							</div>
@@ -320,8 +320,8 @@ export function Account() {
 											className="h-24 w-24 rounded-full object-cover"
 										/>
 									) : (
-										<div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-											<User className="h-12 w-12 text-muted-foreground" />
+										<div className="bg-muted flex h-24 w-24 items-center justify-center rounded-full">
+											<User className="text-muted-foreground h-12 w-12" />
 										</div>
 									)}
 								</div>
@@ -383,7 +383,7 @@ export function Account() {
 											</Button>
 										)}
 									</div>
-									<p className="text-xs text-muted-foreground">
+									<p className="text-muted-foreground text-xs">
 										{content.profile.avatarSection.hint}
 									</p>
 								</div>
@@ -415,9 +415,9 @@ export function Account() {
 										className={usernameCheckError ? "border-red-500" : ""}
 									/>
 									{username && username !== user?.username && (
-										<div className="absolute right-3 top-1/2 -translate-y-1/2">
+										<div className="absolute top-1/2 right-3 -translate-y-1/2">
 											{usernameChecking ? (
-												<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+												<Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
 											) : usernameCheckError ? (
 												<X className="h-4 w-4 text-red-500" />
 											) : (
@@ -525,7 +525,7 @@ export function Account() {
 								<h3 className="font-semibold text-red-500">
 									{content.profile.deleteSection.title}
 								</h3>
-								<p className="mt-1 text-sm text-muted-foreground">
+								<p className="text-muted-foreground mt-1 text-sm">
 									{content.profile.deleteSection.description}
 								</p>
 							</div>
@@ -546,8 +546,8 @@ export function Account() {
 				onOpenChange={setDeleteDialogOpen}
 			>
 				<DialogPrimitive.Portal>
-					<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-					<DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+					<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80" />
+					<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg">
 						<div className="flex flex-col space-y-3">
 							<div className="flex items-center gap-3">
 								<div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
@@ -558,7 +558,7 @@ export function Account() {
 								</DialogPrimitive.Title>
 							</div>
 
-							<DialogPrimitive.Description className="text-sm text-muted-foreground">
+							<DialogPrimitive.Description className="text-muted-foreground text-sm">
 								{content.profile.deleteSection.dialogDescription}
 							</DialogPrimitive.Description>
 
@@ -607,7 +607,7 @@ export function Account() {
 							</Button>
 						</div>
 
-						<DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
+						<DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
 							<X className="h-4 w-4" />
 							<span className="sr-only">Close</span>
 						</DialogPrimitive.Close>

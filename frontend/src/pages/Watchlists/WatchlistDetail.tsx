@@ -107,14 +107,14 @@ export function WatchlistDetail() {
 		return (
 			<div className="container mx-auto px-4 py-8">
 				<div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
-					<div className="rounded-full bg-muted p-6">
+					<div className="bg-muted rounded-full p-6">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
 							viewBox="0 0 24 24"
 							strokeWidth={1.5}
 							stroke="currentColor"
-							className="h-16 w-16 text-muted-foreground"
+							className="text-muted-foreground h-16 w-16"
 						>
 							<title>Watchlist not found icon</title>
 							<path
@@ -126,7 +126,7 @@ export function WatchlistDetail() {
 					</div>
 					<div className="text-center">
 						<h1 className="text-2xl font-bold">Watchlist introuvable</h1>
-						<p className="mt-2 text-muted-foreground">
+						<p className="text-muted-foreground mt-2">
 							Cette watchlist n'existe pas ou a été supprimée.
 						</p>
 					</div>
@@ -233,12 +233,15 @@ export function WatchlistDetail() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background">
+		<div className="from-background via-background/95 to-background min-h-screen bg-linear-to-b">
 			<WatchlistHeader
 				watchlist={watchlist}
 				actionButton={
 					isOwner || isCollaborator ? (
-						<Button onClick={() => setAddModalOpen(true)}>
+						<Button
+							className="corner-squircle cursor-pointer rounded-2xl"
+							onClick={() => setAddModalOpen(true)}
+						>
 							<Plus className="h-4 w-4" />
 							{content.watchlists.addItem}
 						</Button>
@@ -260,7 +263,7 @@ export function WatchlistDetail() {
 							<DropdownMenu.Trigger asChild>
 								<button
 									type="button"
-									className="select-none rounded p-3 transition-all hover:scale-105"
+									className="rounded p-3 transition-all select-none hover:scale-105"
 								>
 									<img
 										src={pointIcon}
@@ -271,18 +274,18 @@ export function WatchlistDetail() {
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Portal>
 								<DropdownMenu.Content
-									className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-background p-1 shadow-md"
+									className="border-border bg-background z-50 min-w-[200px] overflow-hidden rounded-md border p-1 shadow-md"
 									sideOffset={5}
 								>
 									<DropdownMenu.Item
-										className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+										className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors outline-none"
 										onClick={() => setEditModalOpen(true)}
 									>
 										<Pencil className="h-4 w-4" />
 										<span>{content.watchlists.editWatchlist}</span>
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
-										className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
+										className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-500 transition-colors outline-none hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
 										onClick={() => setDeleteDialogOpen(true)}
 									>
 										<Trash2 className="h-4 w-4" />

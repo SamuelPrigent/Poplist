@@ -16,7 +16,7 @@ import {
 	useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Film } from "lucide-react";
+import { Film, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,7 +105,7 @@ export function Watchlists() {
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [selectedWatchlist, setSelectedWatchlist] = useState<Watchlist | null>(
-		null,
+		null
 	);
 
 	// Setup drag sensors
@@ -123,7 +123,7 @@ export function Watchlists() {
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
-		}),
+		})
 	);
 
 	const fetchWatchlists = useCallback(async () => {
@@ -181,7 +181,7 @@ export function Watchlists() {
 			// After fetch, reorder to put new watchlist first
 			setWatchlists((currentWatchlists) => {
 				const withoutNew = currentWatchlists.filter(
-					(w) => w._id !== newWatchlist._id,
+					(w) => w._id !== newWatchlist._id
 				);
 				const reordered = [newWatchlist, ...withoutNew];
 
@@ -245,7 +245,7 @@ export function Watchlists() {
 	return (
 		<div className="container mx-auto mb-32 px-4 py-8">
 			{/* Title */}
-			<div className="mb-6 mt-5">
+			<div className="mt-5 mb-6">
 				<h1 className="mb-1 text-3xl font-bold text-white">
 					{content.watchlists.title}
 				</h1>
@@ -260,7 +260,7 @@ export function Watchlists() {
 					<button
 						type="button"
 						onClick={toggleOwned}
-						className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
 							showOwned
 								? "bg-primary text-primary-foreground"
 								: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -271,7 +271,7 @@ export function Watchlists() {
 					<button
 						type="button"
 						onClick={toggleSaved}
-						className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
 							showSaved
 								? "bg-primary text-primary-foreground"
 								: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -281,8 +281,11 @@ export function Watchlists() {
 					</button>
 				</div>
 
-				<Button onClick={() => setDialogOpen(true)}>
-					{/* <Plus className="h-4 w-4" /> */}
+				<Button
+					className="corner-squircle rounded-2xl"
+					onClick={() => setDialogOpen(true)}
+				>
+					<Plus className="h-4 w-4" />
 					{content.watchlists.createWatchlist}
 				</Button>
 			</div>
@@ -314,7 +317,7 @@ export function Watchlists() {
 				<Empty>
 					<EmptyHeader>
 						<EmptyMedia variant="icon">
-							<Film className="h-8 w-8 text-muted-foreground" />
+							<Film className="text-muted-foreground h-8 w-8" />
 						</EmptyMedia>
 						<EmptyTitle>
 							{watchlists.length === 0
