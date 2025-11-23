@@ -305,12 +305,15 @@ export async function createWatchlist(
 			items: data.items,
 		});
 
-		// Add watchlist to owner's watchlistsOrder
-		const owner = await User.findById(userId);
-		if (owner) {
-			owner.watchlistsOrder.push(watchlist._id as Types.ObjectId);
-			await owner.save();
-		}
+		// Add watchlist to the beginning of owner's watchlistsOrder (atomic operation)
+		await User.findByIdAndUpdate(userId, {
+			$push: {
+				watchlistsOrder: {
+					$each: [watchlist._id],
+					$position: 0,
+				},
+			},
+		});
 
 		// Regenerate thumbnail in background if watchlist has items (don't wait for it)
 		if (watchlist.items.length > 0) {
@@ -1653,6 +1656,16 @@ export async function duplicateWatchlist(
 			items: originalWatchlist.items,
 			thumbnailUrl: originalWatchlist.thumbnailUrl, // Temporary - use original's thumbnail for instant display
 			// Don't copy imageUrl - custom images should not be duplicated
+		});
+
+		// Add watchlist to the beginning of owner's watchlistsOrder (atomic operation)
+		await User.findByIdAndUpdate(userId, {
+			$push: {
+				watchlistsOrder: {
+					$each: [duplicatedWatchlist._id],
+					$position: 0,
+				},
+			},
 		});
 
 		// Regenerate fresh thumbnail asynchronously (will replace the temporary one)

@@ -298,7 +298,7 @@ export function WatchlistHeader({
 												setTimeout(() => setShowSaveAnimation(false), 200);
 												await onSave();
 											}}
-											className="group relative rounded p-3 transition-all hover:scale-105"
+											className="group relative cursor-pointer rounded p-3 transition-all hover:scale-105"
 											title={
 												isSaved
 													? content.watchlists.tooltips.unsave
@@ -346,7 +346,7 @@ export function WatchlistHeader({
 										<button
 											type="button"
 											onClick={onDuplicate}
-											className="group rounded p-3 transition-all hover:scale-105"
+											className="group cursor-pointer rounded p-3 transition-all hover:scale-105"
 											title={content.watchlists.tooltips.duplicate}
 										>
 											<Copy className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
@@ -356,7 +356,7 @@ export function WatchlistHeader({
 										<button
 											type="button"
 											onClick={onShare}
-											className="group rounded p-3 transition-all hover:scale-105"
+											className="group cursor-pointer rounded p-3 transition-all hover:scale-105"
 											title={content.watchlists.tooltips.share}
 										>
 											<img

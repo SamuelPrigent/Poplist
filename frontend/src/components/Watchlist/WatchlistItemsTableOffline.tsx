@@ -165,7 +165,6 @@ function DraggableRow({
 				"group select-none transition-colors duration-150",
 				!isLastRow && "border-b border-border",
 				hoveredRow === item.tmdbId && "bg-muted/30",
-				!isDragDisabled && "cursor-grab active:cursor-grabbing",
 			)}
 		>
 			{row.getVisibleCells().map((cell, cellIndex: number) => {
@@ -314,7 +313,7 @@ function DraggableRow({
 										<button
 											type="button"
 											className={cn(
-												"flex h-8 w-8 items-center justify-center rounded-md bg-muted/50 transition-opacity hover:bg-muted",
+												"flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-muted/50 transition-opacity hover:bg-muted",
 												hoveredRow === item.tmdbId
 													? "opacity-100"
 													: "opacity-0 group-hover:opacity-100",

@@ -126,24 +126,19 @@ export function Watchlists() {
 		})
 	);
 
-	const fetchWatchlists = useCallback(async () => {
+	const fetchWatchlists = useCallback(async (showLoading = true) => {
 		try {
-			setLoading(true);
+			if (showLoading) {
+				setLoading(true);
+			}
 			const data = await watchlistAPI.getMine();
-			//   console.log(
-			//     "📦 [Watchlists.tsx] Watchlists received from backend:",
-			//     data.watchlists.map((w) => ({
-			//       name: w.name,
-			//       isOwner: w.isOwner,
-			//       isCollaborator: w.isCollaborator,
-			//       isSaved: w.isSaved,
-			//     })),
-			//   );
 			setWatchlists(data.watchlists);
 		} catch (error) {
 			console.error("Failed to fetch watchlists:", error);
 		} finally {
-			setLoading(false);
+			if (showLoading) {
+				setLoading(false);
+			}
 		}
 	}, []);
 
@@ -175,26 +170,16 @@ export function Watchlists() {
 
 	const handleCreateSuccess = async (newWatchlist?: Watchlist) => {
 		if (newWatchlist) {
-			// Fetch updated watchlists
-			await fetchWatchlists();
+			// Optimistic update: add new watchlist to the beginning immediately
+			setWatchlists((prev) => [newWatchlist, ...prev]);
 
-			// After fetch, reorder to put new watchlist first
-			setWatchlists((currentWatchlists) => {
-				const withoutNew = currentWatchlists.filter(
-					(w) => w._id !== newWatchlist._id
-				);
-				const reordered = [newWatchlist, ...withoutNew];
-
-				// Persist new order to backend
-				const orderedWatchlistIds = reordered.map((w) => w._id);
-				watchlistAPI.reorderWatchlists(orderedWatchlistIds).catch((error) => {
-					console.error("Failed to reorder watchlists:", error);
-				});
-
-				return reordered;
+			// Fetch in background to sync with server (don't show loading spinner)
+			fetchWatchlists(false).catch((error) => {
+				console.error("Failed to sync watchlists:", error);
 			});
 		} else {
-			fetchWatchlists();
+			// Fallback: full refetch with loading spinner
+			await fetchWatchlists(true);
 		}
 	};
 

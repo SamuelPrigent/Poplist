@@ -272,7 +272,7 @@ export function WatchlistCard({
 							<button
 								type="button"
 								onClick={(e) => e.stopPropagation()}
-								className="ml-auto flex h-6 w-6 items-center justify-center rounded opacity-0 transition-all hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
+								className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
 							>
 								<MoreVertical className="h-4 w-4" />
 							</button>

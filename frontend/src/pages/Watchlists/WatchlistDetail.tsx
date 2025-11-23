@@ -263,7 +263,7 @@ export function WatchlistDetail() {
 							<DropdownMenu.Trigger asChild>
 								<button
 									type="button"
-									className="rounded p-3 transition-all select-none hover:scale-105"
+									className="cursor-pointer rounded p-3 transition-all select-none hover:scale-105"
 								>
 									<img
 										src={pointIcon}
@@ -314,7 +314,7 @@ export function WatchlistDetail() {
 						>
 							<button
 								type="button"
-								className="group p-3 transition-all hover:scale-105"
+								className="group cursor-pointer p-3 transition-all hover:scale-105"
 								title={content.watchlists.tooltips.inviteCollaborator}
 							>
 								<UserPlus className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
@@ -324,7 +324,7 @@ export function WatchlistDetail() {
 						<button
 							type="button"
 							onClick={() => setLeaveDialogOpen(true)}
-							className="group p-3 transition-all hover:scale-105"
+							className="group cursor-pointer p-3 transition-all hover:scale-105"
 							title={
 								content.watchlists.collaborators?.leaveTitle ||
 								"Quitter la watchlist"

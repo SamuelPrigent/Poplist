@@ -343,7 +343,7 @@ export function Explore() {
 							<button
 								type="button"
 								onClick={() => updateGenre(null)}
-								className={`rounded-full px-4 py-2 text-sm transition-colors ${
+								className={`cursor-pointer rounded-full px-4 py-2 text-sm transition-colors ${
 									selectedGenre === null
 										? "bg-white text-black"
 										: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -356,7 +356,7 @@ export function Explore() {
 									type="button"
 									key={genre.id}
 									onClick={() => updateGenre(genre.id)}
-									className={`rounded-full px-4 py-2 text-sm transition-colors ${
+									className={`cursor-pointer rounded-full px-4 py-2 text-sm transition-colors ${
 										selectedGenre === genre.id
 											? "bg-white text-black"
 											: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -429,7 +429,7 @@ export function Explore() {
 												<DropdownMenu.Trigger asChild>
 													<button
 														type="button"
-														className="rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
+														className="cursor-pointer rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
 														disabled={addingTo === item.id}
 														onClick={(e) => e.stopPropagation()}
 													>
