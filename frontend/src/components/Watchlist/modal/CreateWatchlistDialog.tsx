@@ -290,13 +290,14 @@ export function CreateWatchlistDialog({
 										type="button"
 										onClick={() => fileInputRef.current?.click()}
 										disabled={loading}
-										className="border-border bg-muted/50 hover:bg-muted flex h-24 w-24 items-center justify-center rounded-md border border-dashed disabled:opacity-50"
+										className="border-border bg-muted/50 hover:bg-muted flex h-24 w-24 cursor-pointer items-center justify-center rounded-md border border-dashed disabled:opacity-50"
 									>
 										<ImageIcon className="text-muted-foreground h-6 w-6" />
 									</button>
 								)}
 								<div className="flex-1">
 									<Button
+										className="cursor-pointer"
 										type="button"
 										variant="outline"
 										size="sm"
@@ -333,6 +334,7 @@ export function CreateWatchlistDialog({
 						{/* Actions */}
 						<div className="flex justify-end gap-2">
 							<Button
+								className="cursor-pointer"
 								type="button"
 								variant="outline"
 								onClick={handleCancel}
@@ -340,7 +342,11 @@ export function CreateWatchlistDialog({
 							>
 								{content.watchlists.cancel}
 							</Button>
-							<Button type="submit" disabled={loading}>
+							<Button
+								className="cursor-pointer"
+								type="submit"
+								disabled={loading}
+							>
 								{loading
 									? content.watchlists.creating
 									: content.watchlists.create}

@@ -194,6 +194,11 @@ export async function discover(req: Request, res: Response): Promise<void> {
 		// Optional filters
 		const withGenres = req.query.with_genres as string;
 		const sortBy = (req.query.sort_by as string) || "popularity.desc";
+		const voteCountGte = req.query["vote_count.gte"] as string;
+		const primaryReleaseDateGte = req.query["primary_release_date.gte"] as string;
+		const primaryReleaseDateLte = req.query["primary_release_date.lte"] as string;
+		const firstAirDateGte = req.query["first_air_date.gte"] as string;
+		const firstAirDateLte = req.query["first_air_date.lte"] as string;
 
 		if (type !== "movie" && type !== "tv") {
 			res.status(400).json({ error: 'type must be "movie" or "tv"' });
@@ -209,6 +214,28 @@ export async function discover(req: Request, res: Response): Promise<void> {
 
 		if (withGenres) {
 			params.with_genres = withGenres;
+		}
+
+		// Add vote count filter
+		if (voteCountGte) {
+			params["vote_count.gte"] = voteCountGte;
+		}
+
+		// Add date filters (movies use primary_release_date, TV uses first_air_date)
+		if (type === "movie") {
+			if (primaryReleaseDateGte) {
+				params["primary_release_date.gte"] = primaryReleaseDateGte;
+			}
+			if (primaryReleaseDateLte) {
+				params["primary_release_date.lte"] = primaryReleaseDateLte;
+			}
+		} else {
+			if (firstAirDateGte) {
+				params["first_air_date.gte"] = firstAirDateGte;
+			}
+			if (firstAirDateLte) {
+				params["first_air_date.lte"] = firstAirDateLte;
+			}
 		}
 
 		const data = await fetchFromTMDB(`/discover/${type}`, params);

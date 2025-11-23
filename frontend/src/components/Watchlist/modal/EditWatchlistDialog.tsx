@@ -391,7 +391,11 @@ export const EditWatchlistDialog = forwardRef<
 						)}
 
 						<div className="flex justify-end">
-							<Button type="submit" disabled={loading}>
+							<Button
+								className="cursor-pointer"
+								type="submit"
+								disabled={loading}
+							>
 								{loading ? content.watchlists.saving : content.watchlists.save}
 							</Button>
 						</div>

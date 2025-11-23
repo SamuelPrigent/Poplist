@@ -150,4 +150,9 @@
 	input[type="checkbox"]:focus-visible {
 		@apply outline-2 outline-offset-2 outline-white transition-all duration-150;
 	}
+
+	/* Remove focus styles from Command component inputs (year pickers) */
+	[cmdk-input-wrapper] input:focus {
+		@apply border-transparent shadow-none outline-none;
+	}
 }

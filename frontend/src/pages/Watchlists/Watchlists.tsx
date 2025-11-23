@@ -267,7 +267,7 @@ export function Watchlists() {
 				</div>
 
 				<Button
-					className="corner-squircle rounded-2xl"
+					className="corner-squircle cursor-pointer rounded-2xl"
 					onClick={() => setDialogOpen(true)}
 				>
 					<Plus className="h-4 w-4" />

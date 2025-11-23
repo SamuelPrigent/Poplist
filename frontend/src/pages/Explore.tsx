@@ -1,12 +1,32 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronLeft, ChevronRight, Plus, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+	Check,
+	ChevronsUpDown,
+	ChevronLeft,
+	ChevronRight,
+	Plus,
+	Star,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import { ItemDetailsModal } from "@/components/Watchlist/modal/ItemDetailsModal";
 import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
+import { cn } from "@/lib/cn";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
 
@@ -21,8 +41,11 @@ interface MediaItem {
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// Generate 42 stable skeleton keys
-const SKELETON_KEYS = Array.from({ length: 42 }, (_, i) => `skeleton-${i + 1}`);
+// Generate 36 stable skeleton keys (6 columns × 6 rows)
+const SKELETON_KEYS = Array.from({ length: 36 }, (_, i) => `skeleton-${i + 1}`);
+
+// Generate years from 2026 to 1895 (first film)
+const YEARS = Array.from({ length: 2026 - 1895 + 1 }, (_, i) => 2026 - i);
 
 const GENRES = {
 	movie: [
@@ -61,15 +84,37 @@ export function Explore() {
 	const { isAuthenticated } = useAuth();
 	const [searchParams, setSearchParams] = useSearchParams();
 
-	// Initialize state from URL params
-	const mediaType = (searchParams.get("type") as "movie" | "tv") || "movie";
-	const filterType =
-		(searchParams.get("filter") as "trending" | "popular" | "top_rated") ||
-		"trending";
-	const selectedGenre = searchParams.get("genre")
-		? Number(searchParams.get("genre"))
-		: null;
-	const page = Number(searchParams.get("page")) || 1;
+	// Use useMemo to memoize derived values from searchParams
+	const mediaTypes = useMemo(() => {
+		const typesParam = searchParams.get("types") || "movie";
+		return typesParam.split(",") as ("movie" | "tv")[];
+	}, [searchParams]);
+
+	const filterType = useMemo(
+		() => (searchParams.get("filter") as "popular" | "top_rated") || "popular",
+		[searchParams]
+	);
+
+	const selectedGenre = useMemo(() => {
+		const genre = searchParams.get("genre");
+		return genre ? Number(genre) : null;
+	}, [searchParams]);
+
+	// Extract year from date params (format: YYYY-MM-DD -> YYYY)
+	const yearFromParam = useMemo(() => {
+		const dateStr = searchParams.get("dateFrom") || "";
+		return dateStr ? dateStr.split("-")[0] : "";
+	}, [searchParams]);
+
+	const yearToParam = useMemo(() => {
+		const dateStr = searchParams.get("dateTo") || "";
+		return dateStr ? dateStr.split("-")[0] : "";
+	}, [searchParams]);
+
+	const page = useMemo(
+		() => Number(searchParams.get("page")) || 1,
+		[searchParams]
+	);
 
 	const [media, setMedia] = useState<MediaItem[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -82,18 +127,76 @@ export function Explore() {
 		type: "movie" | "tv";
 	} | null>(null);
 
-	// Helper functions to update URL params
-	const updateMediaType = (type: "movie" | "tv") => {
+	// Year picker state
+	const [yearFrom, setYearFrom] = useState<string>(yearFromParam);
+	const [yearTo, setYearTo] = useState<string>(yearToParam);
+	const [openYearFrom, setOpenYearFrom] = useState(false);
+	const [openYearTo, setOpenYearTo] = useState(false);
+
+	// Filter yearTo list: can't be less than yearFrom
+	const availableYearsTo = useMemo(() => {
+		if (!yearFrom) return YEARS;
+		const fromYear = Number.parseInt(yearFrom);
+		return YEARS.filter((year) => year >= fromYear);
+	}, [yearFrom]);
+
+	// Filter yearFrom list: can't be greater than yearTo
+	const availableYearsFrom = useMemo(() => {
+		if (!yearTo) return YEARS;
+		const toYear = Number.parseInt(yearTo);
+		return YEARS.filter((year) => year <= toYear);
+	}, [yearTo]);
+
+	// Update URL when years change
+	useEffect(() => {
 		const newParams = new URLSearchParams(searchParams);
-		newParams.set("type", type);
-		newParams.set("page", "1"); // Reset to page 1 when changing type
+
+		// Transform year to YYYY-01-01 format for API
+		if (yearFrom) {
+			newParams.set("dateFrom", `${yearFrom}-01-01`);
+		} else {
+			newParams.delete("dateFrom");
+		}
+		if (yearTo) {
+			newParams.set("dateTo", `${yearTo}-12-31`);
+		} else {
+			newParams.delete("dateTo");
+		}
+
+		// Only update if changed to avoid infinite loop
+		const currentDateFrom = searchParams.get("dateFrom") || "";
+		const currentDateTo = searchParams.get("dateTo") || "";
+		const newDateFrom = yearFrom ? `${yearFrom}-01-01` : "";
+		const newDateTo = yearTo ? `${yearTo}-12-31` : "";
+
+		if (currentDateFrom !== newDateFrom || currentDateTo !== newDateTo) {
+			newParams.set("page", "1");
+			setSearchParams(newParams);
+		}
+	}, [yearFrom, yearTo, searchParams, setSearchParams]);
+
+	// Helper functions to update URL params
+	const toggleMediaType = (type: "movie" | "tv") => {
+		const newParams = new URLSearchParams(searchParams);
+		let newTypes = [...mediaTypes];
+
+		if (newTypes.includes(type)) {
+			newTypes = newTypes.filter((t) => t !== type);
+			// Prevent empty selection
+			if (newTypes.length === 0) return;
+		} else {
+			newTypes.push(type);
+		}
+
+		newParams.set("types", newTypes.join(","));
+		newParams.set("page", "1");
 		setSearchParams(newParams);
 	};
 
-	const updateFilterType = (filter: "trending" | "popular" | "top_rated") => {
+	const updateFilterType = (filter: "popular" | "top_rated") => {
 		const newParams = new URLSearchParams(searchParams);
 		newParams.set("filter", filter);
-		newParams.set("page", "1"); // Reset to page 1 when changing filter
+		newParams.set("page", "1");
 		setSearchParams(newParams);
 	};
 
@@ -104,7 +207,7 @@ export function Explore() {
 		} else {
 			newParams.set("genre", genre.toString());
 		}
-		newParams.set("page", "1"); // Reset to page 1 when changing genre
+		newParams.set("page", "1");
 		setSearchParams(newParams);
 	};
 
@@ -114,7 +217,7 @@ export function Explore() {
 		setSearchParams(newParams);
 	};
 
-	// Scroll to top on mount and whenever URL params change (page, filter, genre, etc.)
+	// Scroll to top on mount and whenever URL params change
 	// biome-ignore lint/correctness/useExhaustiveDependencies: We want to scroll on any param change
 	useEffect(() => {
 		window.scrollTo({ top: 0, behavior: "smooth" });
@@ -130,82 +233,120 @@ export function Explore() {
 				})
 				.catch(console.error);
 		} else {
-			// Offline mode: get watchlists with ownership flags
 			const localWatchlists = getLocalWatchlistsWithOwnership();
 			setWatchlists(localWatchlists);
 		}
 	}, [isAuthenticated]);
 
-	// Fetch media based on filters
+	// Fetch media based on filters using discover API
 	useEffect(() => {
 		const fetchMedia = async () => {
 			setLoading(true);
 			try {
-				// Calculate actual TMDB pages needed (TMDB returns 20 per page)
-				// We want to display 42 items (6 rows × 7 columns)
-				// So we need to fetch multiple TMDB pages for each of our pages
-				const itemsPerDisplayPage = 42;
+				const itemsPerDisplayPage = 36; // 6 columns × 6 rows
 				const itemsPerTMDBPage = 20;
 				const startTMDBPage =
 					Math.floor(((page - 1) * itemsPerDisplayPage) / itemsPerTMDBPage) + 1;
 				const pagesNeeded = Math.ceil(itemsPerDisplayPage / itemsPerTMDBPage);
 
-				let allResults: MediaItem[] = [];
-				let totalPages = 1;
+				// Fetch for each selected media type
+				const fetchPromises = mediaTypes.map(async (type) => {
+					let allResults: MediaItem[] = [];
+					let totalPages = 1;
 
-				for (let i = 0; i < pagesNeeded; i++) {
-					const currentTMDBPage = startTMDBPage + i;
-					let url = "";
-					const params = new URLSearchParams({
-						language: "fr-FR",
-						page: currentTMDBPage.toString(),
-					});
+					for (let i = 0; i < pagesNeeded; i++) {
+						const currentTMDBPage = startTMDBPage + i;
+						const params = new URLSearchParams({
+							language: "fr-FR",
+							page: currentTMDBPage.toString(),
+						});
 
-					if (filterType === "trending") {
-						// Use backend cached trending endpoint (doesn't support genre filtering)
-						url = `${API_URL}/tmdb/trending/day`;
-						// Note: Trending always returns "all" (movies + TV), but we filter by mediaType on frontend
-					} else if (selectedGenre) {
-						// Use backend cached discover endpoint for genre filtering
-						url = `${API_URL}/tmdb/discover/${mediaType}`;
-						params.append("with_genres", selectedGenre.toString());
+						// Always use discover endpoint
+						let sortBy = "popularity.desc";
 
-						// Set appropriate sort_by based on filter type
 						if (filterType === "popular") {
-							params.append("sort_by", "popularity.desc");
+							sortBy = "popularity.desc";
 						} else if (filterType === "top_rated") {
-							params.append("sort_by", "vote_average.desc");
-							params.append("vote_count.gte", "200");
+							sortBy = "vote_average.desc";
 						}
-					} else {
-						// Use backend cached popular/top_rated endpoints when no genre filter
-						url = `${API_URL}/tmdb/${mediaType}/${filterType}`;
+
+						params.append("sort_by", sortBy);
+
+						// Always add minimum vote count to avoid absurd results
+						params.append("vote_count.gte", "100");
+
+						// Add genre filter
+						if (selectedGenre) {
+							params.append("with_genres", selectedGenre.toString());
+						}
+
+						// Add date filters (year transformed to YYYY-01-01 and YYYY-12-31)
+						const dateFrom = yearFrom ? `${yearFrom}-01-01` : "";
+						const dateTo = yearTo ? `${yearTo}-12-31` : "";
+
+						// Use correct date field based on media type
+						// Movies: primary_release_date | TV Shows: first_air_date
+						const dateField =
+							type === "movie" ? "primary_release_date" : "first_air_date";
+
+						if (dateFrom) {
+							params.append(`${dateField}.gte`, dateFrom);
+						}
+						if (dateTo) {
+							params.append(`${dateField}.lte`, dateTo);
+						}
+
+						const url = `${API_URL}/tmdb/discover/${type}`;
+						const fullUrl = `${url}?${params.toString()}`;
+
+						const response = await fetch(fullUrl);
+						const data = await response.json();
+
+						allResults = [...allResults, ...(data.results || [])];
+						totalPages = data.total_pages || 1;
 					}
 
-					// Use backend cached routes - no TMDB API key needed
-					const response = await fetch(`${url}?${params}`);
+					return { type, results: allResults, totalPages };
+				});
 
-					const data = await response.json();
-					allResults = [...allResults, ...(data.results || [])];
-					totalPages = data.total_pages || 1;
+				const fetchedData = await Promise.all(fetchPromises);
+
+				// If both movie and tv are selected, alternate results
+				let combinedResults: MediaItem[] = [];
+				if (mediaTypes.length === 2) {
+					const movieResults =
+						fetchedData.find((d) => d.type === "movie")?.results || [];
+					const tvResults =
+						fetchedData.find((d) => d.type === "tv")?.results || [];
+					const maxLength = Math.max(movieResults.length, tvResults.length);
+
+					for (let i = 0; i < maxLength; i++) {
+						if (movieResults[i]) combinedResults.push(movieResults[i]);
+						if (tvResults[i]) combinedResults.push(tvResults[i]);
+					}
+				} else {
+					// Single type selected
+					combinedResults = fetchedData[0]?.results || [];
 				}
 
 				// Calculate the starting index for this display page
 				const startIndex =
 					((page - 1) * itemsPerDisplayPage) % itemsPerTMDBPage;
 
-				// Slice to get exactly 42 items for this page
-				const displayResults = allResults.slice(
+				// Slice to get exactly 36 items for this page
+				const displayResults = combinedResults.slice(
 					startIndex,
-					startIndex + itemsPerDisplayPage,
+					startIndex + itemsPerDisplayPage
 				);
 
 				setMedia(displayResults);
-				// Calculate total display pages based on TMDB total pages
+
+				// Use the highest total pages from all fetched types
+				const maxTotalPages = Math.max(...fetchedData.map((d) => d.totalPages));
 				const totalDisplayPages = Math.ceil(
-					(totalPages * itemsPerTMDBPage) / itemsPerDisplayPage,
+					(maxTotalPages * itemsPerTMDBPage) / itemsPerDisplayPage
 				);
-				setTotalPages(Math.min(totalDisplayPages, 500)); // TMDB limits to 500 pages
+				setTotalPages(Math.min(totalDisplayPages, 500));
 			} catch (error) {
 				console.error("Failed to fetch media:", error);
 			} finally {
@@ -214,47 +355,46 @@ export function Explore() {
 		};
 
 		fetchMedia();
-	}, [mediaType, filterType, selectedGenre, page]);
+	}, [mediaTypes, filterType, selectedGenre, page, yearFrom, yearTo]);
 
 	const handleAddToWatchlist = async (
 		watchlistId: string,
-		mediaItem: MediaItem,
+		mediaItem: MediaItem
 	) => {
 		try {
 			setAddingTo(mediaItem.id);
 
+			// Determine media type for this item
+			const itemType: "movie" | "tv" = mediaItem.title ? "movie" : "tv";
+
 			if (isAuthenticated) {
-				// Online mode: add via API
 				await watchlistAPI.addItem(watchlistId, {
 					tmdbId: mediaItem.id.toString(),
-					type: mediaType,
+					type: itemType,
 					language: "fr-FR",
 					region: "FR",
 				});
 			} else {
-				// Offline mode: add to localStorage
 				const localWatchlists = localStorage.getItem("watchlists");
 				if (localWatchlists) {
 					const watchlists: Watchlist[] = JSON.parse(localWatchlists);
 					const watchlistIndex = watchlists.findIndex(
-						(w) => w._id === watchlistId,
+						(w) => w._id === watchlistId
 					);
 
 					if (watchlistIndex !== -1) {
-						// Check if item already exists
 						const itemExists = watchlists[watchlistIndex].items.some(
-							(item) => item.tmdbId === mediaItem.id.toString(),
+							(item) => item.tmdbId === mediaItem.id.toString()
 						);
 
 						if (!itemExists) {
-							// Construct basic item
 							const newItem = {
 								tmdbId: mediaItem.id.toString(),
 								title: mediaItem.title || mediaItem.name || "",
 								posterUrl: mediaItem.poster_path
 									? `https://image.tmdb.org/t/p/w500${mediaItem.poster_path}`
 									: "",
-								type: mediaType,
+								type: itemType,
 								platformList: [],
 								addedAt: new Date().toISOString(),
 							};
@@ -263,7 +403,6 @@ export function Explore() {
 							watchlists[watchlistIndex].updatedAt = new Date().toISOString();
 							localStorage.setItem("watchlists", JSON.stringify(watchlists));
 
-							// Reload with ownership flags to maintain correct state
 							const updatedWatchlists = getLocalWatchlistsWithOwnership();
 							setWatchlists(updatedWatchlists);
 						}
@@ -278,110 +417,273 @@ export function Explore() {
 	};
 
 	const handleItemClick = (item: MediaItem) => {
+		const itemType = item.title ? "movie" : "tv";
 		setSelectedItem({
 			tmdbId: item.id.toString(),
-			type: mediaType,
+			type: itemType,
 		});
 		setDetailsModalOpen(true);
 	};
 
+	// Get available genres based on selected media types
+	const availableGenres = useMemo(() => {
+		if (mediaTypes.length === 2) {
+			const combined = [...GENRES.movie, ...GENRES.tv];
+			// Deduplicate by id
+			const uniqueGenres = Array.from(
+				new Map(combined.map((g) => [g.id, g])).values()
+			);
+			return uniqueGenres;
+		}
+		return mediaTypes[0] === "movie" ? GENRES.movie : GENRES.tv;
+	}, [mediaTypes]);
+
 	return (
-		<div className="mb-24 min-h-screen bg-background py-12">
+		<div className="bg-background mb-24 min-h-screen py-12">
 			<div className="container mx-auto px-4">
 				{/* Header */}
-				<div className="mb-12 text-center">
+				<div className="mb-12 text-left">
 					<h1 className="mb-4 text-5xl font-bold text-white">
 						{content.explore.title}
 					</h1>
-					<p className="text-lg text-muted-foreground">
+					<p className="text-muted-foreground text-lg">
 						{content.explore.subtitle}
 					</p>
 				</div>
 
 				{/* Filters */}
-				<div className="mb-8 space-y-6">
-					{/* Media Type Filter */}
-					<div className="flex justify-center">
-						<Tabs
-							value={mediaType}
-							onValueChange={(v) => updateMediaType(v as "movie" | "tv")}
-						>
-							<TabsList>
-								<TabsTrigger value="movie">
-									{content.explore.filters.movies}
-								</TabsTrigger>
-								<TabsTrigger value="tv">
-									{content.explore.filters.series}
-								</TabsTrigger>
-							</TabsList>
-						</Tabs>
-					</div>
-
-					{/* Filter Type */}
-					<div className="flex justify-center">
-						<Tabs
-							value={filterType}
-							onValueChange={(v) => updateFilterType(v as typeof filterType)}
-						>
-							<TabsList>
-								<TabsTrigger value="trending">
-									{content.explore.filters.trending}
-								</TabsTrigger>
-								<TabsTrigger value="popular">
-									{content.explore.sortBy.popular}
-								</TabsTrigger>
-								<TabsTrigger value="top_rated">
-									{content.explore.filters.topRated}
-								</TabsTrigger>
-							</TabsList>
-						</Tabs>
-					</div>
-
-					{/* Genre Filter - only show for non-trending */}
-					{filterType !== "trending" && (
-						<div className="flex flex-wrap justify-center gap-2">
-							<button
-								type="button"
-								onClick={() => updateGenre(null)}
-								className={`cursor-pointer rounded-full px-4 py-2 text-sm transition-colors ${
-									selectedGenre === null
-										? "bg-white text-black"
-										: "bg-muted text-muted-foreground hover:bg-muted/80"
-								}`}
+				<div className="mb-8 space-y-4">
+					{/* Main Filters Row - Media Type + Sort Type */}
+					<div className="flex flex-wrap items-center gap-3">
+						{/* Media Type Filter - Multi-select in dark container */}
+						<div className="bg-muted/50 rounded-md p-1">
+							<div
+								className={cn(
+									"flex items-center rounded-md",
+									mediaTypes.length === 2 && "bg-white"
+								)}
 							>
-								{content.explore.filters.all}
-							</button>
-							{GENRES[mediaType].map((genre) => (
 								<button
 									type="button"
-									key={genre.id}
-									onClick={() => updateGenre(genre.id)}
-									className={`cursor-pointer rounded-full px-4 py-2 text-sm transition-colors ${
-										selectedGenre === genre.id
+									onClick={() => toggleMediaType("movie")}
+									className={cn(
+										"cursor-pointer px-4 py-2 text-sm font-medium transition-colors",
+										mediaTypes.includes("movie")
 											? "bg-white text-black"
-											: "bg-muted text-muted-foreground hover:bg-muted/80"
-									}`}
+											: "text-muted-foreground hover:text-foreground bg-transparent",
+										mediaTypes.length === 2
+											? "rounded-l-md bg-transparent"
+											: "rounded-md"
+									)}
 								>
-									{genre.name}
+									{content.explore.filters.movies}
 								</button>
-							))}
+								<button
+									type="button"
+									onClick={() => toggleMediaType("tv")}
+									className={cn(
+										"cursor-pointer px-4 py-2 text-sm font-medium transition-colors",
+										mediaTypes.includes("tv")
+											? "bg-white text-black"
+											: "text-muted-foreground hover:text-foreground bg-transparent",
+										mediaTypes.length === 2
+											? "rounded-r-md bg-transparent"
+											: "rounded-md"
+									)}
+								>
+									{content.explore.filters.series}
+								</button>
+							</div>
 						</div>
-					)}
+
+						{/* Sort Filter - Single select in dark container */}
+						<div className="bg-muted/50 rounded-md p-1">
+							<div className="flex items-center gap-1">
+								<button
+									type="button"
+									onClick={() => updateFilterType("popular")}
+									className={cn(
+										"cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors",
+										filterType === "popular"
+											? "bg-white text-black"
+											: "text-muted-foreground hover:text-foreground bg-transparent"
+									)}
+								>
+									Populaires
+								</button>
+								<button
+									type="button"
+									onClick={() => updateFilterType("top_rated")}
+									className={cn(
+										"cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors",
+										filterType === "top_rated"
+											? "bg-white text-black"
+											: "text-muted-foreground hover:text-foreground bg-transparent"
+									)}
+								>
+									Mieux notés
+								</button>
+							</div>
+						</div>
+					</div>
+
+					{/* Year Filters Row */}
+					<div className="flex flex-wrap items-center gap-3">
+						{/* Year From Picker - Combobox */}
+						<Popover open={openYearFrom} onOpenChange={setOpenYearFrom}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={openYearFrom}
+									className="w-[200px] cursor-pointer justify-between"
+								>
+									{yearFrom || "Année minimum"}
+									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-[200px] p-0">
+								<Command>
+									<CommandInput placeholder="Rechercher..." />
+									<CommandList>
+										<CommandEmpty>Aucune année trouvée.</CommandEmpty>
+										<CommandGroup>
+											{availableYearsFrom.map((year) => (
+												<CommandItem
+													key={year}
+													value={year.toString()}
+													onSelect={(currentValue) => {
+														setYearFrom(
+															currentValue === yearFrom ? "" : currentValue
+														);
+														setOpenYearFrom(false);
+													}}
+												>
+													<Check
+														className={cn(
+															"mr-2 h-4 w-4",
+															yearFrom === year.toString()
+																? "opacity-100"
+																: "opacity-0"
+														)}
+													/>
+													{year}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
+
+						{/* Year To Picker - Combobox */}
+						<Popover open={openYearTo} onOpenChange={setOpenYearTo}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={openYearTo}
+									className="w-[200px] cursor-pointer justify-between"
+								>
+									{yearTo || "Année maximum"}
+									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-[200px] p-0">
+								<Command>
+									<CommandInput placeholder="Rechercher..." />
+									<CommandList>
+										<CommandEmpty>Aucune année trouvée.</CommandEmpty>
+										<CommandGroup>
+											{availableYearsTo.map((year) => (
+												<CommandItem
+													key={year}
+													value={year.toString()}
+													onSelect={(currentValue) => {
+														setYearTo(
+															currentValue === yearTo ? "" : currentValue
+														);
+														setOpenYearTo(false);
+													}}
+												>
+													<Check
+														className={cn(
+															"mr-2 h-4 w-4",
+															yearTo === year.toString()
+																? "opacity-100"
+																: "opacity-0"
+														)}
+													/>
+													{year}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
+
+						{/* Clear years button */}
+						{(yearFrom || yearTo) && (
+							<Button
+								variant="ghost"
+								size="sm"
+								className="cursor-pointer"
+								onClick={() => {
+									setYearFrom("");
+									setYearTo("");
+								}}
+							>
+								Effacer les années
+							</Button>
+						)}
+					</div>
+
+					{/* Genre Filter Row */}
+					<div className="flex flex-wrap items-center gap-2">
+						<button
+							type="button"
+							onClick={() => updateGenre(null)}
+							className={cn(
+								"cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+								selectedGenre === null
+									? "bg-white text-black"
+									: "bg-muted text-muted-foreground hover:bg-muted/80"
+							)}
+						>
+							{content.explore.filters.all}
+						</button>
+						{availableGenres.map((genre) => (
+							<button
+								type="button"
+								key={genre.id}
+								onClick={() => updateGenre(genre.id)}
+								className={cn(
+									"cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+									selectedGenre === genre.id
+										? "bg-white text-black"
+										: "bg-muted text-muted-foreground hover:bg-muted/80"
+								)}
+							>
+								{genre.name}
+							</button>
+						))}
+					</div>
 				</div>
 
 				{/* Media Grid */}
 				{loading ? (
-					<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+					<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 						{SKELETON_KEYS.map((skeletonKey) => (
 							<div
 								key={skeletonKey}
-								className="aspect-[2/3] animate-pulse rounded-lg bg-muted"
+								className="bg-muted aspect-2/3 animate-pulse rounded-lg"
 							/>
 						))}
 					</div>
 				) : (
 					<>
-						<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+						<div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 							{media.map((item, index) => (
 								<div
 									key={`${item.id}-${index}-${page}`}
@@ -396,7 +698,7 @@ export function Explore() {
 									/>
 
 									{/* Poster */}
-									<div className="pointer-events-none aspect-[2/3] overflow-hidden rounded-lg bg-muted">
+									<div className="bg-muted pointer-events-none aspect-2/3 overflow-hidden rounded-lg">
 										{item.poster_path ? (
 											<img
 												src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
@@ -404,15 +706,15 @@ export function Explore() {
 												className="h-full w-full object-cover transition-transform group-hover:scale-105"
 											/>
 										) : (
-											<div className="flex h-full items-center justify-center text-muted-foreground">
+											<div className="text-muted-foreground flex h-full items-center justify-center">
 												?
 											</div>
 										)}
 									</div>
 
-									{/* Add button (if authenticated or has offline watchlists) */}
+									{/* Add button */}
 									{(isAuthenticated || watchlists.length > 0) && (
-										<div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+										<div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
 											<DropdownMenu.Root
 												onOpenChange={(open) => {
 													if (!open) {
@@ -439,22 +741,22 @@ export function Explore() {
 
 												<DropdownMenu.Portal>
 													<DropdownMenu.Content
-														className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+														className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-md border p-1 shadow-md"
 														sideOffset={5}
 														onClick={(e) => e.stopPropagation()}
 													>
-														<DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+														<DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-semibold">
 															{content.watchlists.addToWatchlist}
 														</DropdownMenu.Label>
 														{watchlists.filter(
-															(w) => w.isOwner || w.isCollaborator,
+															(w) => w.isOwner || w.isCollaborator
 														).length > 0 ? (
 															watchlists
 																.filter((w) => w.isOwner || w.isCollaborator)
 																.map((watchlist) => (
 																	<DropdownMenu.Item
 																		key={watchlist._id}
-																		className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+																		className="hover:bg-accent hover:text-accent-foreground relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none"
 																		onSelect={() =>
 																			handleAddToWatchlist(watchlist._id, item)
 																		}
@@ -463,7 +765,7 @@ export function Explore() {
 																	</DropdownMenu.Item>
 																))
 														) : (
-															<div className="px-2 py-1.5 text-sm text-muted-foreground">
+															<div className="text-muted-foreground px-2 py-1.5 text-sm">
 																{content.watchlists.noWatchlist}
 															</div>
 														)}
@@ -474,7 +776,7 @@ export function Explore() {
 									)}
 
 									{/* Info overlay */}
-									<div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
+									<div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
 										<h3 className="line-clamp-2 text-sm font-semibold text-white">
 											{item.title || item.name}
 										</h3>
@@ -495,13 +797,14 @@ export function Explore() {
 								<Button
 									variant="outline"
 									size="icon"
+									className="cursor-pointer"
 									onClick={() => updatePage(Math.max(1, page - 1))}
 									disabled={page === 1}
 								>
 									<ChevronLeft className="h-4 w-4" />
 								</Button>
 
-								<span className="text-sm text-muted-foreground">
+								<span className="text-muted-foreground text-sm">
 									{content.explore.pagination.pageOf
 										.replace("{page}", String(page))
 										.replace("{totalPages}", String(totalPages))}
@@ -510,6 +813,7 @@ export function Explore() {
 								<Button
 									variant="outline"
 									size="icon"
+									className="cursor-pointer"
 									onClick={() => updatePage(Math.min(totalPages, page + 1))}
 									disabled={page === totalPages}
 								>
