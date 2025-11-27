@@ -76,7 +76,7 @@ async function refreshAccessToken(): Promise<boolean> {
 
 async function request<T>(
 	endpoint: string,
-	options: RequestOptions = {},
+	options: RequestOptions = {}
 ): Promise<T> {
 	const { body, _isRetry, ...restOptions } = options;
 
@@ -277,7 +277,7 @@ export const watchlistAPI = {
 		request("/watchlists/mine"),
 
 	getById: (
-		id: string,
+		id: string
 	): Promise<{
 		watchlist: Watchlist;
 		isSaved: boolean;
@@ -304,7 +304,7 @@ export const watchlistAPI = {
 			description?: string;
 			isPublic?: boolean;
 			items?: WatchlistItem[];
-		},
+		}
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}`, {
 			method: "PUT",
@@ -318,7 +318,7 @@ export const watchlistAPI = {
 
 	addCollaborator: (
 		id: string,
-		username: string,
+		username: string
 	): Promise<{ message: string; collaborator: Collaborator }> =>
 		request(`/watchlists/${id}/collaborators`, {
 			method: "POST",
@@ -327,7 +327,7 @@ export const watchlistAPI = {
 
 	removeCollaborator: (
 		id: string,
-		collaboratorId: string,
+		collaboratorId: string
 	): Promise<{ message: string }> =>
 		request(`/watchlists/${id}/collaborators/${collaboratorId}`, {
 			method: "DELETE",
@@ -348,7 +348,7 @@ export const watchlistAPI = {
 			type: "movie" | "tv";
 			language?: string;
 			region?: string;
-		},
+		}
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/items`, {
 			method: "POST",
@@ -363,7 +363,7 @@ export const watchlistAPI = {
 	moveItem: (
 		id: string,
 		tmdbId: string,
-		position: "first" | "last",
+		position: "first" | "last"
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/items/${tmdbId}/position`, {
 			method: "PUT",
@@ -372,7 +372,7 @@ export const watchlistAPI = {
 
 	reorderItems: (
 		id: string,
-		orderedTmdbIds: string[],
+		orderedTmdbIds: string[]
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/items/reorder`, {
 			method: "PUT",
@@ -380,7 +380,7 @@ export const watchlistAPI = {
 		}),
 
 	reorderWatchlists: (
-		orderedWatchlistIds: string[],
+		orderedWatchlistIds: string[]
 	): Promise<{ message: string }> =>
 		request(`/watchlists/reorder`, {
 			method: "PUT",
@@ -389,7 +389,7 @@ export const watchlistAPI = {
 
 	uploadCover: (
 		id: string,
-		imageData: string,
+		imageData: string
 	): Promise<{ watchlist: Watchlist; imageUrl: string }> =>
 		request(`/watchlists/${id}/upload-cover`, {
 			method: "POST",
@@ -397,7 +397,7 @@ export const watchlistAPI = {
 		}),
 
 	deleteCover: (
-		id: string,
+		id: string
 	): Promise<{ message: string; watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/cover`, {
 			method: "DELETE",
@@ -434,18 +434,18 @@ export const watchlistAPI = {
 	getItemDetails: (
 		tmdbId: string,
 		type: "movie" | "tv",
-		language?: string,
+		language?: string
 	): Promise<{ details: FullMediaDetails }> => {
 		const searchParams = new URLSearchParams();
 		if (language) searchParams.append("language", language);
 		const query = searchParams.toString();
 		return request(
-			`/watchlists/items/${tmdbId}/${type}/details${query ? `?${query}` : ""}`,
+			`/watchlists/items/${tmdbId}/${type}/details${query ? `?${query}` : ""}`
 		);
 	},
 
 	getPublicWatchlists: (
-		limit?: number,
+		limit?: number
 	): Promise<{ watchlists: Watchlist[] }> => {
 		const searchParams = new URLSearchParams();
 		if (limit) searchParams.append("limit", limit.toString());
@@ -457,7 +457,7 @@ export const watchlistAPI = {
 		request("/watchlists/public/all"),
 
 	getWatchlistsByCategory: (
-		category: string,
+		category: string
 	): Promise<{ watchlists: Watchlist[] }> =>
 		request(`/watchlists/by-category/${category}`),
 
@@ -480,7 +480,7 @@ export const watchlistAPI = {
 // User API
 export const userAPI = {
 	uploadAvatar: (
-		imageData: string,
+		imageData: string
 	): Promise<{ user: User; avatarUrl: string }> =>
 		request("/user/upload-avatar", {
 			method: "POST",
@@ -504,25 +504,30 @@ export const userAPI = {
 };
 
 // TMDB API
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-
 export const tmdbAPI = {
-	getTrending: async (timeWindow: "day" | "week" = "day", page: number = 1) => {
-		const response = await fetch(
-			`${TMDB_BASE_URL}/trending/all/${timeWindow}?page=${page}`,
-			{
-				headers: {
-					Authorization: `Bearer ${TMDB_API_KEY}`,
-					"Content-Type": "application/json",
-				},
-			},
-		);
-
-		if (!response.ok) {
-			throw new Error("Failed to fetch trending");
-		}
-
-		return response.json();
+	getTrending: (
+		timeWindow: "day" | "week" = "day",
+		page: number = 1
+	): Promise<{
+		results: Array<{
+			id: number;
+			media_type: "movie" | "tv";
+			title?: string;
+			name?: string;
+			poster_path?: string;
+			backdrop_path?: string;
+			overview?: string;
+			vote_average?: number;
+			release_date?: string;
+			first_air_date?: string;
+		}>;
+		page: number;
+		total_pages: number;
+		total_results: number;
+	}> => {
+		const searchParams = new URLSearchParams({
+			page: page.toString(),
+		});
+		return request(`/tmdb/trending/${timeWindow}?${searchParams.toString()}`);
 	},
 };
