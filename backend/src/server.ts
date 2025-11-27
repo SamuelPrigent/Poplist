@@ -108,6 +108,15 @@ app.get("/image-proxy", async (req: Request, res: Response) => {
 	}
 });
 
+// Health check endpoint for Render
+app.get("/", (_req: Request, res: Response) => {
+	res.json({
+		status: "ok",
+		message: "WatchlistHub API is running",
+		timestamp: new Date().toISOString(),
+	});
+});
+
 app.use("/auth", authRoutes);
 app.use("/watchlists", watchlistRoutes);
 app.use("/tmdb", tmdbRoutes);
