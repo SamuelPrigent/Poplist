@@ -6,8 +6,11 @@ let googleOAuthClient: OAuth2Client | null = null;
 function getOAuthConfig() {
 	const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 	const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
-	const BACKEND_URL = `http://localhost:${process.env.PORT || "3000"}`;
-	const REDIRECT_URI = `${BACKEND_URL}/auth/google/callback`;
+
+	// ✅ Utilise GOOGLE_REDIRECT_URI en priorité, sinon fallback localhost pour dev
+	const REDIRECT_URI =
+		process.env.GOOGLE_REDIRECT_URI ||
+		`http://localhost:${process.env.PORT || "3000"}/auth/google/callback`;
 
 	console.log(
 		"🔍 [Google Config] CLIENT_ID:",
