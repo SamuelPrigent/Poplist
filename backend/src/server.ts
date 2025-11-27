@@ -117,6 +117,15 @@ app.get("/", (_req: Request, res: Response) => {
 	});
 });
 
+// Dedicated health check endpoint (alternative)
+app.get("/health", (_req: Request, res: Response) => {
+	res.json({
+		status: "ok",
+		uptime: process.uptime(),
+		timestamp: new Date().toISOString(),
+	});
+});
+
 app.use("/auth", authRoutes);
 app.use("/watchlists", watchlistRoutes);
 app.use("/tmdb", tmdbRoutes);
