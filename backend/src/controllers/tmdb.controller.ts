@@ -9,7 +9,7 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
  */
 async function fetchFromTMDB(
 	endpoint: string,
-	params: Record<string, string> = {},
+	params: Record<string, string> = {}
 ) {
 	const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
 
@@ -57,7 +57,7 @@ export async function getTrending(req: Request, res: Response): Promise<void> {
 			await saveToCache(
 				res.locals.cacheKey,
 				data,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 
@@ -93,7 +93,7 @@ export async function getSimilar(req: Request, res: Response): Promise<void> {
 			await saveToCache(
 				res.locals.cacheKey,
 				data,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 
@@ -131,7 +131,7 @@ export async function getPopular(req: Request, res: Response): Promise<void> {
 			await saveToCache(
 				res.locals.cacheKey,
 				data,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 
@@ -169,7 +169,7 @@ export async function getTopRated(req: Request, res: Response): Promise<void> {
 			await saveToCache(
 				res.locals.cacheKey,
 				data,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 
@@ -195,8 +195,12 @@ export async function discover(req: Request, res: Response): Promise<void> {
 		const withGenres = req.query.with_genres as string;
 		const sortBy = (req.query.sort_by as string) || "popularity.desc";
 		const voteCountGte = req.query["vote_count.gte"] as string;
-		const primaryReleaseDateGte = req.query["primary_release_date.gte"] as string;
-		const primaryReleaseDateLte = req.query["primary_release_date.lte"] as string;
+		const primaryReleaseDateGte = req.query[
+			"primary_release_date.gte"
+		] as string;
+		const primaryReleaseDateLte = req.query[
+			"primary_release_date.lte"
+		] as string;
 		const firstAirDateGte = req.query["first_air_date.gte"] as string;
 		const firstAirDateLte = req.query["first_air_date.lte"] as string;
 
@@ -245,7 +249,7 @@ export async function discover(req: Request, res: Response): Promise<void> {
 			await saveToCache(
 				res.locals.cacheKey,
 				data,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 
@@ -279,7 +283,7 @@ export async function getGenres(req: Request, res: Response): Promise<void> {
 			await saveToCache(
 				res.locals.cacheKey,
 				data,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 

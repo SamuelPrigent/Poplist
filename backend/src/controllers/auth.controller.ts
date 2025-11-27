@@ -172,7 +172,7 @@ export async function googleAuth(_req: Request, res: Response): Promise<void> {
 	console.log("🔵 [Google Auth] Starting OAuth flow...");
 	console.log(
 		"🔵 [Google Auth] Redirect URI configured:",
-		process.env.CLIENT_URL || "http://localhost:5173",
+		process.env.CLIENT_URL || "http://localhost:5173"
 	);
 	const authUrl = getGoogleAuthURL();
 	console.log("🔵 [Google Auth] Generated auth URL:", authUrl);
@@ -181,7 +181,7 @@ export async function googleAuth(_req: Request, res: Response): Promise<void> {
 
 export async function googleCallback(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		console.log("🟢 [Google Callback] Received callback from Google");
@@ -191,14 +191,14 @@ export async function googleCallback(
 
 		if (!code || typeof code !== "string") {
 			console.error(
-				"🔴 [Google Callback] Missing or invalid authorization code",
+				"🔴 [Google Callback] Missing or invalid authorization code"
 			);
 			res.status(400).json({ error: "Missing authorization code" });
 			return;
 		}
 
 		console.log(
-			"🟢 [Google Callback] Authorization code received, fetching user info...",
+			"🟢 [Google Callback] Authorization code received, fetching user info..."
 		);
 
 		// Get user info from Google
@@ -337,7 +337,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 		}
 
 		const tokenIndex = user.refreshTokens.findIndex(
-			(t) => t.tokenHash === tokenHash,
+			(t) => t.tokenHash === tokenHash
 		);
 
 		if (tokenIndex === -1) {
@@ -393,7 +393,7 @@ export async function logout(req: Request, res: Response): Promise<void> {
 			if (user) {
 				// Remove this refresh token
 				user.refreshTokens = user.refreshTokens.filter(
-					(t) => t.tokenHash !== tokenHash,
+					(t) => t.tokenHash !== tokenHash
 				);
 				await user.save();
 			}
@@ -443,13 +443,13 @@ const updateUsernameSchema = z.object({
 		.max(20)
 		.regex(
 			/^[a-zA-Z0-9_]+$/,
-			"Username can only contain letters, numbers, and underscores",
+			"Username can only contain letters, numbers, and underscores"
 		),
 });
 
 export async function updateUsername(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -501,7 +501,7 @@ const updateLanguageSchema = z.object({
 
 export async function updateLanguage(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -547,7 +547,7 @@ const changePasswordSchema = z.object({
 
 export async function changePassword(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -598,7 +598,7 @@ const deleteAccountSchema = z.object({
 
 export async function deleteAccount(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const { confirmation } = deleteAccountSchema.parse(req.body);
@@ -618,18 +618,18 @@ export async function deleteAccount(
 			{ likedBy: userId },
 			{
 				$pull: { likedBy: userId },
-			},
+			}
 		);
 
 		// Remove this user's watchlists from other users' savedWatchlists arrays
 		const userWatchlists = await Watchlist.find({ ownerId: userId }).select(
-			"_id",
+			"_id"
 		);
 		const watchlistIds = userWatchlists.map((w) => w._id);
 
 		await User.updateMany(
 			{ savedWatchlists: { $in: watchlistIds } },
-			{ $pull: { savedWatchlists: { $in: watchlistIds } } },
+			{ $pull: { savedWatchlists: { $in: watchlistIds } } }
 		);
 
 		// Delete all user's watchlists
@@ -655,7 +655,7 @@ export async function deleteAccount(
 
 export async function checkUsernameAvailability(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	const { username } = req.params;
 

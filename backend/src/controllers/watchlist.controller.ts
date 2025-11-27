@@ -120,7 +120,7 @@ const reorderWatchlistsSchema = z.object({
 
 export async function getMyWatchlists(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -156,7 +156,7 @@ export async function getMyWatchlists(
 		// Merge and deduplicate (prioritize owned/collaborated watchlists over saved)
 		const watchlistsMap = new Map<string, WatchlistWithFlags>();
 		const savedIds = new Set(
-			saved.map((w) => (w._id as Types.ObjectId).toString()),
+			saved.map((w) => (w._id as Types.ObjectId).toString())
 		);
 
 		// Add owned/collaborated first (higher priority)
@@ -226,12 +226,12 @@ export async function getMyWatchlists(
 
 		// Find missing watchlists (exist but not in order)
 		const missingIds = allWatchlistIds.filter(
-			(id) => !currentOrder.includes(id),
+			(id) => !currentOrder.includes(id)
 		);
 		if (missingIds.length > 0) {
 			// Add missing watchlists to the end
 			user.watchlistsOrder.push(
-				...missingIds.map((id) => new Types.ObjectId(id)),
+				...missingIds.map((id) => new Types.ObjectId(id))
 			);
 			needsSave = true;
 		}
@@ -273,7 +273,7 @@ export async function getMyWatchlists(
 
 export async function createWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -330,12 +330,12 @@ export async function createWatchlist(
 							watchlist
 								.save()
 								.catch((err) =>
-									console.error("Failed to save thumbnail URL:", err),
+									console.error("Failed to save thumbnail URL:", err)
 								);
 						}
 					})
 					.catch((err) =>
-						console.error("Failed to regenerate thumbnail:", err),
+						console.error("Failed to regenerate thumbnail:", err)
 					);
 			}
 		}
@@ -352,7 +352,7 @@ export async function createWatchlist(
 
 export async function updateWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -378,7 +378,7 @@ export async function updateWatchlist(
 		// Check if user is owner or collaborator
 		const isOwner = watchlist.ownerId.toString() === userId;
 		const isCollaborator = watchlist.collaborators.some(
-			(c) => c.toString() === userId,
+			(c) => c.toString() === userId
 		);
 
 		if (!isOwner && !isCollaborator) {
@@ -457,7 +457,7 @@ export async function updateWatchlist(
 
 export async function deleteWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -503,7 +503,7 @@ export async function deleteWatchlist(
 		// Remove watchlist from each user's watchlistsOrder
 		await User.updateMany(
 			{ _id: { $in: affectedUserIds } },
-			{ $pull: { watchlistsOrder: watchlistObjectId } },
+			{ $pull: { watchlistsOrder: watchlistObjectId } }
 		);
 
 		await Watchlist.findByIdAndDelete(id);
@@ -517,7 +517,7 @@ export async function deleteWatchlist(
 
 export async function getPublicWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const { id } = req.params;
@@ -551,7 +551,7 @@ export async function getPublicWatchlist(
 // Get featured/community public watchlists (for homepage)
 export async function getPublicWatchlists(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const limit = Math.min(parseInt(req.query.limit as string, 10) || 6, 1000); // Max 1000 for community page
@@ -618,7 +618,7 @@ export async function getPublicWatchlists(
 		if (userId) {
 			const user = await User.findById(userId);
 			const savedIds = new Set(
-				(user?.savedWatchlists || []).map((id) => id.toString()),
+				(user?.savedWatchlists || []).map((id) => id.toString())
 			);
 
 			const watchlistsWithFlags = watchlists.map((w) => {
@@ -626,10 +626,12 @@ export async function getPublicWatchlists(
 				const ownerId = w.ownerId?._id?.toString() || w.ownerId?.toString();
 				const isOwner = ownerId === userId;
 				// Check if user is a collaborator
-				const isCollaborator = w.collaborators.some((collab: { _id?: Types.ObjectId }) => {
-					const collabId = collab?._id?.toString();
-					return collabId === userId;
-				});
+				const isCollaborator = w.collaborators.some(
+					(collab: { _id?: Types.ObjectId }) => {
+						const collabId = collab?._id?.toString();
+						return collabId === userId;
+					}
+				);
 				const isSaved = savedIds.has(w._id.toString());
 
 				const watchlistObj: WatchlistWithFlags = {
@@ -669,7 +671,7 @@ export async function getPublicWatchlists(
 // Get public watchlists by category
 export async function getWatchlistsByCategory(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const { category } = req.params;
@@ -687,7 +689,7 @@ export async function getWatchlistsByCategory(
 			.populate("collaborators", "email username avatarUrl")
 			.sort({ createdAt: -1 })
 			.select(
-				"_id name description imageUrl thumbnailUrl items categories ownerId collaborators createdAt",
+				"_id name description imageUrl thumbnailUrl items categories ownerId collaborators createdAt"
 			);
 
 		res.json({ watchlists });
@@ -700,7 +702,7 @@ export async function getWatchlistsByCategory(
 // Get count of public watchlists by category
 export async function getWatchlistCountByCategory(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const { category } = req.params;
@@ -725,7 +727,7 @@ export async function getWatchlistCountByCategory(
 // Get a single watchlist by ID (with permission check)
 export async function getWatchlistById(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -752,7 +754,7 @@ export async function getWatchlistById(
 		// Check if user has access (owner, collaborator, or public)
 		const isOwner = watchlist.ownerId._id.toString() === userId;
 		const isCollaborator = watchlist.collaborators.some(
-			(c) => c._id.toString() === userId,
+			(c) => c._id.toString() === userId
 		);
 		const isPublic = watchlist.isPublic;
 
@@ -765,7 +767,7 @@ export async function getWatchlistById(
 		const user = await User.findById(userId);
 		const isSaved =
 			user?.savedWatchlists?.some(
-				(savedId) => (savedId as Types.ObjectId).toString() === id,
+				(savedId) => (savedId as Types.ObjectId).toString() === id
 			) || false;
 
 		res.json({ watchlist, isSaved, isOwner, isCollaborator });
@@ -778,7 +780,7 @@ export async function getWatchlistById(
 // Add an item to a watchlist (enriched with TMDB data)
 export async function addItemToWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -804,7 +806,7 @@ export async function addItemToWatchlist(
 		// Check if user is owner or collaborator
 		const isOwner = watchlist.ownerId.toString() === userId;
 		const isCollaborator = watchlist.collaborators.some(
-			(c) => c.toString() === userId,
+			(c) => c.toString() === userId
 		);
 
 		if (!isOwner && !isCollaborator) {
@@ -814,7 +816,7 @@ export async function addItemToWatchlist(
 
 		// Check if item already exists
 		const itemExists = watchlist.items.some(
-			(item) => item.tmdbId === data.tmdbId,
+			(item) => item.tmdbId === data.tmdbId
 		);
 		if (itemExists) {
 			res.status(400).json({ error: "Item already exists in watchlist" });
@@ -826,7 +828,7 @@ export async function addItemToWatchlist(
 			data.tmdbId,
 			data.type,
 			data.language,
-			data.region,
+			data.region
 		);
 
 		if (!enrichedData) {
@@ -864,7 +866,7 @@ export async function addItemToWatchlist(
 					watchlist
 						.save()
 						.catch((err) =>
-							console.error("Failed to save thumbnail URL:", err),
+							console.error("Failed to save thumbnail URL:", err)
 						);
 				}
 			})
@@ -883,7 +885,7 @@ export async function addItemToWatchlist(
 // Remove an item from a watchlist
 export async function removeItemFromWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -903,7 +905,7 @@ export async function removeItemFromWatchlist(
 		// Check if user is owner or collaborator
 		const isOwner = watchlist.ownerId.toString() === userId;
 		const isCollaborator = watchlist.collaborators.some(
-			(c) => c.toString() === userId,
+			(c) => c.toString() === userId
 		);
 
 		if (!isOwner && !isCollaborator) {
@@ -935,7 +937,7 @@ export async function removeItemFromWatchlist(
 					watchlist
 						.save()
 						.catch((err) =>
-							console.error("Failed to save thumbnail URL:", err),
+							console.error("Failed to save thumbnail URL:", err)
 						);
 				} else if (posterUrls.length === 0) {
 					// Clear thumbnail if no items left
@@ -943,7 +945,7 @@ export async function removeItemFromWatchlist(
 					watchlist
 						.save()
 						.catch((err) =>
-							console.error("Failed to clear thumbnail URL:", err),
+							console.error("Failed to clear thumbnail URL:", err)
 						);
 				}
 			})
@@ -959,7 +961,7 @@ export async function removeItemFromWatchlist(
 // Move an item to first or last position
 export async function moveItemPosition(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -980,7 +982,7 @@ export async function moveItemPosition(
 		// Check if user is owner or collaborator
 		const isOwner = watchlist.ownerId.toString() === userId;
 		const isCollaborator = watchlist.collaborators.some(
-			(c) => c.toString() === userId,
+			(c) => c.toString() === userId
 		);
 
 		if (!isOwner && !isCollaborator) {
@@ -990,7 +992,7 @@ export async function moveItemPosition(
 
 		// Find the item
 		const itemIndex = watchlist.items.findIndex(
-			(item) => item.tmdbId === tmdbId,
+			(item) => item.tmdbId === tmdbId
 		);
 		if (itemIndex === -1) {
 			res.status(404).json({ error: "Item not found in watchlist" });
@@ -1045,7 +1047,7 @@ export async function reorderItems(req: Request, res: Response): Promise<void> {
 		// Check if user is owner or collaborator
 		const isOwner = watchlist.ownerId.toString() === userId;
 		const isCollaborator = watchlist.collaborators.some(
-			(c) => c.toString() === userId,
+			(c) => c.toString() === userId
 		);
 
 		if (!isOwner && !isCollaborator) {
@@ -1055,7 +1057,7 @@ export async function reorderItems(req: Request, res: Response): Promise<void> {
 
 		// Create a map of items by tmdbId for quick lookup
 		const itemsMap = new Map(
-			watchlist.items.map((item) => [item.tmdbId, item]),
+			watchlist.items.map((item) => [item.tmdbId, item])
 		);
 
 		// Reorder items based on orderedTmdbIds and clean up data
@@ -1128,7 +1130,7 @@ export async function reorderItems(req: Request, res: Response): Promise<void> {
 					watchlist
 						.save()
 						.catch((err) =>
-							console.error("Failed to save thumbnail URL:", err),
+							console.error("Failed to save thumbnail URL:", err)
 						);
 				}
 			})
@@ -1183,18 +1185,18 @@ export async function uploadCover(req: Request, res: Response): Promise<void> {
 
 		console.log(
 			"📊 [UPLOAD] Image data received, length:",
-			req.body.imageData.length,
+			req.body.imageData.length
 		);
 		console.log(
 			"📊 [UPLOAD] Image data prefix:",
-			req.body.imageData.substring(0, 50),
+			req.body.imageData.substring(0, 50)
 		);
 
 		// Validate image data format (must be base64 data URL)
 		if (!req.body.imageData.startsWith("data:image/")) {
 			console.error(
 				"❌ [UPLOAD] Invalid image format:",
-				req.body.imageData.substring(0, 100),
+				req.body.imageData.substring(0, 100)
 			);
 			res
 				.status(400)
@@ -1330,7 +1332,7 @@ export async function deleteCover(req: Request, res: Response): Promise<void> {
 		if (!publicId) {
 			console.error(
 				"❌ [DELETE] Failed to extract public_id from URL:",
-				watchlist.imageUrl,
+				watchlist.imageUrl
 			);
 			res.status(400).json({ error: "Invalid image URL format" });
 			return;
@@ -1374,7 +1376,7 @@ export async function deleteCover(req: Request, res: Response): Promise<void> {
 // Reorder user's watchlists (for drag and drop)
 export async function reorderWatchlists(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -1393,7 +1395,7 @@ export async function reorderWatchlists(
 
 		// Update user's watchlistsOrder with the new order
 		user.watchlistsOrder = orderedWatchlistIds.map(
-			(id) => new Types.ObjectId(id),
+			(id) => new Types.ObjectId(id)
 		);
 		await user.save();
 
@@ -1429,7 +1431,7 @@ export async function searchTMDB(req: Request, res: Response): Promise<void> {
 			await saveToCache(
 				res.locals.cacheKey,
 				results,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 
@@ -1443,7 +1445,7 @@ export async function searchTMDB(req: Request, res: Response): Promise<void> {
 // Get full details for a specific media item (movie or TV show)
 export async function getItemDetails(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const { tmdbId, type } = req.params;
@@ -1475,7 +1477,7 @@ export async function getItemDetails(
 			await saveToCache(
 				res.locals.cacheKey,
 				responseData,
-				res.locals.cacheDurationDays,
+				res.locals.cacheDurationDays
 			);
 		}
 
@@ -1489,7 +1491,7 @@ export async function getItemDetails(
 // Save a public watchlist to user's library
 export async function saveWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<Response> {
 	try {
 		if (!req.user) {
@@ -1555,7 +1557,7 @@ export async function saveWatchlist(
 // Unsave a watchlist from user's library
 export async function unsaveWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<Response> {
 	try {
 		if (!req.user) {
@@ -1572,7 +1574,7 @@ export async function unsaveWatchlist(
 		// Remove from savedWatchlists
 		const initialLength = user.savedWatchlists.length;
 		user.savedWatchlists = user.savedWatchlists.filter(
-			(w) => w.toString() !== id,
+			(w) => w.toString() !== id
 		);
 
 		if (user.savedWatchlists.length === initialLength) {
@@ -1581,7 +1583,7 @@ export async function unsaveWatchlist(
 
 		// Remove from watchlistsOrder
 		user.watchlistsOrder = user.watchlistsOrder.filter(
-			(w) => w.toString() !== id,
+			(w) => w.toString() !== id
 		);
 
 		await user.save();
@@ -1592,7 +1594,7 @@ export async function unsaveWatchlist(
 			if (watchlist) {
 				// Remove from likedBy array
 				watchlist.likedBy = watchlist.likedBy.filter(
-					(likedUserId) => likedUserId.toString() !== userId,
+					(likedUserId) => likedUserId.toString() !== userId
 				);
 				await watchlist.save();
 			}
@@ -1607,7 +1609,7 @@ export async function unsaveWatchlist(
 // Duplicate a public watchlist to user's personal space
 export async function duplicateWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -1632,7 +1634,7 @@ export async function duplicateWatchlist(
 		// Can only duplicate public watchlists or ones you have access to
 		const isOwner = originalWatchlist.ownerId.toString() === userId;
 		const isCollaborator = originalWatchlist.collaborators.some(
-			(c) => c.toString() === userId,
+			(c) => c.toString() === userId
 		);
 
 		if (!originalWatchlist.isPublic && !isOwner && !isCollaborator) {
@@ -1682,7 +1684,7 @@ export async function duplicateWatchlist(
 						duplicatedWatchlist
 							.save()
 							.catch((err) =>
-								console.error("Failed to save thumbnail URL:", err),
+								console.error("Failed to save thumbnail URL:", err)
 							);
 					}
 				})
@@ -1702,7 +1704,7 @@ export async function duplicateWatchlist(
  */
 export async function generateWatchlistThumbnail(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const { id } = req.params;
@@ -1728,7 +1730,7 @@ export async function generateWatchlistThumbnail(
 		// Check if user is owner or collaborator
 		const isOwner = watchlist.ownerId.toString() === userId;
 		const isCollaborator = watchlist.collaborators.some(
-			(collaboratorId) => collaboratorId.toString() === userId,
+			(collaboratorId) => collaboratorId.toString() === userId
 		);
 
 		if (!isOwner && !isCollaborator) {
@@ -1771,7 +1773,7 @@ export async function generateWatchlistThumbnail(
  */
 export async function addCollaborator(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -1828,7 +1830,7 @@ export async function addCollaborator(
 		// Check if already a collaborator
 		if (
 			watchlist.collaborators.some(
-				(id) => id.toString() === collaboratorId.toString(),
+				(id) => id.toString() === collaboratorId.toString()
 			)
 		) {
 			res.status(400).json({ error: "User is already a collaborator" });
@@ -1841,23 +1843,21 @@ export async function addCollaborator(
 		// Remove like/save if user was following this watchlist
 		// (becoming a collaborator makes following redundant)
 		const wasFollowing = watchlist.likedBy.some(
-			(id) => id.toString() === collaboratorId.toString(),
+			(id) => id.toString() === collaboratorId.toString()
 		);
 		if (wasFollowing) {
 			watchlist.likedBy = watchlist.likedBy.filter(
-				(id) => id.toString() !== collaboratorId.toString(),
+				(id) => id.toString() !== collaboratorId.toString()
 			);
 
 			// Remove from user's saved watchlists
 			if (
 				collaborator.savedWatchlists.some(
-					(id) =>
-						id.toString() === (watchlist._id as Types.ObjectId).toString(),
+					(id) => id.toString() === (watchlist._id as Types.ObjectId).toString()
 				)
 			) {
 				collaborator.savedWatchlists = collaborator.savedWatchlists.filter(
-					(id) =>
-						id.toString() !== (watchlist._id as Types.ObjectId).toString(),
+					(id) => id.toString() !== (watchlist._id as Types.ObjectId).toString()
 				);
 				needsCollaboratorSave = true;
 			}
@@ -1870,11 +1870,11 @@ export async function addCollaborator(
 		// Add watchlist to user's collaborativeWatchlists
 		if (
 			!collaborator.collaborativeWatchlists.includes(
-				watchlist._id as Types.ObjectId,
+				watchlist._id as Types.ObjectId
 			)
 		) {
 			collaborator.collaborativeWatchlists.push(
-				watchlist._id as Types.ObjectId,
+				watchlist._id as Types.ObjectId
 			);
 			needsCollaboratorSave = true;
 		}
@@ -1883,7 +1883,7 @@ export async function addCollaborator(
 		const watchlistIdStr = (watchlist._id as Types.ObjectId).toString();
 		if (
 			!collaborator.watchlistsOrder.some(
-				(id) => id.toString() === watchlistIdStr,
+				(id) => id.toString() === watchlistIdStr
 			)
 		) {
 			collaborator.watchlistsOrder.push(watchlist._id as Types.ObjectId);
@@ -1914,7 +1914,7 @@ export async function addCollaborator(
  */
 export async function removeCollaborator(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -1952,7 +1952,7 @@ export async function removeCollaborator(
 
 		// Check if user is actually a collaborator
 		const collaboratorIndex = watchlist.collaborators.findIndex(
-			(id) => id.toString() === collaboratorId,
+			(id) => id.toString() === collaboratorId
 		);
 
 		if (collaboratorIndex === -1) {
@@ -1969,12 +1969,12 @@ export async function removeCollaborator(
 		if (collaborator) {
 			collaborator.collaborativeWatchlists =
 				collaborator.collaborativeWatchlists.filter(
-					(wId) => wId.toString() !== id,
+					(wId) => wId.toString() !== id
 				);
 
 			// Remove from watchlistsOrder
 			collaborator.watchlistsOrder = collaborator.watchlistsOrder.filter(
-				(wId) => wId.toString() !== id,
+				(wId) => wId.toString() !== id
 			);
 
 			await collaborator.save();
@@ -1992,7 +1992,7 @@ export async function removeCollaborator(
  */
 export async function leaveWatchlist(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		if (!req.user) {
@@ -2016,7 +2016,7 @@ export async function leaveWatchlist(
 
 		// Check if user is a collaborator
 		const collaboratorIndex = watchlist.collaborators.findIndex(
-			(id) => id.toString() === userId,
+			(id) => id.toString() === userId
 		);
 
 		if (collaboratorIndex === -1) {
@@ -2034,12 +2034,12 @@ export async function leaveWatchlist(
 		const user = await User.findById(userId);
 		if (user) {
 			user.collaborativeWatchlists = user.collaborativeWatchlists.filter(
-				(wId) => wId.toString() !== id,
+				(wId) => wId.toString() !== id
 			);
 
 			// Remove from watchlistsOrder
 			user.watchlistsOrder = user.watchlistsOrder.filter(
-				(wId) => wId.toString() !== id,
+				(wId) => wId.toString() !== id
 			);
 
 			await user.save();

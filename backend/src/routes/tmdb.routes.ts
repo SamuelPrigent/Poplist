@@ -12,7 +12,7 @@ const router = Router();
 router.get(
 	"/trending/:timeWindow",
 	cacheMiddleware(30),
-	tmdbController.getTrending,
+	tmdbController.getTrending
 );
 
 // Discover with filters (doit être avant /:type/:id/similar)
@@ -31,7 +31,7 @@ router.get("/:type/top_rated", cacheMiddleware(30), tmdbController.getTopRated);
 router.get(
 	"/:type/:id/similar",
 	cacheMiddleware(30),
-	tmdbController.getSimilar,
+	tmdbController.getSimilar
 );
 
 export default router;

@@ -11,11 +11,11 @@ function getOAuthConfig() {
 
 	console.log(
 		"🔍 [Google Config] CLIENT_ID:",
-		CLIENT_ID ? `✅ ${CLIENT_ID.substring(0, 20)}...` : "❌ EMPTY",
+		CLIENT_ID ? `✅ ${CLIENT_ID.substring(0, 20)}...` : "❌ EMPTY"
 	);
 	console.log(
 		"🔍 [Google Config] CLIENT_SECRET:",
-		CLIENT_SECRET ? "✅ Present" : "❌ EMPTY",
+		CLIENT_SECRET ? "✅ Present" : "❌ EMPTY"
 	);
 	console.log("🔍 [Google Config] REDIRECT_URI:", REDIRECT_URI);
 
@@ -28,14 +28,14 @@ function getGoogleOAuthClient(): OAuth2Client {
 
 		if (!CLIENT_ID || !CLIENT_SECRET) {
 			throw new Error(
-				"Missing Google OAuth credentials. Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env",
+				"Missing Google OAuth credentials. Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env"
 			);
 		}
 
 		googleOAuthClient = new OAuth2Client(
 			CLIENT_ID,
 			CLIENT_SECRET,
-			REDIRECT_URI,
+			REDIRECT_URI
 		);
 		console.log("🟢 [Google Client] OAuth2Client initialized successfully");
 	}
@@ -58,7 +58,7 @@ export function getGoogleAuthURL(): string {
 
 	console.log(
 		"🔵 [Google Lib] Generating OAuth URL with redirect:",
-		REDIRECT_URI,
+		REDIRECT_URI
 	);
 
 	const authUrl = client.generateAuthUrl({
@@ -69,7 +69,7 @@ export function getGoogleAuthURL(): string {
 
 	console.log(
 		"🔵 [Google Lib] Generated URL (first 100 chars):",
-		authUrl.substring(0, 100),
+		authUrl.substring(0, 100)
 	);
 
 	return authUrl;

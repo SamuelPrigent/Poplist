@@ -29,7 +29,7 @@ const refreshTokenSchema = new Schema<RefreshToken>(
 		issuedAt: { type: Date, required: true, default: Date.now },
 		userAgent: { type: String },
 	},
-	{ _id: false },
+	{ _id: false }
 );
 
 const userSchema = new Schema<IUser>(
@@ -82,7 +82,7 @@ const userSchema = new Schema<IUser>(
 	},
 	{
 		timestamps: true,
-	},
+	}
 );
 
 export const User = mongoose.model<IUser>("User", userSchema);

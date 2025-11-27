@@ -1,18 +1,16 @@
 import type { NextFunction, Request, Response } from "express";
 import { type AccessTokenPayload, verifyAccessToken } from "../lib/jwt.js";
 
-declare global {
-	namespace Express {
-		interface Request {
-			user?: AccessTokenPayload;
-		}
+declare module "express-serve-static-core" {
+	interface Request {
+		user?: AccessTokenPayload;
 	}
 }
 
 export function requireAuth(
 	req: Request,
 	res: Response,
-	next: NextFunction,
+	next: NextFunction
 ): void {
 	try {
 		const accessToken = req.cookies.accessToken;
@@ -34,7 +32,7 @@ export function requireAuth(
 export function optionalAuth(
 	req: Request,
 	res: Response,
-	next: NextFunction,
+	next: NextFunction
 ): void {
 	try {
 		const accessToken = req.cookies.accessToken;

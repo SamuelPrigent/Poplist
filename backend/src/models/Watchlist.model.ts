@@ -37,7 +37,7 @@ const platformSchema = new Schema<Platform>(
 		name: { type: String, required: true },
 		logoPath: { type: String, default: "" },
 	},
-	{ _id: false },
+	{ _id: false }
 );
 
 const watchlistItemSchema = new Schema<WatchlistItem>(
@@ -52,7 +52,7 @@ const watchlistItemSchema = new Schema<WatchlistItem>(
 		numberOfEpisodes: { type: Number },
 		addedAt: { type: Date, default: Date.now, required: true },
 	},
-	{ _id: false },
+	{ _id: false }
 );
 
 const watchlistSchema = new Schema<IWatchlist>(
@@ -90,7 +90,7 @@ const watchlistSchema = new Schema<IWatchlist>(
 	},
 	{
 		timestamps: true,
-	},
+	}
 );
 
 // Compound index for efficient queries
@@ -100,5 +100,5 @@ watchlistSchema.index({ isPublic: 1, createdAt: -1 }); // For filtering and sort
 
 export const Watchlist = mongoose.model<IWatchlist>(
 	"Watchlist",
-	watchlistSchema,
+	watchlistSchema
 );

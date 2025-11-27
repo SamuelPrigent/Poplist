@@ -26,7 +26,7 @@ router.delete("/profile/account", requireAuth, authController.deleteAccount);
 // Username availability check (public route)
 router.get(
 	"/username/check/:username",
-	authController.checkUsernameAvailability,
+	authController.checkUsernameAvailability
 );
 
 export default router;

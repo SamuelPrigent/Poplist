@@ -17,7 +17,7 @@ if (process.env.CLOUDINARY_URL) {
 	// Parse CLOUDINARY_URL and configure explicitly
 	// Format: cloudinary://api_key:api_secret@cloud_name
 	const match = process.env.CLOUDINARY_URL.match(
-		/cloudinary:\/\/([^:]+):([^@]+)@(.+)/,
+		/cloudinary:\/\/([^:]+):([^@]+)@(.+)/
 	);
 
 	if (match) {
@@ -38,16 +38,16 @@ if (process.env.CLOUDINARY_URL) {
 console.log("🔍 [ENV DEBUG] Loading environment variables...");
 console.log(
 	"🔍 [ENV DEBUG] GOOGLE_CLIENT_ID:",
-	process.env.GOOGLE_CLIENT_ID ? "✅ Loaded" : "❌ Missing",
+	process.env.GOOGLE_CLIENT_ID ? "✅ Loaded" : "❌ Missing"
 );
 console.log(
 	"🔍 [ENV DEBUG] GOOGLE_CLIENT_SECRET:",
-	process.env.GOOGLE_CLIENT_SECRET ? "✅ Loaded" : "❌ Missing",
+	process.env.GOOGLE_CLIENT_SECRET ? "✅ Loaded" : "❌ Missing"
 );
 console.log("🔍 [ENV DEBUG] PORT:", process.env.PORT || "using default 3000");
 console.log(
 	"🔍 [ENV DEBUG] CLIENT_URL:",
-	process.env.CLIENT_URL || "using default",
+	process.env.CLIENT_URL || "using default"
 );
 
 const app = express();
@@ -61,7 +61,7 @@ app.use(
 	cors({
 		origin: CLIENT_URL,
 		credentials: true,
-	}),
+	})
 );
 app.use(express.json({ limit: "10mb" })); // Increased limit for base64 image uploads
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));

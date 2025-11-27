@@ -5,7 +5,7 @@ const cookieDomain = process.env.COOKIE_DOMAIN || "localhost";
 
 const commonOptions = {
 	httpOnly: true,
-	sameSite: (isProduction ? "strict" : "lax") as "strict" | "lax",
+	sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
 	secure: isProduction,
 	domain: cookieDomain,
 	path: "/",

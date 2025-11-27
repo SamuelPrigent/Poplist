@@ -103,7 +103,7 @@ export function AuthDrawer({
 		window.open(
 			`${API_URL}/auth/google`,
 			"Google Login",
-			`width=${width},height=${height},left=${left},top=${top}`,
+			`width=${width},height=${height},left=${left},top=${top}`
 		);
 
 		// Listen for postMessage from popup
@@ -134,7 +134,7 @@ export function AuthDrawer({
 			() => {
 				window.removeEventListener("message", handleMessage);
 			},
-			5 * 60 * 1000,
+			5 * 60 * 1000
 		);
 
 		window.addEventListener("message", handleMessage);
@@ -164,7 +164,7 @@ export function AuthDrawer({
 					<Button
 						type="button"
 						variant="outline"
-						className="w-full"
+						className="w-full cursor-pointer"
 						onClick={handleGoogleLogin}
 					>
 						<svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -190,10 +190,10 @@ export function AuthDrawer({
 
 					<div className="relative">
 						<div className="absolute inset-0 flex items-center">
-							<span className="w-full border-t border-border" />
+							<span className="border-border w-full border-t" />
 						</div>
 						<div className="relative flex justify-center text-xs uppercase">
-							<span className="bg-background px-2 text-muted-foreground">
+							<span className="bg-background text-muted-foreground px-2">
 								{content.auth.or}
 							</span>
 						</div>
@@ -232,12 +232,16 @@ export function AuthDrawer({
 						</div>
 
 						{error && (
-							<div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+							<div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
 								{error}
 							</div>
 						)}
 
-						<Button type="submit" className="w-full" disabled={loading}>
+						<Button
+							type="submit"
+							className="w-full cursor-pointer"
+							disabled={loading}
+						>
 							{loading
 								? content.auth.processing
 								: mode === "login"
@@ -246,14 +250,14 @@ export function AuthDrawer({
 						</Button>
 					</form>
 
-					<div className="text-center text-sm text-muted-foreground">
+					<div className="text-muted-foreground text-center text-sm">
 						{mode === "login" ? (
 							<p>
 								{content.auth.dontHaveAccount}{" "}
 								<button
 									type="button"
 									onClick={() => setMode("signup")}
-									className="text-primary underline"
+									className="text-primary cursor-pointer underline"
 								>
 									{content.auth.signupTitle}
 								</button>
@@ -264,7 +268,7 @@ export function AuthDrawer({
 								<button
 									type="button"
 									onClick={() => setMode("login")}
-									className="text-primary underline"
+									className="text-primary cursor-pointer underline"
 								>
 									{content.auth.loginTitle}
 								</button>

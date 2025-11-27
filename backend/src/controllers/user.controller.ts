@@ -82,7 +82,10 @@ export async function uploadAvatar(req: Request, res: Response): Promise<void> {
 						await cloudinary.uploader.destroy(oldPublicId);
 						console.log("✅ [CLOUDINARY] Old avatar deleted successfully");
 					} catch (error) {
-						console.warn("⚠️  [CLOUDINARY] Failed to delete old avatar:", error);
+						console.warn(
+							"⚠️  [CLOUDINARY] Failed to delete old avatar:",
+							error
+						);
 					}
 				}
 			}
@@ -156,7 +159,7 @@ export async function deleteAvatar(req: Request, res: Response): Promise<void> {
 		if (!publicId) {
 			console.error(
 				"❌ [DELETE] Failed to extract public_id from URL:",
-				user.avatarUrl,
+				user.avatarUrl
 			);
 			res.status(400).json({ error: "Invalid avatar URL format" });
 			return;
@@ -206,7 +209,7 @@ export async function getProfile(req: Request, res: Response): Promise<void> {
 		const userId = req.user.sub;
 
 		const user = await User.findById(userId).select(
-			"-passwordHash -refreshTokens",
+			"-passwordHash -refreshTokens"
 		);
 
 		if (!user) {
@@ -227,14 +230,14 @@ export async function getProfile(req: Request, res: Response): Promise<void> {
 // Get public user profile by username with their public watchlists
 export async function getUserProfileByUsername(
 	req: Request,
-	res: Response,
+	res: Response
 ): Promise<void> {
 	try {
 		const { username } = req.params;
 
 		// Find user by username
 		const user = await User.findOne({ username }).select(
-			"_id username avatarUrl watchlistsOrder",
+			"_id username avatarUrl watchlistsOrder"
 		);
 
 		if (!user) {
@@ -257,10 +260,10 @@ export async function getUserProfileByUsername(
 		// Sort watchlists according to user's watchlistsOrder
 		const orderedWatchlists = publicWatchlists.sort((a, b) => {
 			const indexA = user.watchlistsOrder.findIndex(
-				(id) => id.toString() === a._id.toString(),
+				(id) => id.toString() === a._id.toString()
 			);
 			const indexB = user.watchlistsOrder.findIndex(
-				(id) => id.toString() === b._id.toString(),
+				(id) => id.toString() === b._id.toString()
 			);
 
 			// If both are in watchlistsOrder, sort by their order
@@ -275,9 +278,7 @@ export async function getUserProfileByUsername(
 			if (indexB !== -1) return 1;
 
 			// If neither is in watchlistsOrder, sort by creation date (newest first)
-			return (
-				new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-			);
+			return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 		});
 
 		res.json({

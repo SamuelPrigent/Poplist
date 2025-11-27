@@ -339,6 +339,7 @@ export function Account() {
 												disabled={avatarUploading || avatarDeleting}
 											/>
 											<Button
+												className="cursor-pointer"
 												type="button"
 												variant="outline"
 												disabled={avatarUploading || avatarDeleting}
@@ -364,6 +365,7 @@ export function Account() {
 
 										{user?.avatarUrl && (
 											<Button
+												className="cursor-pointer"
 												type="button"
 												variant="outline"
 												disabled={avatarUploading || avatarDeleting}
@@ -431,6 +433,7 @@ export function Account() {
 								)}
 							</div>
 							<Button
+								className="cursor-pointer"
 								type="submit"
 								disabled={
 									usernameLoading ||
@@ -499,6 +502,7 @@ export function Account() {
 									/>
 								</div>
 								<Button
+									className="cursor-pointer"
 									type="submit"
 									disabled={
 										passwordLoading ||
@@ -530,6 +534,7 @@ export function Account() {
 								</p>
 							</div>
 							<Button
+								className="cursor-pointer"
 								variant="destructive"
 								onClick={() => setDeleteDialogOpen(true)}
 							>
@@ -582,6 +587,7 @@ export function Account() {
 						{/* Actions */}
 						<div className="flex justify-end gap-2 pt-4">
 							<Button
+								className="cursor-pointer"
 								type="button"
 								variant="outline"
 								onClick={() => {
@@ -593,6 +599,7 @@ export function Account() {
 								{content.profile.deleteSection.cancel}
 							</Button>
 							<Button
+								className="cursor-pointer"
 								type="button"
 								variant="destructive"
 								onClick={handleDeleteAccount}

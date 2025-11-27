@@ -92,7 +92,12 @@ export function Header() {
 									</div>
 									<span className="text-sm font-medium">{user?.username}</span>
 								</button>
-								<Button variant="ghost" size="icon" onClick={handleLogout}>
+								<Button
+									className="cursor-pointer"
+									variant="ghost"
+									size="icon"
+									onClick={handleLogout}
+								>
 									<LogOut className="h-4 w-4" />
 								</Button>
 							</div>

@@ -137,7 +137,7 @@ function buildProfileUrl(path: string | null): string {
 // Fetch movie details
 export async function getMovieDetails(
 	tmdbId: string,
-	language: string = "fr-FR",
+	language: string = "fr-FR"
 ): Promise<Omit<EnrichedMediaData, "platformList"> | null> {
 	const cacheKey = `movie:${tmdbId}:${language}`;
 	const cached = cache.get<Omit<EnrichedMediaData, "platformList">>(cacheKey);
@@ -151,7 +151,7 @@ export async function getMovieDetails(
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		if (!response.ok) {
@@ -180,7 +180,7 @@ export async function getMovieDetails(
 // Fetch TV show details
 export async function getTVDetails(
 	tmdbId: string,
-	language: string = "fr-FR",
+	language: string = "fr-FR"
 ): Promise<Omit<EnrichedMediaData, "platformList"> | null> {
 	const cacheKey = `tv:${tmdbId}:${language}`;
 	const cached = cache.get<Omit<EnrichedMediaData, "platformList">>(cacheKey);
@@ -194,7 +194,7 @@ export async function getTVDetails(
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		if (!response.ok) {
@@ -243,7 +243,7 @@ function isAllowedProvider(providerName: string): boolean {
 	return ALLOWED_PROVIDERS.some(
 		(allowed) =>
 			providerName.toLowerCase().includes(allowed.toLowerCase()) ||
-			allowed.toLowerCase().includes(providerName.toLowerCase()),
+			allowed.toLowerCase().includes(providerName.toLowerCase())
 	);
 }
 
@@ -251,7 +251,7 @@ function isAllowedProvider(providerName: string): boolean {
 export async function getWatchProviders(
 	tmdbId: string,
 	type: "movie" | "tv",
-	region: string = "FR",
+	region: string = "FR"
 ): Promise<Platform[]> {
 	const cacheKey = `providers:${type}:${tmdbId}:${region}`;
 	const cached = cache.get<Platform[]>(cacheKey);
@@ -265,13 +265,13 @@ export async function getWatchProviders(
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		if (!response.ok) {
 			console.error(
 				`TMDB API error (providers ${type} ${tmdbId}):`,
-				response.statusText,
+				response.statusText
 			);
 			return [{ name: "Inconnu", logoPath: "" }];
 		}
@@ -293,7 +293,7 @@ export async function getWatchProviders(
 				...regionData.flatrate.map((p) => ({
 					name: p.provider_name,
 					logoPath: p.logo_path,
-				})),
+				}))
 			);
 		}
 
@@ -302,7 +302,7 @@ export async function getWatchProviders(
 				...regionData.buy.map((p) => ({
 					name: p.provider_name,
 					logoPath: p.logo_path,
-				})),
+				}))
 			);
 		}
 
@@ -311,7 +311,7 @@ export async function getWatchProviders(
 				...regionData.rent.map((p) => ({
 					name: p.provider_name,
 					logoPath: p.logo_path,
-				})),
+				}))
 			);
 		}
 
@@ -335,7 +335,7 @@ export async function getWatchProviders(
 		// Debug log
 		console.log(
 			`[TMDB] Watch providers for ${type} ${tmdbId} in ${region}:`,
-			result,
+			result
 		);
 
 		cache.set(cacheKey, result);
@@ -343,7 +343,7 @@ export async function getWatchProviders(
 	} catch (error) {
 		console.error(
 			`Error fetching watch providers for ${type} ${tmdbId}:`,
-			error,
+			error
 		);
 		return [{ name: "Inconnu", logoPath: "" }];
 	}
@@ -354,7 +354,7 @@ export async function enrichMediaData(
 	tmdbId: string,
 	type: "movie" | "tv",
 	language: string = "fr-FR",
-	region: string = "FR",
+	region: string = "FR"
 ): Promise<EnrichedMediaData | null> {
 	try {
 		// Fetch details based on type
@@ -381,7 +381,7 @@ export async function enrichMediaData(
 // Fetch runtime for a single movie
 async function getMovieRuntime(
 	tmdbId: number,
-	language: string,
+	language: string
 ): Promise<number | undefined> {
 	const cacheKey = `runtime:movie:${tmdbId}`;
 	const cached = cache.get<number>(cacheKey);
@@ -395,7 +395,7 @@ async function getMovieRuntime(
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		if (!response.ok) return undefined;
@@ -417,7 +417,7 @@ async function getMovieRuntime(
 // Fetch runtime for a single TV show (episode runtime)
 async function getTVRuntime(
 	tmdbId: number,
-	language: string,
+	language: string
 ): Promise<number | undefined> {
 	const cacheKey = `runtime:tv:${tmdbId}`;
 	const cached = cache.get<number>(cacheKey);
@@ -431,7 +431,7 @@ async function getTVRuntime(
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		if (!response.ok) return undefined;
@@ -469,7 +469,7 @@ export interface SearchResult {
 export async function searchMedia(
 	query: string,
 	language: string = "fr-FR",
-	page: number = 1,
+	page: number = 1
 ): Promise<SearchResult> {
 	const cacheKey = `search:${query}:${language}:${page}`;
 	const cached = cache.get<SearchResult>(cacheKey);
@@ -478,14 +478,14 @@ export async function searchMedia(
 	try {
 		const response = await fetch(
 			`${TMDB_BASE_URL}/search/multi?query=${encodeURIComponent(
-				query,
+				query
 			)}&language=${language}&page=${page}&include_adult=false`,
 			{
 				headers: {
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		if (!response.ok) {
@@ -497,7 +497,7 @@ export async function searchMedia(
 
 		// Filter only movies and TV shows (exclude persons)
 		const filteredResults = data.results.filter(
-			(item) => item.media_type === "movie" || item.media_type === "tv",
+			(item) => item.media_type === "movie" || item.media_type === "tv"
 		) as Array<{
 			id: number;
 			media_type: "movie" | "tv";
@@ -616,7 +616,7 @@ export interface FullMediaDetails {
 // Fetch full movie details with credits
 export async function getMovieFullDetails(
 	tmdbId: string,
-	language: string = "fr-FR",
+	language: string = "fr-FR"
 ): Promise<FullMediaDetails | null> {
 	const cacheKey = `movie-full:${tmdbId}:${language}`;
 	const cached = cache.get<FullMediaDetails>(cacheKey);
@@ -631,13 +631,13 @@ export async function getMovieFullDetails(
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		// If not found in requested language, try English as fallback
 		if (!detailsResponse.ok && language !== "en-US") {
 			console.warn(
-				`TMDB API error (movie full ${tmdbId}) with ${language}, trying en-US fallback`,
+				`TMDB API error (movie full ${tmdbId}) with ${language}, trying en-US fallback`
 			);
 			detailsResponse = await fetch(
 				`${TMDB_BASE_URL}/movie/${tmdbId}?language=en-US&append_to_response=credits`,
@@ -646,14 +646,14 @@ export async function getMovieFullDetails(
 						Authorization: `Bearer ${TMDB_API_KEY}`,
 						"Content-Type": "application/json",
 					},
-				},
+				}
 			);
 		}
 
 		if (!detailsResponse.ok) {
 			console.error(
 				`TMDB API error (movie full ${tmdbId}):`,
-				detailsResponse.statusText,
+				detailsResponse.statusText
 			);
 			return null;
 		}
@@ -670,7 +670,7 @@ export async function getMovieFullDetails(
 
 		// Find director
 		const director = movieData.credits?.crew?.find(
-			(member) => member.job === "Director",
+			(member) => member.job === "Director"
 		)?.name;
 
 		const result: FullMediaDetails = {
@@ -700,7 +700,7 @@ export async function getMovieFullDetails(
 // Fetch full TV show details with credits
 export async function getTVFullDetails(
 	tmdbId: string,
-	language: string = "fr-FR",
+	language: string = "fr-FR"
 ): Promise<FullMediaDetails | null> {
 	const cacheKey = `tv-full-v2:${tmdbId}:${language}`;
 	const cached = cache.get<FullMediaDetails>(cacheKey);
@@ -715,13 +715,13 @@ export async function getTVFullDetails(
 					Authorization: `Bearer ${TMDB_API_KEY}`,
 					"Content-Type": "application/json",
 				},
-			},
+			}
 		);
 
 		// If not found in requested language, try English as fallback
 		if (!detailsResponse.ok && language !== "en-US") {
 			console.warn(
-				`TMDB API error (TV full ${tmdbId}) with ${language}, trying en-US fallback`,
+				`TMDB API error (TV full ${tmdbId}) with ${language}, trying en-US fallback`
 			);
 			detailsResponse = await fetch(
 				`${TMDB_BASE_URL}/tv/${tmdbId}?language=en-US&append_to_response=credits`,
@@ -730,14 +730,14 @@ export async function getTVFullDetails(
 						Authorization: `Bearer ${TMDB_API_KEY}`,
 						"Content-Type": "application/json",
 					},
-				},
+				}
 			);
 		}
 
 		if (!detailsResponse.ok) {
 			console.error(
 				`TMDB API error (TV full ${tmdbId}):`,
-				detailsResponse.statusText,
+				detailsResponse.statusText
 			);
 			return null;
 		}
@@ -755,7 +755,7 @@ export async function getTVFullDetails(
 		// For TV shows, find creator or executive producer
 		const director = tvData.credits?.crew?.find(
 			(member) =>
-				member.job === "Creator" || member.job === "Executive Producer",
+				member.job === "Creator" || member.job === "Executive Producer"
 		)?.name;
 
 		const result: FullMediaDetails = {
@@ -788,7 +788,7 @@ export async function getTVFullDetails(
 export async function getFullMediaDetails(
 	tmdbId: string,
 	type: "movie" | "tv",
-	language: string = "fr-FR",
+	language: string = "fr-FR"
 ): Promise<FullMediaDetails | null> {
 	return type === "movie"
 		? await getMovieFullDetails(tmdbId, language)

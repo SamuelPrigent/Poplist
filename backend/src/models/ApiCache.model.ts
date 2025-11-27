@@ -32,7 +32,7 @@ const apiCacheSchema = new Schema<IApiCache>(
 	},
 	{
 		timestamps: false, // On gère manuellement cachedAt
-	},
+	}
 );
 
 // TTL index : MongoDB supprimera automatiquement les documents expirés

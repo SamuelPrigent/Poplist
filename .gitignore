@@ -1,5 +1,6 @@
 prompt
 .env
+.env.prod
 .DS_Store
 dist
 node_modules
@@ -9,3 +10,4 @@ API_TMDB_CACHE.md
 archives
 DEVOPS.md
 DevOps1.md
+render.md

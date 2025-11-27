@@ -108,7 +108,7 @@ export async function generateThumbnail(posterUrls: string[]): Promise<Buffer> {
  */
 export async function uploadThumbnailToCloudinary(
 	thumbnailBuffer: Buffer,
-	watchlistId: string,
+	watchlistId: string
 ): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const uploadStream = cloudinary.uploader.upload_stream(
@@ -126,7 +126,7 @@ export async function uploadThumbnailToCloudinary(
 				} else {
 					reject(new Error("Upload failed: no result returned"));
 				}
-			},
+			}
 		);
 
 		// Write buffer to stream
@@ -143,7 +143,7 @@ export async function uploadThumbnailToCloudinary(
  */
 export async function regenerateThumbnail(
 	watchlistId: string,
-	posterUrls: string[],
+	posterUrls: string[]
 ): Promise<string | null> {
 	try {
 		if (posterUrls.length === 0) {
@@ -153,7 +153,7 @@ export async function regenerateThumbnail(
 		const thumbnailBuffer = await generateThumbnail(posterUrls);
 		const thumbnailUrl = await uploadThumbnailToCloudinary(
 			thumbnailBuffer,
-			watchlistId,
+			watchlistId
 		);
 		return thumbnailUrl;
 	} catch (error) {
@@ -168,13 +168,13 @@ export async function regenerateThumbnail(
  * @returns Promise<void>
  */
 export async function deleteThumbnailFromCloudinary(
-	watchlistId: string,
+	watchlistId: string
 ): Promise<void> {
 	try {
 		const publicId = `watchlist_thumbnails/thumbnail_${watchlistId}`;
 		await cloudinary.uploader.destroy(publicId);
 		console.log(
-			`Deleted thumbnail for watchlist ${watchlistId} from Cloudinary`,
+			`Deleted thumbnail for watchlist ${watchlistId} from Cloudinary`
 		);
 	} catch (error) {
 		console.error("Failed to delete thumbnail from Cloudinary:", error);
