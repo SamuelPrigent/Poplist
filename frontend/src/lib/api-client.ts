@@ -1,4 +1,11 @@
 import type { User } from "@/context/auth-context";
+import appleTvLogo from "@/assets/watchProvider/appleTv.svg";
+import crunchyrollLogo from "@/assets/watchProvider/Crunchyroll.svg";
+import disneyPlusLogo from "@/assets/watchProvider/disneyplus.svg";
+import hboLogo from "@/assets/watchProvider/hbo.svg";
+import netflixLogo from "@/assets/watchProvider/netflix2.svg";
+import primeVideoLogo from "@/assets/watchProvider/primeVideo.svg";
+import youtubeLogo from "@/assets/watchProvider/youtube.svg";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -13,14 +20,14 @@ export function getTMDBImageUrl(logoPath: string): string {
 // Helper to get local watch provider logo based on provider name
 export function getWatchProviderLogo(providerName: string): string | null {
 	const nameMap: Record<string, string | null> = {
-		netflix: "/src/assets/watchProvider/netflix2.svg",
-		"amazon prime video": "/src/assets/watchProvider/primeVideo.svg",
-		"amazon prime video with ads": "/src/assets/watchProvider/primeVideo.svg",
-		youtube: "/src/assets/watchProvider/youtube.svg",
-		"apple tv": "/src/assets/watchProvider/appleTv.svg",
-		"disney plus": "/src/assets/watchProvider/disneyplus.svg",
-		crunchyroll: "/src/assets/watchProvider/Crunchyroll.svg",
-		"hbo max": "/src/assets/watchProvider/hbo.svg",
+		netflix: netflixLogo,
+		"amazon prime video": primeVideoLogo,
+		"amazon prime video with ads": primeVideoLogo,
+		youtube: youtubeLogo,
+		"apple tv": appleTvLogo,
+		"disney plus": disneyPlusLogo,
+		crunchyroll: crunchyrollLogo,
+		"hbo max": hboLogo,
 	};
 
 	const normalized = providerName.toLowerCase();

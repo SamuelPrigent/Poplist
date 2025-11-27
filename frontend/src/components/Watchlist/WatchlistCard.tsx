@@ -6,6 +6,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Edit, Film, MoreVertical, Trash2 } from "lucide-react";
 import { useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import checkGreenIcon from "@/assets/checkGreenFull.svg";
 import teamIcon from "@/assets/team.svg";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 import type { Watchlist } from "@/lib/api-client";
@@ -151,7 +152,7 @@ export function WatchlistCard({
 				{/* Saved Badge - Indicates this is a followed watchlist */}
 				{showSavedBadge && (
 					<img
-						src="/src/assets/checkGreenFull.svg"
+						src={checkGreenIcon}
 						alt="Suivi"
 						className="h-4 w-4 flex-shrink-0"
 					/>
