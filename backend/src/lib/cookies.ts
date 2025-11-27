@@ -1,14 +1,15 @@
 import type { Response } from "express";
 
 const isProduction = process.env.NODE_ENV === "production";
-const cookieDomain = process.env.COOKIE_DOMAIN || "localhost";
 
+// For cross-domain cookies (different domains), don't set domain attribute
+// Browser will automatically set cookie for the current domain
 const commonOptions = {
 	httpOnly: true,
 	sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
 	secure: isProduction,
-	domain: cookieDomain,
 	path: "/",
+	// domain: undefined in production for cross-domain cookies
 };
 
 export function setAccessTokenCookie(res: Response, token: string): void {

@@ -46,13 +46,15 @@ console.log(
 );
 console.log("🔍 [ENV DEBUG] PORT:", process.env.PORT || "using default 3000");
 console.log(
-	"🔍 [ENV DEBUG] CLIENT_URL:",
+	"🔍 [ENV DEBUG] CLIENT_URL (raw):",
 	process.env.CLIENT_URL || "using default"
 );
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+// Remove trailing slash from CLIENT_URL to avoid CORS issues
+const CLIENT_URL = (process.env.CLIENT_URL || "http://localhost:5173").replace(/\/$/, "");
+console.log("🔍 [ENV DEBUG] CLIENT_URL (cleaned):", CLIENT_URL);
 const MONGO_URL =
 	process.env.MONGO_URL || "mongodb://localhost:27017/watchlisthub";
 
