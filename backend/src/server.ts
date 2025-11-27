@@ -53,7 +53,10 @@ console.log(
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Remove trailing slash from CLIENT_URL to avoid CORS issues
-const CLIENT_URL = (process.env.CLIENT_URL || "http://localhost:5173").replace(/\/$/, "");
+const CLIENT_URL = (process.env.CLIENT_URL || "http://localhost:5173").replace(
+	/\/$/,
+	""
+);
 console.log("🔍 [ENV DEBUG] CLIENT_URL (cleaned):", CLIENT_URL);
 const MONGO_URL =
 	process.env.MONGO_URL || "mongodb://localhost:27017/watchlisthub";
