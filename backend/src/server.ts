@@ -67,11 +67,6 @@ app.use(express.json({ limit: "10mb" })); // Increased limit for base64 image up
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
-// Routes
-app.get("/health", (res: Response) => {
-	res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
 // Image proxy endpoint (public, no auth required)
 app.get("/image-proxy", async (req: Request, res: Response) => {
 	try {
