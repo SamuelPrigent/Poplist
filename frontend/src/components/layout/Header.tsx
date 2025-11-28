@@ -104,14 +104,14 @@ export function Header() {
 						) : (
 							<>
 								<Button
-									className="corner-squircle rounded-lg"
+									className="corner-squircle cursor-pointer rounded-lg"
 									variant="outline"
 									onClick={openLogin}
 								>
 									{content.header.login}
 								</Button>
 								<Button
-									className="corner-squircle rounded-lg"
+									className="corner-squircle cursor-pointer rounded-lg"
 									onClick={openSignup}
 								>
 									{content.header.signup}
