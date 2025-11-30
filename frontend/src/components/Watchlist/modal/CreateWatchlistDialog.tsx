@@ -297,7 +297,7 @@ export function CreateWatchlistDialog({
 								)}
 								<div className="flex-1">
 									<Button
-										className="cursor-pointer"
+										className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 										type="button"
 										variant="outline"
 										size="sm"
@@ -334,7 +334,7 @@ export function CreateWatchlistDialog({
 						{/* Actions */}
 						<div className="flex justify-end gap-2">
 							<Button
-								className="cursor-pointer"
+								className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 								type="button"
 								variant="outline"
 								onClick={handleCancel}
@@ -343,7 +343,7 @@ export function CreateWatchlistDialog({
 								{content.watchlists.cancel}
 							</Button>
 							<Button
-								className="cursor-pointer"
+								className="focus-visible:ring-offset-background cursor-pointer text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 								type="submit"
 								disabled={loading}
 							>
