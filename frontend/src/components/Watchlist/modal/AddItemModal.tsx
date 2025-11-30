@@ -346,7 +346,7 @@ export function AddItemModal({
 															onClick={() => handleAddItem(item)}
 															disabled={isDisabled}
 															className={cn(
-																"transition-transform",
+																"cursor-pointer transition-transform",
 																isDisabled
 																	? "w-[84.04px] border-none bg-green-800/35 p-0 text-[#0bd42c]"
 																	: ""

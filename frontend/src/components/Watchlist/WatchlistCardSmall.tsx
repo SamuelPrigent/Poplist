@@ -29,10 +29,10 @@ export function WatchlistCardSmall({
 		<button
 			type="button"
 			onClick={handleClick}
-			className="group flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-muted/30 p-3 text-left transition-all hover:bg-muted/50"
+			className="group bg-muted/30 hover:bg-muted/50 flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg p-3 text-left transition-all"
 		>
 			{/* Thumbnail - Square */}
-			<div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+			<div className="bg-muted relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
 				{thumbnailUrl ? (
 					<img
 						src={thumbnailUrl}
@@ -43,7 +43,7 @@ export function WatchlistCardSmall({
 					/>
 				) : (
 					<div className="flex h-full w-full items-center justify-center">
-						<Film className="h-8 w-8 text-muted-foreground" />
+						<Film className="text-muted-foreground h-8 w-8" />
 					</div>
 				)}
 			</div>
@@ -53,7 +53,7 @@ export function WatchlistCardSmall({
 				<h3 className="line-clamp-1 text-sm font-semibold text-white">
 					{watchlist.name}
 				</h3>
-				<p className="text-xs text-muted-foreground">
+				<p className="text-muted-foreground text-xs">
 					{watchlist.items.length}{" "}
 					{watchlist.items.length === 1
 						? content.watchlists.item

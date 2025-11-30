@@ -243,6 +243,7 @@ export const pt: Content = {
 			subtitle:
 				"O seu universo cinematográfico, organizado e partilhado com amigos.",
 			cta: "Criar uma watchlist",
+			ctaSecondary: "Saber mais",
 			pills: {
 				organize: "Organize seus filmes",
 				share: "Compartilhe com seus amigos",

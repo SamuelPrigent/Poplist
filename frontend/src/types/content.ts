@@ -211,6 +211,7 @@ export interface Content {
 			title: string;
 			subtitle: string;
 			cta: string;
+			ctaSecondary: string;
 			pills: {
 				organize: string;
 				share: string;

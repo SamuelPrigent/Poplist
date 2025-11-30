@@ -245,6 +245,7 @@ export const de: Content = {
 			title: "Ihre Watchlists perfekt organisiert",
 			subtitle: "Ihr Film-Universum, organisiert und mit Freunden geteilt.",
 			cta: "Watchlist erstellen",
+			ctaSecondary: "Mehr erfahren",
 			pills: {
 				organize: "Organisieren Sie Ihre Filme",
 				share: "Mit Freunden teilen",

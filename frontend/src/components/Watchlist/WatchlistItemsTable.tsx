@@ -171,9 +171,9 @@ function DraggableRow({
 			onMouseEnter={() => setHoveredRow(item.tmdbId)}
 			onMouseLeave={() => setHoveredRow(null)}
 			className={cn(
-				"group select-none transition-colors duration-150",
-				!isLastRow && "border-b border-border",
-				hoveredRow === item.tmdbId && "bg-muted/30",
+				"group transition-colors duration-150 select-none",
+				!isLastRow && "border-border border-b",
+				hoveredRow === item.tmdbId && "bg-muted/30"
 			)}
 		>
 			{row.getVisibleCells().map((cell, cellIndex: number) => {
@@ -203,60 +203,60 @@ function DraggableRow({
 											<button
 												type="button"
 												className={cn(
-													"cursor-pointer rounded p-1 transition-all hover:bg-muted focus-visible:opacity-100",
+													"hover:bg-muted cursor-pointer rounded p-1 transition-all focus-visible:opacity-100",
 													hoveredRow === item.tmdbId
 														? "opacity-100"
-														: "opacity-0 group-hover:opacity-100",
+														: "opacity-0 group-hover:opacity-100"
 												)}
 												disabled={loadingItem === item.tmdbId}
 												onClick={(e) => e.stopPropagation()}
 											>
-												<MoreVertical className="h-4 w-4 text-muted-foreground" />
+												<MoreVertical className="text-muted-foreground h-4 w-4" />
 											</button>
 										</DropdownMenu.Trigger>
 
 										<DropdownMenu.Portal>
 											<DropdownMenu.Content
-												className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
+												className="border-border bg-popover z-50 min-w-[220px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
 												sideOffset={5}
 											>
 												<DropdownMenu.Sub>
-													<DropdownMenu.SubTrigger className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+													<DropdownMenu.SubTrigger className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50">
 														<Plus className="mr-2.5 h-4 w-4" />
 														<span>
 															{content.watchlists.contextMenu.addToWatchlist}
 														</span>
-														<span className="ml-auto text-xs text-muted-foreground">
+														<span className="text-muted-foreground ml-auto text-xs">
 															→
 														</span>
 													</DropdownMenu.SubTrigger>
 													<DropdownMenu.Portal>
 														<DropdownMenu.SubContent
-															className="z-50 min-w-[200px] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md"
+															className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-md border p-1 shadow-md"
 															sideOffset={5}
 														>
-															<DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+															<DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-semibold">
 																{content.watchlists.addToWatchlist}
 															</DropdownMenu.Label>
 															{watchlists.filter(
 																(w) =>
 																	w._id !== currentWatchlistId &&
-																	(w.isOwner || w.isCollaborator),
+																	(w.isOwner || w.isCollaborator)
 															).length > 0 ? (
 																watchlists
 																	.filter(
 																		(w) =>
 																			w._id !== currentWatchlistId &&
-																			(w.isOwner || w.isCollaborator),
+																			(w.isOwner || w.isCollaborator)
 																	)
 																	.map((watchlist) => (
 																		<DropdownMenu.Item
 																			key={watchlist._id}
-																			className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+																			className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none"
 																			onSelect={() =>
 																				handleAddToWatchlist(
 																					watchlist._id,
-																					item,
+																					item
 																				)
 																			}
 																			disabled={addingTo === item.tmdbId}
@@ -265,7 +265,7 @@ function DraggableRow({
 																		</DropdownMenu.Item>
 																	))
 															) : (
-																<div className="px-2 py-1.5 text-sm text-muted-foreground">
+																<div className="text-muted-foreground px-2 py-1.5 text-sm">
 																	{content.watchlists.noWatchlist}
 																</div>
 															)}
@@ -274,7 +274,7 @@ function DraggableRow({
 												</DropdownMenu.Sub>
 
 												<DropdownMenu.Item
-													className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+													className="relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm text-red-500 transition-colors outline-none select-none hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500 data-disabled:pointer-events-none data-disabled:opacity-50"
 													onSelect={() => handleRemoveItem(item.tmdbId)}
 												>
 													<Trash2 className="mr-2.5 h-4 w-4" />
@@ -283,10 +283,10 @@ function DraggableRow({
 													</span>
 												</DropdownMenu.Item>
 
-												<DropdownMenu.Separator className="my-1.5 h-px bg-border" />
+												<DropdownMenu.Separator className="bg-border my-1.5 h-px" />
 
 												<DropdownMenu.Item
-													className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+													className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
 													onSelect={() => handleMoveItem(item.tmdbId, "first")}
 													disabled={index === 0}
 												>
@@ -297,7 +297,7 @@ function DraggableRow({
 												</DropdownMenu.Item>
 
 												<DropdownMenu.Item
-													className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+													className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
 													onSelect={() => handleMoveItem(item.tmdbId, "last")}
 													disabled={index === totalItems - 1}
 												>
@@ -326,10 +326,10 @@ function DraggableRow({
 											<button
 												type="button"
 												className={cn(
-													"flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-muted/50 transition-opacity hover:bg-muted",
+													"bg-muted/50 hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition-opacity",
 													hoveredRow === item.tmdbId
 														? "opacity-100"
-														: "opacity-0 group-hover:opacity-100",
+														: "opacity-0 group-hover:opacity-100"
 												)}
 												disabled={addingTo === item.tmdbId}
 												onClick={(e) => e.stopPropagation()}
@@ -340,27 +340,27 @@ function DraggableRow({
 
 										<DropdownMenu.Portal>
 											<DropdownMenu.Content
-												className="z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover p-1.5 shadow-xl"
+												className="border-border bg-popover z-50 min-w-[220px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
 												sideOffset={5}
 											>
-												<DropdownMenu.Label className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+												<DropdownMenu.Label className="text-muted-foreground px-3 py-2 text-xs font-semibold">
 													{content.watchlists.addToWatchlist}
 												</DropdownMenu.Label>
 												{watchlists.filter(
 													(w) =>
 														w._id !== currentWatchlistId &&
-														(w.isOwner || w.isCollaborator),
+														(w.isOwner || w.isCollaborator)
 												).length > 0 ? (
 													watchlists
 														.filter(
 															(w) =>
 																w._id !== currentWatchlistId &&
-																(w.isOwner || w.isCollaborator),
+																(w.isOwner || w.isCollaborator)
 														)
 														.map((watchlist) => (
 															<DropdownMenu.Item
 																key={watchlist._id}
-																className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+																className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none"
 																onSelect={() =>
 																	handleAddToWatchlist(watchlist._id, item)
 																}
@@ -370,7 +370,7 @@ function DraggableRow({
 															</DropdownMenu.Item>
 														))
 												) : (
-													<div className="px-3 py-2.5 text-sm text-muted-foreground">
+													<div className="text-muted-foreground px-3 py-2.5 text-sm">
 														{content.watchlists.noWatchlist}
 													</div>
 												)}
@@ -454,7 +454,7 @@ export function WatchlistItemsTable({
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
-		}),
+		})
 	);
 
 	const formatRuntime = useCallback((minutes: number | undefined) => {
@@ -467,7 +467,7 @@ export function WatchlistItemsTable({
 
 	const handleAddToWatchlist = async (
 		watchlistId: string,
-		item: WatchlistItem,
+		item: WatchlistItem
 	) => {
 		try {
 			setAddingTo(item.tmdbId);
@@ -616,7 +616,7 @@ export function WatchlistItemsTable({
 									column.clearSorting(); // custom order
 								}
 							}}
-							className="flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+							className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
 							tabIndex={0}
 							role="button"
 							onKeyDown={(e) => {
@@ -641,7 +641,7 @@ export function WatchlistItemsTable({
 					const item = info.row.original;
 					return (
 						<div className="flex items-center gap-3">
-							<div className="h-16 w-12 flex-shrink-0 overflow-hidden rounded bg-muted">
+							<div className="bg-muted h-16 w-12 shrink-0 overflow-hidden rounded">
 								{item.posterUrl ? (
 									<img
 										src={item.posterUrl}
@@ -651,7 +651,7 @@ export function WatchlistItemsTable({
 										decoding="async"
 									/>
 								) : (
-									<div className="flex h-full w-full items-center justify-center text-muted-foreground">
+									<div className="text-muted-foreground flex h-full w-full items-center justify-center">
 										?
 									</div>
 								)}
@@ -673,7 +673,7 @@ export function WatchlistItemsTable({
 								"inline-block rounded-full px-2 py-1 text-xs font-medium",
 								type === "movie"
 									? "bg-blue-500/10 text-blue-400"
-									: "bg-purple-500/10 text-purple-400",
+									: "bg-purple-500/10 text-purple-400"
 							)}
 						>
 							{type === "movie"
@@ -692,7 +692,7 @@ export function WatchlistItemsTable({
 
 					// Handle both old format (string[]) and new format (Platform[])
 					const platforms: { name: string; logoPath: string }[] = Array.isArray(
-						rawPlatforms,
+						rawPlatforms
 					)
 						? rawPlatforms
 								.filter((p) => p !== null && p !== undefined && p !== "")
@@ -708,7 +708,7 @@ export function WatchlistItemsTable({
 									return null;
 								})
 								.filter(
-									(p): p is { name: string; logoPath: string } => p !== null,
+									(p): p is { name: string; logoPath: string } => p !== null
 								)
 						: [];
 
@@ -731,7 +731,7 @@ export function WatchlistItemsTable({
 									column.clearSorting(); // custom order
 								}
 							}}
-							className="flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+							className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
 							tabIndex={0}
 							role="button"
 							onKeyDown={(e) => {
@@ -759,14 +759,14 @@ export function WatchlistItemsTable({
 					// For TV shows with both runtime and episodes, show combined format
 					if (item.type === "tv" && runtime && item.numberOfEpisodes) {
 						return (
-							<span className="text-sm text-muted-foreground">
+							<span className="text-muted-foreground text-sm">
 								{formatRuntime(runtime)} · {item.numberOfEpisodes} ep
 							</span>
 						);
 					}
 
 					return (
-						<span className="text-sm text-muted-foreground">
+						<span className="text-muted-foreground text-sm">
 							{formatRuntime(runtime)}
 						</span>
 					);
@@ -803,7 +803,7 @@ export function WatchlistItemsTable({
 				size: 80,
 			},
 		],
-		[content, formatRuntime],
+		[content, formatRuntime]
 	);
 
 	// Determine if we're in custom order mode (no sorting)
@@ -833,7 +833,7 @@ export function WatchlistItemsTable({
 			<Empty>
 				<EmptyHeader>
 					<EmptyMedia variant="icon">
-						<Film className="h-8 w-8 text-muted-foreground" />
+						<Film className="text-muted-foreground h-8 w-8" />
 					</EmptyMedia>
 					<EmptyTitle>{content.watchlists.noItemsYet}</EmptyTitle>
 					<EmptyDescription>
@@ -846,7 +846,7 @@ export function WatchlistItemsTable({
 
 	return (
 		<>
-			<div className="mb-32 overflow-hidden rounded-lg border border-border bg-card">
+			<div className="border-border bg-card mb-32 overflow-hidden rounded-lg border">
 				<DndContext
 					sensors={sensors}
 					collisionDetection={closestCenter}
@@ -857,20 +857,20 @@ export function WatchlistItemsTable({
 							{table.getHeaderGroups().map((headerGroup) => (
 								<tr
 									key={headerGroup.id}
-									className="border-b border-border"
+									className="border-border border-b"
 									style={{ backgroundColor: "rgb(51 59 70 / 27%)" }}
 								>
 									{headerGroup.headers.map((header) => (
 										<th
 											key={header.id}
-											className="select-none px-4 py-4 text-left text-sm font-semibold text-muted-foreground transition-colors duration-150"
+											className="text-muted-foreground px-4 py-4 text-left text-sm font-semibold transition-colors duration-150 select-none"
 											style={{ width: header.column.getSize() }}
 										>
 											{header.isPlaceholder
 												? null
 												: flexRender(
 														header.column.columnDef.header,
-														header.getContext(),
+														header.getContext()
 													)}
 										</th>
 									))}

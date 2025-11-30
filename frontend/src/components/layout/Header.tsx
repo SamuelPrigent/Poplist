@@ -65,7 +65,7 @@ export function Header() {
 					<div className="flex items-center gap-4">
 						<Link
 							to="/watchlists"
-							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors"
+							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-white focus-visible:ring-[3px] focus-visible:border-white"
 						>
 							<Bookmark
 								className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}

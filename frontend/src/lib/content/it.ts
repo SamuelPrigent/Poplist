@@ -240,6 +240,7 @@ export const it: Content = {
 			subtitle:
 				"Il tuo universo cinematografico, organizzato e condiviso con gli amici.",
 			cta: "Crea una watchlist",
+			ctaSecondary: "Scopri di più",
 			pills: {
 				organize: "Organizza i tuoi film",
 				share: "Condividi con gli amici",

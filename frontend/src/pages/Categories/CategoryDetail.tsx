@@ -72,7 +72,7 @@ export function CategoryDetail() {
 				<div
 					className="relative h-[210px] w-full overflow-hidden"
 					style={{
-						background: `linear-gradient(to bottom, ${categoryInfo.headerGradient.match(/rgb\([^)]+\)/)?.[0] || "rgb(30, 30, 30)"}, transparent 60%)`,
+						background: `linear-gradient(to bottom, ${categoryInfo.headerGradient.match(/rgb\([^)]+\)/)?.[0]?.replace(")", " / 35%)") || "rgb(30, 30, 30 / 35%)"}, transparent 60%)`,
 					}}
 				>
 					{/* Content */}

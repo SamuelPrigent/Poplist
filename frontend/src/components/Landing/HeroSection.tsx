@@ -36,6 +36,18 @@ export function HeroSection({
 		});
 	};
 
+	// Map groupIdx to avoid repetition in last column (col 6)
+	// Last column (col 6: indices 5, 11, 17, 23) uses images from column 3 (indices 2, 8, 14, 20)
+	const getStartIdx = (groupIdx: number) => {
+		// Check if this is column 6 (last column in 6-column grid)
+		if (groupIdx % 6 === 5) {
+			// Map to column 3 (same row)
+			const remappedIdx = groupIdx - 3;
+			return remappedIdx * 4;
+		}
+		return groupIdx * 4;
+	};
+
 	return (
 		<section className="to-background relative min-h-[80vh] overflow-hidden bg-linear-to-br from-slate-900">
 			{/* Organized Watchlist Background Grid - Static */}
@@ -52,11 +64,50 @@ export function HeroSection({
 							{/* Mini poster grid 2x2 */}
 							<div className="grid grid-cols-2 gap-0.5">
 								{(() => {
+									const isColumn6 = groupIdx % 6 === 5;
+
+									if (isColumn6) {
+										// For column 6, use images 2,3 from column 3 and images 2,3 from column 4
+										const col3Idx = groupIdx - 3;
+										const col4Idx = groupIdx - 2;
+
+										const col3Items = createWatchlistGroup(trending, col3Idx * 4);
+										const col4Items = createWatchlistGroup(trending, col4Idx * 4);
+
+										if (col3Items.length === 0 || col4Items.length === 0)
+											return null;
+
+										// Combine: [img2 col3, img3 col3, img2 col4, img3 col4]
+										const combinedItems = [
+											col3Items[2],
+											col3Items[3],
+											col4Items[2],
+											col4Items[3],
+										];
+
+										return combinedItems.map((item, renderIdx) => (
+											<div
+												key={`poster-${groupIdx}-${renderIdx}`}
+												className="aspect-2/3 overflow-hidden rounded-sm bg-slate-800"
+											>
+												{item?.poster_path && (
+													<img
+														src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
+														alt=""
+														className="h-full w-full object-cover opacity-60"
+													/>
+												)}
+											</div>
+										));
+									}
+
+									// For all other columns, use normal logic
 									const groupItems = createWatchlistGroup(
 										trending,
-										groupIdx * 4
+										getStartIdx(groupIdx)
 									);
 									if (groupItems.length === 0) return null;
+
 									return POSTER_SLOTS.map((slotIdx) => {
 										const item = groupItems[slotIdx];
 										return (
@@ -123,13 +174,30 @@ export function HeroSection({
 					{content.home.hero.subtitle}
 				</p>
 
-				{/* CTA Button - Gray */}
-				<Link
-					to={watchlistsUrl}
-					className="corner-squircle inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-6 py-[1.4rem] text-sm font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"
-				>
-					{content.home.hero.cta}
-				</Link>
+				{/* CTA Buttons */}
+				<div className="flex flex-wrap items-center justify-center gap-4">
+					<Link
+						to={watchlistsUrl}
+						className="corner-squircle inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-6 py-[1.4rem] text-sm font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"
+					>
+						{content.home.hero.cta}
+					</Link>
+					<button
+						type="button"
+						onClick={() => {
+							const featuresSection = document.querySelector(
+								"section:nth-of-type(2)"
+							);
+							featuresSection?.scrollIntoView({
+								behavior: "smooth",
+								block: "start",
+							});
+						}}
+						className="corner-squircle inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-gray-400/30 bg-transparent px-6 py-[1.4rem] text-sm font-semibold whitespace-nowrap text-gray-200 transition-colors hover:border-gray-400/50 hover:bg-gray-400/10"
+					>
+						{content.home.hero.ctaSecondary}
+					</button>
+				</div>
 			</div>
 		</section>
 	);

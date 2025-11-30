@@ -339,7 +339,7 @@ export function Account() {
 												disabled={avatarUploading || avatarDeleting}
 											/>
 											<Button
-												className="cursor-pointer"
+												className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 												type="button"
 												variant="outline"
 												disabled={avatarUploading || avatarDeleting}
@@ -365,7 +365,7 @@ export function Account() {
 
 										{user?.avatarUrl && (
 											<Button
-												className="cursor-pointer"
+												className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 												type="button"
 												variant="outline"
 												disabled={avatarUploading || avatarDeleting}
@@ -534,7 +534,7 @@ export function Account() {
 								</p>
 							</div>
 							<Button
-								className="cursor-pointer"
+								className="focus-visible:ring-offset-background cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 								variant="destructive"
 								onClick={() => setDeleteDialogOpen(true)}
 							>
@@ -599,7 +599,7 @@ export function Account() {
 								{content.profile.deleteSection.cancel}
 							</Button>
 							<Button
-								className="cursor-pointer"
+								className="focus-visible:ring-offset-background cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 								type="button"
 								variant="destructive"
 								onClick={handleDeleteAccount}

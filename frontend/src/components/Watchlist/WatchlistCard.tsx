@@ -92,12 +92,12 @@ export function WatchlistCard({
 				<button
 					type="button"
 					onClick={handleClick}
-					className="relative mb-3 aspect-[1/1] w-full cursor-pointer overflow-hidden rounded-md bg-muted text-left"
+					tabIndex={-1} className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md text-left"
 				>
 					{categoryGradient ? (
 						<div className="relative flex h-full w-full items-center justify-center p-4">
 							{/* Dark overlay for better text contrast */}
-							<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+							<div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
 							<span className="relative z-10 text-center text-lg font-bold text-white drop-shadow-lg">
 								{watchlist.name}
 							</span>
@@ -112,13 +112,13 @@ export function WatchlistCard({
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
-							<Film className="h-12 w-12 text-muted-foreground" />
+							<Film className="text-muted-foreground h-12 w-12" />
 						</div>
 					)}
 				</button>
 			) : (
 				<div
-					className="relative mb-3 aspect-[1/1] w-full overflow-hidden rounded-md bg-muted"
+					className="bg-muted relative mb-3 aspect-square w-full overflow-hidden rounded-md"
 					style={
 						categoryGradient ? { background: categoryGradient } : undefined
 					}
@@ -126,7 +126,7 @@ export function WatchlistCard({
 					{categoryGradient ? (
 						<div className="relative flex h-full w-full items-center justify-center p-4">
 							{/* Dark overlay for better text contrast */}
-							<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+							<div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
 							<span className="relative z-10 text-center text-lg font-bold text-white drop-shadow-lg">
 								{watchlist.name}
 							</span>
@@ -141,7 +141,7 @@ export function WatchlistCard({
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
-							<Film className="h-12 w-12 text-muted-foreground" />
+							<Film className="text-muted-foreground h-12 w-12" />
 						</div>
 					)}
 				</div>
@@ -151,18 +151,14 @@ export function WatchlistCard({
 			<div className="flex items-center gap-1">
 				{/* Saved Badge - Indicates this is a followed watchlist */}
 				{showSavedBadge && (
-					<img
-						src={checkGreenIcon}
-						alt="Suivi"
-						className="h-4 w-4 flex-shrink-0"
-					/>
+					<img src={checkGreenIcon} alt="Suivi" className="h-4 w-4 shrink-0" />
 				)}
 
 				{/* Collaborative Badge - Indicates this is a collaborative watchlist */}
 				{showCollaborativeBadge && (
 					//   <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-muted/80">
 					// {/* <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(0deg_85.8%_55.11%_/_54%)]"> */}
-					<div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(207.87deg_100%_34.92%_/_57%)]">
+					<div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[hsl(207.87deg_100%_34.92%_/57%)]">
 						<img
 							src={teamIcon}
 							alt="Collaborative"
@@ -171,12 +167,12 @@ export function WatchlistCard({
 					</div>
 				)}
 
-				<h3 className="line-clamp-2 text-sm font-semibold text-white">
+				<h3 className="line-clamp-2 text-[14.5px] font-semibold text-white">
 					{handleClick ? (
 						<button
 							type="button"
 							onClick={handleClick}
-							className="w-full cursor-pointer text-left hover:underline"
+							className="w-full cursor-pointer text-left" tabIndex={-1}
 						>
 							{watchlist.name}
 						</button>
@@ -187,7 +183,7 @@ export function WatchlistCard({
 			</div>
 
 			{showOwner && (
-				<p className="mt-1 text-xs text-muted-foreground">
+				<p className="text-muted-foreground mt-1 text-xs">
 					par{" "}
 					{typeof watchlist.ownerId === "object" &&
 					watchlist.ownerId !== null &&
@@ -199,10 +195,10 @@ export function WatchlistCard({
 								e.preventDefault();
 								e.stopPropagation();
 								navigate(
-									`/user/${(watchlist.ownerId as { username: string }).username}`,
+									`/user/${(watchlist.ownerId as { username: string }).username}`
 								);
 							}}
-							className="cursor-pointer capitalize text-white hover:underline"
+							className="cursor-pointer text-white capitalize hover:underline"
 						>
 							{watchlist.ownerId.username}
 						</button>
@@ -213,12 +209,12 @@ export function WatchlistCard({
 			)}
 
 			{showVisibility && (
-				<div className="mt-1 text-xs text-muted-foreground">
+				<div className="text-muted-foreground mt-1 text-xs">
 					{handleClick ? (
 						<button
 							type="button"
 							onClick={handleClick}
-							className="cursor-pointer text-muted-foreground hover:underline"
+							className="text-muted-foreground cursor-pointer" tabIndex={-1}
 						>
 							{watchlist.isPublic
 								? content.watchlists.public
@@ -234,12 +230,12 @@ export function WatchlistCard({
 				</div>
 			)}
 
-			<div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+			<div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
 				{handleClick ? (
 					<button
 						type="button"
 						onClick={handleClick}
-						className="cursor-pointer text-muted-foreground hover:underline"
+						className="text-muted-foreground cursor-pointer" tabIndex={-1}
 					>
 						{watchlist.items.length}{" "}
 						{watchlist.items.length === 1
@@ -273,7 +269,12 @@ export function WatchlistCard({
 							<button
 								type="button"
 								onClick={(e) => e.stopPropagation()}
-								className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
+								onKeyDown={(e) => {
+									if (e.key === "Enter" || e.key === " ") {
+										e.stopPropagation();
+									}
+								}}
+								className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all group-hover:opacity-100 hover:brightness-125 hover:backdrop-brightness-150 focus-visible:opacity-100"
 							>
 								<MoreVertical className="h-4 w-4" />
 							</button>
@@ -281,13 +282,16 @@ export function WatchlistCard({
 
 						<DropdownMenu.Portal>
 							<DropdownMenu.Content
-								className="z-50 min-w-[180px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md"
+								className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1 shadow-md"
 								sideOffset={5}
 								onKeyDown={handleDropdownKeyDown}
+							onCloseAutoFocus={(e) => {
+								e.preventDefault();
+							}}
 							>
 								<DropdownMenu.Item
 									ref={editButtonRef}
-									className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+									className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
 									onSelect={() => onEdit(watchlist)}
 								>
 									<Edit className="mr-2 h-4 w-4" />
@@ -296,7 +300,7 @@ export function WatchlistCard({
 
 								<DropdownMenu.Item
 									ref={deleteButtonRef}
-									className="relative flex cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
+									className="relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm text-red-500 transition-colors outline-none select-none hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
 									onSelect={() => onDelete(watchlist)}
 								>
 									<Trash2 className="mr-2 h-4 w-4" />
@@ -317,6 +321,13 @@ export function WatchlistCard({
 				style={draggableProps.style}
 				{...draggableProps.attributes}
 				{...draggableProps.listeners}
+				tabIndex={0}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						window.location.href = href;
+					}
+				}}
 				className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
 			>
 				{cardContent}

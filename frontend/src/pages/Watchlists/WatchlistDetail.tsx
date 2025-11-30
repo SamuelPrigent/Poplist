@@ -249,21 +249,11 @@ export function WatchlistDetail() {
 				}
 				menuButton={
 					isOwner ? (
-						<DropdownMenu.Root
-							onOpenChange={(open) => {
-								if (!open) {
-									setTimeout(() => {
-										if (document.activeElement instanceof HTMLElement) {
-											document.activeElement.blur();
-										}
-									}, 0);
-								}
-							}}
-						>
+						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild>
 								<button
 									type="button"
-									className="cursor-pointer rounded p-3 transition-all select-none hover:scale-105"
+									className="cursor-pointer rounded p-3 transition-all select-none hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 								>
 									<img
 										src={pointIcon}
@@ -276,6 +266,10 @@ export function WatchlistDetail() {
 								<DropdownMenu.Content
 									className="border-border bg-background z-50 min-w-[200px] overflow-hidden rounded-md border p-1 shadow-md"
 									sideOffset={5}
+									onCloseAutoFocus={(e) => {
+										// Empêche le focus automatique de retourner sur le trigger lors de la fermeture
+										e.preventDefault();
+									}}
 								>
 									<DropdownMenu.Item
 										className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors outline-none"

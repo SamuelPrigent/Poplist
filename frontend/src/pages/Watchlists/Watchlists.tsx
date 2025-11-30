@@ -245,7 +245,7 @@ export function Watchlists() {
 					<button
 						type="button"
 						onClick={toggleOwned}
-						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
 							showOwned
 								? "bg-primary text-primary-foreground"
 								: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -256,7 +256,7 @@ export function Watchlists() {
 					<button
 						type="button"
 						onClick={toggleSaved}
-						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
 							showSaved
 								? "bg-primary text-primary-foreground"
 								: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -267,7 +267,7 @@ export function Watchlists() {
 				</div>
 
 				<Button
-					className="corner-squircle cursor-pointer rounded-2xl"
+					className="corner-squircle cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 					onClick={() => setDialogOpen(true)}
 				>
 					<Plus className="h-4 w-4" />

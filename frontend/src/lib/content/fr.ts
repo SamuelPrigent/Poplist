@@ -242,6 +242,7 @@ export const fr: Content = {
 			title: "Vos Watchlists parfaitement organisées",
 			subtitle: "Ton univers cinéma, organisé et partagé avec tes amis.",
 			cta: "Créer une watchlist",
+			ctaSecondary: "En savoir plus",
 			pills: {
 				organize: "Organisez vos films",
 				share: "Partagez avec vos amis",
