@@ -56,6 +56,29 @@ import type { Content } from "@/types/content";
 import { ItemDetailsModal } from "./modal/ItemDetailsModal";
 import { WatchProviderList } from "./WatchProviderBubble";
 
+// Separate component for poster image with its own loading state
+function PosterImage({ src, alt }: { src: string; alt: string }) {
+	const [loaded, setLoaded] = useState(false);
+
+	return (
+		<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
+			{/* Skeleton - shown while loading */}
+			{!loaded && <div className="bg-muted absolute inset-0 animate-pulse" />}
+			{/* Actual image */}
+			<img
+				src={src}
+				alt={alt}
+				className={`h-full w-full object-cover transition-opacity duration-200 ${
+					loaded ? "opacity-100" : "opacity-0"
+				}`}
+				loading="lazy"
+				decoding="async"
+				onLoad={() => setLoaded(true)}
+			/>
+		</div>
+	);
+}
+
 // Bracket icon component (left/right arrows)
 function BracketIcon({ className }: { className?: string }) {
 	return (
@@ -395,7 +418,7 @@ export function WatchlistItemsTableOffline({
 	}, [watchlist.items]);
 
 	// Load other watchlists for "Add to watchlist" feature
-	useEffect(() => {
+	const loadOtherWatchlists = useCallback(() => {
 		const allWatchlists = getLocalWatchlists();
 		// Filter to exclude current watchlist and only show owned offline watchlists
 		const filtered = allWatchlists.filter(
@@ -403,6 +426,40 @@ export function WatchlistItemsTableOffline({
 		);
 		setOtherWatchlists(filtered);
 	}, [watchlist._id]);
+
+	// Load watchlists on mount and when watchlist ID changes
+	useEffect(() => {
+		loadOtherWatchlists();
+	}, [loadOtherWatchlists]);
+
+	// Listen for localStorage changes (from other tabs or same tab)
+	useEffect(() => {
+		const handleStorageChange = (e: StorageEvent) => {
+			if (e.key === "watchlists") {
+				loadOtherWatchlists();
+			}
+		};
+
+		// Listen for storage events from other tabs
+		window.addEventListener("storage", handleStorageChange);
+
+		// Also listen for custom events from same tab
+		const handleCustomStorageChange = () => {
+			loadOtherWatchlists();
+		};
+		window.addEventListener(
+			"localStorageWatchlistsChanged",
+			handleCustomStorageChange
+		);
+
+		return () => {
+			window.removeEventListener("storage", handleStorageChange);
+			window.removeEventListener(
+				"localStorageWatchlistsChanged",
+				handleCustomStorageChange
+			);
+		};
+	}, [loadOtherWatchlists]);
 
 	// Setup drag sensors
 	const sensors = useSensors(
@@ -442,6 +499,9 @@ export function WatchlistItemsTableOffline({
 
 		watchlists[watchlistIndex].items = updatedItems;
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
+
+		// Dispatch custom event for same-tab detection
+		window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
 
 		// Invalidate thumbnail cache so it regenerates with new items
 		deleteCachedThumbnail(watchlist._id);
@@ -533,6 +593,9 @@ export function WatchlistItemsTableOffline({
 			// Update localStorage
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
 
+			// Dispatch custom event for same-tab detection
+			window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
+
 			// Invalidate thumbnail cache for target watchlist
 			deleteCachedThumbnail(targetWatchlistId);
 		} catch (error) {
@@ -604,21 +667,13 @@ export function WatchlistItemsTableOffline({
 					const item = info.row.original;
 					return (
 						<div className="flex items-center gap-3">
-							<div className="bg-muted h-16 w-12 shrink-0 overflow-hidden rounded">
-								{item.posterUrl ? (
-									<img
-										src={item.posterUrl}
-										alt={item.title}
-										className="h-full w-full object-cover"
-										loading="lazy"
-										decoding="async"
-									/>
-								) : (
-									<div className="text-muted-foreground flex h-full w-full items-center justify-center">
-										?
-									</div>
-								)}
-							</div>
+							{item.posterUrl ? (
+								<PosterImage src={item.posterUrl} alt={item.title} />
+							) : (
+								<div className="bg-muted text-muted-foreground flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded">
+									?
+								</div>
+							)}
 							<span className="font-medium text-white">{item.title}</span>
 						</div>
 					);
@@ -750,7 +805,7 @@ export function WatchlistItemsTableOffline({
 								setSelectedItem(item);
 								setDetailsModalOpen(true);
 							}}
-							className="h-8 gap-1.5 px-3 text-xs"
+							className="h-8 cursor-pointer gap-1.5 px-3 text-xs"
 						>
 							<Eye className="h-3 w-3" />
 							{content.watchlists.preview}

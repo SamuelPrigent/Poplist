@@ -35,7 +35,7 @@ export const fr: Content = {
 		createWatchlist: "Nouvelle watchlist",
 		createWatchlistDescription:
 			"Créez une nouvelle watchlist pour organiser vos films et séries.",
-		notLoggedInWarning: "Données locales",
+		notLoggedInWarning: "Données locale",
 		noWatchlists: "Vous n'avez pas encore créé de watchlist.",
 		myWatchlists: "Mes watchlists",
 		followed: "Suivies",
@@ -53,6 +53,10 @@ export const fr: Content = {
 		categories: "Catégories / Tags",
 		categoriesDescription:
 			"Sélectionnez une ou plusieurs catégories pour faciliter la découverte de votre watchlist",
+		genreCategories: "Catégories par genre",
+		platformCategories: "Plateformes de streaming",
+		platformsDescription:
+			"Sélectionnez les plateformes sur lesquelles votre liste est disponible",
 		name: "Nom",
 		namePlaceholder: "Ma watchlist",
 		description: "Description",
@@ -166,9 +170,9 @@ export const fr: Content = {
 	landing: {
 		hero: {
 			tagline: "Planifiez, suivez et profitez de vos films ensemble",
-			title: "Vos Watchlists parfaitement organisées",
+			title: "Créez et partagez des listes de vos films et séries préférés",
 			subtitle:
-				"Organisez vos soirées TV et partagez vos découvertes avec vos amis",
+				"Organisez vos soirées TV et partagez vos découvertes avec vos amis.",
 			cta: "Créer une watchlist",
 		},
 		features: {
@@ -238,7 +242,6 @@ export const fr: Content = {
 	// Home Page
 	home: {
 		hero: {
-			//   title: "Découvre, crée et partage tes watchlists",
 			title: "Vos Watchlists parfaitement organisées",
 			subtitle: "Ton univers cinéma, organisé et partagé avec tes amis.",
 			cta: "Créer une watchlist",
@@ -255,7 +258,7 @@ export const fr: Content = {
 			seeAll: "Voir tout",
 		},
 		categories: {
-			title: "Watchlists par thème",
+			title: "Listes par catégorie",
 			subtitle: "Catégorie WatchlistHub",
 			seeMore: "Voir plus",
 			items: {
@@ -311,8 +314,13 @@ export const fr: Content = {
 				},
 			},
 		},
+		platformsSection: {
+			title: "Listes par plateformes",
+			subtitle: "Vos plateformes favorites",
+			seeAll: "Voir tout",
+		},
 		popularWatchlists: {
-			title: "Watchlists populaires",
+			title: "Listes populaires",
 			subtitle: "Partagées par la communauté",
 			seeMore: "Voir plus",
 			noWatchlists: "Aucune watchlist publique pour le moment",
@@ -356,6 +364,10 @@ export const fr: Content = {
 			title: "Tendances du moment",
 			subtitle: "Les titres qui cartonnent cette semaine.",
 			seeMore: "Voir tout",
+		},
+		communityWatchlists: {
+			title: "Listes de la communauté",
+			subtitle: "Découvrez les collections partagées par nos utilisateurs",
 		},
 	},
 
@@ -434,6 +446,38 @@ export const fr: Content = {
 			"disney-plus": {
 				name: "Disney+",
 				description: "L'univers Disney, Pixar, Marvel et Star Wars",
+			},
+			"apple-tv": {
+				name: "Apple TV+",
+				description: "Les productions originales Apple TV+",
+			},
+			crunchyroll: {
+				name: "Crunchyroll",
+				description: "Les meilleurs animes en streaming",
+			},
+			"hbo-max": {
+				name: "HBO Max",
+				description: "Les séries et films HBO",
+			},
+			youtube: {
+				name: "YouTube",
+				description: "Films et séries disponibles sur YouTube",
+			},
+			"canal-plus": {
+				name: "Canal+",
+				description: "Les programmes Canal+",
+			},
+			ocs: {
+				name: "OCS",
+				description: "Le meilleur du cinéma et des séries",
+			},
+			"paramount-plus": {
+				name: "Paramount+",
+				description: "Les productions Paramount+",
+			},
+			"rakuten-tv": {
+				name: "Rakuten TV",
+				description: "Films et séries sur Rakuten TV",
 			},
 			anime: {
 				name: "Animation",

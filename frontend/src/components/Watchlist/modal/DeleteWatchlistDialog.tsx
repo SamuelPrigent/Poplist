@@ -115,6 +115,7 @@ export function DeleteWatchlistDialog({
 							variant="outline"
 							onClick={handleCancel}
 							disabled={loading}
+							className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 						>
 							{content.watchlists.cancel}
 						</Button>
@@ -123,6 +124,7 @@ export function DeleteWatchlistDialog({
 							variant="destructive"
 							onClick={handleDelete}
 							disabled={loading}
+							className="focus-visible:ring-offset-background cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 						>
 							{loading
 								? content.watchlists.deleting

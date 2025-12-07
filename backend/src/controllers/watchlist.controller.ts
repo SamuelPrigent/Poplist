@@ -61,6 +61,23 @@ function extractPublicIdFromUrl(imageUrl: string): string | null {
 	}
 }
 
+/**
+ * Build MongoDB query filter for category search
+ * Supports both old format (categories: string[]) and new format (categories: { genre: [], watchProvider: [] })
+ * @param category - The category to search for (e.g., "netflix", "action")
+ * @returns MongoDB query filter object
+ */
+function buildCategoryFilter(category: string) {
+	// Search in both old and new formats using $or
+	return {
+		$or: [
+			{ categories: category }, // Old format: categories is array containing the value
+			{ "categories.genre": category }, // New format: search in genre array
+			{ "categories.watchProvider": category }, // New format: search in watchProvider array
+		],
+	};
+}
+
 const platformSchema = z.object({
 	name: z.string(),
 	logoPath: z.string().default(""),
@@ -78,11 +95,22 @@ const watchlistItemSchema = z.object({
 	addedAt: z.string().or(z.date()).optional(),
 });
 
+// Categories schema - supports both old and new formats for backward compatibility
+// Old format: string[]
+// New format: { genre?: string[], watchProvider?: string[] }
+const categoriesSchema = z.union([
+	z.array(z.string()), // Old format
+	z.object({
+		genre: z.array(z.string()).optional(),
+		watchProvider: z.array(z.string()).optional(),
+	}), // New format
+]);
+
 const createWatchlistSchema = z.object({
 	name: z.string().min(1).max(100),
 	description: z.string().max(500).optional(),
 	isPublic: z.boolean().default(false),
-	categories: z.array(z.string()).optional(),
+	categories: categoriesSchema.optional(),
 	items: z.array(watchlistItemSchema).default([]),
 	fromLocalStorage: z.boolean().optional(),
 });
@@ -91,7 +119,7 @@ const updateWatchlistSchema = z.object({
 	name: z.string().min(1).max(100).optional(),
 	description: z.string().max(500).optional(),
 	isPublic: z.boolean().optional(),
-	categories: z.array(z.string()).optional(),
+	categories: categoriesSchema.optional(),
 	items: z.array(watchlistItemSchema).optional(),
 });
 
@@ -683,7 +711,7 @@ export async function getWatchlistsByCategory(
 
 		const watchlists = await Watchlist.find({
 			isPublic: true,
-			categories: category,
+			...buildCategoryFilter(category),
 		})
 			.populate("ownerId", "email username avatarUrl")
 			.populate("collaborators", "email username avatarUrl")
@@ -714,7 +742,7 @@ export async function getWatchlistCountByCategory(
 
 		const count = await Watchlist.countDocuments({
 			isPublic: true,
-			categories: category,
+			...buildCategoryFilter(category),
 		});
 
 		res.json({ category, count });

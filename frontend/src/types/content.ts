@@ -43,6 +43,9 @@ export interface Content {
 		preview: string;
 		categories: string;
 		categoriesDescription: string;
+		genreCategories: string;
+		platformCategories: string;
+		platformsDescription: string;
 		name: string;
 		namePlaceholder: string;
 		description: string;
@@ -278,6 +281,11 @@ export interface Content {
 				};
 			};
 		};
+		platformsSection: {
+			title: string;
+			subtitle: string;
+			seeAll: string;
+		};
 		popularWatchlists: {
 			title: string;
 			subtitle: string;
@@ -318,6 +326,10 @@ export interface Content {
 			title: string;
 			subtitle: string;
 			seeMore: string;
+		};
+		communityWatchlists: {
+			title: string;
+			subtitle: string;
 		};
 	};
 	explore: {
@@ -380,6 +392,14 @@ export interface Content {
 			netflix: { name: string; description: string };
 			"prime-video": { name: string; description: string };
 			"disney-plus": { name: string; description: string };
+			"apple-tv": { name: string; description: string };
+			crunchyroll: { name: string; description: string };
+			"hbo-max": { name: string; description: string };
+			youtube: { name: string; description: string };
+			"canal-plus": { name: string; description: string };
+			ocs: { name: string; description: string };
+			"paramount-plus": { name: string; description: string };
+			"rakuten-tv": { name: string; description: string };
 			anime: { name: string; description: string };
 			action: { name: string; description: string };
 			documentaries: { name: string; description: string };

@@ -9,8 +9,10 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PlatformSelector } from "@/components/Watchlist/PlatformSelector";
 import {
 	type Watchlist,
+	type WatchlistCategories,
 	type WatchlistItem,
 	watchlistAPI,
 } from "@/lib/api-client";
@@ -20,9 +22,10 @@ import {
 } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 import {
+	GENRE_CATEGORIES,
 	getCategoryInfo,
-	WATCHLIST_CATEGORIES,
-	type WatchlistCategory,
+	type GenreCategory,
+	type PlatformCategory,
 } from "@/types/categories";
 
 interface EditWatchlistDialogProps {
@@ -45,7 +48,10 @@ export const EditWatchlistDialog = forwardRef<
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
 	const [isPublic, setIsPublic] = useState(false);
-	const [categories, setCategories] = useState<WatchlistCategory[]>([]);
+	const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
+	const [providerCategories, setProviderCategories] = useState<
+		PlatformCategory[]
+	>([]);
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -59,8 +65,8 @@ export const EditWatchlistDialog = forwardRef<
 		},
 	}));
 
-	const toggleCategory = (category: WatchlistCategory) => {
-		setCategories((prev) =>
+	const toggleGenreCategory = (category: GenreCategory) => {
+		setGenreCategories((prev) =>
 			prev.includes(category)
 				? prev.filter((c) => c !== category)
 				: [...prev, category]
@@ -73,17 +79,43 @@ export const EditWatchlistDialog = forwardRef<
 			setName(watchlist.name);
 			setDescription(watchlist.description || "");
 			setIsPublic(watchlist.isPublic);
-			setCategories((watchlist.categories || []) as WatchlistCategory[]);
+
+			// Parse categories - support both old and new formats
+			const cats = watchlist.categories;
+			if (Array.isArray(cats)) {
+				// Old format: string[] - separate by known platforms
+				// const genres: GenreCategory[] = [];
+				// const providers: PlatformCategory[] = [];
+				// We'll just set empty arrays for now since we can't distinguish in old format without platform constants
+				setGenreCategories([]);
+				setProviderCategories([]);
+			} else if (cats && typeof cats === "object") {
+				// New format: { genre?: string[], watchProvider?: string[] }
+				const typedCats = cats as WatchlistCategories;
+				setGenreCategories((typedCats.genre || []) as GenreCategory[]);
+				setProviderCategories(
+					(typedCats.watchProvider || []) as PlatformCategory[]
+				);
+			} else {
+				setGenreCategories([]);
+				setProviderCategories([]);
+			}
+
 			setImagePreview(watchlist.imageUrl || null);
 		}
 	}, [open, watchlist]);
 
 	// Clear categories when watchlist becomes private
 	useEffect(() => {
-		if (!isPublic && categories.length > 0) {
-			setCategories([]);
+		if (!isPublic) {
+			if (genreCategories.length > 0) {
+				setGenreCategories([]);
+			}
+			if (providerCategories.length > 0) {
+				setProviderCategories([]);
+			}
 		}
-	}, [isPublic, categories.length]);
+	}, [isPublic, genreCategories.length, providerCategories.length]);
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -124,6 +156,17 @@ export const EditWatchlistDialog = forwardRef<
 		setLoading(true);
 
 		try {
+			// Build categories object in new format
+			const hasGenres = genreCategories.length > 0;
+			const hasProviders = providerCategories.length > 0;
+			const categoriesData =
+				hasGenres || hasProviders
+					? {
+							genre: hasGenres ? genreCategories : undefined,
+							watchProvider: hasProviders ? providerCategories : undefined,
+						}
+					: undefined;
+
 			if (offline) {
 				// Offline mode: update in localStorage
 				const watchlists = JSON.parse(
@@ -140,7 +183,7 @@ export const EditWatchlistDialog = forwardRef<
 						description: description.trim() || undefined,
 						imageUrl: imagePreview || undefined,
 						isPublic,
-						categories: categories.length > 0 ? categories : undefined,
+						categories: categoriesData,
 						updatedAt: new Date().toISOString(),
 					};
 					watchlists[index] = updatedWatchlist;
@@ -172,7 +215,7 @@ export const EditWatchlistDialog = forwardRef<
 					name: string;
 					description?: string;
 					isPublic: boolean;
-					categories?: WatchlistCategory[];
+					categories?: typeof categoriesData;
 				} = {
 					name: name.trim(),
 					isPublic,
@@ -186,8 +229,8 @@ export const EditWatchlistDialog = forwardRef<
 				}
 
 				// Add categories if any are selected
-				if (categories.length > 0) {
-					updates.categories = categories;
+				if (categoriesData) {
+					updates.categories = categoriesData;
 				}
 
 				await watchlistAPI.update(watchlist._id, updates);
@@ -363,31 +406,45 @@ export const EditWatchlistDialog = forwardRef<
 
 						{/* Categories Selection - Only shown if public */}
 						{isPublic && (
-							<div className="space-y-2">
-								<p className="text-sm font-medium">
-									{content.watchlists.categories}
-								</p>
-								<div className="flex flex-wrap gap-2">
-									{WATCHLIST_CATEGORIES.map((category) => (
-										<button
-											type="button"
-											key={category}
-											onClick={() => toggleCategory(category)}
-											disabled={loading}
-											className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-												categories.includes(category)
-													? "bg-primary text-primary-foreground"
-													: "bg-muted text-muted-foreground hover:bg-muted/80"
-											}`}
-										>
-											{getCategoryInfo(category, content).name}
-										</button>
-									))}
+							<>
+								{/* Genre Categories */}
+								<div className="space-y-2">
+									<p className="text-sm font-medium">
+										{content.watchlists.genreCategories ||
+											"Catégories par genre"}
+									</p>
+									<div className="flex flex-wrap gap-2">
+										{GENRE_CATEGORIES.map((category) => (
+											<button
+												type="button"
+												key={category}
+												onClick={() => toggleGenreCategory(category)}
+												disabled={loading}
+												className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+													genreCategories.includes(category)
+														? "bg-primary text-primary-foreground"
+														: "bg-muted text-muted-foreground hover:bg-muted/80"
+												}`}
+											>
+												{getCategoryInfo(category, content).name}
+											</button>
+										))}
+									</div>
 								</div>
-								<p className="text-muted-foreground text-xs">
-									{content.watchlists.categoriesDescription}
-								</p>
-							</div>
+
+								{/* Platform Categories */}
+								<div className="space-y-2">
+									<p className="text-sm font-medium">
+										{content.watchlists.platformCategories ||
+											"Plateformes de streaming"}
+									</p>
+									<PlatformSelector
+										selected={providerCategories}
+										onChange={setProviderCategories}
+										disabled={loading}
+									/>
+								</div>
+							</>
 						)}
 
 						<div className="flex justify-end">

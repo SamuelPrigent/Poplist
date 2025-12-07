@@ -293,3 +293,35 @@ export async function getGenres(req: Request, res: Response): Promise<void> {
 		res.status(500).json({ error: "Failed to fetch genres" });
 	}
 }
+
+/**
+ * GET /api/tmdb/:type/:id/providers
+ * Get watch providers for a specific movie/TV show
+ */
+export async function getProviders(req: Request, res: Response): Promise<void> {
+	try {
+		const { type, id } = req.params; // 'movie' or 'tv' + tmdbId
+		const region = (req.query.region as string) || "FR";
+
+		if (type !== "movie" && type !== "tv") {
+			res.status(400).json({ error: 'type must be "movie" or "tv"' });
+			return;
+		}
+
+		const data = await fetchFromTMDB(`/${type}/${id}/watch/providers`);
+
+		// Save to cache
+		if (res.locals.cacheKey) {
+			await saveToCache(
+				res.locals.cacheKey,
+				data,
+				res.locals.cacheDurationDays
+			);
+		}
+
+		res.json(data);
+	} catch (error) {
+		console.error("Error fetching watch providers:", error);
+		res.status(500).json({ error: "Failed to fetch watch providers" });
+	}
+}

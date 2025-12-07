@@ -51,11 +51,35 @@ import { useAuth } from "@/context/auth-context";
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
+import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 import { generateAndCacheThumbnail } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
 import { ItemDetailsModal } from "./modal/ItemDetailsModal";
 import { WatchProviderList } from "./WatchProviderBubble";
+
+// Separate component for poster image with its own loading state
+function PosterImage({ src, alt }: { src: string; alt: string }) {
+	const [loaded, setLoaded] = useState(false);
+
+	return (
+		<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
+			{/* Skeleton - shown while loading */}
+			{!loaded && <div className="bg-muted absolute inset-0 animate-pulse" />}
+			{/* Actual image */}
+			<img
+				src={src}
+				alt={alt}
+				className={`h-full w-full object-cover transition-opacity duration-200 ${
+					loaded ? "opacity-100" : "opacity-0"
+				}`}
+				loading="lazy"
+				decoding="async"
+				onLoad={() => setLoaded(true)}
+			/>
+		</div>
+	);
+}
 
 // Bracket icon component (left/right arrows)
 function BracketIcon({ className }: { className?: string }) {
@@ -427,8 +451,8 @@ export function WatchlistItemsTable({
 		setItems(watchlist.items);
 	}, [watchlist.items]);
 
-	// Fetch user watchlists if authenticated
-	useEffect(() => {
+	// Fetch user watchlists if authenticated, or load from localStorage if not
+	const loadWatchlists = useCallback(() => {
 		if (isAuthenticated) {
 			watchlistAPI
 				.getMine()
@@ -436,8 +460,49 @@ export function WatchlistItemsTable({
 					setWatchlists(data.watchlists);
 				})
 				.catch(console.error);
+		} else {
+			// User is not authenticated - load from localStorage with ownership info
+			const localWatchlists = getLocalWatchlistsWithOwnership();
+			// Only show owned watchlists (isOwner === true), excluding current one
+			const ownedWatchlists = localWatchlists.filter(
+				(wl) => wl.isOwner && wl._id !== watchlist._id
+			);
+			setWatchlists(ownedWatchlists);
 		}
-	}, [isAuthenticated]);
+	}, [isAuthenticated, watchlist._id]);
+
+	useEffect(() => {
+		loadWatchlists();
+	}, [loadWatchlists]);
+
+	// Listen for localStorage changes when not authenticated
+	useEffect(() => {
+		if (isAuthenticated) return;
+
+		const handleStorageChange = (e: StorageEvent) => {
+			if (e.key === "watchlists") {
+				loadWatchlists();
+			}
+		};
+
+		const handleCustomStorageChange = () => {
+			loadWatchlists();
+		};
+
+		window.addEventListener("storage", handleStorageChange);
+		window.addEventListener(
+			"localStorageWatchlistsChanged",
+			handleCustomStorageChange
+		);
+
+		return () => {
+			window.removeEventListener("storage", handleStorageChange);
+			window.removeEventListener(
+				"localStorageWatchlistsChanged",
+				handleCustomStorageChange
+			);
+		};
+	}, [isAuthenticated, loadWatchlists]);
 
 	// Setup drag sensors
 	const sensors = useSensors(
@@ -641,21 +706,13 @@ export function WatchlistItemsTable({
 					const item = info.row.original;
 					return (
 						<div className="flex items-center gap-3">
-							<div className="bg-muted h-16 w-12 shrink-0 overflow-hidden rounded">
-								{item.posterUrl ? (
-									<img
-										src={item.posterUrl}
-										alt={item.title}
-										className="h-full w-full object-cover"
-										loading="lazy"
-										decoding="async"
-									/>
-								) : (
-									<div className="text-muted-foreground flex h-full w-full items-center justify-center">
-										?
-									</div>
-								)}
-							</div>
+							{item.posterUrl ? (
+								<PosterImage src={item.posterUrl} alt={item.title} />
+							) : (
+								<div className="bg-muted text-muted-foreground flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded">
+									?
+								</div>
+							)}
 							<span className="font-medium text-white">{item.title}</span>
 						</div>
 					);
@@ -787,7 +844,7 @@ export function WatchlistItemsTable({
 								setSelectedItem(item);
 								setDetailsModalOpen(true);
 							}}
-							className="h-8 gap-1.5 px-3 text-xs"
+							className="h-8 cursor-pointer gap-1.5 px-3 text-xs"
 						>
 							<Eye className="h-3 w-3" />
 							{content.watchlists.preview}

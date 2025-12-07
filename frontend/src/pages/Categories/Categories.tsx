@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
+import { WatchlistCardGenre } from "@/components/Watchlist/WatchlistCardGenre";
 import {
 	type Watchlist,
 	type WatchlistItem,
@@ -9,7 +9,7 @@ import {
 } from "@/lib/api-client";
 import { scrollToTop } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
-import { getCategoryInfo, WATCHLIST_CATEGORIES } from "@/types/categories";
+import { GENRE_CATEGORIES, getCategoryInfo } from "@/types/categories";
 
 export function Categories() {
 	const { content } = useLanguageStore();
@@ -26,18 +26,7 @@ export function Categories() {
 	useEffect(() => {
 		const fetchCategoryCounts = async () => {
 			try {
-				const categoryIds = [
-					"movies",
-					"series",
-					"netflix",
-					"prime-video",
-					"disney-plus",
-					"jeunesse",
-					"enfant",
-					"action",
-					"anime",
-					"documentaries",
-				];
+				const categoryIds = [...GENRE_CATEGORIES];
 
 				const counts: Record<string, number> = {};
 				await Promise.all(
@@ -70,7 +59,7 @@ export function Categories() {
 
 	return (
 		<div className="bg-background min-h-screen pb-20">
-			<div className="container mx-auto px-4 py-12">
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-12">
 				{/* Back Button */}
 				<div className="mb-8">
 					<button
@@ -105,7 +94,7 @@ export function Categories() {
 					</div>
 				) : (
 					<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-						{WATCHLIST_CATEGORIES.map((categoryId) => {
+						{GENRE_CATEGORIES.map((categoryId, index) => {
 							const category = getCategoryInfo(categoryId, content);
 							const itemCount = categoryCounts[categoryId] || 0;
 							const placeholderTimestamp = "1970-01-01T00:00:00.000Z";
@@ -139,15 +128,14 @@ export function Categories() {
 							};
 
 							return (
-								<WatchlistCard
+								<WatchlistCardGenre
 									key={categoryId}
 									watchlist={mockWatchlist}
 									content={content}
 									href={`/category/${categoryId}`}
-									showMenu={false}
+									genreId={categoryId}
 									showOwner={false}
-									showVisibility={false}
-									categoryGradient={category.cardGradient}
+									index={index}
 								/>
 							);
 						})}

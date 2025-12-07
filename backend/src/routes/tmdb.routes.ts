@@ -27,6 +27,13 @@ router.get("/:type/popular", cacheMiddleware(30), tmdbController.getPopular);
 // Top rated content (doit être avant /:type/:id/similar)
 router.get("/:type/top_rated", cacheMiddleware(30), tmdbController.getTopRated);
 
+// Watch providers (doit être avant /:type/:id/similar)
+router.get(
+	"/:type/:id/providers",
+	cacheMiddleware(30),
+	tmdbController.getProviders
+);
+
 // Similar content (route générique, doit être EN DERNIER)
 router.get(
 	"/:type/:id/similar",

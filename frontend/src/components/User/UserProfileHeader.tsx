@@ -31,15 +31,15 @@ export function UserProfileHeader({
 	return (
 		<div className="relative w-full overflow-hidden">
 			{/* Background Gradient */}
-			<div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-background/60 to-background" />
+			<div className="via-background/60 to-background absolute inset-0 bg-linear-to-b from-purple-900/20" />
 
-			<div className="container relative mx-auto px-4 pt-8">
+			<div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-8">
 				{/* Back Button */}
 				<div className="mb-4">
 					<button
 						type="button"
 						onClick={handleBack}
-						className="flex items-center gap-2 rounded text-sm text-muted-foreground transition-colors hover:text-white"
+						className="text-muted-foreground flex items-center gap-2 rounded text-sm transition-colors hover:text-white"
 					>
 						<ArrowLeft className="h-4 w-4" />
 						<span>{content.watchlists.back}</span>
@@ -48,7 +48,7 @@ export function UserProfileHeader({
 
 				<div className="flex flex-col gap-6 md:flex-row md:items-end md:gap-8">
 					{/* Avatar - Round */}
-					<div className="flex-shrink-0">
+					<div className="shrink-0">
 						<div className="relative h-56 w-56 overflow-hidden rounded-full shadow-2xl">
 							{user.avatarUrl ? (
 								<img
@@ -59,8 +59,8 @@ export function UserProfileHeader({
 									decoding="async"
 								/>
 							) : (
-								<div className="flex h-full w-full items-center justify-center bg-muted/50">
-									<User className="h-24 w-24 text-muted-foreground" />
+								<div className="bg-muted/50 flex h-full w-full items-center justify-center">
+									<User className="text-muted-foreground h-24 w-24" />
 								</div>
 							)}
 						</div>
@@ -69,16 +69,16 @@ export function UserProfileHeader({
 					{/* Info */}
 					<div className="flex flex-1 flex-col justify-end space-y-4">
 						<div className="space-y-1">
-							<span className="text-sm font-normal text-muted-foreground">
+							<span className="text-muted-foreground text-sm font-normal">
 								{content.userProfile.profile}
 							</span>
 						</div>
 
-						<h1 className="text-4xl font-bold text-white md:text-[80px] leading-[0.9]">
+						<h1 className="text-4xl leading-[0.9] font-bold text-white md:text-[80px]">
 							{user.username}
 						</h1>
 
-						<div className="flex items-center gap-2 text-sm text-muted-foreground">
+						<div className="text-muted-foreground flex items-center gap-2 text-sm">
 							<span>
 								{totalPublicWatchlists}{" "}
 								{totalPublicWatchlists === 1

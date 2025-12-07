@@ -14,7 +14,11 @@ import {
 	type EditWatchlistDialogRef,
 } from "@/components/Watchlist/modal/EditWatchlistDialog";
 import { LeaveWatchlistDialog } from "@/components/Watchlist/modal/LeaveWatchlistDialog";
-import { WatchlistHeader } from "@/components/Watchlist/WatchlistHeader";
+import {
+	WATCHLIST_HEADER_BUTTON_CLASS,
+	WATCHLIST_HEADER_ICON_CLASS,
+	WatchlistHeader,
+} from "@/components/Watchlist/WatchlistHeader";
 import { WatchlistItemsTable } from "@/components/Watchlist/WatchlistItemsTable";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -93,7 +97,7 @@ export function WatchlistDetail() {
 
 	if (loading) {
 		return (
-			<div className="container mx-auto px-4 py-8">
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<div className="flex items-center justify-center py-12">
 					<div className="text-muted-foreground">
 						{content.watchlists.loading}
@@ -105,7 +109,7 @@ export function WatchlistDetail() {
 
 	if (notFound || !watchlist) {
 		return (
-			<div className="container mx-auto px-4 py-8">
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
 					<div className="bg-muted rounded-full p-6">
 						<svg
@@ -239,7 +243,7 @@ export function WatchlistDetail() {
 				actionButton={
 					isOwner || isCollaborator ? (
 						<Button
-							className="corner-squircle cursor-pointer rounded-2xl"
+							className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 							onClick={() => setAddModalOpen(true)}
 						>
 							<Plus className="h-4 w-4" />
@@ -251,14 +255,11 @@ export function WatchlistDetail() {
 					isOwner ? (
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild>
-								<button
-									type="button"
-									className="cursor-pointer rounded p-3 transition-all select-none hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-								>
+								<button type="button" className={WATCHLIST_HEADER_BUTTON_CLASS}>
 									<img
 										src={pointIcon}
 										alt="Menu"
-										className="h-8 w-8 opacity-60 brightness-0 invert transition-all hover:opacity-100"
+										className={`${WATCHLIST_HEADER_ICON_CLASS} brightness-0 invert`}
 									/>
 								</button>
 							</DropdownMenu.Trigger>
@@ -272,7 +273,7 @@ export function WatchlistDetail() {
 									}}
 								>
 									<DropdownMenu.Item
-										className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors outline-none"
+										className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground flex cursor-pointer gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors outline-none"
 										onClick={() => setEditModalOpen(true)}
 									>
 										<Pencil className="h-4 w-4" />
@@ -308,17 +309,19 @@ export function WatchlistDetail() {
 						>
 							<button
 								type="button"
-								className="group cursor-pointer p-3 transition-all hover:scale-105"
+								className={WATCHLIST_HEADER_BUTTON_CLASS}
 								title={content.watchlists.tooltips.inviteCollaborator}
 							>
-								<UserPlus className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
+								<UserPlus
+									className={`${WATCHLIST_HEADER_ICON_CLASS} text-white`}
+								/>
 							</button>
 						</AddCollaboratorPopover>
 					) : isCollaborator ? (
 						<button
 							type="button"
 							onClick={() => setLeaveDialogOpen(true)}
-							className="group cursor-pointer p-3 transition-all hover:scale-105"
+							className={WATCHLIST_HEADER_BUTTON_CLASS}
 							title={
 								content.watchlists.collaborators?.leaveTitle ||
 								"Quitter la watchlist"
@@ -327,14 +330,14 @@ export function WatchlistDetail() {
 							<img
 								src={cancelUserIcon}
 								alt="Leave"
-								className="h-6 w-6 opacity-60 brightness-0 invert transition-all group-hover:opacity-100"
+								className={`${WATCHLIST_HEADER_ICON_CLASS} brightness-0 invert`}
 							/>
 						</button>
 					) : null
 				}
 			/>
 
-			<div className="container mx-auto px-4 py-8">
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<WatchlistItemsTable
 					watchlist={watchlist}
 					onUpdate={fetchWatchlist}

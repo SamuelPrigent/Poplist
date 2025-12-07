@@ -129,7 +129,7 @@ export function WatchlistDetailOffline() {
 						<button
 							type="button"
 							onClick={() => navigate(-1)}
-							className="text-muted-foreground flex items-center gap-2 text-sm transition-colors hover:text-white"
+							className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
 						>
 							<ArrowLeft className="h-4 w-4" />
 							<span>{content.watchlists.back}</span>
@@ -206,7 +206,7 @@ export function WatchlistDetailOffline() {
 								{/* Add button aligned with bottom */}
 								<div className="shrink-0 pb-1">
 									<Button
-										className="corner-squircle rounded-2xl"
+										className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 										onClick={() => setAddModalOpen(true)}
 									>
 										<Plus className="h-4 w-4" />

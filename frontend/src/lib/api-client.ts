@@ -3,7 +3,7 @@ import appleTvLogo from "@/assets/watchProvider/appleTv.svg";
 import crunchyrollLogo from "@/assets/watchProvider/Crunchyroll.svg";
 import disneyPlusLogo from "@/assets/watchProvider/disneyplus.svg";
 import hboLogo from "@/assets/watchProvider/hbo.svg";
-import netflixLogo from "@/assets/watchProvider/netflix2.svg";
+import netflixLogo from "@/assets/watchProvider/netflix.svg";
 import primeVideoLogo from "@/assets/watchProvider/primeVideo.svg";
 import youtubeLogo from "@/assets/watchProvider/youtube.svg";
 
@@ -23,15 +23,37 @@ export function getWatchProviderLogo(providerName: string): string | null {
 		netflix: netflixLogo,
 		"amazon prime video": primeVideoLogo,
 		"amazon prime video with ads": primeVideoLogo,
+		"prime video": primeVideoLogo,
+		"prime-video": primeVideoLogo,
 		youtube: youtubeLogo,
 		"apple tv": appleTvLogo,
+		"apple tv+": appleTvLogo,
+		"apple tv plus": appleTvLogo,
+		"apple-tv": appleTvLogo,
 		"disney plus": disneyPlusLogo,
+		"disney+": disneyPlusLogo,
+		"disney-plus": disneyPlusLogo,
 		crunchyroll: crunchyrollLogo,
 		"hbo max": hboLogo,
+		"hbo-max": hboLogo,
+		hbo: hboLogo,
 	};
 
-	const normalized = providerName.toLowerCase();
-	return nameMap[normalized] || null;
+	const normalized = providerName.toLowerCase().trim();
+
+	// First try exact match
+	if (nameMap[normalized]) {
+		return nameMap[normalized];
+	}
+
+	// Fallback: check if provider name contains any known provider name
+	for (const [key, logo] of Object.entries(nameMap)) {
+		if (normalized.includes(key) || key.includes(normalized)) {
+			return logo;
+		}
+	}
+
+	return null;
 }
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
@@ -237,6 +259,11 @@ export interface UserProfileResponse {
 	totalPublicWatchlists: number;
 }
 
+export interface WatchlistCategories {
+	genre?: string[];
+	watchProvider?: string[];
+}
+
 export interface Watchlist {
 	_id: string;
 	ownerId: string | WatchlistOwner;
@@ -245,7 +272,7 @@ export interface Watchlist {
 	imageUrl?: string;
 	thumbnailUrl?: string; // Auto-generated 2x2 poster grid (Cloudinary)
 	isPublic: boolean;
-	categories?: string[];
+	categories?: WatchlistCategories | string[]; // New format: { genre: [], watchProvider: [] } | Old format: string[] for backward compatibility
 	collaborators: string[] | Collaborator[]; // Can be IDs or populated collaborator objects
 	items: WatchlistItem[];
 	createdAt: string;
@@ -295,7 +322,7 @@ export const watchlistAPI = {
 		name: string;
 		description?: string;
 		isPublic?: boolean;
-		categories?: string[];
+		categories?: WatchlistCategories | string[];
 		items?: WatchlistItem[];
 		fromLocalStorage?: boolean;
 	}): Promise<{ watchlist: Watchlist }> =>
@@ -409,6 +436,93 @@ export const watchlistAPI = {
 		request(`/watchlists/${id}/cover`, {
 			method: "DELETE",
 		}),
+
+	fetchTMDBProviders: async (
+		tmdbId: string,
+		type: "movie" | "tv",
+		region: string = "FR"
+	): Promise<Platform[]> => {
+		try {
+			const response = await request(
+				`/tmdb/${type}/${tmdbId}/providers?region=${region}`
+			);
+			const data = response as {
+				results: {
+					[countryCode: string]: {
+						link: string;
+						flatrate?: Array<{
+							logo_path: string;
+							provider_id: number;
+							provider_name: string;
+							display_priority: number;
+						}>;
+						buy?: Array<{
+							logo_path: string;
+							provider_id: number;
+							provider_name: string;
+							display_priority: number;
+						}>;
+						rent?: Array<{
+							logo_path: string;
+							provider_id: number;
+							provider_name: string;
+							display_priority: number;
+						}>;
+					};
+				};
+			};
+
+			const regionData = data.results[region];
+			if (!regionData) {
+				return [{ name: "Inconnu", logoPath: "" }];
+			}
+
+			// Collect all providers
+			const allProviders: Platform[] = [];
+
+			// Priority: flatrate (streaming) > buy > rent
+			if (regionData.flatrate) {
+				allProviders.push(
+					...regionData.flatrate.map((p) => ({
+						name: p.provider_name,
+						logoPath: p.logo_path,
+					}))
+				);
+			}
+
+			if (regionData.buy) {
+				allProviders.push(
+					...regionData.buy.map((p) => ({
+						name: p.provider_name,
+						logoPath: p.logo_path,
+					}))
+				);
+			}
+
+			if (regionData.rent) {
+				allProviders.push(
+					...regionData.rent.map((p) => ({
+						name: p.provider_name,
+						logoPath: p.logo_path,
+					}))
+				);
+			}
+
+			// Remove duplicates by provider name
+			const uniqueProviders = new Map<string, Platform>();
+			for (const provider of allProviders) {
+				if (!uniqueProviders.has(provider.name)) {
+					uniqueProviders.set(provider.name, provider);
+				}
+			}
+
+			const result = Array.from(uniqueProviders.values());
+			return result.length > 0 ? result : [{ name: "Inconnu", logoPath: "" }];
+		} catch (error) {
+			console.error("Failed to fetch TMDB providers:", error);
+			return [{ name: "Inconnu", logoPath: "" }];
+		}
+	},
 
 	searchTMDB: (params: {
 		query: string;

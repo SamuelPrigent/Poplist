@@ -34,6 +34,12 @@ function isWatchlistOwner(
 	);
 }
 
+export const WATCHLIST_HEADER_BUTTON_CLASS =
+	"group relative flex h-[80%] items-center justify-center rounded-lg p-3 transition-all cursor-pointer  hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
+
+export const WATCHLIST_HEADER_ICON_CLASS =
+	"h-6 w-6 transition-all opacity-60 group-hover:opacity-100";
+
 export function WatchlistHeader({
 	watchlist,
 	actionButton,
@@ -70,7 +76,7 @@ export function WatchlistHeader({
 			{/* Background Gradient */}
 			<div className="via-background/60 to-background absolute inset-0 bg-linear-to-b from-purple-900/20" />
 
-			<div className="relative container mx-auto px-4 pt-8">
+			<div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-8">
 				{/* Back Button */}
 				<div className="mb-8">
 					<button
@@ -147,7 +153,7 @@ export function WatchlistHeader({
 								<button
 									type="button"
 									onClick={onEdit}
-									className="hover:text-primary cursor-pointer text-left transition-colors"
+									className="hover:text-primary cursor-pointer rounded-lg text-left transition-colors"
 								>
 									{watchlist.name}
 								</button>
@@ -184,7 +190,7 @@ export function WatchlistHeader({
 												<button
 													type="button"
 													onClick={() => navigate(`/user/${ownerUsername}`)}
-													className="cursor-pointer font-semibold text-white capitalize hover:underline"
+													className="cursor-pointer rounded-lg font-semibold text-white capitalize hover:underline"
 												>
 													{ownerUsername}
 												</button>
@@ -282,13 +288,14 @@ export function WatchlistHeader({
 						onShare ||
 						collaboratorButton ||
 						menuButton;
+
 					return (
 						<div
 							className={`mt-6 flex items-center ${hasLeftButtons ? "justify-between" : "justify-end"}`}
 						>
 							{/* Left: Icon Buttons */}
 							{hasLeftButtons && (
-								<div className="flex items-center gap-1">
+								<div className="flex min-h-[50px] items-center justify-center gap-1">
 									{showSaveButton && onSave && (
 										<button
 											type="button"
@@ -298,7 +305,7 @@ export function WatchlistHeader({
 												setTimeout(() => setShowSaveAnimation(false), 200);
 												await onSave();
 											}}
-											className="group relative cursor-pointer rounded p-3 transition-all hover:scale-105"
+											className={WATCHLIST_HEADER_BUTTON_CLASS}
 											title={
 												isSaved
 													? content.watchlists.tooltips.unsave
@@ -346,23 +353,25 @@ export function WatchlistHeader({
 										<button
 											type="button"
 											onClick={onDuplicate}
-											className="group cursor-pointer rounded p-3 transition-all hover:scale-105"
+											className={WATCHLIST_HEADER_BUTTON_CLASS}
 											title={content.watchlists.tooltips.duplicate}
 										>
-											<Copy className="h-6 w-6 text-white opacity-60 transition-all group-hover:opacity-100" />
+											<Copy
+												className={`${WATCHLIST_HEADER_ICON_CLASS} text-white`}
+											/>
 										</button>
 									)}
 									{onShare && (
 										<button
 											type="button"
 											onClick={onShare}
-											className="group cursor-pointer rounded p-3 transition-all hover:scale-105"
+											className={WATCHLIST_HEADER_BUTTON_CLASS}
 											title={content.watchlists.tooltips.share}
 										>
 											<img
 												src={shareIcon}
 												alt="Share"
-												className="h-7 w-7 opacity-60 brightness-0 invert transition-all group-hover:opacity-100"
+												className={`${WATCHLIST_HEADER_ICON_CLASS} brightness-0 invert`}
 											/>
 										</button>
 									)}

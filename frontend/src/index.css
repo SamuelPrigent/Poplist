@@ -30,6 +30,9 @@
 	--color-card: hsl(222.2 84% 4.9%);
 	--color-card-foreground: hsl(210 40% 98%);
 
+	--maxWidth: 1500px;
+	--sectionWidth: 92%;
+
 	--radius-lg: 0.5rem;
 	--radius-md: calc(0.5rem - 2px);
 	--radius-sm: calc(0.5rem - 4px);

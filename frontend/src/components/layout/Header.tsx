@@ -40,7 +40,7 @@ export function Header() {
 	return (
 		<>
 			<header className="border-border bg-background border-b">
-				<div className="container mx-auto flex h-16 items-center justify-between px-4">
+				<div className="mx-auto flex h-16 w-[92%] max-w-(--maxWidth) items-center justify-between px-4">
 					<div className="flex items-center gap-6">
 						<div className="flex items-center gap-2">
 							<img src={play} className="h-4 w-4" alt="" />
@@ -50,13 +50,13 @@ export function Header() {
 						</div>
 						<Link
 							to="/home"
-							className="text-muted-foreground rounded text-sm font-medium transition-colors hover:text-white"
+							className="text-muted-foreground rounded p-1 text-sm font-medium transition-colors hover:text-white"
 						>
 							{content.header.home}
 						</Link>
 						<Link
 							to="/explore"
-							className="text-muted-foreground rounded text-sm font-medium transition-colors hover:text-white"
+							className="text-muted-foreground rounded p-1 text-sm font-medium transition-colors hover:text-white"
 						>
 							{content.header.explore}
 						</Link>
@@ -65,7 +65,7 @@ export function Header() {
 					<div className="flex items-center gap-4">
 						<Link
 							to="/watchlists"
-							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-white focus-visible:ring-[3px] focus-visible:border-white"
+							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
 						>
 							<Bookmark
 								className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}
@@ -104,14 +104,14 @@ export function Header() {
 						) : (
 							<>
 								<Button
-									className="corner-squircle cursor-pointer rounded-lg"
+									className="focus-visible:ring-offset-background rounded-squircle cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 									variant="outline"
 									onClick={openLogin}
 								>
 									{content.header.login}
 								</Button>
 								<Button
-									className="corner-squircle cursor-pointer rounded-lg"
+									className="focus-visible:ring-offset-background rounded-squircle cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 									onClick={openSignup}
 								>
 									{content.header.signup}

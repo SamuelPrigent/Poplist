@@ -26,6 +26,10 @@ export function ItemDetailsModal({
 	const [_error, setError] = useState<string | null>(null);
 	const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
 	const [showSeeMore, setShowSeeMore] = useState(false);
+	const [posterLoaded, setPosterLoaded] = useState(false);
+	const [loadedActorImages, setLoadedActorImages] = useState<Set<string>>(
+		new Set()
+	);
 	const overviewRef = useRef<HTMLParagraphElement>(null);
 
 	const languageCode =
@@ -41,6 +45,8 @@ export function ItemDetailsModal({
 		// Reset expanded state when modal opens
 		setIsOverviewExpanded(false);
 		setShowSeeMore(false);
+		setPosterLoaded(false);
+		setLoadedActorImages(new Set());
 
 		const fetchDetails = async () => {
 			setLoading(true);
@@ -200,15 +206,25 @@ export function ItemDetailsModal({
 									<div className="flex gap-5">
 										{/* Poster */}
 										<div className="shrink-0">
-											<div className="bg-muted h-48 w-32 overflow-hidden rounded-lg">
+											<div className="relative h-48 w-32 overflow-hidden rounded-lg">
 												{details.posterUrl ? (
-													<img
-														src={details.posterUrl}
-														alt={details.title}
-														className="h-full w-full object-cover"
-													/>
+													<>
+														{/* Skeleton - shown while loading */}
+														{!posterLoaded && (
+															<div className="bg-muted absolute inset-0 animate-pulse" />
+														)}
+														{/* Actual image */}
+														<img
+															src={details.posterUrl}
+															alt={details.title}
+															className={`h-full w-full object-cover transition-opacity duration-200 ${
+																posterLoaded ? "opacity-100" : "opacity-0"
+															}`}
+															onLoad={() => setPosterLoaded(true)}
+														/>
+													</>
 												) : (
-													<div className="text-muted-foreground flex h-full items-center justify-center">
+													<div className="bg-muted text-muted-foreground flex h-full items-center justify-center">
 														{content.watchlists.itemDetails.notAvailable}
 													</div>
 												)}
@@ -341,15 +357,33 @@ export function ItemDetailsModal({
 														key={`${actor.name}-${actor.character}`}
 														className="flex gap-3"
 													>
-														<div className="bg-muted h-16 w-16 shrink-0 overflow-hidden rounded-lg">
+														<div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
 															{actor.profileUrl ? (
-																<img
-																	src={actor.profileUrl}
-																	alt={actor.name}
-																	className="h-full w-full object-cover"
-																/>
+																<>
+																	{/* Skeleton - shown while loading */}
+																	{!loadedActorImages.has(actor.profileUrl) && (
+																		<div className="bg-muted absolute inset-0 animate-pulse" />
+																	)}
+																	{/* Actual image */}
+																	<img
+																		src={actor.profileUrl}
+																		alt={actor.name}
+																		className={`h-full w-full object-cover transition-opacity duration-200 ${
+																			loadedActorImages.has(actor.profileUrl)
+																				? "opacity-100"
+																				: "opacity-0"
+																		}`}
+																		onLoad={() => {
+																			setLoadedActorImages((prev) => {
+																				const newSet = new Set(prev);
+																				newSet.add(actor.profileUrl!);
+																				return newSet;
+																			});
+																		}}
+																	/>
+																</>
 															) : (
-																<div className="text-muted-foreground flex h-full items-center justify-center text-xs">
+																<div className="bg-muted text-muted-foreground flex h-full items-center justify-center text-xs">
 																	{content.watchlists.itemDetails.notAvailable}
 																</div>
 															)}

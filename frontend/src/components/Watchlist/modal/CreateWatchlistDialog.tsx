@@ -3,12 +3,14 @@ import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PlatformSelector } from "@/components/Watchlist/PlatformSelector";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import {
+	GENRE_CATEGORIES,
 	getCategoryInfo,
-	WATCHLIST_CATEGORIES,
-	type WatchlistCategory,
+	type GenreCategory,
+	type PlatformCategory,
 } from "@/types/categories";
 
 interface CreateWatchlistDialogProps {
@@ -28,15 +30,18 @@ export function CreateWatchlistDialog({
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
 	const [isPublic, setIsPublic] = useState(false);
-	const [categories, setCategories] = useState<WatchlistCategory[]>([]);
+	const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
+	const [providerCategories, setProviderCategories] = useState<
+		PlatformCategory[]
+	>([]);
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const toggleCategory = (category: WatchlistCategory) => {
-		setCategories((prev) =>
+	const toggleGenreCategory = (category: GenreCategory) => {
+		setGenreCategories((prev) =>
 			prev.includes(category)
 				? prev.filter((c) => c !== category)
 				: [...prev, category]
@@ -45,10 +50,15 @@ export function CreateWatchlistDialog({
 
 	// Clear categories when watchlist becomes private
 	useEffect(() => {
-		if (!isPublic && categories.length > 0) {
-			setCategories([]);
+		if (!isPublic) {
+			if (genreCategories.length > 0) {
+				setGenreCategories([]);
+			}
+			if (providerCategories.length > 0) {
+				setProviderCategories([]);
+			}
 		}
-	}, [isPublic, categories.length]);
+	}, [isPublic, genreCategories.length, providerCategories.length]);
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -89,6 +99,17 @@ export function CreateWatchlistDialog({
 		setLoading(true);
 
 		try {
+			// Build categories object in new format
+			const hasGenres = genreCategories.length > 0;
+			const hasProviders = providerCategories.length > 0;
+			const categoriesData =
+				hasGenres || hasProviders
+					? {
+							genre: hasGenres ? genreCategories : undefined,
+							watchProvider: hasProviders ? providerCategories : undefined,
+						}
+					: undefined;
+
 			if (offline) {
 				// Offline mode: create in localStorage
 				const newWatchlist = {
@@ -97,8 +118,8 @@ export function CreateWatchlistDialog({
 					name: name.trim(),
 					description: description.trim() || undefined,
 					imageUrl: imagePreview || undefined,
-					isPublic,
-					categories: categories.length > 0 ? categories : undefined,
+					isPublic: false, // Offline watchlists cannot be public
+					categories: undefined, // Offline watchlists don't support categories
 					collaborators: [],
 					items: [],
 					likedBy: [],
@@ -110,7 +131,8 @@ export function CreateWatchlistDialog({
 				setName("");
 				setDescription("");
 				setIsPublic(false);
-				setCategories([]);
+				setGenreCategories([]);
+				setProviderCategories([]);
 				setImageFile(null);
 				setImagePreview(null);
 
@@ -122,7 +144,7 @@ export function CreateWatchlistDialog({
 					name: name.trim(),
 					description: description.trim() || undefined,
 					isPublic,
-					categories: categories.length > 0 ? categories : undefined,
+					categories: categoriesData,
 				});
 
 				// Upload cover image if provided
@@ -134,7 +156,8 @@ export function CreateWatchlistDialog({
 				setName("");
 				setDescription("");
 				setIsPublic(false);
-				setCategories([]);
+				setGenreCategories([]);
+				setProviderCategories([]);
 				setImageFile(null);
 				setImagePreview(null);
 
@@ -154,7 +177,8 @@ export function CreateWatchlistDialog({
 		setName("");
 		setDescription("");
 		setIsPublic(false);
-		setCategories([]);
+		setGenreCategories([]);
+		setProviderCategories([]);
 		setImageFile(null);
 		setImagePreview(null);
 		setError(null);
@@ -211,51 +235,69 @@ export function CreateWatchlistDialog({
 							/>
 						</div>
 
-						{/* Public Checkbox */}
-						<div className="flex items-center space-x-2">
-							<input
-								type="checkbox"
-								id="isPublic"
-								checked={isPublic}
-								onChange={(e) => setIsPublic(e.target.checked)}
-								disabled={loading}
-								className="border-input bg-background text-primary focus-visible:ring-ring h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-							/>
-							<label
-								htmlFor="isPublic"
-								className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-							>
-								{content.watchlists.makePublic}
-							</label>
-						</div>
-
-						{/* Categories Selection - Only shown if public */}
-						{isPublic && (
-							<div className="space-y-2">
-								<p className="text-sm font-medium">
-									{content.watchlists.categories}
-								</p>
-								<div className="flex flex-wrap gap-2">
-									{WATCHLIST_CATEGORIES.map((category) => (
-										<button
-											type="button"
-											key={category}
-											onClick={() => toggleCategory(category)}
-											disabled={loading}
-											className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-												categories.includes(category)
-													? "bg-primary text-primary-foreground"
-													: "bg-muted text-muted-foreground hover:bg-muted/80"
-											}`}
-										>
-											{getCategoryInfo(category, content).name}
-										</button>
-									))}
+						{/* Public Checkbox - Only shown for authenticated users */}
+						{!offline && (
+							<>
+								<div className="flex items-center space-x-2">
+									<input
+										type="checkbox"
+										id="isPublic"
+										checked={isPublic}
+										onChange={(e) => setIsPublic(e.target.checked)}
+										disabled={loading}
+										className="border-input bg-background text-primary focus-visible:ring-ring h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									/>
+									<label
+										htmlFor="isPublic"
+										className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+									>
+										{content.watchlists.makePublic}
+									</label>
 								</div>
-								<p className="text-muted-foreground text-xs">
-									{content.watchlists.categoriesDescription}
-								</p>
-							</div>
+
+								{/* Categories Selection - Only shown if public */}
+								{isPublic && (
+									<>
+										{/* Genre Categories */}
+										<div className="space-y-2">
+											<p className="text-sm font-medium">
+												{content.watchlists.genreCategories ||
+													"Catégories par genre"}
+											</p>
+											<div className="flex flex-wrap gap-2">
+												{GENRE_CATEGORIES.map((category) => (
+													<button
+														type="button"
+														key={category}
+														onClick={() => toggleGenreCategory(category)}
+														disabled={loading}
+														className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+															genreCategories.includes(category)
+																? "bg-primary text-primary-foreground"
+																: "bg-muted text-muted-foreground hover:bg-muted/80"
+														}`}
+													>
+														{getCategoryInfo(category, content).name}
+													</button>
+												))}
+											</div>
+										</div>
+
+										{/* Platform Categories */}
+										<div className="space-y-2">
+											<p className="text-sm font-medium">
+												{content.watchlists.platformCategories ||
+													"Plateformes de streaming"}
+											</p>
+											<PlatformSelector
+												selected={providerCategories}
+												onChange={setProviderCategories}
+												disabled={loading}
+											/>
+										</div>
+									</>
+								)}
+							</>
 						)}
 
 						{/* Cover Image Upload */}

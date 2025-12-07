@@ -433,7 +433,7 @@ export function Account() {
 								)}
 							</div>
 							<Button
-								className="cursor-pointer"
+								className="focus-visible:ring-offset-background cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 								type="submit"
 								disabled={
 									usernameLoading ||
@@ -587,7 +587,7 @@ export function Account() {
 						{/* Actions */}
 						<div className="flex justify-end gap-2 pt-4">
 							<Button
-								className="cursor-pointer"
+								className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 								type="button"
 								variant="outline"
 								onClick={() => {

@@ -20,7 +20,7 @@ interface HeroSectionProps {
 const GRID_INDICES = Array.from({ length: 24 }, (_, i) => i);
 const POSTER_SLOTS = [0, 1, 2, 3];
 
-export function HeroSection({
+export function HeroSection2({
 	content,
 	trending,
 	watchlistsUrl,
@@ -146,35 +146,38 @@ export function HeroSection({
 			<div className="relative z-10 flex min-h-[80vh] flex-col items-center justify-center px-4 py-20 text-center">
 				{/* Feature Pills - Top */}
 				<div className="mb-8 flex flex-wrap items-center justify-center gap-4">
-					<div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-[5px] backdrop-blur-sm">
+					<div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 backdrop-blur-sm">
 						<ListChecks className="h-4 w-4 text-blue-400" />
-						<span className="text-sm font-medium text-gray-200">
+						<span className="text-sm text-gray-300">
 							{content.home.hero.pills.organize}
 						</span>
 					</div>
-					<div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-[5px] backdrop-blur-sm">
+					<div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 backdrop-blur-sm">
 						<Sparkles className="h-4 w-4 text-yellow-400" />
-						<span className="text-sm font-medium text-gray-200">
+						<span className="text-sm text-gray-300">
 							{content.home.hero.pills.discover}
 						</span>
 					</div>
-					<div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-[5px] backdrop-blur-sm">
+					<div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 backdrop-blur-sm">
 						<Users className="h-4 w-4 text-purple-400" />
-						<span className="text-sm font-medium text-gray-200">
+						<span className="text-sm text-gray-300">
 							{content.home.hero.pills.share}
 						</span>
 					</div>
 				</div>
 
 				{/* Main Title */}
-				<h1 className="mb-8 max-w-[67%] text-[65px] leading-[0.97] font-semibold tracking-tighter drop-shadow-2xl">
-					<span className="bg-[linear-gradient(99deg,rgba(255,255,255,0.5)_0%,rgba(255,255,255,1)_26%,rgba(255,255,255,1)_76%,rgba(255,255,255,0.3)_100%)] bg-clip-text text-transparent">
-						{content.landing.hero.title}
+				<h1 className="mb-6 max-w-4xl text-5xl leading-tight font-bold md:text-7xl">
+					<span className="text-white">
+						{content.home.hero.title.split(" ").slice(0, 2).join(" ")}
+					</span>{" "}
+					<span className="text-gray-400">
+						{content.home.hero.title.split(" ").slice(2).join(" ")}
 					</span>
 				</h1>
 
 				<p className="mb-12 max-w-2xl text-xl text-gray-300">
-					{content.landing.hero.subtitle}
+					{content.home.hero.subtitle}
 				</p>
 
 				{/* CTA Buttons */}

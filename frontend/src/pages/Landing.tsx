@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+// import { HeroSection2 } from "@/components/Landing/HeroSection2";
 import { HeroSection } from "@/components/Landing/HeroSection";
 import { RightSectionPreview } from "@/components/Landing/RightSectionPreview";
 import {
@@ -174,11 +175,11 @@ export function Landing() {
 
 					<div className="w-full max-w-[277px] rounded-lg text-center">
 						<div className="mb-4 flex justify-center">
-							<div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-500/20 text-xl font-bold text-purple-400">
+							<div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500/20 text-xl font-bold text-yellow-400">
 								2
 							</div>
 						</div>
-						<h3 className="mb-3 text-xl font-semibold text-purple-400">
+						<h3 className="mb-3 text-xl font-semibold text-yellow-400">
 							{content.landing.startInSeconds.step2.title}
 						</h3>
 						<p className="text-[16px] text-balance text-gray-300">
@@ -188,11 +189,11 @@ export function Landing() {
 
 					<div className="w-full max-w-[277px] rounded-lg text-center">
 						<div className="mb-4 flex justify-center">
-							<div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500/20 text-xl font-bold text-yellow-400">
+							<div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-500/20 text-xl font-bold text-purple-400">
 								3
 							</div>
 						</div>
-						<h3 className="mb-3 text-xl font-semibold text-yellow-400">
+						<h3 className="mb-3 text-xl font-semibold text-purple-400">
 							{content.landing.startInSeconds.step3.title}
 						</h3>
 						<p className="text-[16px] text-balance text-gray-300">

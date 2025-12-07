@@ -57,7 +57,7 @@ export function UserProfile() {
 
 	if (loading) {
 		return (
-			<div className="container mx-auto px-4 py-8">
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<div className="flex items-center justify-center py-12">
 					<div className="text-muted-foreground">
 						{content.userProfile.loading}
@@ -69,7 +69,7 @@ export function UserProfile() {
 
 	if (notFound || !user) {
 		return (
-			<div className="container mx-auto px-4 py-8">
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<Empty>
 					<EmptyHeader>
 						<EmptyMedia />
@@ -89,14 +89,14 @@ export function UserProfile() {
 	// User exists but has no public watchlists
 	if (totalPublicWatchlists === 0) {
 		return (
-			<div className="min-h-screen bg-background pb-12">
+			<div className="bg-background min-h-screen pb-12">
 				<UserProfileHeader
 					user={user}
 					totalPublicWatchlists={totalPublicWatchlists}
 					hasWatchlists={false}
 				/>
 
-				<div className="container mx-auto px-4 py-12">
+				<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-12">
 					<Empty>
 						<EmptyHeader>
 							<EmptyMedia />
@@ -116,15 +116,15 @@ export function UserProfile() {
 
 	// User has public watchlists
 	return (
-		<div className="min-h-screen bg-background pb-24">
+		<div className="bg-background min-h-screen pb-24">
 			<UserProfileHeader
 				user={user}
 				totalPublicWatchlists={totalPublicWatchlists}
 				hasWatchlists={true}
 			/>
 
-			<div className="container mx-auto px-4 py-8 pt-16">
-				<h2 className="text-2xl font-semibold text-white mb-7">
+			<div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8 pt-16">
+				<h2 className="mb-7 text-2xl font-semibold text-white">
 					{content.userProfile.publicWatchlists}
 				</h2>
 

@@ -95,13 +95,21 @@ function WatchlistCardOffline({
 			style={draggableProps?.style}
 			{...(draggableProps?.attributes || {})}
 			{...(draggableProps?.listeners || {})}
+			tabIndex={0}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					navigate(`/local/watchlist/${watchlist._id}`);
+				}
+			}}
 			className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
 		>
 			{/* Cover Image */}
 			<button
 				type="button"
 				onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
-				className="bg-muted relative mb-3 aspect-square w-full overflow-hidden rounded-md"
+				tabIndex={-1}
+				className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md"
 			>
 				{thumbnailUrl ? (
 					<img
@@ -122,6 +130,7 @@ function WatchlistCardOffline({
 			<button
 				type="button"
 				onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+				tabIndex={-1}
 				className="line-clamp-2 w-full text-left text-sm font-semibold text-white"
 			>
 				{watchlist.name}
@@ -131,6 +140,7 @@ function WatchlistCardOffline({
 				<button
 					type="button"
 					onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+					tabIndex={-1}
 					className="text-muted-foreground"
 				>
 					{watchlist.isPublic
@@ -143,6 +153,7 @@ function WatchlistCardOffline({
 				<button
 					type="button"
 					onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+					tabIndex={-1}
 				>
 					{watchlist.items.length}{" "}
 					{watchlist.items.length === 1
@@ -166,7 +177,12 @@ function WatchlistCardOffline({
 						<button
 							type="button"
 							onClick={(e) => e.stopPropagation()}
-							className="hover:bg-muted flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.stopPropagation();
+								}
+							}}
+							className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all group-hover:opacity-100 hover:brightness-125 hover:backdrop-brightness-150 focus-visible:opacity-100"
 						>
 							<MoreVertical className="h-4 w-4" />
 						</button>
@@ -177,6 +193,9 @@ function WatchlistCardOffline({
 							className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1 shadow-md"
 							sideOffset={5}
 							onKeyDown={handleDropdownKeyDown}
+							onCloseAutoFocus={(e) => {
+								e.preventDefault();
+							}}
 						>
 							{/* Edit */}
 							<DropdownMenu.Item
@@ -368,7 +387,7 @@ export function WatchlistsOffline() {
 
 	if (loading) {
 		return (
-			<div className="container mx-auto px-4 py-8">
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<h1 className="mb-8 text-3xl font-bold text-white">
 					{content.watchlists.title}
 				</h1>
@@ -382,7 +401,7 @@ export function WatchlistsOffline() {
 	}
 
 	return (
-		<div className="container mx-auto mb-32 px-4 py-8">
+		<div className="container mx-auto mb-32 min-h-[80vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 			<div className="mt-9 mb-3 flex items-center justify-between">
 				<div className="flex items-center gap-4">
 					<h1 className="text-3xl font-bold text-white">
@@ -390,7 +409,7 @@ export function WatchlistsOffline() {
 					</h1>
 				</div>
 				<Button
-					className="corner-squircle rounded-2xl"
+					className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 					onClick={() => setDialogOpen(true)}
 				>
 					<Plus className="h-4 w-4" />

@@ -136,6 +136,13 @@ export function AddItemModal({
 
 				if (watchlistIndex === -1) return;
 
+				// Fetch providers from TMDB via backend
+				const platformList = await watchlistAPI.fetchTMDBProviders(
+					item.id.toString(),
+					item.media_type,
+					region
+				);
+
 				// Add item to watchlist
 				watchlists[watchlistIndex].items.push({
 					tmdbId: item.id.toString(),
@@ -144,7 +151,7 @@ export function AddItemModal({
 						? `https://image.tmdb.org/t/p/w500${item.poster_path}`
 						: "",
 					type: item.media_type,
-					platformList: [{ name: "Inconnu", logoPath: "" }], // Platform data not available in search results
+					platformList,
 					runtime: item.runtime,
 					addedAt: new Date().toISOString(),
 				});
@@ -236,8 +243,8 @@ export function AddItemModal({
 						{/* Results */}
 						<div
 							ref={scrollContainerRef}
-							className="flex-1 overflow-y-auto px-6 pb-6"
-							style={{ maxHeight: "calc(80vh - 200px)" }}
+							className="flex-1 overflow-y-auto px-6 pb-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500"
+							style={{ maxHeight: "calc(80vh - 200px)", scrollbarColor: "#4b5563 transparent" }}
 						>
 							{loading && (
 								<div className="flex items-center justify-center py-12">

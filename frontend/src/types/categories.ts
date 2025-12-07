@@ -1,19 +1,46 @@
 import type { Content } from "./content";
 
-// Allowed watchlist categories/tags
-export const WATCHLIST_CATEGORIES = [
+// Genre categories
+export const GENRE_CATEGORIES = [
 	"movies",
 	"series",
+	"anime",
+	"enfant",
+	"documentaries",
+	"jeunesse",
+	"action",
+] as const;
+
+// Platform/Watch Provider categories
+export const PLATFORM_CATEGORIES = [
 	"netflix",
 	"prime-video",
 	"disney-plus",
-	"anime",
-	"action",
-	"documentaries",
-	"enfant",
-	"jeunesse",
+	"crunchyroll",
+	"hbo-max",
+	"youtube",
+	"apple-tv",
 ] as const;
 
+// Platforms with available logos (for display purposes)
+export const PLATFORM_CATEGORIES_WITH_LOGOS = [
+	"netflix",
+	"prime-video",
+	"disney-plus",
+	"crunchyroll",
+	"hbo-max",
+	"youtube",
+	"apple-tv",
+] as const;
+
+// Combined type for all categories
+export const WATCHLIST_CATEGORIES = [
+	...GENRE_CATEGORIES,
+	...PLATFORM_CATEGORIES,
+] as const;
+
+export type GenreCategory = (typeof GENRE_CATEGORIES)[number];
+export type PlatformCategory = (typeof PLATFORM_CATEGORIES)[number];
 export type WatchlistCategory = (typeof WATCHLIST_CATEGORIES)[number];
 
 export interface CategoryInfo {
@@ -29,7 +56,7 @@ export interface CategoryInfo {
 // Helper function to get translated category info
 export const getCategoryInfo = (
 	categoryId: WatchlistCategory,
-	content: Content,
+	content: Content
 ): CategoryInfo => {
 	const translations = content.categories.list[categoryId];
 	const baseInfo = CATEGORY_INFO[categoryId];
@@ -54,23 +81,23 @@ export const CATEGORY_INFO: Record<
 		name: "Films",
 		description: "Les meilleurs films du moment",
 		gradient:
-			"linear-gradient(135deg, #10b981 0%, #059669 40%, #047857 60%, #065f46 100%)",
-		cardGradient: "linear-gradient(16deg, #10b981, #0a4d3a 30%, #000000)",
+			"linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)",
+		cardGradient: "linear-gradient(135deg, #4A90E2, #667EEA)",
 		headerGradient:
-			"linear-gradient(168deg, rgb(4 120 87) 0%, rgb(5 150 105) 60%, rgb(4 120 87) 100%)",
+			"linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)",
 		sectionGradient:
-			"linear-gradient(rgb(16 185 129 / 32%) 0%, transparent 120px)",
+			"linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)",
 	},
 	series: {
 		name: "Séries",
 		description: "Les séries à ne pas manquer",
 		gradient:
-			"linear-gradient(135deg, #f59e0b 0%, #d97706 40%, #b45309 60%, #92400e 100%)",
-		cardGradient: "linear-gradient(16deg, #f59e0b, #7c4d07 30%, #000000)",
+			"linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)",
+		cardGradient: "linear-gradient(135deg, #4A90E2, #667EEA)",
 		headerGradient:
-			"linear-gradient(168deg, rgb(180 83 9) 0%, rgb(217 119 6) 60%, rgb(180 83 9) 100%)",
+			"linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)",
 		sectionGradient:
-			"linear-gradient(rgb(245 158 11 / 32%) 0%, transparent 120px)",
+			"linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)",
 	},
 	netflix: {
 		name: "Netflix",
@@ -109,55 +136,143 @@ export const CATEGORY_INFO: Record<
 		name: "Animation",
 		description: "Les meilleurs séries et films d'animation et manga adaptés",
 		gradient:
-			"linear-gradient(135deg, #ec4899 0%, #db2777 40%, #be185d 60%, #9f1239 100%)",
-		cardGradient: "linear-gradient(16deg, #ec4899, #831843 30%, #000000)",
+			"linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)",
+		cardGradient: "linear-gradient(135deg, #4A90E2, #667EEA)",
 		headerGradient:
-			"linear-gradient(168deg, rgb(190 24 93) 0%, rgb(219 39 119) 60%, rgb(190 24 93) 100%)",
+			"linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)",
 		sectionGradient:
-			"linear-gradient(rgb(236 72 153 / 32%) 0%, transparent 120px)",
+			"linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)",
 	},
 	documentaries: {
 		name: "Documentaires",
 		description: "Documentaires captivants et éducatifs",
 		gradient:
-			"linear-gradient(135deg, #06b6d4 0%, #0891b2 40%, #0e7490 60%, #155e75 100%)",
-		cardGradient: "linear-gradient(16deg, #06b6d4, #164e63 30%, #000000)",
+			"linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)",
+		cardGradient: "linear-gradient(135deg, #4A90E2, #667EEA)",
 		headerGradient:
-			"linear-gradient(168deg, rgb(14 116 144) 0%, rgb(8 145 178) 60%, rgb(14 116 144) 100%)",
+			"linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)",
 		sectionGradient:
-			"linear-gradient(rgb(6 182 212 / 32%) 0%, transparent 120px)",
+			"linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)",
 	},
 	jeunesse: {
 		name: "Jeunesse",
 		description: "Films et séries adolescent et adulte",
 		gradient:
-			"linear-gradient(135deg, #6b7280 0%, #4b5563 40%, #374151 60%, #1f2937 100%)",
-		cardGradient: "linear-gradient(16deg, #6b7280, #374151 30%, #000000)",
+			"linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)",
+		cardGradient: "linear-gradient(135deg, #4A90E2, #667EEA)",
 		headerGradient:
-			"linear-gradient(168deg, rgb(55 65 81) 0%, rgb(75 85 99) 60%, rgb(55 65 81) 100%)",
+			"linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)",
 		sectionGradient:
-			"linear-gradient(rgb(107 114 128 / 32%) 0%, transparent 120px)",
+			"linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)",
 	},
 	enfant: {
 		name: "Enfant",
 		description: "Films et séries pour enfant",
 		gradient:
-			"linear-gradient(135deg, #3b82f6 0%, #2563eb 40%, #1d4ed8 60%, #1e40af 100%)",
-		cardGradient: "linear-gradient(16deg, #3b82f6, #1e3a8a 30%, #000000)",
+			"linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)",
+		cardGradient: "linear-gradient(135deg, #4A90E2, #667EEA)",
 		headerGradient:
-			"linear-gradient(168deg, rgb(29 78 216) 0%, rgb(37 99 235) 60%, rgb(29 78 216) 100%)",
+			"linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)",
 		sectionGradient:
-			"linear-gradient(rgb(59 130 246 / 32%) 0%, transparent 120px)",
+			"linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)",
 	},
 	action: {
 		name: "Action",
 		description: "Classiques et nouveautés films d'actions",
 		gradient:
-			"linear-gradient(135deg, #ef4444 0%, #dc2626 40%, #b91c1c 60%, #991b1b 100%)",
-		cardGradient: "linear-gradient(16deg, #ef4444, #7f1d1d 30%, #000000)",
+			"linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)",
+		cardGradient: "linear-gradient(135deg, #4A90E2, #667EEA)",
 		headerGradient:
-			"linear-gradient(168deg, rgb(185 28 28) 0%, rgb(220 38 38) 60%, rgb(185 28 28) 100%)",
+			"linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)",
 		sectionGradient:
-			"linear-gradient(rgb(239 68 68 / 32%) 0%, transparent 120px)",
+			"linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)",
 	},
+	"apple-tv": {
+		name: "Apple TV+",
+		description: "Les productions originales Apple TV+",
+		gradient:
+			"linear-gradient(135deg, #94a3b8 0%, #64748b 40%, #475569 60%, #334155 100%)",
+		cardGradient: "linear-gradient(16deg, #94a3b8, #334155 30%, #000000)",
+		headerGradient:
+			"linear-gradient(168deg, rgb(71 85 105) 0%, rgb(100 116 139) 60%, rgb(71 85 105) 100%)",
+		sectionGradient:
+			"linear-gradient(rgb(148 163 184 / 32%) 0%, transparent 120px)",
+	},
+	crunchyroll: {
+		name: "Crunchyroll",
+		description: "Les meilleurs animes en streaming",
+		gradient:
+			"linear-gradient(135deg, #f97316 0%, #ea580c 40%, #c2410c 60%, #9a3412 100%)",
+		cardGradient: "linear-gradient(16deg, #f97316, #7c2d12 30%, #000000)",
+		headerGradient:
+			"linear-gradient(168deg, rgb(194 65 12) 0%, rgb(234 88 12) 60%, rgb(194 65 12) 100%)",
+		sectionGradient:
+			"linear-gradient(rgb(249 115 22 / 32%) 0%, transparent 120px)",
+	},
+	"hbo-max": {
+		name: "HBO Max",
+		description: "Les séries et films HBO",
+		gradient:
+			"linear-gradient(135deg, #8b5cf6 0%, #7c3aed 40%, #6d28d9 60%, #5b21b6 100%)",
+		cardGradient: "linear-gradient(16deg, #8b5cf6, #4c1d95 30%, #000000)",
+		headerGradient:
+			"linear-gradient(168deg, rgb(109 40 217) 0%, rgb(124 58 237) 60%, rgb(109 40 217) 100%)",
+		sectionGradient:
+			"linear-gradient(rgb(139 92 246 / 32%) 0%, transparent 120px)",
+	},
+	youtube: {
+		name: "YouTube",
+		description: "Films et séries disponibles sur YouTube",
+		gradient:
+			"linear-gradient(135deg, #dc2626 0%, #b91c1c 40%, #991b1b 60%, #7f1d1d 100%)",
+		cardGradient: "linear-gradient(16deg, #dc2626, #7f1d1d 30%, #000000)",
+		headerGradient:
+			"linear-gradient(168deg, rgb(153 27 27) 0%, rgb(185 28 28) 60%, rgb(153 27 27) 100%)",
+		sectionGradient:
+			"linear-gradient(rgb(220 38 38 / 32%) 0%, transparent 120px)",
+	},
+	// "canal-plus": {
+	// 	name: "Canal+",
+	// 	description: "Les programmes Canal+",
+	// 	gradient:
+	// 		"linear-gradient(135deg, #000000 0%, #18181b 40%, #27272a 60%, #3f3f46 100%)",
+	// 	cardGradient: "linear-gradient(16deg, #18181b, #000000 30%, #000000)",
+	// 	headerGradient:
+	// 		"linear-gradient(168deg, rgb(39 39 42) 0%, rgb(24 24 27) 60%, rgb(39 39 42) 100%)",
+	// 	sectionGradient:
+	// 		"linear-gradient(rgb(24 24 27 / 32%) 0%, transparent 120px)",
+	// },
+	// ocs: {
+	// 	name: "OCS",
+	// 	description: "Le meilleur du cinéma et des séries",
+	// 	gradient:
+	// 		"linear-gradient(135deg, #f59e0b 0%, #d97706 40%, #b45309 60%, #92400e 100%)",
+	// 	cardGradient: "linear-gradient(16deg, #f59e0b, #78350f 30%, #000000)",
+	// 	headerGradient:
+	// 		"linear-gradient(168deg, rgb(180 83 9) 0%, rgb(217 119 6) 60%, rgb(180 83 9) 100%)",
+	// 	sectionGradient:
+	// 		"linear-gradient(rgb(245 158 11 / 32%) 0%, transparent 120px)",
+	// },
+	// "paramount-plus": {
+	// 	name: "Paramount+",
+	// 	description: "Films et séries Paramount+",
+	// 	gradient:
+	// 		"linear-gradient(135deg, #0ea5e9 0%, #0284c7 40%, #0369a1 60%, #075985 100%)",
+	// 	cardGradient: "linear-gradient(16deg, #0ea5e9, #0c4a6e 30%, #000000)",
+	// 	headerGradient:
+	// 		"linear-gradient(168deg, rgb(3 105 161) 0%, rgb(2 132 199) 60%, rgb(3 105 161) 100%)",
+	// 	sectionGradient:
+	// 		"linear-gradient(rgb(14 165 233 / 32%) 0%, transparent 120px)",
+	// },
+	// "rakuten-tv": {
+	// 	name: "Rakuten TV",
+	// 	description: "Location et achat de films",
+	// 	gradient:
+	// 		"linear-gradient(135deg, #dc2626 0%, #b91c1c 40%, #991b1b 60%, #7f1d1d 100%)",
+	// 	cardGradient: "linear-gradient(16deg, #dc2626, #450a0a 30%, #000000)",
+	// 	headerGradient:
+	// 		"linear-gradient(168deg, rgb(153 27 27) 0%, rgb(185 28 28) 60%, rgb(153 27 27) 100%)",
+	// 	sectionGradient:
+	// 		"linear-gradient(rgb(220 38 38 / 32%) 0%, transparent 120px)",
+	// },
 };

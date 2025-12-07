@@ -34,6 +34,7 @@ import type { Watchlist } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { useWatchlistFiltersStore } from "@/store/watchlistFilters";
+import { Section } from "@/components/layout/Section";
 
 interface SortableWatchlistCardProps {
 	watchlist: Watchlist;
@@ -185,7 +186,7 @@ export function Watchlists() {
 
 	if (loading) {
 		return (
-			<div className="container mx-auto px-4 py-8">
+			<Section>
 				<h1 className="mb-10 text-3xl font-bold text-white">
 					{content.watchlists.title}
 				</h1>
@@ -194,7 +195,7 @@ export function Watchlists() {
 						{content.watchlists.loading}
 					</div>
 				</div>
-			</div>
+			</Section>
 		);
 	}
 
@@ -228,7 +229,7 @@ export function Watchlists() {
 	});
 
 	return (
-		<div className="container mx-auto mb-32 px-4 py-8">
+		<Section className="mb-20">
 			{/* Title */}
 			<div className="mt-5 mb-6">
 				<h1 className="mb-1 text-3xl font-bold text-white">
@@ -245,7 +246,7 @@ export function Watchlists() {
 					<button
 						type="button"
 						onClick={toggleOwned}
-						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+						className={`focus-visible:ring-offset-background cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
 							showOwned
 								? "bg-primary text-primary-foreground"
 								: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -256,7 +257,7 @@ export function Watchlists() {
 					<button
 						type="button"
 						onClick={toggleSaved}
-						className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+						className={`focus-visible:ring-offset-background cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
 							showSaved
 								? "bg-primary text-primary-foreground"
 								: "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -267,7 +268,7 @@ export function Watchlists() {
 				</div>
 
 				<Button
-					className="corner-squircle cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+					className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 					onClick={() => setDialogOpen(true)}
 				>
 					<Plus className="h-4 w-4" />
@@ -347,6 +348,6 @@ export function Watchlists() {
 					</SortableContext>
 				</DndContext>
 			)}
-		</div>
+		</Section>
 	);
 }

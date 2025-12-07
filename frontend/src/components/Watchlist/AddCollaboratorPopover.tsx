@@ -54,7 +54,7 @@ export function AddCollaboratorPopover({
 		const timeoutId = setTimeout(async () => {
 			try {
 				const response = await fetch(
-					`${API_URL}/auth/username/check/${encodeURIComponent(username)}`,
+					`${API_URL}/auth/username/check/${encodeURIComponent(username)}`
 				);
 				const data = await response.json();
 
@@ -82,7 +82,7 @@ export function AddCollaboratorPopover({
 			await watchlistAPI.addCollaborator(watchlistId, username.trim());
 			toast.success(
 				content.watchlists.collaborators.addSuccess ||
-					`${username} ajouté comme collaborateur`,
+					`${username} ajouté comme collaborateur`
 			);
 			setUsername("");
 			setValidationState("idle");
@@ -93,7 +93,7 @@ export function AddCollaboratorPopover({
 				error instanceof Error
 					? error.message
 					: content.watchlists.collaborators.addError ||
-							"Échec de l'ajout du collaborateur",
+							"Échec de l'ajout du collaborateur"
 			);
 		} finally {
 			setIsAdding(false);
@@ -102,13 +102,13 @@ export function AddCollaboratorPopover({
 
 	const handleRemoveCollaborator = async (
 		collaboratorId: string,
-		collaboratorUsername: string,
+		collaboratorUsername: string
 	) => {
 		try {
 			await watchlistAPI.removeCollaborator(watchlistId, collaboratorId);
 			toast.success(
 				content.watchlists.collaborators.removeSuccess ||
-					`${collaboratorUsername} retiré`,
+					`${collaboratorUsername} retiré`
 			);
 			onCollaboratorRemoved();
 		} catch (error) {
@@ -117,7 +117,7 @@ export function AddCollaboratorPopover({
 				error instanceof Error
 					? error.message
 					: content.watchlists.collaborators.removeError ||
-							"Échec de la suppression du collaborateur",
+							"Échec de la suppression du collaborateur"
 			);
 		}
 	};
@@ -126,7 +126,7 @@ export function AddCollaboratorPopover({
 		switch (validationState) {
 			case "checking":
 				return (
-					<div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+					<div className="border-muted-foreground h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
 				);
 			case "valid":
 				return <Check className="h-5 w-5 text-green-500" />;
@@ -147,11 +147,11 @@ export function AddCollaboratorPopover({
 			<PopoverContent className="w-80 p-4" align="start">
 				<div className="space-y-4">
 					<div>
-						<h3 className="text-sm font-semibold mb-2">
+						<h3 className="mb-2 text-sm font-semibold">
 							{content.watchlists.collaborators.addTitle ||
 								"Ajouter un collaborateur"}
 						</h3>
-						<p className="text-xs text-muted-foreground mb-3">
+						<p className="text-muted-foreground mb-3 text-xs">
 							{content.watchlists.collaborators.addDescription ||
 								"Entrez le nom d'utilisateur de la personne à ajouter"}
 						</p>
@@ -172,7 +172,7 @@ export function AddCollaboratorPopover({
 								className="pr-10"
 								disabled={isAdding}
 							/>
-							<div className="absolute right-3 top-1/2 -translate-y-1/2">
+							<div className="absolute top-1/2 right-3 -translate-y-1/2">
 								{getValidationIcon()}
 							</div>
 						</div>
@@ -180,7 +180,7 @@ export function AddCollaboratorPopover({
 						<Button
 							onClick={handleAddCollaborator}
 							disabled={isAddButtonDisabled}
-							className="w-full mt-2"
+							className="mt-2 w-full cursor-pointer"
 							size="sm"
 						>
 							{isAdding
@@ -191,7 +191,7 @@ export function AddCollaboratorPopover({
 
 					{collaborators.length > 0 && (
 						<div className="border-t pt-3">
-							<h4 className="text-xs font-semibold text-muted-foreground mb-2">
+							<h4 className="text-muted-foreground mb-2 text-xs font-semibold">
 								{content.watchlists.collaborators.currentTitle ||
 									"Collaborateurs actuels"}
 							</h4>
@@ -199,11 +199,11 @@ export function AddCollaboratorPopover({
 								{collaborators.map((collaborator) => (
 									<div
 										key={collaborator._id}
-										className="flex items-center justify-between rounded-md bg-muted/50 p-2 text-sm"
+										className="bg-muted/50 flex items-center justify-between rounded-md p-2 text-sm"
 									>
 										<div className="flex items-center gap-2">
-											<div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted">
-												<User className="h-4 w-4 text-muted-foreground" />
+											<div className="bg-muted flex h-7 w-7 items-center justify-center rounded-full">
+												<User className="text-muted-foreground h-4 w-4" />
 											</div>
 											<span className="font-medium">
 												{collaborator.username}
@@ -214,10 +214,10 @@ export function AddCollaboratorPopover({
 											onClick={() =>
 												handleRemoveCollaborator(
 													collaborator._id,
-													collaborator.username,
+													collaborator.username
 												)
 											}
-											className="rounded text-muted-foreground transition-colors hover:text-red-500"
+											className="text-muted-foreground cursor-pointer rounded transition-colors hover:text-red-500"
 											title={
 												content.watchlists.collaborators.remove || "Retirer"
 											}

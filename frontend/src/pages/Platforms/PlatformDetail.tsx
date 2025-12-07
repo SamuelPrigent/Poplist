@@ -3,24 +3,20 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
 import { useAuth } from "@/context/auth-context";
-import { type Watchlist, watchlistAPI } from "@/lib/api-client";
+import {
+	getWatchProviderLogo,
+	type Watchlist,
+	watchlistAPI,
+} from "@/lib/api-client";
 import { scrollToTop } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
-import { getCategoryInfo, type WatchlistCategory } from "@/types/categories";
+import {
+	getCategoryInfo,
+	PLATFORM_CATEGORIES,
+	type PlatformCategory,
+} from "@/types/categories";
 
-// Category header colors (Hex with 35% opacity - 59 in hex)
-// Based on the color variation logic with 35° hue rotation per index
-const CATEGORY_HEADER_COLORS: Record<string, string> = {
-	movies: "#11314475", // Index 0: bleu
-	series: "#21114496", // Index 1: +35° rotation -> Greenish
-	anime: "#3611449b", // Index 2: +70° rotation -> Pinkish
-	enfant: "#3c114483", // Index 3: +105° rotation -> Orange
-	documentaries: "#451c0b86", // Index 4: +140° rotation -> Purple
-	jeunesse: "#41370d74", // Index 5: Similar to above
-	action: "#273a0a67", // Index 6: +210° rotation -> Red
-};
-
-export function CategoryDetail() {
+export function PlatformDetail() {
 	const { id } = useParams<{ id: string }>();
 	const { content } = useLanguageStore();
 	const { user } = useAuth();
@@ -29,8 +25,14 @@ export function CategoryDetail() {
 	const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	const categoryInfo = id
-		? getCategoryInfo(id as WatchlistCategory, content)
+	// Validate that the ID is a valid platform category
+	const isPlatformCategory =
+		id && PLATFORM_CATEGORIES.includes(id as PlatformCategory);
+	const categoryInfo = isPlatformCategory
+		? getCategoryInfo(id as PlatformCategory, content)
+		: null;
+	const logo = isPlatformCategory
+		? getWatchProviderLogo(id as PlatformCategory)
 		: null;
 
 	useEffect(() => {
@@ -39,10 +41,10 @@ export function CategoryDetail() {
 
 	useEffect(() => {
 		const fetchData = async () => {
-			if (!id) return;
+			if (!id || !isPlatformCategory) return;
 
 			try {
-				// Fetch category watchlists
+				// Fetch platform watchlists
 				const data = await watchlistAPI.getWatchlistsByCategory(id);
 				setWatchlists(data.watchlists || []);
 
@@ -56,21 +58,21 @@ export function CategoryDetail() {
 					}
 				}
 			} catch (error) {
-				console.error("Failed to fetch category watchlists:", error);
+				console.error("Failed to fetch platform watchlists:", error);
 			} finally {
 				setLoading(false);
 			}
 		};
 
 		fetchData();
-	}, [id, user]);
+	}, [id, isPlatformCategory, user]);
 
-	if (!categoryInfo) {
+	if (!categoryInfo || !logo) {
 		return (
 			<div className="bg-background min-h-screen pb-20">
 				<div className="container mx-auto max-w-(--maxWidth) px-4 py-12">
 					<div className="border-border bg-card rounded-lg border p-12 text-center">
-						<p className="text-muted-foreground">Catégorie non trouvée</p>
+						<p className="text-muted-foreground">Plateforme non trouvée</p>
 					</div>
 				</div>
 			</div>
@@ -79,16 +81,16 @@ export function CategoryDetail() {
 
 	return (
 		<div className="bg-background min-h-screen pb-20">
-			{/* Header with subtle gradient */}
+			{/* Header with platform logo */}
 			<div className="relative w-full">
 				<div
-					className="relative h-[197px] w-full overflow-hidden"
+					className="relative h-[250px] w-full overflow-hidden"
 					style={{
-						background: `linear-gradient(to bottom, ${CATEGORY_HEADER_COLORS[id || "movies"] || "#4A90E259"}, transparent 60%)`,
+						background: `linear-gradient(to bottom, ${categoryInfo.headerGradient.match(/rgb\([^)]+\)/)?.[0]?.replace(")", " / 20%)") || "rgb(30, 30, 30 / 20%)"}, transparent 60%)`,
 					}}
 				>
 					{/* Content */}
-					<div className="relative container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) flex-col justify-start px-10 pt-[1.7rem]">
+					<div className="relative container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) flex-col justify-start px-4 pt-[1.7rem]">
 						{/* Back Button */}
 						<div className="mb-6">
 							<button
@@ -101,22 +103,34 @@ export function CategoryDetail() {
 							</button>
 						</div>
 
-						{/* Title and Description */}
-						<div>
-							<h1 className="mb-3 text-5xl font-bold text-white drop-shadow-lg md:text-6xl">
-								{categoryInfo.name}
-							</h1>
-							<p className="max-w-2xl text-base text-white/90 drop-shadow-md">
-								{categoryInfo.description}
-							</p>
+						{/* Platform Logo and Info */}
+						<div className="flex items-center gap-6">
+							{/* Logo */}
+							<div className="bg-card border-border shrink-0 overflow-hidden rounded-2xl border p-4 shadow-lg">
+								<img
+									src={logo}
+									alt={categoryInfo.name}
+									className="h-24 w-24 object-contain"
+								/>
+							</div>
+
+							{/* Title and Description */}
+							<div>
+								<h1 className="mb-3 text-5xl font-bold text-white drop-shadow-lg md:text-6xl">
+									{categoryInfo.name}
+								</h1>
+								<p className="max-w-2xl text-base text-white/90 drop-shadow-md">
+									{categoryInfo.description}
+								</p>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			{/* Watchlists section without gradient */}
+			{/* Watchlists section */}
 			<div className="relative w-full">
-				<div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4">
+				<div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-4">
 					{/* Watchlists Grid */}
 					{loading ? (
 						<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -165,7 +179,7 @@ export function CategoryDetail() {
 						<div className="border-border bg-card rounded-lg border p-12 text-center">
 							<Film className="text-muted-foreground mx-auto h-16 w-16" />
 							<p className="text-muted-foreground mt-4">
-								Aucune watchlist dans cette catégorie pour le moment
+								Aucune watchlist pour cette plateforme pour le moment
 							</p>
 						</div>
 					)}

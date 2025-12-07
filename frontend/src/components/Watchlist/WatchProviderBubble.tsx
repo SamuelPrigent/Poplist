@@ -29,7 +29,7 @@ export function WatchProviderBubble({
 	return (
 		<div
 			key={`${providerName}-${index}`}
-			className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-muted"
+			className="bg-muted relative h-9 w-9 shrink-0 overflow-hidden rounded-lg"
 			title={providerName}
 		>
 			<img
@@ -39,7 +39,7 @@ export function WatchProviderBubble({
 				loading="lazy"
 			/>
 			{/* Gradient overlay for depth */}
-			<div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+			<div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
 		</div>
 	);
 }
@@ -54,10 +54,35 @@ export interface WatchProviderListProps {
 
 export function WatchProviderList({
 	providers,
-	maxVisible = 4,
+	maxVisible = 5,
 }: WatchProviderListProps) {
-	// Filter out invalid providers and those without logos
-	// Also deduplicate Prime Video variants (keep only one)
+	// Normalize provider name to deduplicate variants
+	const normalizeProviderName = (name: string): string => {
+		const normalized = name.toLowerCase().trim();
+
+		// Map all Netflix variants to "netflix"
+		if (normalized.includes("netflix")) return "netflix";
+
+		// Map all Prime Video variants to "prime video"
+		if (normalized.includes("prime video") || normalized.includes("prime"))
+			return "prime video";
+
+		// Map all HBO variants to "hbo"
+		if (normalized.includes("hbo")) return "hbo";
+
+		// Map all Crunchyroll variants to "crunchyroll"
+		if (normalized.includes("crunchyroll")) return "crunchyroll";
+
+		// Map all Disney+ variants to "disney"
+		if (normalized.includes("disney")) return "disney";
+
+		// Map all Apple TV+ variants to "apple tv"
+		if (normalized.includes("apple")) return "apple tv";
+
+		return normalized;
+	};
+
+	// Filter out invalid providers, deduplicate, and keep only those with logos
 	const seen = new Set<string>();
 	const validProviders = providers.filter((p) => {
 		if (!p || !p.name || !p.name.trim() || p.name.toLowerCase() === "inconnu") {
@@ -70,24 +95,22 @@ export function WatchProviderList({
 			return false;
 		}
 
-		// Deduplicate Prime Video variants
-		const normalizedName = p.name.toLowerCase();
-		if (normalizedName.includes("prime video")) {
-			if (seen.has("prime video")) {
-				return false; // Skip duplicate Prime Video
-			}
-			seen.add("prime video");
+		// Deduplicate by normalized name
+		const normalizedName = normalizeProviderName(p.name);
+		if (seen.has(normalizedName)) {
+			return false; // Skip duplicate provider variant
 		}
+		seen.add(normalizedName);
 
 		return true;
 	});
 
 	if (validProviders.length === 0) {
-		return <span className="text-xs text-muted-foreground">—</span>;
+		return <span className="text-muted-foreground text-xs">—</span>;
 	}
 
+	// Limit to maxVisible providers (no "+X" indicator)
 	const visibleProviders = validProviders.slice(0, maxVisible);
-	const remainingCount = validProviders.length - maxVisible;
 
 	return (
 		<div className="flex flex-wrap gap-2">
@@ -98,11 +121,6 @@ export function WatchProviderList({
 					index={idx}
 				/>
 			))}
-			{remainingCount > 0 && (
-				<div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">
-					+{remainingCount}
-				</div>
-			)}
 		</div>
 	);
 }

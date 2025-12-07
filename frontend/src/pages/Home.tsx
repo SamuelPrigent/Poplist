@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 import { MoviePoster } from "@/components/Home/MoviePoster";
 import { ItemDetailsModal } from "@/components/Watchlist/modal/ItemDetailsModal";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
+import { WatchlistCardImg } from "@/components/Watchlist/WatchlistCardImg";
+import { WatchlistCardGenre } from "@/components/Watchlist/WatchlistCardGenre";
+// import { WatchlistCardGenre2 } from "@/components/Watchlist/WatchlistCardGenre2";
 import { WatchlistCardSmall } from "@/components/Watchlist/WatchlistCardSmall";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -15,7 +18,15 @@ import {
 } from "@/lib/api-client";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
-import { getCategoryInfo, WATCHLIST_CATEGORIES } from "@/types/categories";
+import {
+	GENRE_CATEGORIES,
+	getCategoryInfo,
+	// PLATFORM_CATEGORIES,
+	PLATFORM_CATEGORIES_WITH_LOGOS,
+	// type PlatformCategory,
+} from "@/types/categories";
+import { getWatchProviderLogo } from "@/lib/api-client";
+import { Section } from "@/components/layout/Section";
 
 interface TrendingItem {
 	id: number;
@@ -48,7 +59,7 @@ interface FeaturedCategory {
 	username: string;
 }
 
-export function HomeApp() {
+export function Home() {
 	const { content } = useLanguageStore();
 	const { user } = useAuth();
 
@@ -177,13 +188,18 @@ export function HomeApp() {
 				);
 				setRecommendations(selectedRecommendations);
 
-				// Fetch category counts for all categories
+				// Fetch category counts for genres and platforms
 				const categoryIds = [
 					"movies",
 					"series",
+					"anime",
+					"action",
+					"documentaries",
 					"netflix",
 					"prime-video",
 					"disney-plus",
+					"apple-tv",
+					"crunchyroll",
 				];
 
 				const counts: Record<string, number> = {};
@@ -291,7 +307,7 @@ export function HomeApp() {
 	};
 
 	// Featured categories - using getCategoryInfo for translations
-	const categories: FeaturedCategory[] = WATCHLIST_CATEGORIES.slice(0, 5).map(
+	const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 5).map(
 		(categoryId) => {
 			const categoryInfo = getCategoryInfo(categoryId, content);
 			return {
@@ -315,7 +331,7 @@ export function HomeApp() {
 		<div className="bg-background min-h-screen pb-20">
 			{/* My Watchlists - Library Section */}
 			{userWatchlists.length > 0 && (
-				<section className="container mx-auto px-4 py-12">
+				<Section className="pb-7">
 					<div className="mb-6 flex items-center justify-between">
 						<div>
 							<h2 className="text-2xl font-bold text-white">
@@ -334,7 +350,7 @@ export function HomeApp() {
 					</div>
 
 					<div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-						{userWatchlists.slice(0, 8).map((watchlist) => (
+						{userWatchlists.slice(0, 4).map((watchlist) => (
 							<WatchlistCardSmall
 								key={watchlist._id}
 								watchlist={watchlist}
@@ -346,11 +362,11 @@ export function HomeApp() {
 							/>
 						))}
 					</div>
-				</section>
+				</Section>
 			)}
 
 			{/* Categories Section */}
-			<section className="container mx-auto px-4 py-12">
+			<Section>
 				<div className="mb-6 flex items-center justify-between">
 					<div>
 						<h2 className="text-2xl font-bold text-white">
@@ -369,7 +385,7 @@ export function HomeApp() {
 				</div>
 
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-					{categories.map((category) => {
+					{categories.map((category, index) => {
 						const placeholderTimestamp = "1970-01-01T00:00:00.000Z";
 						const placeholderItems: WatchlistItem[] = Array.from(
 							{ length: category.itemCount },
@@ -401,22 +417,88 @@ export function HomeApp() {
 						};
 
 						return (
-							<WatchlistCard
+							<WatchlistCardGenre
 								key={category.id}
 								watchlist={mockWatchlist}
 								content={content}
 								href={`/category/${category.id}`}
-								showMenu={false}
+								genreId={category.id}
 								showOwner={false}
-								categoryGradient={category.gradient}
+								index={index}
 							/>
 						);
 					})}
 				</div>
-			</section>
+			</Section>
+			{/* Platforms Section */}
+			<Section>
+				<div className="mb-6 flex items-center justify-between">
+					<div>
+						<h2 className="text-2xl font-bold text-white">
+							{content.home.platformsSection.title}
+						</h2>
+						<p className="text-muted-foreground mt-1 text-sm">
+							{content.home.platformsSection.subtitle}
+						</p>
+					</div>
+					<Link
+						to="/platforms"
+						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+					>
+						{content.home.platformsSection.seeAll}
+					</Link>
+				</div>
+
+				<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+					{PLATFORM_CATEGORIES_WITH_LOGOS.slice(0, 5).map((platformId) => {
+						const categoryInfo = getCategoryInfo(platformId, content);
+						const itemCount = categoryCounts[platformId] || 0;
+						const logo = getWatchProviderLogo(platformId);
+						const placeholderTimestamp = "1970-01-01T00:00:00.000Z";
+						const placeholderItems: WatchlistItem[] = Array.from(
+							{ length: itemCount },
+							(_, index) => ({
+								tmdbId: `${platformId}-item-${index}`,
+								title: categoryInfo.name,
+								posterUrl: "",
+								type: "movie",
+								platformList: [],
+								addedAt: placeholderTimestamp,
+							})
+						);
+
+						const mockWatchlist: Watchlist = {
+							_id: platformId,
+							ownerId: {
+								email: "featured@watchlisthub.app",
+								username: "WatchlistHub",
+							},
+							name: categoryInfo.name,
+							description: categoryInfo.description,
+							imageUrl: "",
+							isPublic: true,
+							collaborators: [],
+							items: placeholderItems,
+							createdAt: placeholderTimestamp,
+							updatedAt: placeholderTimestamp,
+							likedBy: [],
+						};
+
+						return (
+							<WatchlistCardImg
+								key={platformId}
+								watchlist={mockWatchlist}
+								content={content}
+								href={`/platform/${platformId}`}
+								logoUrl={logo || ""}
+							/>
+						);
+					})}
+				</div>
+			</Section>
 
 			{/* Popular Watchlists Section */}
-			<section className="container mx-auto px-4 py-12">
+			<Section>
 				<div className="mb-6 flex items-center justify-between">
 					<div>
 						<h2 className="text-2xl font-bold text-white">
@@ -482,10 +564,10 @@ export function HomeApp() {
 						</p>
 					</div>
 				)}
-			</section>
+			</Section>
 
 			{/* Recommandations Section */}
-			<section className="container mx-auto px-4 py-12">
+			<Section>
 				<div className="mb-6 flex items-center justify-between">
 					<div>
 						<h2 className="text-2xl font-bold text-white">
@@ -589,7 +671,7 @@ export function HomeApp() {
 						</div>
 					))}
 				</div>
-			</section>
+			</Section>
 
 			{/* Item Details Modal */}
 			{selectedItem && (

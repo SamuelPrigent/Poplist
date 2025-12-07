@@ -15,7 +15,9 @@ import { Account } from "./pages/Account";
 import { Categories } from "./pages/Categories/Categories";
 import { CategoryDetail } from "./pages/Categories/CategoryDetail";
 import { Explore } from "./pages/Explore";
-import { HomeApp } from "./pages/HomeApp";
+import { PlatformDetail } from "./pages/Platforms/PlatformDetail";
+import { Platforms } from "./pages/Platforms/Platforms";
+import { Home } from "./pages/Home";
 import { Landing } from "./pages/Landing";
 import { UserProfile } from "./pages/User/UserProfile";
 import { CommunityWatchlists } from "./pages/Watchlists/CommunityWatchlists";
@@ -29,15 +31,17 @@ function App() {
 		<ErrorBoundary>
 			<BrowserRouter>
 				<AuthProvider>
-					<div className="flex min-h-screen flex-col bg-background">
+					<div className="bg-background flex min-h-screen flex-col">
 						<Header />
 						<main className="flex-1">
 							<Routes>
 								<Route path="/" element={<Landing />} />
-								<Route path="/home" element={<HomeApp />} />
+								<Route path="/home" element={<Home />} />
 								<Route path="/explore" element={<Explore />} />
 								<Route path="/categories" element={<Categories />} />
 								<Route path="/category/:id" element={<CategoryDetail />} />
+								<Route path="/platforms" element={<Platforms />} />
+								<Route path="/platform/:id" element={<PlatformDetail />} />
 								<Route
 									path="/community-watchlists"
 									element={<CommunityWatchlists />}

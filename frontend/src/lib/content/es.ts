@@ -52,6 +52,10 @@ export const es: Content = {
 		categories: "Categorías / Etiquetas",
 		categoriesDescription:
 			"Selecciona una o más categorías para facilitar el descubrimiento de tu lista",
+		genreCategories: "Categorías por género",
+		platformCategories: "Plataformas de streaming",
+		platformsDescription:
+			"Selecciona las plataformas donde tu lista está disponible",
 		name: "Nombre",
 		namePlaceholder: "Mi lista",
 		description: "Descripción",
@@ -165,7 +169,7 @@ export const es: Content = {
 	landing: {
 		hero: {
 			tagline: "Planifica, sigue y disfruta de tus películas juntos",
-			title: "Tus Watchlists perfectamente organizadas",
+			title: "Crea y comparte listas de tus películas y series favoritas",
 			subtitle:
 				"Organiza tus noches de TV y comparte tus descubrimientos con tus amigos",
 			cta: "Crear una watchlist",
@@ -253,7 +257,7 @@ export const es: Content = {
 			seeAll: "Ver todo",
 		},
 		categories: {
-			title: "Watchlists por tema",
+			title: "Listas por categoría",
 			subtitle: "Selección WatchlistHub",
 			seeMore: "Ver más",
 			items: {
@@ -309,6 +313,11 @@ export const es: Content = {
 				},
 			},
 		},
+		platformsSection: {
+			title: "Listas por plataforma",
+			subtitle: "Tus plataformas favoritas",
+			seeAll: "Ver todo",
+		},
 		popularWatchlists: {
 			title: "Watchlists populares",
 			subtitle: "Compartidas por la comunidad",
@@ -354,6 +363,10 @@ export const es: Content = {
 			title: "Tendencias del momento",
 			subtitle: "Los títulos que están de moda esta semana.",
 			seeMore: "Ver todo",
+		},
+		communityWatchlists: {
+			title: "Listas de la comunidad",
+			subtitle: "Descubre colecciones compartidas por nuestros usuarios",
 		},
 	},
 
@@ -426,6 +439,38 @@ export const es: Content = {
 			"disney-plus": {
 				name: "Disney+",
 				description: "El universo Disney, Pixar, Marvel y Star Wars",
+			},
+			"apple-tv": {
+				name: "Apple TV+",
+				description: "Producciones originales de Apple TV+",
+			},
+			crunchyroll: {
+				name: "Crunchyroll",
+				description: "Los mejores animes en streaming",
+			},
+			"hbo-max": {
+				name: "HBO Max",
+				description: "Series y películas de HBO",
+			},
+			youtube: {
+				name: "YouTube",
+				description: "Películas y series disponibles en YouTube",
+			},
+			"canal-plus": {
+				name: "Canal+",
+				description: "Programas de Canal+",
+			},
+			ocs: {
+				name: "OCS",
+				description: "Lo mejor del cine y las series",
+			},
+			"paramount-plus": {
+				name: "Paramount+",
+				description: "Producciones de Paramount+",
+			},
+			"rakuten-tv": {
+				name: "Rakuten TV",
+				description: "Películas y series en Rakuten TV",
 			},
 			anime: {
 				name: "Animación",
