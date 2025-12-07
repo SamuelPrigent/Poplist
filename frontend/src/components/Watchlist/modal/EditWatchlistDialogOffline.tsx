@@ -9,23 +9,12 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlatformSelector } from "@/components/Watchlist/PlatformSelector";
-import type {
-	Watchlist,
-	WatchlistCategories,
-	WatchlistItem,
-} from "@/lib/api-client";
+import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import {
 	deleteCachedThumbnail,
 	generateAndCacheThumbnail,
 } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
-import {
-	GENRE_CATEGORIES,
-	getCategoryInfo,
-	type GenreCategory,
-	type PlatformCategory,
-} from "@/types/categories";
 
 interface EditWatchlistDialogOfflineProps {
 	open: boolean;
@@ -45,11 +34,6 @@ export const EditWatchlistDialogOffline = forwardRef<
 	const { content } = useLanguageStore();
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
-	const [isPublic, setIsPublic] = useState(false);
-	const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
-	const [providerCategories, setProviderCategories] = useState<
-		PlatformCategory[]
-	>([]);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -62,54 +46,14 @@ export const EditWatchlistDialogOffline = forwardRef<
 		},
 	}));
 
-	const toggleGenreCategory = (category: GenreCategory) => {
-		setGenreCategories((prev) =>
-			prev.includes(category)
-				? prev.filter((c) => c !== category)
-				: [...prev, category]
-		);
-	};
-
 	// Initialize form with watchlist data when dialog opens
 	useEffect(() => {
 		if (open && watchlist) {
 			setName(watchlist.name);
 			setDescription(watchlist.description || "");
-			setIsPublic(watchlist.isPublic);
-
-			// Parse categories - support both old and new formats
-			const cats = watchlist.categories;
-			if (Array.isArray(cats)) {
-				// Old format: string[] - set empty arrays for now
-				setGenreCategories([]);
-				setProviderCategories([]);
-			} else if (cats && typeof cats === "object") {
-				// New format: { genre?: string[], watchProvider?: string[] }
-				const typedCats = cats as WatchlistCategories;
-				setGenreCategories((typedCats.genre || []) as GenreCategory[]);
-				setProviderCategories(
-					(typedCats.watchProvider || []) as PlatformCategory[]
-				);
-			} else {
-				setGenreCategories([]);
-				setProviderCategories([]);
-			}
-
 			setImagePreview(watchlist.imageUrl || null);
 		}
 	}, [open, watchlist]);
-
-	// Clear categories when watchlist becomes private
-	useEffect(() => {
-		if (!isPublic) {
-			if (genreCategories.length > 0) {
-				setGenreCategories([]);
-			}
-			if (providerCategories.length > 0) {
-				setProviderCategories([]);
-			}
-		}
-	}, [isPublic, genreCategories.length, providerCategories.length]);
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -149,17 +93,6 @@ export const EditWatchlistDialogOffline = forwardRef<
 		setLoading(true);
 
 		try {
-			// Build categories object in new format
-			const hasGenres = genreCategories.length > 0;
-			const hasProviders = providerCategories.length > 0;
-			const categoriesData =
-				hasGenres || hasProviders
-					? {
-							genre: hasGenres ? genreCategories : undefined,
-							watchProvider: hasProviders ? providerCategories : undefined,
-					  }
-					: undefined;
-
 			// Offline mode: update in localStorage
 			const watchlists = JSON.parse(localStorage.getItem("watchlists") || "[]");
 			const index = watchlists.findIndex(

@@ -1,10 +1,10 @@
 import { useAuth } from "@/context/auth-context";
-import { HomeApp } from "@/pages/HomeApp";
+import { Home } from "@/pages/Home";
 import { Landing } from "@/pages/Landing";
 
 export function SmartHome() {
 	const { user } = useAuth();
 
-	// Show HomeApp if logged in, Landing if not
-	return user ? <HomeApp /> : <Landing />;
+	// Show Home if logged in, Landing if not
+	return user ? <Home /> : <Landing />;
 }
