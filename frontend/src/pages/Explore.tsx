@@ -28,6 +28,7 @@ import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
+import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
 
@@ -428,9 +429,6 @@ export function Explore() {
 							localStorage.setItem("watchlists", JSON.stringify(watchlists));
 
 							// Invalidate thumbnail cache so it regenerates with new item
-							const { deleteCachedThumbnail } = await import(
-								"@/lib/thumbnailGenerator"
-							);
 							deleteCachedThumbnail(watchlistId);
 
 							console.log("[Explore] Item added successfully!");

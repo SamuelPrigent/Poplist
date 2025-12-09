@@ -17,6 +17,7 @@ import {
 	watchlistAPI,
 } from "@/lib/api-client";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
+import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 import {
 	GENRE_CATEGORIES,
@@ -260,19 +261,22 @@ export function Home() {
 							const type = item.media_type || "movie";
 
 							// Fetch providers and details from TMDB via backend
-							console.log("[Home] Fetching providers and details for:", item.id, type);
+							console.log(
+								"[Home] Fetching providers and details for:",
+								item.id,
+								type
+							);
 
 							const [platformList, mediaDetails] = await Promise.all([
-								watchlistAPI.fetchTMDBProviders(
-									item.id.toString(),
-									type,
-									"FR"
-								),
+								watchlistAPI.fetchTMDBProviders(item.id.toString(), type, "FR"),
 								watchlistAPI.getItemDetails(item.id.toString(), type, "fr-FR"),
 							]);
 
 							console.log("[Home] Received platformList:", platformList);
-							console.log("[Home] Received runtime:", mediaDetails.details.runtime);
+							console.log(
+								"[Home] Received runtime:",
+								mediaDetails.details.runtime
+							);
 
 							const newItem = {
 								tmdbId: item.id.toString(),
@@ -293,9 +297,6 @@ export function Home() {
 							localStorage.setItem("watchlists", JSON.stringify(watchlists));
 
 							// Invalidate thumbnail cache so it regenerates with new item
-							const { deleteCachedThumbnail } = await import(
-								"@/lib/thumbnailGenerator"
-							);
 							deleteCachedThumbnail(watchlistId);
 
 							console.log("[Home] Item added successfully!");
