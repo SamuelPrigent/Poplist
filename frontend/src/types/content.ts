@@ -145,6 +145,13 @@ export interface Content {
 		};
 		addToWatchlist: string;
 		noWatchlist: string;
+		offlinePopover: {
+			title: string;
+			accessEverywhere: string;
+			collaborativeLists: string;
+			shareWithFriends: string;
+			signup: string;
+		};
 	};
 	landing: {
 		hero: {

@@ -136,15 +136,27 @@ export function AddItemModal({
 
 				if (watchlistIndex === -1) return;
 
-				// Fetch providers from TMDB via backend
-				const platformList = await watchlistAPI.fetchTMDBProviders(
-					item.id.toString(),
-					item.media_type,
-					region
-				);
+				// Fetch providers and details from TMDB via backend
+				console.log("[AddItemModal] Fetching providers and details for:", item.id, item.media_type);
+
+				const [platformList, mediaDetails] = await Promise.all([
+					watchlistAPI.fetchTMDBProviders(
+						item.id.toString(),
+						item.media_type,
+						region
+					),
+					watchlistAPI.getItemDetails(
+						item.id.toString(),
+						item.media_type,
+						languageCode
+					),
+				]);
+
+				console.log("[AddItemModal] Received platformList:", platformList);
+				console.log("[AddItemModal] Received runtime:", mediaDetails.details.runtime);
 
 				// Add item to watchlist
-				watchlists[watchlistIndex].items.push({
+				const newItem = {
 					tmdbId: item.id.toString(),
 					title: item.title || item.name || "",
 					posterUrl: item.poster_path
@@ -152,14 +164,19 @@ export function AddItemModal({
 						: "",
 					type: item.media_type,
 					platformList,
-					runtime: item.runtime,
+					runtime: mediaDetails.details.runtime,
 					addedAt: new Date().toISOString(),
-				});
+				};
 
+				console.log("[AddItemModal] Adding new item:", newItem);
+
+				watchlists[watchlistIndex].items.push(newItem);
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
 
 				// Invalidate thumbnail cache so it regenerates with new item
 				deleteCachedThumbnail(watchlist._id);
+
+				console.log("[AddItemModal] Item added successfully!");
 			} else {
 				// Online mode: add via API
 				await watchlistAPI.addItem(watchlist._id, {

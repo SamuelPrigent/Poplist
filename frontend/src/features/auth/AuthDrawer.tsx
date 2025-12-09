@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -55,6 +56,7 @@ export function AuthDrawer({
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 	const { login, signup, refetch } = useAuth();
 
 	useEffect(() => {
@@ -207,6 +209,7 @@ export function AuthDrawer({
 							<Input
 								id="email"
 								type="email"
+								autoComplete="email"
 								placeholder={content.auth.emailPlaceholder}
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -219,16 +222,28 @@ export function AuthDrawer({
 							<label htmlFor="password" className="text-sm font-medium">
 								{content.auth.password}
 							</label>
-							<Input
-								id="password"
-								type="password"
-								placeholder={content.auth.passwordPlaceholder}
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								required
-								minLength={8}
-								className="mt-1"
-							/>
+							<div className="relative mt-1">
+								<Input
+									id="password"
+									type={showPassword ? "text" : "password"}
+									placeholder={content.auth.passwordPlaceholder}
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									required
+									minLength={8}
+									className="pr-10"
+								/>
+								<div
+									className="absolute inset-y-0 right-0 flex cursor-pointer items-center p-3"
+									onClick={() => setShowPassword(!showPassword)}
+								>
+									{showPassword ? (
+										<Eye className="text-muted-foreground h-4 w-4" />
+									) : (
+										<EyeOff className="text-muted-foreground h-4 w-4" />
+									)}
+								</div>
+							</div>
 						</div>
 
 						{error && (
@@ -239,7 +254,7 @@ export function AuthDrawer({
 
 						<Button
 							type="submit"
-							className="w-full cursor-pointer"
+							className="w-full cursor-pointer select-none"
 							disabled={loading}
 						>
 							{loading
@@ -252,7 +267,7 @@ export function AuthDrawer({
 
 					<div className="text-muted-foreground text-center text-sm">
 						{mode === "login" ? (
-							<p>
+							<p className="select-none">
 								{content.auth.dontHaveAccount}{" "}
 								<button
 									type="button"
@@ -263,7 +278,7 @@ export function AuthDrawer({
 								</button>
 							</p>
 						) : (
-							<p>
+							<p className="select-none">
 								{content.auth.alreadyHaveAccount}{" "}
 								<button
 									type="button"

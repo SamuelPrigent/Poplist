@@ -92,7 +92,8 @@ export function WatchlistCard({
 				<button
 					type="button"
 					onClick={handleClick}
-					tabIndex={-1} className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md text-left"
+					tabIndex={-1}
+					className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md text-left"
 				>
 					{categoryGradient ? (
 						<div className="relative flex h-full w-full items-center justify-center p-4">
@@ -172,7 +173,8 @@ export function WatchlistCard({
 						<button
 							type="button"
 							onClick={handleClick}
-							className="w-full cursor-pointer text-left" tabIndex={-1}
+							className="w-full cursor-pointer text-left"
+							tabIndex={-1}
 						>
 							{watchlist.name}
 						</button>
@@ -184,7 +186,7 @@ export function WatchlistCard({
 
 			{showOwner && (
 				<p className="text-muted-foreground mt-1 text-xs">
-					par{" "}
+					{"par "}
 					{typeof watchlist.ownerId === "object" &&
 					watchlist.ownerId !== null &&
 					"username" in watchlist.ownerId &&
@@ -198,7 +200,7 @@ export function WatchlistCard({
 									`/user/${(watchlist.ownerId as { username: string }).username}`
 								);
 							}}
-							className="cursor-pointer text-white capitalize hover:underline"
+							className="cursor-pointer rounded-md text-white capitalize hover:underline"
 						>
 							{watchlist.ownerId.username}
 						</button>
@@ -214,7 +216,8 @@ export function WatchlistCard({
 						<button
 							type="button"
 							onClick={handleClick}
-							className="text-muted-foreground cursor-pointer" tabIndex={-1}
+							className="text-muted-foreground cursor-pointer"
+							tabIndex={-1}
 						>
 							{watchlist.isPublic
 								? content.watchlists.public
@@ -235,7 +238,8 @@ export function WatchlistCard({
 					<button
 						type="button"
 						onClick={handleClick}
-						className="text-muted-foreground cursor-pointer" tabIndex={-1}
+						className="text-muted-foreground cursor-pointer"
+						tabIndex={-1}
 					>
 						{watchlist.items.length}{" "}
 						{watchlist.items.length === 1
@@ -285,9 +289,9 @@ export function WatchlistCard({
 								className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1 shadow-md"
 								sideOffset={5}
 								onKeyDown={handleDropdownKeyDown}
-							onCloseAutoFocus={(e) => {
-								e.preventDefault();
-							}}
+								onCloseAutoFocus={(e) => {
+									e.preventDefault();
+								}}
 							>
 								<DropdownMenu.Item
 									ref={editButtonRef}

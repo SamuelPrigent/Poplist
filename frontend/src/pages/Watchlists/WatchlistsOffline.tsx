@@ -17,11 +17,24 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Edit, Film, MoreVertical, Plus, Trash2 } from "lucide-react";
+import {
+	ChevronRight,
+	Database,
+	Edit,
+	Film,
+	MoreVertical,
+	Plus,
+	Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { OfflineIcon } from "@/components/icons/OfflineIcon";
 import { Button } from "@/components/ui/button";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import {
 	Empty,
 	EmptyDescription,
@@ -34,7 +47,6 @@ import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchl
 import { EditWatchlistDialogOffline } from "@/components/Watchlist/modal/EditWatchlistDialogOffline";
 import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
 import type { Watchlist } from "@/lib/api-client";
-import { cn } from "@/lib/cn";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
@@ -284,6 +296,35 @@ export function WatchlistsOffline() {
 	const [selectedWatchlist, setSelectedWatchlist] = useState<Watchlist | null>(
 		null
 	);
+	const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
+	const [popoverOpen, setPopoverOpen] = useState(false);
+	const popoverTimeoutRef = useRef<number | null>(null);
+
+	// Handle popover hover with delay
+	const handlePopoverEnter = () => {
+		// Clear any pending close timeout
+		if (popoverTimeoutRef.current) {
+			clearTimeout(popoverTimeoutRef.current);
+			popoverTimeoutRef.current = null;
+		}
+		setPopoverOpen(true);
+	};
+
+	const handlePopoverLeave = () => {
+		// Delay closing by 150ms
+		popoverTimeoutRef.current = setTimeout(() => {
+			setPopoverOpen(false);
+		}, 150);
+	};
+
+	// Cleanup timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (popoverTimeoutRef.current) {
+				clearTimeout(popoverTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	// Setup drag sensors
 	const sensors = useSensors(
@@ -442,15 +483,71 @@ export function WatchlistsOffline() {
 				</>
 			)}
 
-			{/* Data Source Badge */}
+			{/* Data Source Badge with Signup Popover */}
 			<div className="mb-7">
-				<div className="flex w-fit items-center gap-1">
-					<p className="text-sm font-light text-slate-300">
-						{content.watchlists.notLoggedInWarning}
-					</p>
-					<OfflineIcon className={cn("h-4 w-4 text-slate-300")} />
-				</div>
+				<Popover open={popoverOpen} onOpenChange={() => {}}>
+					<PopoverTrigger asChild>
+						<div
+							role="button"
+							tabIndex={0}
+							className="flex w-fit cursor-default items-center gap-2 rounded-full bg-slate-800/60 px-3 py-[6px] text-sm text-gray-400 backdrop-blur-sm transition-all hover:bg-slate-800/80"
+							onMouseEnter={handlePopoverEnter}
+							onMouseLeave={handlePopoverLeave}
+						>
+							<Database className="h-4 w-4 shrink-0 text-slate-400" />
+							<span className="text-sm font-medium text-slate-300 select-none">
+								{content.watchlists.notLoggedInWarning}
+							</span>
+						</div>
+					</PopoverTrigger>
+					<PopoverContent
+						className="w-72 border-2 border-none bg-transparent p-0"
+						side="bottom"
+						align="start"
+						sideOffset={0}
+						onMouseEnter={handlePopoverEnter}
+						onMouseLeave={handlePopoverLeave}
+					>
+						{/* Invisible bridge to prevent flickering */}
+						<div className="h-3 w-full bg-transparent" />
+
+						{/* Actual popover content */}
+						<div className="border-border bg-popover space-y-4 rounded-2xl border p-5 shadow-lg">
+							<p className="text-sm font-medium text-white">
+								{content.watchlists.offlinePopover.title}
+							</p>
+							<ul className="text-muted-foreground space-y-2.5 text-sm">
+								<li className="flex items-center gap-2">
+									<span className="text-green-500">✓</span>
+									{content.watchlists.offlinePopover.accessEverywhere}
+								</li>
+								<li className="flex items-center gap-2">
+									<span className="text-green-500">✓</span>
+									{content.watchlists.offlinePopover.collaborativeLists}
+								</li>
+								<li className="flex items-center gap-2">
+									<span className="text-green-500">✓</span>
+									{content.watchlists.offlinePopover.shareWithFriends}
+								</li>
+							</ul>
+							<Button
+								variant="secondary"
+								className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
+								onClick={() => setAuthDrawerOpen(true)}
+							>
+								{content.watchlists.offlinePopover.signup}
+								<ChevronRight className="ml-1 h-4 w-4" />
+							</Button>
+						</div>
+					</PopoverContent>
+				</Popover>
 			</div>
+
+			<AuthDrawer
+				open={authDrawerOpen}
+				onClose={() => setAuthDrawerOpen(false)}
+				initialMode="signup"
+			/>
 
 			{watchlists.length === 0 ? (
 				<Empty>

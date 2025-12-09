@@ -390,6 +390,25 @@ export function Explore() {
 						);
 
 						if (!itemExists) {
+							// Fetch providers and details from TMDB via backend
+							console.log("[Explore] Fetching providers and details for:", mediaItem.id, itemType);
+
+							const [platformList, mediaDetails] = await Promise.all([
+								watchlistAPI.fetchTMDBProviders(
+									mediaItem.id.toString(),
+									itemType,
+									"FR"
+								),
+								watchlistAPI.getItemDetails(
+									mediaItem.id.toString(),
+									itemType,
+									"fr-FR"
+								),
+							]);
+
+							console.log("[Explore] Received platformList:", platformList);
+							console.log("[Explore] Received runtime:", mediaDetails.details.runtime);
+
 							const newItem = {
 								tmdbId: mediaItem.id.toString(),
 								title: mediaItem.title || mediaItem.name || "",
@@ -397,13 +416,24 @@ export function Explore() {
 									? `https://image.tmdb.org/t/p/w500${mediaItem.poster_path}`
 									: "",
 								type: itemType,
-								platformList: [],
+								platformList,
+								runtime: mediaDetails.details.runtime,
 								addedAt: new Date().toISOString(),
 							};
+
+							console.log("[Explore] Adding new item:", newItem);
 
 							watchlists[watchlistIndex].items.push(newItem);
 							watchlists[watchlistIndex].updatedAt = new Date().toISOString();
 							localStorage.setItem("watchlists", JSON.stringify(watchlists));
+
+							// Invalidate thumbnail cache so it regenerates with new item
+							const { deleteCachedThumbnail } = await import(
+								"@/lib/thumbnailGenerator"
+							);
+							deleteCachedThumbnail(watchlistId);
+
+							console.log("[Explore] Item added successfully!");
 
 							const updatedWatchlists = getLocalWatchlistsWithOwnership();
 							setWatchlists(updatedWatchlists);

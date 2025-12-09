@@ -251,42 +251,58 @@ export function Home() {
 					);
 
 					if (watchlistIndex !== -1) {
-						// Fetch item details from backend cached route
-						const API_URL =
-							import.meta.env.VITE_API_URL || "http://localhost:3000";
-						const type = item.media_type || "movie";
-						const response = await fetch(
-							`${API_URL}/watchlists/items/${item.id}/${type}/details?language=fr-FR`
+						// Check if item already exists
+						const itemExists = watchlists[watchlistIndex].items.some(
+							(existingItem) => existingItem.tmdbId === item.id.toString()
 						);
 
-						if (response.ok) {
-							const data = await response.json();
-							const details = data.details;
+						if (!itemExists) {
+							const type = item.media_type || "movie";
+
+							// Fetch providers and details from TMDB via backend
+							console.log("[Home] Fetching providers and details for:", item.id, type);
+
+							const [platformList, mediaDetails] = await Promise.all([
+								watchlistAPI.fetchTMDBProviders(
+									item.id.toString(),
+									type,
+									"FR"
+								),
+								watchlistAPI.getItemDetails(item.id.toString(), type, "fr-FR"),
+							]);
+
+							console.log("[Home] Received platformList:", platformList);
+							console.log("[Home] Received runtime:", mediaDetails.details.runtime);
+
 							const newItem = {
 								tmdbId: item.id.toString(),
-								title: details.title || details.name || "",
-								posterUrl: details.poster_path
-									? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+								title: item.title || item.name || "",
+								posterUrl: item.poster_path
+									? `https://image.tmdb.org/t/p/w500${item.poster_path}`
 									: "",
 								type: type as "movie" | "tv",
-								platformList: [],
+								platformList,
+								runtime: mediaDetails.details.runtime,
 								addedAt: new Date().toISOString(),
 							};
 
-							// Check if item already exists
-							const itemExists = watchlists[watchlistIndex].items.some(
-								(existingItem) => existingItem.tmdbId === newItem.tmdbId
+							console.log("[Home] Adding new item:", newItem);
+
+							watchlists[watchlistIndex].items.push(newItem);
+							watchlists[watchlistIndex].updatedAt = new Date().toISOString();
+							localStorage.setItem("watchlists", JSON.stringify(watchlists));
+
+							// Invalidate thumbnail cache so it regenerates with new item
+							const { deleteCachedThumbnail } = await import(
+								"@/lib/thumbnailGenerator"
 							);
+							deleteCachedThumbnail(watchlistId);
 
-							if (!itemExists) {
-								watchlists[watchlistIndex].items.push(newItem);
-								watchlists[watchlistIndex].updatedAt = new Date().toISOString();
-								localStorage.setItem("watchlists", JSON.stringify(watchlists));
+							console.log("[Home] Item added successfully!");
 
-								// Reload with ownership flags to maintain correct state
-								const updatedWatchlists = getLocalWatchlistsWithOwnership();
-								setUserWatchlists(updatedWatchlists);
-							}
+							// Reload with ownership flags to maintain correct state
+							const updatedWatchlists = getLocalWatchlistsWithOwnership();
+							setUserWatchlists(updatedWatchlists);
 						}
 					}
 				}

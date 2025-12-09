@@ -14,8 +14,7 @@ export const fr: Content = {
 	// Auth Drawer
 	auth: {
 		loginTitle: "Connexion",
-		loginDescription:
-			"Bienvenue ! Connectez-vous pour accéder à vos watchlists.",
+		loginDescription: "Connectez-vous pour accéder à vos watchlists.",
 		signupTitle: "Inscription",
 		signupDescription: "Créez un compte pour sauvegarder vos watchlists.",
 		continueWithGoogle: "Continuer avec Google",
@@ -165,6 +164,13 @@ export const fr: Content = {
 		},
 		addToWatchlist: "Ajouter à une watchlist",
 		noWatchlist: "Aucune watchlist",
+		offlinePopover: {
+			title: "Pourquoi s'inscrire ?",
+			accessEverywhere: "Accéder à tes listes partout",
+			collaborativeLists: "Créer des listes collaboratives",
+			shareWithFriends: "Partager tes listes avec tes amis",
+			signup: "Inscription",
+		},
 	},
 
 	landing: {

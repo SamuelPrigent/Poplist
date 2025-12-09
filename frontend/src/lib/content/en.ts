@@ -163,6 +163,13 @@ export const en: Content = {
 		},
 		addToWatchlist: "Add to a watchlist",
 		noWatchlist: "No watchlist",
+		offlinePopover: {
+			title: "Why sign up?",
+			accessEverywhere: "Access your lists everywhere",
+			collaborativeLists: "Create collaborative lists",
+			shareWithFriends: "Share your lists with friends",
+			signup: "Sign Up",
+		},
 	},
 
 	landing: {

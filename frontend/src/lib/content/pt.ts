@@ -165,6 +165,13 @@ export const pt: Content = {
 		},
 		addToWatchlist: "Adicionar a uma watchlist",
 		noWatchlist: "Nenhuma watchlist",
+		offlinePopover: {
+			title: "Por que se registar?",
+			accessEverywhere: "Aceda às suas listas em qualquer lugar",
+			collaborativeLists: "Crie listas colaborativas",
+			shareWithFriends: "Partilhe as suas listas com amigos",
+			signup: "Registar",
+		},
 	},
 
 	landing: {
