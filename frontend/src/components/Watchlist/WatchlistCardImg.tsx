@@ -23,13 +23,14 @@ export function WatchlistCardImg({
 			className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
 		>
 			{/* Logo Container */}
-			<div className="bg-card border-border group-hover:bg-accent relative mb-3 aspect-square w-full overflow-hidden rounded-md border transition-all group-hover:shadow-lg">
+			{/* <div className="bg-card border-border relative mb-3 aspect-square w-full overflow-hidden rounded-md border transition-all group-hover:bg-[#0f172a] group-hover:shadow-lg"> */}
+			<div className="bg-card relative mb-3 aspect-square w-full overflow-hidden rounded-md border-2 transition-all group-hover:bg-[#0f172a] group-hover:shadow-lg">
 				<div className="flex h-full w-full items-center justify-center p-6">
 					{logoUrl ? (
 						<img
 							src={logoUrl}
 							alt={watchlist.name}
-							className="h-[65%] w-[65%] object-contain opacity-100 transition-opacity group-hover:brightness-110"
+							className="h-[55%] w-[55%] object-contain opacity-100 transition-opacity group-hover:brightness-110"
 							loading="lazy"
 							decoding="async"
 						/>

@@ -3,14 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { authAPI } from "@/lib/api-client";
 import { type Language, useLanguageStore } from "@/store/language";
+import "flag-icons/css/flag-icons.min.css";
 
-const languages: { code: Language; flag: string; name: string }[] = [
-	{ code: "fr", flag: "🇫🇷", name: "Français" },
-	{ code: "en", flag: "🇬🇧", name: "English" },
-	{ code: "de", flag: "🇩🇪", name: "Deutsch" },
-	{ code: "es", flag: "🇪🇸", name: "Español" },
-	{ code: "it", flag: "🇮🇹", name: "Italiano" },
-	{ code: "pt", flag: "🇵🇹", name: "Português" },
+const languages: { code: Language; flagCode: string; name: string }[] = [
+	{ code: "fr", flagCode: "fr", name: "Français" },
+	{ code: "en", flagCode: "gb", name: "English" },
+	{ code: "de", flagCode: "de", name: "Deutsch" },
+	{ code: "es", flagCode: "es", name: "Español" },
+	{ code: "it", flagCode: "it", name: "Italiano" },
+	{ code: "pt", flagCode: "pt", name: "Português" },
 ];
 
 export function Footer() {
@@ -56,9 +57,9 @@ export function Footer() {
 	};
 
 	return (
-		<footer className="border-t border-border bg-background py-6">
+		<footer className="border-border bg-background border-t py-6">
 			<div className="container mx-auto flex items-center justify-between px-4">
-				<div className="text-sm text-muted-foreground">
+				<div className="text-muted-foreground text-sm">
 					{content.footer.appName}
 				</div>
 
@@ -66,9 +67,11 @@ export function Footer() {
 					<button
 						type="button"
 						onClick={() => setIsOpen(!isOpen)}
-						className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+						className="border-border bg-card text-foreground hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors"
 					>
-						<span className="text-lg">{currentLanguage?.flag}</span>
+						<span
+							className={`fi fi-${currentLanguage?.flagCode} h-[15px] text-lg opacity-95`}
+						/>
 						<span>{currentLanguage?.name}</span>
 						<ChevronDown
 							className={`h-4 w-4 transition-transform ${
@@ -78,19 +81,21 @@ export function Footer() {
 					</button>
 
 					{isOpen && (
-						<div className="absolute bottom-full right-0 mb-2 w-40 overflow-hidden rounded-md border border-border bg-card shadow-lg">
+						<div className="border-border bg-card absolute right-0 bottom-full mb-2 w-40 overflow-hidden rounded-md border shadow-lg">
 							{languages.map((lang) => (
 								<button
 									type="button"
 									key={lang.code}
 									onClick={() => handleLanguageChange(lang.code)}
-									className={`flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-accent ${
+									className={`hover:bg-accent flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-sm transition-colors ${
 										lang.code === language
 											? "bg-accent text-foreground"
 											: "text-muted-foreground"
 									}`}
 								>
-									<span className="text-lg">{lang.flag}</span>
+									<span
+										className={`fi fi-${lang.flagCode} h-[15px] opacity-95`}
+									/>
 									<span>{lang.name}</span>
 								</button>
 							))}

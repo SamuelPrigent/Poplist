@@ -89,58 +89,6 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 	return [r * 255, g * 255, b * 255];
 }
 
-// Meteors component
-function Meteors({ number = 3 }: { number?: number }) {
-	const meteors = new Array(number).fill(true);
-	return (
-		<>
-			{meteors.map((_, idx) => (
-				<motion.span
-					key={idx}
-					className="absolute top-0 left-1/2 h-0.5 w-0.5 rounded-full bg-white shadow-[0_0_0_1px_#ffffff10]"
-					style={{
-						top: `${Math.random() * 100}%`,
-						left: `${Math.random() * 100}%`,
-					}}
-					animate={{
-						x: [0, -300],
-						y: [0, 300],
-						opacity: [1, 0],
-					}}
-					transition={{
-						duration: Math.random() * 2 + 2,
-						repeat: Number.POSITIVE_INFINITY,
-						repeatDelay: Math.random() * 5 + 5,
-						ease: "linear",
-					}}
-				>
-					<svg
-						width="100"
-						height="2"
-						viewBox="0 0 100 2"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg"
-						className="absolute -z-10 -translate-y-1/2"
-					>
-						<path
-							d="M0 1H100"
-							stroke="url(#gradient)"
-							strokeWidth="2"
-							strokeLinecap="round"
-						/>
-						<defs>
-							<linearGradient id="gradient" x1="0" y1="0" x2="100" y2="0">
-								<stop offset="0%" stopColor="white" stopOpacity="0" />
-								<stop offset="100%" stopColor="white" stopOpacity="1" />
-							</linearGradient>
-						</defs>
-					</svg>
-				</motion.span>
-			))}
-		</>
-	);
-}
-
 export function WatchlistCardGenre({
 	watchlist,
 	content,
@@ -184,9 +132,6 @@ export function WatchlistCardGenre({
 
 				{/* Content */}
 				<div className="absolute inset-[2px] flex items-center justify-center overflow-hidden rounded-xl bg-[hsl(222.2,84%,4.9%)] p-6">
-					{/* Meteors effect */}
-					{isHovered && <Meteors number={3} />}
-
 					{/* Gradient accent line - only on hover */}
 					{isHovered && (
 						<motion.div
@@ -216,57 +161,17 @@ export function WatchlistCardGenre({
 								backgroundClip: "text",
 								color: "transparent",
 							}}
-							whileHover={{ scale: 1.05 }}
+							animate={{
+								scale: isHovered ? 1.02 : 1,
+							}}
+							transition={{
+								duration: 0.2,
+								ease: "easeOut",
+							}}
 						>
 							{watchlist.name}
 						</motion.h3>
-
-						{/* Underline accent */}
-						<motion.div
-							className="mx-auto mt-2 h-0.5"
-							style={{ backgroundColor: colors.accent }}
-							initial={{ width: 0 }}
-							animate={{ width: "60%" }}
-							transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
-						></motion.div>
 					</div>
-
-					{/* Corner accents */}
-					<div
-						className="absolute top-2 left-2 h-4 w-4 rounded-tl border-t-2 border-l-2"
-						style={{ borderColor: colors.accent }}
-					></div>
-					<div
-						className="absolute right-2 bottom-2 h-4 w-4 rounded-br border-r-2 border-b-2"
-						style={{ borderColor: colors.accent }}
-					></div>
-
-					{/* Floating particles on hover - reduced */}
-					{isHovered && (
-						<>
-							{[...Array(3)].map((_, i) => (
-								<motion.div
-									key={i}
-									className="absolute h-0.5 w-0.5 rounded-full"
-									style={{
-										backgroundColor: colors.accent,
-										top: `${Math.random() * 100}%`,
-										left: `${Math.random() * 100}%`,
-									}}
-									animate={{
-										y: [0, -30, -60],
-										opacity: [0, 0.4, 0],
-										scale: [0, 0.8, 0],
-									}}
-									transition={{
-										duration: 2,
-										delay: i * 0.2,
-										repeat: Number.POSITIVE_INFINITY,
-									}}
-								/>
-							))}
-						</>
-					)}
 				</div>
 			</motion.div>
 
