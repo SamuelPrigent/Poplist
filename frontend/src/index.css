@@ -2,6 +2,25 @@
 @plugin "tailwindcss-animate";
 @plugin "@toolwind/corner-shape";
 
+* {
+	/* font */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+img {
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: crisp-edges;
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+	html {
+		-webkit-font-smoothing: subpixel-antialiased;
+		-moz-osx-font-smoothing: auto;
+	}
+}
+
 @theme {
 	--color-border: hsl(217.2 32.6% 17.5%);
 	--color-input: hsl(217.2 32.6% 17.5%);
@@ -31,7 +50,7 @@
 	--color-card-foreground: hsl(210 40% 98%);
 
 	--maxWidth: 1500px;
-	--sectionWidth: 92%;
+	--sectionWidth: 93%;
 
 	--radius-lg: 0.5rem;
 	--radius-md: calc(0.5rem - 2px);

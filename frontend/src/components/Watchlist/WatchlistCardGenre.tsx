@@ -3,6 +3,13 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
+import arcane from "../../assets/categories/jinx-arcane.png";
+import simba from "../../assets/categories/simba.png";
+import neo from "../../assets/categories/neo.png";
+import friends from "../../assets/categories/friends.png";
+import vindiesel from "../../assets/categories/vindiesel.png";
+import avatar from "../../assets/categories/avatar.png";
+import animal from "../../assets/categories/perroquet.png";
 
 interface WatchlistCardGenre {
 	watchlist: Watchlist;
@@ -12,6 +19,17 @@ interface WatchlistCardGenre {
 	showOwner?: boolean;
 	index?: number;
 }
+
+// Mapping des catégories vers les images iconiques
+const categoryImages: Record<string, string> = {
+	anime: arcane, // Jinx de Arcane
+	enfant: simba, // Simba du Roi Lion
+	movies: avatar, // Navi d'Avatar
+	series: friends, // Jennifer Aniston de Friends
+	documentaries: animal, // Ours blanc
+	jeunesse: vindiesel, // Vin Diesel
+	action: neo, // Neo de Matrix
+};
 
 // Base colors for all categories
 const baseColors = { from: "#4A90E2", to: "#667EEA", accent: "#7B68EE" };
@@ -93,6 +111,7 @@ export function WatchlistCardGenre({
 	watchlist,
 	content,
 	href,
+	genreId,
 	showOwner = false,
 	index = 0,
 }: WatchlistCardGenre) {
@@ -104,6 +123,11 @@ export function WatchlistCardGenre({
 	};
 
 	const [isHovered, setIsHovered] = useState(false);
+
+	// Get the category image
+	const categoryImage = genreId
+		? categoryImages[genreId] || categoryImages.default
+		: categoryImages.default;
 
 	return (
 		<Link
@@ -117,7 +141,7 @@ export function WatchlistCardGenre({
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.2, ease: "easeOut" }}
-				className="relative mb-3 aspect-square w-full overflow-hidden rounded-xl bg-[hsl(222.2,84%,4.9%)]"
+				className="relative mb-3 aspect-square w-full overflow-hidden rounded-xl bg-[hsl(227,6%,31%)]"
 			>
 				{/* Animated gradient border */}
 				<motion.div
@@ -127,11 +151,32 @@ export function WatchlistCardGenre({
 						padding: "2px",
 					}}
 				>
-					<div className="h-full w-full rounded-xl bg-[hsl(222.2,84%,4.9%)]"></div>
+					<div className="h-full w-full rounded-xl bg-[hsl(225,13%,25%)]"></div>
 				</motion.div>
 
 				{/* Content */}
-				<div className="absolute inset-[2px] flex items-center justify-center overflow-hidden rounded-xl bg-[hsl(222.2,84%,4.9%)] p-6">
+				<div className="absolute inset-[2px] flex items-end justify-center overflow-hidden rounded-xl bg-[hsl(222.2,84%,4.9%)] p-6">
+					{/* Background image - 70% height, centered */}
+					{categoryImage && (
+						<div className="absolute inset-0 flex items-end justify-center">
+							<img
+								src={categoryImage}
+								alt=""
+								className="h-[85%] w-auto object-contain opacity-70"
+								style={{ objectPosition: "center bottom" }}
+							/>
+						</div>
+					)}
+
+					{/* Gradient overlay - from transparent to gray */}
+					<div
+						className="absolute inset-0"
+						style={{
+							background:
+								"linear-gradient(to top, rgba(26, 27, 41, 0.15) 0%, transparent 60%)",
+						}}
+					/>
+
 					{/* Gradient accent line - only on hover */}
 					{isHovered && (
 						<motion.div
@@ -151,15 +196,19 @@ export function WatchlistCardGenre({
 					)}
 
 					{/* Genre name with modern typography */}
-					<div className="relative z-10 text-center">
+					<div className="relative z-10 w-full text-center">
 						<motion.h3
-							className="text-2xl font-bold tracking-tight"
+							className="text-[22px] font-bold tracking-tight"
 							style={{
-								background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
-								WebkitBackgroundClip: "text",
-								WebkitTextFillColor: "transparent",
-								backgroundClip: "text",
+								// background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+								// WebkitBackgroundClip: "text",
+								// WebkitTextFillColor: "transparent",
+								// backgroundClip: "text",
 								color: "transparent",
+								// color: "white",
+								backgroundImage:
+									"linear-gradient(99deg,rgba(255,255,255,0.717) 0%,rgba(255,255,255,1) 26%,rgba(255,255,255,1) 76%,rgba(255,255,255,0.706) 100%)",
+								backgroundClip: "text",
 							}}
 							animate={{
 								scale: isHovered ? 1.02 : 1,

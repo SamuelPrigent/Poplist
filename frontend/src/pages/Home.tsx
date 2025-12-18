@@ -195,6 +195,7 @@ export function Home() {
 					"series",
 					"anime",
 					"action",
+					"enfant",
 					"documentaries",
 					"netflix",
 					"prime-video",

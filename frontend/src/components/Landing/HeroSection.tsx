@@ -168,7 +168,7 @@ export function HeroSection({
 
 				{/* Main Title */}
 				<h1 className="mb-8 max-w-[800px] text-[65px] leading-[0.97] font-semibold tracking-tighter drop-shadow-2xl">
-					<span className="bg-[linear-gradient(99deg,rgba(255,255,255,0.5)_0%,rgba(255,255,255,1)_26%,rgba(255,255,255,1)_76%,rgba(255,255,255,0.3)_100%)] bg-clip-text text-transparent">
+					<span className="bg-[linear-gradient(99deg,rgba(255,255,255,0.717)_0%,rgba(255,255,255,1)_26%,rgba(255,255,255,1)_76%,rgba(255,255,255,0.706)_100%)] bg-clip-text text-transparent">
 						{content.landing.hero.title}
 					</span>
 				</h1>
