@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import cancelUserIcon from "@/assets/cancelUser.svg";
 import pointIcon from "@/assets/points.svg";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import { AddCollaboratorPopover } from "@/components/Watchlist/AddCollaboratorPopover";
 import { AddItemModal } from "@/components/Watchlist/modal/AddItemModal";
 import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
@@ -44,6 +45,15 @@ export function WatchlistDetail() {
 	const [isCollaborator, setIsCollaborator] = useState(false);
 	const [isSaved, setIsSaved] = useState(false);
 	const editDialogRef = useRef<EditWatchlistDialogRef>(null);
+
+	// Pagination states
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(15);
+
+	// Scroll to top when page changes
+	useEffect(() => {
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	}, [currentPage]);
 
 	const fetchWatchlist = useCallback(async () => {
 		if (!id) {
@@ -109,7 +119,7 @@ export function WatchlistDetail() {
 
 	if (notFound || !watchlist) {
 		return (
-			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
+			<div className="container mx-auto mb-32 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
 					<div className="bg-muted rounded-full p-6">
 						<svg
@@ -237,7 +247,7 @@ export function WatchlistDetail() {
 	};
 
 	return (
-		<div className="from-background via-background/95 to-background min-h-screen bg-linear-to-b">
+		<div className="from-background via-background/95 to-background mb-16 min-h-screen bg-linear-to-b">
 			<WatchlistHeader
 				watchlist={watchlist}
 				actionButton={
@@ -339,11 +349,35 @@ export function WatchlistDetail() {
 
 			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<WatchlistItemsTable
-					watchlist={watchlist}
+					watchlist={{
+						...watchlist,
+						items:
+							itemsPerPage === watchlist.items.length
+								? watchlist.items
+								: watchlist.items.slice(
+										(currentPage - 1) * itemsPerPage,
+										currentPage * itemsPerPage
+									),
+					}}
 					onUpdate={fetchWatchlist}
 					isOwner={isOwner}
 					isCollaborator={isCollaborator}
 				/>
+
+				{/* Pagination component */}
+				{watchlist.items.length > 0 && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={Math.ceil(watchlist.items.length / itemsPerPage)}
+						onPageChange={setCurrentPage}
+						itemsPerPage={itemsPerPage}
+						totalItems={watchlist.items.length}
+						onItemsPerPageChange={(newItemsPerPage) => {
+							setItemsPerPage(newItemsPerPage);
+							setCurrentPage(1); // Reset to page 1 when changing items per page
+						}}
+					/>
+				)}
 			</div>
 
 			{/* Add Item Modal - for owners and collaborators */}

@@ -2,6 +2,7 @@ import { ArrowLeft, Film, Pencil, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import { AddItemModal } from "@/components/Watchlist/modal/AddItemModal";
 import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
 import {
@@ -25,6 +26,15 @@ export function WatchlistDetailOffline() {
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const editDialogRef = useRef<EditWatchlistDialogOfflineRef>(null);
+
+	// Pagination states
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(15);
+
+	// Scroll to top when page changes
+	useEffect(() => {
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	}, [currentPage]);
 
 	const fetchWatchlist = useCallback(() => {
 		if (!id) return;
@@ -220,7 +230,33 @@ export function WatchlistDetailOffline() {
 			</div>
 
 			<div className="container mx-auto mt-4 px-4 py-8">
-				<WatchlistItemsTableOffline watchlist={watchlist} />
+				<WatchlistItemsTableOffline
+					watchlist={{
+						...watchlist,
+						items:
+							itemsPerPage === watchlist.items.length
+								? watchlist.items
+								: watchlist.items.slice(
+										(currentPage - 1) * itemsPerPage,
+										currentPage * itemsPerPage
+								  ),
+					}}
+				/>
+
+				{/* Pagination component */}
+				{watchlist.items.length > 0 && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={Math.ceil(watchlist.items.length / itemsPerPage)}
+						onPageChange={setCurrentPage}
+						itemsPerPage={itemsPerPage}
+						totalItems={watchlist.items.length}
+						onItemsPerPageChange={(newItemsPerPage) => {
+							setItemsPerPage(newItemsPerPage);
+							setCurrentPage(1); // Reset to page 1 when changing items per page
+						}}
+					/>
+				)}
 			</div>
 
 			{/* Add Item Modal */}
