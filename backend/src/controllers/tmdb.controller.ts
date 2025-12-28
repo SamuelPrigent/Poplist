@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { saveToCache } from "../middleware/cache.middleware.js";
 
-const TMDB_API_KEY = process.env.TMDB_API; // Using existing TMDB_API env variable
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 /**
@@ -20,7 +19,7 @@ async function fetchFromTMDB(
 
 	const response = await fetch(url.toString(), {
 		headers: {
-			Authorization: `Bearer ${TMDB_API_KEY}`,
+			Authorization: `Bearer ${process.env.TMDB_API}`,
 			"Content-Type": "application/json",
 		},
 	});
@@ -301,7 +300,7 @@ export async function getGenres(req: Request, res: Response): Promise<void> {
 export async function getProviders(req: Request, res: Response): Promise<void> {
 	try {
 		const { type, id } = req.params; // 'movie' or 'tv' + tmdbId
-		const region = (req.query.region as string) || "FR";
+		// const region = (req.query.region as string) || "FR";
 
 		if (type !== "movie" && type !== "tv") {
 			res.status(400).json({ error: 'type must be "movie" or "tv"' });
