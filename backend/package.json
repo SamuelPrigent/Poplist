@@ -1,7 +1,7 @@
 {
-	"name": "watchlisthub-backend",
+	"name": "poplist-backend",
 	"version": "1.0.0",
-	"description": "Backend for WatchlistHub",
+	"description": "Backend for Poplist",
 	"main": "dist/server.js",
 	"type": "module",
 	"scripts": {

@@ -232,10 +232,12 @@ export function ItemDetailsModal({
 										</div>
 
 										{/* Info */}
-										<div className="flex-1 space-y-4">
+										<div className="min-w-0 flex-1 space-y-4">
 											{/* Title (Visual) */}
 											<div>
-												<h2 className="text-3xl font-bold">{details.title}</h2>
+												<h2 className="truncate pr-12 text-3xl font-bold">
+													{details.title}
+												</h2>
 												<div className="mt-2.5 flex flex-wrap items-center gap-3 text-sm text-white/90">
 													<span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
 														{type === "movie"
@@ -264,8 +266,6 @@ export function ItemDetailsModal({
 																	: content.watchlists.seriesInfo.season}
 																{details.numberOfEpisodes &&
 																	` • ${details.numberOfEpisodes} ${content.watchlists.seriesInfo.episodes}`}
-																{details.runtime &&
-																	` (${formatRuntime(details.runtime)})`}
 															</span>
 														</div>
 													)}{" "}

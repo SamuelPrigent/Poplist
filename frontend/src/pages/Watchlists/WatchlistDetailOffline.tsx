@@ -231,16 +231,9 @@ export function WatchlistDetailOffline() {
 
 			<div className="container mx-auto mt-4 px-4 py-8">
 				<WatchlistItemsTableOffline
-					watchlist={{
-						...watchlist,
-						items:
-							itemsPerPage === watchlist.items.length
-								? watchlist.items
-								: watchlist.items.slice(
-										(currentPage - 1) * itemsPerPage,
-										currentPage * itemsPerPage
-								  ),
-					}}
+					watchlist={watchlist}
+					currentPage={currentPage}
+					itemsPerPage={itemsPerPage}
 				/>
 
 				{/* Pagination component */}

@@ -24,28 +24,45 @@ export function Pagination({
 		return page.toString().padStart(2, "0");
 	};
 
+	// Build display options based on total items:
+	// - <= 15: no options (hide selector)
+	// - > 15 and <= 30: show 15, Tout
+	// - > 30: show 15, 30, Tout
+	const getDisplayOptions = () => {
+		if (totalItems <= 15) return [];
+		if (totalItems <= 30) return [15, totalItems];
+		return [15, 30, totalItems];
+	};
+
+	const displayOptions = getDisplayOptions();
+	const showItemsPerPageSelector = displayOptions.length > 0;
+
 	return (
 		<div className="flex items-center justify-between gap-4 py-4">
 			{/* Items per page selector - Left */}
-			<div className="text-muted-foreground flex items-center gap-2 text-sm">
-				<span>Afficher :</span>
-				<div className="flex gap-1">
-					{[15, 30, totalItems].map((count) => (
-						<button
-							key={count}
-							type="button"
-							onClick={() => onItemsPerPageChange(count)}
-							className={`rounded-md px-3 py-1 transition-colors ${
-								itemsPerPage === count
-									? "bg-accent text-accent-foreground"
-									: "hover:bg-accent/50"
-							}`}
-						>
-							{count === totalItems ? "Tout" : count}
-						</button>
-					))}
+			{showItemsPerPageSelector ? (
+				<div className="text-muted-foreground flex items-center gap-2 text-sm">
+					<span>Afficher :</span>
+					<div className="flex gap-1">
+						{displayOptions.map((count) => (
+							<button
+								key={count}
+								type="button"
+								onClick={() => onItemsPerPageChange(count)}
+								className={`rounded-md px-3 py-1 transition-colors ${
+									itemsPerPage === count
+										? "bg-accent text-accent-foreground"
+										: "hover:bg-accent/50"
+								}`}
+							>
+								{count === totalItems ? "Tout" : count}
+							</button>
+						))}
+					</div>
 				</div>
-			</div>
+			) : (
+				<div className="w-[200px]" />
+			)}
 
 			{/* Page navigation - Center */}
 			<div className="flex items-center gap-1">

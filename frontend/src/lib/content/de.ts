@@ -3,7 +3,7 @@ import type { Content } from "@/types/content";
 export const de: Content = {
 	// Header
 	header: {
-		appName: "WatchlistHub",
+		appName: "Poplist",
 		home: "Startseite",
 		explore: "Erkunden",
 		login: "Anmelden",
@@ -15,10 +15,10 @@ export const de: Content = {
 	auth: {
 		loginTitle: "Anmelden",
 		loginDescription:
-			"Willkommen zurück! Melden Sie sich an, um auf Ihre Watchlists zuzugreifen.",
+			"Willkommen zurück! Melden Sie sich an, um auf Ihre Listen zuzugreifen.",
 		signupTitle: "Registrieren",
 		signupDescription:
-			"Erstellen Sie ein Konto, um Ihre Watchlists zu speichern.",
+			"Erstellen Sie ein Konto, um Ihre Listen zu speichern.",
 		continueWithGoogle: "Mit Google fortfahren",
 		or: "Oder",
 		email: "E-Mail",
@@ -33,15 +33,15 @@ export const de: Content = {
 	// Watchlists Page
 	watchlists: {
 		title: "Bibliothek",
-		createWatchlist: "Neue watchlist",
+		createWatchlist: "Neue Liste",
 		createWatchlistDescription:
-			"Erstellen Sie eine neue Watchlist, um Ihre Filme und Serien zu organisieren.",
+			"Erstellen Sie eine neue Liste, um Ihre Filme und Serien zu organisieren.",
 		notLoggedInWarning: "Lokale Daten",
-		noWatchlists: "Sie haben noch keine Watchlists erstellt.",
-		myWatchlists: "Meine Watchlists",
+		noWatchlists: "Sie haben noch keine Listen erstellt.",
+		myWatchlists: "Meine Listen",
 		followed: "Gefolgt",
-		noWatchlistsInCategory: "Keine Watchlists in dieser Kategorie",
-		adjustFilters: "Passen Sie die Filter an, um mehr Watchlists zu sehen",
+		noWatchlistsInCategory: "Keine Listen in dieser Kategorie",
+		adjustFilters: "Passen Sie die Filter an, um mehr Listen zu sehen",
 		items: "Elemente",
 		item: "Element",
 		headerPublic: "Öffentliche liste",
@@ -53,15 +53,15 @@ export const de: Content = {
 		preview: "Vorschau",
 		categories: "Kategorien / Tags",
 		categoriesDescription:
-			"Wählen Sie eine oder mehrere Kategorien aus, um Ihre Watchlist leichter auffindbar zu machen",
+			"Wählen Sie eine oder mehrere Kategorien aus, um Ihre Liste leichter auffindbar zu machen",
 		genreCategories: "Genre-Kategorien",
 		platformCategories: "Streaming-Plattformen",
 		platformsDescription:
 			"Wählen Sie die Plattformen aus, auf denen Ihre Liste verfügbar ist",
 		name: "Name",
-		namePlaceholder: "Meine Watchlist",
+		namePlaceholder: "Meine Liste",
 		description: "Beschreibung",
-		descriptionPlaceholder: "Beschreibung Ihrer Watchlist",
+		descriptionPlaceholder: "Beschreibung Ihrer Liste",
 		coverImage: "Titelbild",
 		uploadImage: "Bild hochladen",
 		changeImage: "Bild ändern",
@@ -73,23 +73,23 @@ export const de: Content = {
 		back: "Zurück",
 		noItemsYet: "Noch keine Elemente",
 		noItemsDescription:
-			"Beginnen Sie damit, Filme und Serien zu Ihrer Watchlist hinzuzufügen, um Ihre Warteschlange zu organisieren.",
+			"Beginnen Sie damit, Filme und Serien zu Ihrer Liste hinzuzufügen, um Ihre Warteschlange zu organisieren.",
 		edit: "Bearbeiten",
-		editWatchlist: "Watchlist bearbeiten",
+		editWatchlist: "Liste bearbeiten",
 		editWatchlistDescription:
-			"Bearbeiten Sie die Informationen Ihrer Watchlist.",
-		deleteWatchlist: "Watchlist löschen",
+			"Bearbeiten Sie die Informationen Ihrer Liste.",
+		deleteWatchlist: "Liste löschen",
 		deleteWatchlistConfirm:
 			'Möchten Sie "{name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
 		deleteWatchlistWarning:
-			"Diese Watchlist enthält {count} Element(e), die ebenfalls gelöscht werden.",
+			"Diese Liste enthält {count} Element(e), die ebenfalls gelöscht werden.",
 		saving: "Wird gespeichert...",
 		save: "Speichern",
 		deleting: "Wird gelöscht...",
 		delete: "Löschen",
 		addItem: "Hinzufügen",
 		searchMoviesAndSeries:
-			"Suchen und fügen Sie Filme oder Serien zu Ihrer Watchlist hinzu",
+			"Suchen und fügen Sie Filme oder Serien zu Ihrer Liste hinzu",
 		searchPlaceholder: "Nach einem Film oder einer Serie suchen...",
 		searching: "Sucht...",
 		noResults: "Keine Ergebnisse gefunden",
@@ -97,7 +97,7 @@ export const de: Content = {
 			"Beginnen Sie mit der Eingabe, um nach Filmen und Serien zu suchen",
 		add: "Hinzufügen",
 		added: "Hinzugefügt",
-		inWatchlist: "In Watchlist",
+		inWatchlist: "In Liste",
 		// Table headers
 		tableHeaders: {
 			number: "#",
@@ -141,8 +141,8 @@ export const de: Content = {
 			inviteCollaborator: "Mitarbeiter einladen",
 		},
 		contextMenu: {
-			addToWatchlist: "Zu Watchlist hinzufügen",
-			removeFromWatchlist: "Aus Watchlist entfernen",
+			addToWatchlist: "Zu Liste hinzufügen",
+			removeFromWatchlist: "Aus Liste entfernen",
 			moveToFirst: "An erste Position verschieben",
 			moveToLast: "An letzte Position verschieben",
 		},
@@ -158,16 +158,16 @@ export const de: Content = {
 			remove: "Entfernen",
 			removeSuccess: "Mitarbeiter entfernt",
 			removeError: "Mitarbeiter konnte nicht entfernt werden",
-			leaveTitle: "Watchlist verlassen?",
+			leaveTitle: "Liste verlassen?",
 			leaveDescription:
-				"Möchten Sie diese Watchlist wirklich verlassen? Sie verlieren Ihre Mitarbeiterrechte.",
+				"Möchten Sie diese Liste wirklich verlassen? Sie verlieren Ihre Mitarbeiterrechte.",
 			leave: "Verlassen",
 			leaving: "Wird verlassen...",
-			leaveSuccess: "Sie haben die Watchlist verlassen",
-			leaveError: "Watchlist konnte nicht verlassen werden",
+			leaveSuccess: "Sie haben die Liste verlassen",
+			leaveError: "Liste konnte nicht verlassen werden",
 		},
-		addToWatchlist: "Zu einer Watchlist hinzufügen",
-		noWatchlist: "Keine Watchlist",
+		addToWatchlist: "Zu einer Liste hinzufügen",
+		noWatchlist: "Keine Liste",
 		offlinePopover: {
 			title: "Warum registrieren?",
 			accessEverywhere: "Greifen Sie überall auf Ihre Listen zu",
@@ -183,7 +183,7 @@ export const de: Content = {
 			title: "Erstellen und teilen Sie Listen Ihrer Lieblingsfilme und -serien",
 			subtitle:
 				"Organisieren Sie Ihre TV-Abende und teilen Sie Ihre Entdeckungen mit Ihren Freunden",
-			cta: "Watchlist erstellen",
+			cta: "Liste erstellen",
 		},
 		features: {
 			organize: {
@@ -196,13 +196,13 @@ export const de: Content = {
 				tagline: "Entdeckung",
 				title: "Filme und Serien entdecken",
 				description:
-					"Nutzen Sie die Erkundungsfunktion, um Inhalte zu finden, die Sie Ihren Watchlists hinzufügen können.",
+					"Nutzen Sie die Erkundungsfunktion, um Inhalte zu finden, die Sie Ihren Listen hinzufügen können.",
 			},
 			share: {
 				tagline: "Teilen",
-				title: "Folgen Sie Community-Watchlists",
+				title: "Folgen Sie Community-Listen",
 				description:
-					"Fügen Sie die Watchlists anderer Benutzer zu Ihrem persönlichen Bereich hinzu.",
+					"Fügen Sie die Listen anderer Benutzer zu Ihrem persönlichen Bereich hinzu.",
 			},
 		},
 		startInSeconds: {
@@ -210,26 +210,26 @@ export const de: Content = {
 			subtitle:
 				"Keine komplizierte Einrichtung, nur Sie und Ihre Lieblingsinhalte",
 			step1: {
-				title: "Erstellen Sie Ihre Watchlist",
+				title: "Erstellen Sie Ihre Liste",
 				description:
 					'Beginnen Sie mit "Meine Lieblingsfilme" oder werden Sie nostalgisch mit "Kindheitsfilme".',
 			},
 			step2: {
 				title: "Filme hinzufügen",
 				description:
-					"Suchen Sie mit einem Stichwort nach einem Film oder einer Serie und fügen Sie ihn zu Ihrer aktuellen Watchlist hinzu.",
+					"Suchen Sie mit einem Stichwort nach einem Film oder einer Serie und fügen Sie ihn zu Ihrer aktuellen Liste hinzu.",
 			},
 			step3: {
 				title: "Mit Freunden teilen",
 				description:
-					'Machen Sie Ihre Watchlists "öffentlich" und teilen Sie sie einfach mit einem Link.',
+					'Machen Sie Ihre Listen "öffentlich" und teilen Sie sie einfach mit einem Link.',
 			},
 		},
 		testimonials: {
 			title: "Beliebt bei Enthusiasten",
 			subtitle: "Treten Sie einer Gemeinschaft zufriedener Nutzer bei",
 			testimonial1: {
-				text: "Perfekte App zum Organisieren meiner Watchlists. Klare und intuitive Benutzeroberfläche.",
+				text: "Perfekte App zum Organisieren meiner Listen. Klare und intuitive Benutzeroberfläche.",
 				author: "— Marie L.",
 			},
 			testimonial2: {
@@ -242,10 +242,10 @@ export const de: Content = {
 			},
 		},
 		finalCta: {
-			title: "Beginnen Sie einfach mit der Erstellung Ihrer Watchlists",
+			title: "Beginnen Sie einfach mit der Erstellung Ihrer Listen",
 			subtitle:
-				"Treten Sie WatchlistHub bei und organisieren Sie Ihre Lieblingsinhalte mit nur wenigen Klicks.",
-			button: "Meine Watchlist erstellen",
+				"Treten Sie Poplist bei und organisieren Sie Ihre Lieblingsinhalte mit nur wenigen Klicks.",
+			button: "Meine Liste erstellen",
 			disclaimer: "Kostenlose Anwendung • Keine Karte erforderlich",
 		},
 	},
@@ -253,9 +253,9 @@ export const de: Content = {
 	// Home Page
 	home: {
 		hero: {
-			title: "Ihre Watchlists perfekt organisiert",
+			title: "Ihre Listen perfekt organisiert",
 			subtitle: "Ihr Film-Universum, organisiert und mit Freunden geteilt.",
-			cta: "Watchlist erstellen",
+			cta: "Liste erstellen",
 			ctaSecondary: "Mehr erfahren",
 			pills: {
 				organize: "Organisieren Sie Ihre Filme",
@@ -265,12 +265,12 @@ export const de: Content = {
 		},
 		library: {
 			title: "Bibliothek",
-			subtitle: "Ihre persönlichen Watchlists",
+			subtitle: "Ihre persönlichen Listen",
 			seeAll: "Alle anzeigen",
 		},
 		categories: {
 			title: "Listen nach Kategorie",
-			subtitle: "WatchlistHub-Auswahl",
+			subtitle: "Poplist-Auswahl",
 			seeMore: "Mehr sehen",
 			items: {
 				// Zeile 1 - Nach Typ und Plattform
@@ -331,29 +331,29 @@ export const de: Content = {
 			seeAll: "Alle anzeigen",
 		},
 		popularWatchlists: {
-			title: "Beliebte Watchlists",
+			title: "Beliebte Listen",
 			subtitle: "Von der Community geteilt",
 			seeMore: "Mehr sehen",
-			noWatchlists: "Momentan keine öffentlichen Watchlists",
+			noWatchlists: "Momentan keine öffentlichen Listen",
 		},
 		faq: {
 			title: "Häufig gestellte Fragen",
 			subtitle: "Alles, was Sie wissen müssen, um loszulegen",
 			questions: {
 				privateWatchlists: {
-					question: "Wie funktionieren private Watchlists?",
+					question: "Wie funktionieren private Listen?",
 					answer:
-						"Private Watchlists ermöglichen es Ihnen, Ihre Auswahl für sich zu behalten. Sie sind nur für Sie sichtbar und können nicht mit anderen Benutzern geteilt werden. Sie können jederzeit in den Einstellungen Ihrer Watchlist zwischen privat und öffentlich wechseln.",
+						"Private Listen ermöglichen es Ihnen, Ihre Auswahl für sich zu behalten. Sie sind nur für Sie sichtbar und können nicht mit anderen Benutzern geteilt werden. Sie können jederzeit in den Einstellungen Ihrer Liste zwischen privat und öffentlich wechseln.",
 				},
 				pricing: {
 					question: "Ist die Nutzung kostenlos?",
 					answer:
-						"Ja, die App ist völlig kostenlos! Sie können so viele Watchlists erstellen, wie Sie möchten, sie mit Ihren Freunden teilen und Tausende von Filmen und Serien ohne Gebühren erkunden.",
+						"Ja, die App ist völlig kostenlos! Sie können so viele Listen erstellen, wie Sie möchten, sie mit Ihren Freunden teilen und Tausende von Filmen und Serien ohne Gebühren erkunden.",
 				},
 				exploreSection: {
 					question: "Wofür ist der Bereich Erkunden?",
 					answer:
-						"Der Bereich Erkunden ermöglicht es Ihnen, neue Inhalte zu entdecken, indem Sie aktuelle Trends, die beliebtesten oder am besten bewerteten Filme und Serien durchsuchen. Sie können nach Genre filtern, um genau das zu finden, was Sie suchen, und Elemente direkt zu Ihren Watchlists hinzufügen.",
+						"Der Bereich Erkunden ermöglicht es Ihnen, neue Inhalte zu entdecken, indem Sie aktuelle Trends, die beliebtesten oder am besten bewerteten Filme und Serien durchsuchen. Sie können nach Genre filtern, um genau das zu finden, was Sie suchen, und Elemente direkt zu Ihren Listen hinzufügen.",
 				},
 				whatMakesDifferent: {
 					question: "Was macht diese App anders?",
@@ -385,8 +385,8 @@ export const de: Content = {
 	explore: {
 		title: "Erkunden",
 		subtitle:
-			"Entdecken Sie neue Watchlists, die von der Community geteilt werden",
-		searchPlaceholder: "Nach einer Watchlist suchen...",
+			"Entdecken Sie neue Listen, die von der Community geteilt werden",
+		searchPlaceholder: "Nach einer Liste suchen...",
 		filters: {
 			all: "Alle",
 			movies: "Filme",
@@ -431,13 +431,13 @@ export const de: Content = {
 		pagination: {
 			pageOf: "Seite {page} von {totalPages}",
 		},
-		noResults: "Keine Watchlists gefunden",
+		noResults: "Keine Listen gefunden",
 		noResultsDescription: "Versuchen Sie, Ihre Filter oder Suche anzupassen",
 	},
 
 	categories: {
 		title: "Kategorien",
-		subtitle: "Erkunden Sie Watchlists nach Thema",
+		subtitle: "Erkunden Sie Listen nach Thema",
 		list: {
 			movies: { name: "Filme", description: "Die besten Filme des Moments" },
 			series: {
@@ -504,7 +504,7 @@ export const de: Content = {
 
 	// Footer
 	footer: {
-		appName: "WatchlistHub",
+		appName: "Poplist",
 		language: "Sprache",
 	},
 
@@ -591,17 +591,17 @@ export const de: Content = {
 		},
 	},
 	userProfile: {
-		profile: "Profile",
-		publicWatchlists: "Public Playlists",
-		watchlists: "watchlists",
-		watchlist: "watchlist",
-		noPublicWatchlists: "No watchlists published.",
+		profile: "Profil",
+		publicWatchlists: "Öffentliche Listen",
+		watchlists: "Listen",
+		watchlist: "Liste",
+		noPublicWatchlists: "Keine Listen veröffentlicht.",
 		noPublicWatchlistsDescription:
-			"This user hasn't published any public watchlists yet.",
-		loading: "Loading profile...",
-		notFound: "User not found",
+			"Dieser Benutzer hat noch keine öffentlichen Listen veröffentlicht.",
+		loading: "Profil wird geladen...",
+		notFound: "Benutzer nicht gefunden",
 		notFoundDescription:
-			"The user you're looking for doesn't exist or has been deleted.",
-		backToHome: "Back to home",
+			"Der gesuchte Benutzer existiert nicht oder wurde gelöscht.",
+		backToHome: "Zurück zur Startseite",
 	},
 };

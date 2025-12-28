@@ -349,19 +349,12 @@ export function WatchlistDetail() {
 
 			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<WatchlistItemsTable
-					watchlist={{
-						...watchlist,
-						items:
-							itemsPerPage === watchlist.items.length
-								? watchlist.items
-								: watchlist.items.slice(
-										(currentPage - 1) * itemsPerPage,
-										currentPage * itemsPerPage
-									),
-					}}
+					watchlist={watchlist}
 					onUpdate={fetchWatchlist}
 					isOwner={isOwner}
 					isCollaborator={isCollaborator}
+					currentPage={currentPage}
+					itemsPerPage={itemsPerPage}
 				/>
 
 				{/* Pagination component */}

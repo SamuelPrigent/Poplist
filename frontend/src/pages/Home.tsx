@@ -1,11 +1,11 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Eye, Film, Plus } from "lucide-react";
+import { Film, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { MoviePoster } from "@/components/Home/MoviePoster";
 import { ItemDetailsModal } from "@/components/Watchlist/modal/ItemDetailsModal";
 import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
-import { WatchlistCardImg } from "@/components/Watchlist/WatchlistCardImg";
+// import { WatchlistCardImg } from "@/components/Watchlist/WatchlistCardImg";
 import { WatchlistCardGenre } from "@/components/Watchlist/WatchlistCardGenre";
 // import { WatchlistCardGenre2 } from "@/components/Watchlist/WatchlistCardGenre2";
 import { WatchlistCardSmall } from "@/components/Watchlist/WatchlistCardSmall";
@@ -23,10 +23,10 @@ import {
 	GENRE_CATEGORIES,
 	getCategoryInfo,
 	// PLATFORM_CATEGORIES,
-	PLATFORM_CATEGORIES_WITH_LOGOS,
+	// PLATFORM_CATEGORIES_WITH_LOGOS,
 	// type PlatformCategory,
 } from "@/types/categories";
-import { getWatchProviderLogo } from "@/lib/api-client";
+// import { getWatchProviderLogo } from "@/lib/api-client";
 import { Section } from "@/components/layout/Section";
 
 interface TrendingItem {
@@ -334,7 +334,7 @@ export function Home() {
 				description: categoryInfo.description,
 				gradient: categoryInfo.cardGradient,
 				itemCount: categoryCounts[categoryId] || 0,
-				username: "WatchlistHub",
+				username: "Poplist",
 			};
 		}
 	);
@@ -420,7 +420,7 @@ export function Home() {
 						const mockWatchlist: Watchlist = {
 							_id: category.id,
 							ownerId: {
-								email: "featured@watchlisthub.app",
+								email: "featured@poplist.app",
 								username: category.username,
 							},
 							name: category.name,
@@ -449,7 +449,7 @@ export function Home() {
 				</div>
 			</Section>
 			{/* Platforms Section */}
-			<Section>
+			{/* <Section>
 				<div className="mb-6 flex items-center justify-between">
 					<div>
 						<h2 className="text-2xl font-bold text-white">
@@ -488,8 +488,8 @@ export function Home() {
 						const mockWatchlist: Watchlist = {
 							_id: platformId,
 							ownerId: {
-								email: "featured@watchlisthub.app",
-								username: "WatchlistHub",
+								email: "featured@poplist.app",
+								username: "Poplist",
 							},
 							name: categoryInfo.name,
 							description: categoryInfo.description,
@@ -513,7 +513,7 @@ export function Home() {
 						);
 					})}
 				</div>
-			</Section>
+			</Section> */}
 
 			{/* Popular Watchlists Section */}
 			<Section>
@@ -613,23 +613,11 @@ export function Home() {
 								posterPath={item.poster_path}
 								voteAverage={item.vote_average}
 								overview={item.overview}
+								onClick={() => handleOpenDetails(item)}
 							/>
 
-							{/* Action buttons */}
-							<div className="absolute top-2 right-2 flex gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-								{/* Preview button */}
-								<button
-									type="button"
-									className="cursor-pointer rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
-									onClick={(e) => {
-										e.stopPropagation();
-										handleOpenDetails(item);
-									}}
-								>
-									<Eye className="h-4 w-4" />
-								</button>
-
-								{/* Add button with dropdown - always visible */}
+							{/* Add button in top right - small */}
+							<div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
 								<DropdownMenu.Root
 									onOpenChange={(open) => {
 										if (!open) {
@@ -644,7 +632,7 @@ export function Home() {
 									<DropdownMenu.Trigger asChild>
 										<button
 											type="button"
-											className="cursor-pointer rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
+											className="cursor-pointer rounded-full bg-black/70 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black"
 											disabled={addingTo === item.id}
 											onClick={(e) => e.stopPropagation()}
 										>
