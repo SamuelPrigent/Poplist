@@ -113,8 +113,8 @@ export function Categories() {
 							const mockWatchlist: Watchlist = {
 								_id: categoryId,
 								ownerId: {
-									email: "featured@watchlisthub.app",
-									username: "WatchlistHub",
+									email: "featured@poplist.app",
+									username: "Poplist",
 								},
 								name: category.name,
 								description: category.description,

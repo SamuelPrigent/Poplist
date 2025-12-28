@@ -1,8 +1,8 @@
-# WatchlistHub
+# Poplist
 
 ## Aperçu
 
-WatchlistHub est une application fullstack (React + Express) permettant de créer, organiser et partager des watchlists de films et séries, avec récupération automatique des métadonnées via l'API TMDB.
+Poplist est une application fullstack (React + Express) permettant de créer, organiser et partager des listes de films et séries, avec récupération automatique des métadonnées via l'API TMDB.
 
 ## Prérequis
 

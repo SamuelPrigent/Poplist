@@ -3,7 +3,7 @@ import type { Content } from "@/types/content";
 export const es: Content = {
 	// Header
 	header: {
-		appName: "WatchlistHub",
+		appName: "Poplist",
 		home: "Inicio",
 		explore: "Explorar",
 		login: "Iniciar sesión",
@@ -136,8 +136,8 @@ export const es: Content = {
 			inviteCollaborator: "Invitar a un colaborador",
 		},
 		contextMenu: {
-			addToWatchlist: "Añadir a una watchlist",
-			removeFromWatchlist: "Eliminar de la watchlist",
+			addToWatchlist: "Añadir a una lista",
+			removeFromWatchlist: "Eliminar de la lista",
 			moveToFirst: "Mover a la primera posición",
 			moveToLast: "Mover a la última posición",
 		},
@@ -154,16 +154,16 @@ export const es: Content = {
 			remove: "Eliminar",
 			removeSuccess: "Colaborador eliminado",
 			removeError: "Error al eliminar colaborador",
-			leaveTitle: "¿Salir de la watchlist?",
+			leaveTitle: "¿Salir de la lista?",
 			leaveDescription:
-				"¿Estás seguro de que quieres salir de esta watchlist? Perderás tus derechos de colaborador.",
+				"¿Estás seguro de que quieres salir de esta lista? Perderás tus derechos de colaborador.",
 			leave: "Salir",
 			leaving: "Saliendo...",
-			leaveSuccess: "Has salido de la watchlist",
-			leaveError: "Error al salir de la watchlist",
+			leaveSuccess: "Has salido de la lista",
+			leaveError: "Error al salir de la lista",
 		},
-		addToWatchlist: "Añadir a una watchlist",
-		noWatchlist: "Ninguna watchlist",
+		addToWatchlist: "Añadir a una lista",
+		noWatchlist: "Ninguna lista",
 		offlinePopover: {
 			title: "¿Por qué registrarse?",
 			accessEverywhere: "Accede a tus listas en todas partes",
@@ -179,7 +179,7 @@ export const es: Content = {
 			title: "Crea y comparte listas de tus películas y series favoritas",
 			subtitle:
 				"Organiza tus noches de TV y comparte tus descubrimientos con tus amigos",
-			cta: "Crear una watchlist",
+			cta: "Crear una lista",
 		},
 		features: {
 			organize: {
@@ -196,35 +196,35 @@ export const es: Content = {
 			},
 			share: {
 				tagline: "Compartir",
-				title: "Sigue las watchlists de la comunidad",
+				title: "Sigue las listas de la comunidad",
 				description:
-					"Añade las watchlists de otros usuarios a tu espacio personal.",
+					"Añade las listas de otros usuarios a tu espacio personal.",
 			},
 		},
 		startInSeconds: {
 			title: "Comienza en segundos",
 			subtitle: "Sin configuración complicada, solo tú y tu contenido favorito",
 			step1: {
-				title: "Crea tu watchlist",
+				title: "Crea tu lista",
 				description:
 					'Comienza con "Mis películas favoritas" o ponte nostálgico con "Películas de infancia".',
 			},
 			step2: {
 				title: "Añade películas",
 				description:
-					"Busca una película o serie usando una palabra clave y añádela a tu watchlist actual.",
+					"Busca una película o serie usando una palabra clave y añádela a tu lista actual.",
 			},
 			step3: {
 				title: "Compártela con tus amigos",
 				description:
-					'Haz tus watchlists "públicas" y compártelas fácilmente con un enlace.',
+					'Haz tus listas "públicas" y compártelas fácilmente con un enlace.',
 			},
 		},
 		testimonials: {
 			title: "Amado por los entusiastas",
 			subtitle: "Únete a una comunidad de usuarios satisfechos",
 			testimonial1: {
-				text: "Aplicación perfecta para organizar mis watchlists. Interfaz clara e intuitiva.",
+				text: "Aplicación perfecta para organizar mis listas. Interfaz clara e intuitiva.",
 				author: "— Marie L.",
 			},
 			testimonial2: {
@@ -237,10 +237,10 @@ export const es: Content = {
 			},
 		},
 		finalCta: {
-			title: "Comienza a crear tus watchlists fácilmente",
+			title: "Comienza a crear tus listas fácilmente",
 			subtitle:
-				"Únete a WatchlistHub y organiza tu contenido favorito en unos pocos clics.",
-			button: "Crear mi watchlist",
+				"Únete a Poplist y organiza tu contenido favorito en unos pocos clics.",
+			button: "Crear mi lista",
 			disclaimer: "Aplicación gratuita • No se requiere tarjeta",
 		},
 	},
@@ -248,9 +248,9 @@ export const es: Content = {
 	// Home Page
 	home: {
 		hero: {
-			title: "Tus Watchlists perfectamente organizadas",
+			title: "Tus listas perfectamente organizadas",
 			subtitle: "Tu universo del cine, organizado y compartido con amigos.",
-			cta: "Crear una watchlist",
+			cta: "Crear una lista",
 			ctaSecondary: "Saber más",
 			pills: {
 				organize: "Organiza tus películas",
@@ -260,12 +260,12 @@ export const es: Content = {
 		},
 		library: {
 			title: "Biblioteca",
-			subtitle: "Tus watchlists personales",
+			subtitle: "Tus listas personales",
 			seeAll: "Ver todo",
 		},
 		categories: {
 			title: "Listas por categoría",
-			subtitle: "Selección WatchlistHub",
+			subtitle: "Selección Poplist",
 			seeMore: "Ver más",
 			items: {
 				// Línea 1 - Por tipo y plataforma
@@ -326,7 +326,7 @@ export const es: Content = {
 			seeAll: "Ver todo",
 		},
 		popularWatchlists: {
-			title: "Watchlists populares",
+			title: "Listas populares",
 			subtitle: "Compartidas por la comunidad",
 			seeMore: "Ver más",
 			noWatchlists: "No hay listas públicas por el momento",
@@ -505,7 +505,7 @@ export const es: Content = {
 
 	// Footer
 	footer: {
-		appName: "WatchlistHub",
+		appName: "Poplist",
 		language: "Idioma",
 	},
 
@@ -592,17 +592,17 @@ export const es: Content = {
 		},
 	},
 	userProfile: {
-		profile: "Profile",
-		publicWatchlists: "Public Playlists",
-		watchlists: "watchlists",
-		watchlist: "watchlist",
-		noPublicWatchlists: "No watchlists published.",
+		profile: "Perfil",
+		publicWatchlists: "Listas públicas",
+		watchlists: "listas",
+		watchlist: "lista",
+		noPublicWatchlists: "No hay listas publicadas.",
 		noPublicWatchlistsDescription:
-			"This user hasn't published any public watchlists yet.",
-		loading: "Loading profile...",
-		notFound: "User not found",
+			"Este usuario aún no ha publicado ninguna lista pública.",
+		loading: "Cargando perfil...",
+		notFound: "Usuario no encontrado",
 		notFoundDescription:
-			"The user you're looking for doesn't exist or has been deleted.",
-		backToHome: "Back to home",
+			"El usuario que buscas no existe o ha sido eliminado.",
+		backToHome: "Volver al inicio",
 	},
 };

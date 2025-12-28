@@ -16,6 +16,7 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
 	type ColumnDef,
@@ -39,7 +40,6 @@ import {
 	Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Empty,
 	EmptyDescription,
@@ -61,7 +61,7 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
 	const [loaded, setLoaded] = useState(false);
 
 	return (
-		<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
+		<>
 			{/* Skeleton - shown while loading */}
 			{!loaded && <div className="bg-muted absolute inset-0 animate-pulse" />}
 			{/* Actual image */}
@@ -75,7 +75,7 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
 				decoding="async"
 				onLoad={() => setLoaded(true)}
 			/>
-		</div>
+		</>
 	);
 }
 
@@ -118,6 +118,8 @@ function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 interface WatchlistItemsTableProps {
 	watchlist: Watchlist;
 	//   onUpdate: () => void;
+	currentPage?: number;
+	itemsPerPage?: number;
 }
 
 // Extend RowData for custom meta
@@ -135,7 +137,7 @@ interface DraggableRowProps {
 	loadingItem: string | null;
 	hoveredRow: string | null;
 	setHoveredRow: (id: string | null) => void;
-	handleRemoveItem: (tmdbId: string) => void;
+	onConfirmDelete: (item: WatchlistItem) => void;
 	handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
 	handleAddToWatchlist: (tmdbId: string, targetWatchlistId: string) => void;
 	otherWatchlists: Watchlist[];
@@ -152,7 +154,7 @@ function DraggableRow({
 	loadingItem,
 	hoveredRow,
 	setHoveredRow,
-	handleRemoveItem,
+	onConfirmDelete,
 	handleMoveItem,
 	handleAddToWatchlist,
 	otherWatchlists,
@@ -192,23 +194,9 @@ function DraggableRow({
 		>
 			{row.getVisibleCells().map((cell, cellIndex: number) => {
 				const totalCells = row.getVisibleCells().length;
-				const isInformationsColumn = cellIndex === totalCells - 2;
 				const isActionsColumn = cellIndex === totalCells - 1;
 
-				// Informations column (second-to-last column - not draggable)
-				if (isInformationsColumn) {
-					return (
-						<td
-							key={cell.id}
-							className="px-4 py-3"
-							onClick={(e) => e.stopPropagation()}
-						>
-							{flexRender(cell.column.columnDef.cell, cell.getContext())}
-						</td>
-					);
-				}
-
-				// Actions column (last column - not draggable)
+				// Actions column (last column) - not draggable
 				if (isActionsColumn) {
 					return (
 						<td
@@ -216,7 +204,15 @@ function DraggableRow({
 							className="px-4 py-3"
 							onClick={(e) => e.stopPropagation()}
 						>
-							{canEdit ? (
+							<div
+								className={cn(
+									"flex items-center gap-1 transition-opacity",
+									hoveredRow === item.tmdbId
+										? "opacity-100"
+										: "opacity-0 group-hover:opacity-100"
+								)}
+							>
+								{/* Add to watchlist button */}
 								<DropdownMenu.Root
 									onOpenChange={(open) => {
 										if (!open) {
@@ -231,136 +227,24 @@ function DraggableRow({
 									<DropdownMenu.Trigger asChild>
 										<button
 											type="button"
-											className={cn(
-												"hover:bg-muted cursor-pointer rounded p-1 transition-all focus-visible:opacity-100",
-												hoveredRow === item.tmdbId
-													? "opacity-100"
-													: "opacity-0 group-hover:opacity-100"
-											)}
+											className="hover:bg-muted cursor-pointer rounded p-2 transition-colors"
 											disabled={loadingItem === item.tmdbId}
 											onClick={(e) => e.stopPropagation()}
+											title={content.watchlists.contextMenu.addToWatchlist}
 										>
-											<MoreVertical className="text-muted-foreground h-4 w-4" />
+											<Plus className="text-muted-foreground h-[18px] w-[18px]" />
 										</button>
 									</DropdownMenu.Trigger>
 
 									<DropdownMenu.Portal>
 										<DropdownMenu.Content
-											className="border-border bg-popover z-50 min-w-[220px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
-											sideOffset={5}
-										>
-											<DropdownMenu.Sub>
-												<DropdownMenu.SubTrigger className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50">
-													<Plus className="mr-2.5 h-4 w-4" />
-													<span>
-														{content.watchlists.contextMenu.addToWatchlist}
-													</span>
-													<span className="text-muted-foreground ml-auto text-xs">
-														→
-													</span>
-												</DropdownMenu.SubTrigger>
-												<DropdownMenu.Portal>
-													<DropdownMenu.SubContent
-														className="border-border bg-popover z-50 max-h-[300px] min-w-[220px] overflow-y-auto rounded-xl border p-1.5 shadow-xl"
-														sideOffset={8}
-													>
-														{otherWatchlists.length === 0 ? (
-															<div className="text-muted-foreground px-3 py-2.5 text-sm">
-																Aucune autre watchlist
-															</div>
-														) : (
-															otherWatchlists.map((wl) => (
-																<DropdownMenu.Item
-																	key={wl._id}
-																	className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none"
-																	onSelect={() =>
-																		handleAddToWatchlist(item.tmdbId, wl._id)
-																	}
-																>
-																	<span className="truncate">{wl.name}</span>
-																</DropdownMenu.Item>
-															))
-														)}
-													</DropdownMenu.SubContent>
-												</DropdownMenu.Portal>
-											</DropdownMenu.Sub>
-
-											<DropdownMenu.Item
-												className="relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm text-red-500 transition-colors outline-none select-none hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500 data-disabled:pointer-events-none data-disabled:opacity-50"
-												onSelect={() => handleRemoveItem(item.tmdbId)}
-											>
-												<Trash2 className="mr-2.5 h-4 w-4" />
-												<span>
-													{content.watchlists.contextMenu.removeFromWatchlist}
-												</span>
-											</DropdownMenu.Item>
-
-											<DropdownMenu.Separator className="bg-border my-1.5 h-px" />
-
-											<DropdownMenu.Item
-												className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
-												onSelect={() => handleMoveItem(item.tmdbId, "first")}
-												disabled={index === 0}
-											>
-												<MoveUp className="mr-2.5 h-4 w-4" />
-												<span>
-													{content.watchlists.contextMenu.moveToFirst}
-												</span>
-											</DropdownMenu.Item>
-
-											<DropdownMenu.Item
-												className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
-												onSelect={() => handleMoveItem(item.tmdbId, "last")}
-												disabled={index === totalItems - 1}
-											>
-												<MoveDown className="mr-2.5 h-4 w-4" />
-												<span>{content.watchlists.contextMenu.moveToLast}</span>
-											</DropdownMenu.Item>
-										</DropdownMenu.Content>
-									</DropdownMenu.Portal>
-								</DropdownMenu.Root>
-							) : (
-								// Watchlist not owned (imported) - simple "+" button to add to owned watchlists
-								<DropdownMenu.Root
-									onOpenChange={(open) => {
-										if (!open) {
-											setTimeout(() => {
-												if (document.activeElement instanceof HTMLElement) {
-													document.activeElement.blur();
-												}
-											}, 0);
-										}
-									}}
-								>
-									<DropdownMenu.Trigger asChild>
-										<button
-											type="button"
-											className={cn(
-												"bg-muted/50 hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition-opacity",
-												hoveredRow === item.tmdbId
-													? "opacity-100"
-													: "opacity-0 group-hover:opacity-100"
-											)}
-											disabled={loadingItem === item.tmdbId}
-											onClick={(e) => e.stopPropagation()}
-										>
-											<Plus className="h-4 w-4 text-white" />
-										</button>
-									</DropdownMenu.Trigger>
-
-									<DropdownMenu.Portal>
-										<DropdownMenu.Content
-											className="border-border bg-popover z-50 min-w-[220px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
+											className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
 											sideOffset={5}
 										>
 											<DropdownMenu.Label className="text-muted-foreground px-3 py-2 text-xs font-semibold">
 												{content.watchlists.addToWatchlist}
 											</DropdownMenu.Label>
-											{otherWatchlists.length === 0 ? (
-												<div className="text-muted-foreground px-3 py-2.5 text-sm">
-													Aucune watchlist
-												</div>
-											) : (
+											{otherWatchlists.length > 0 ? (
 												otherWatchlists.map((wl) => (
 													<DropdownMenu.Item
 														key={wl._id}
@@ -373,11 +257,86 @@ function DraggableRow({
 														{wl.name}
 													</DropdownMenu.Item>
 												))
+											) : (
+												<div className="text-muted-foreground px-3 py-2.5 text-sm">
+													{content.watchlists.noWatchlist}
+												</div>
 											)}
 										</DropdownMenu.Content>
 									</DropdownMenu.Portal>
 								</DropdownMenu.Root>
-							)}
+
+								{/* Delete button - only for canEdit */}
+								{canEdit && (
+									<button
+										type="button"
+										className="cursor-pointer rounded p-2 text-red-500 transition-colors hover:bg-red-500/10"
+										onClick={(e) => {
+											e.stopPropagation();
+											onConfirmDelete(item);
+										}}
+										disabled={loadingItem === item.tmdbId}
+										title={content.watchlists.contextMenu.removeFromWatchlist}
+									>
+										<Trash2 className="h-[18px] w-[18px]" />
+									</button>
+								)}
+
+								{/* More options menu - only for canEdit */}
+								{canEdit && (
+									<DropdownMenu.Root
+										onOpenChange={(open) => {
+											if (!open) {
+												setTimeout(() => {
+													if (document.activeElement instanceof HTMLElement) {
+														document.activeElement.blur();
+													}
+												}, 0);
+											}
+										}}
+									>
+										<DropdownMenu.Trigger asChild>
+											<button
+												type="button"
+												className="hover:bg-muted cursor-pointer rounded p-2 transition-colors"
+												disabled={loadingItem === item.tmdbId}
+												onClick={(e) => e.stopPropagation()}
+											>
+												<MoreVertical className="text-muted-foreground h-[18px] w-[18px]" />
+											</button>
+										</DropdownMenu.Trigger>
+
+										<DropdownMenu.Portal>
+											<DropdownMenu.Content
+												className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
+												sideOffset={5}
+											>
+												<DropdownMenu.Item
+													className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
+													onSelect={() => handleMoveItem(item.tmdbId, "first")}
+													disabled={index === 0}
+												>
+													<MoveUp className="mr-2.5 h-4 w-4" />
+													<span>
+														{content.watchlists.contextMenu.moveToFirst}
+													</span>
+												</DropdownMenu.Item>
+
+												<DropdownMenu.Item
+													className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
+													onSelect={() => handleMoveItem(item.tmdbId, "last")}
+													disabled={index === totalItems - 1}
+												>
+													<MoveDown className="mr-2.5 h-4 w-4" />
+													<span>
+														{content.watchlists.contextMenu.moveToLast}
+													</span>
+												</DropdownMenu.Item>
+											</DropdownMenu.Content>
+										</DropdownMenu.Portal>
+									</DropdownMenu.Root>
+								)}
+							</div>
 						</td>
 					);
 				}
@@ -399,6 +358,8 @@ function DraggableRow({
 
 export function WatchlistItemsTableOffline({
 	watchlist,
+	currentPage = 1,
+	itemsPerPage,
 }: WatchlistItemsTableProps) {
 	const { content } = useLanguageStore();
 	const [items, setItems] = useState<WatchlistItem[]>(watchlist.items);
@@ -408,6 +369,7 @@ export function WatchlistItemsTableOffline({
 	const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
 	const [otherWatchlists, setOtherWatchlists] = useState<Watchlist[]>([]);
+	const [itemToDelete, setItemToDelete] = useState<WatchlistItem | null>(null);
 
 	// Determine if user can edit this watchlist (owned)
 	const canEdit = watchlist.ownerId === "offline";
@@ -666,16 +628,36 @@ export function WatchlistItemsTableOffline({
 				cell: (info) => {
 					const item = info.row.original;
 					return (
-						<div className="flex items-center gap-3">
-							{item.posterUrl ? (
-								<PosterImage src={item.posterUrl} alt={item.title} />
-							) : (
-								<div className="bg-muted text-muted-foreground flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded">
-									?
-								</div>
-							)}
-							<span className="font-medium text-white">{item.title}</span>
-						</div>
+						<button
+							type="button"
+							onClick={(e) => {
+								e.stopPropagation();
+								setSelectedItem(item);
+								setDetailsModalOpen(true);
+							}}
+							className="group/cell flex cursor-pointer items-center gap-3 text-left"
+						>
+							{/* Poster with overlay triggered by hovering cell (poster or title) */}
+							<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
+								{item.posterUrl ? (
+									<>
+										<PosterImage src={item.posterUrl} alt={item.title} />
+										{/* Hover overlay with eye icon - appears when hovering poster OR title */}
+										<div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
+											<Eye className="h-5 w-5 text-white" />
+										</div>
+									</>
+								) : (
+									<div className="bg-muted text-muted-foreground flex h-full w-full items-center justify-center">
+										?
+									</div>
+								)}
+							</div>
+							{/* Title with underline on hover */}
+							<span className="font-medium text-white underline-offset-2 transition-colors group-hover/cell:underline">
+								{item.title}
+							</span>
+						</button>
 					);
 				},
 				size: 400,
@@ -735,7 +717,7 @@ export function WatchlistItemsTableOffline({
 				size: 200,
 			},
 			{
-				accessorKey: "runtime",
+				id: "format",
 				header: ({ column }) => {
 					const isSorted = column.getIsSorted();
 					return (
@@ -765,60 +747,56 @@ export function WatchlistItemsTableOffline({
 								}
 							}}
 						>
-							{content.watchlists.tableHeaders.duration}
+							Format
 							<SortIcon sortState={isSorted} />
 						</div>
 					);
 				},
+				accessorFn: (row) => {
+					// For sorting: TV shows use episodes * 35min, movies use runtime
+					if (row.type === "tv" && row.numberOfEpisodes) {
+						return row.numberOfEpisodes * 35;
+					}
+					return row.runtime || 0;
+				},
 				cell: (info) => {
 					const item = info.row.original;
-					const runtime = info.getValue() as number | undefined;
 
-					// For TV shows with both runtime and episodes, show combined format
-					if (item.type === "tv" && runtime && item.numberOfEpisodes) {
-						return (
-							<span className="text-muted-foreground text-sm">
-								{formatRuntime(runtime)} · {item.numberOfEpisodes} ep
-							</span>
-						);
+					// For TV shows: display "X saisons · Y épisodes"
+					if (item.type === "tv") {
+						const seasons = item.numberOfSeasons;
+						const episodes = item.numberOfEpisodes;
+						if (seasons || episodes) {
+							const parts = [];
+							if (seasons) {
+								parts.push(`${seasons} ${seasons > 1 ? "saisons" : "saison"}`);
+							}
+							if (episodes) {
+								parts.push(`${episodes} ép.`);
+							}
+							return (
+								<span className="text-muted-foreground text-sm">
+									{parts.join(" · ")}
+								</span>
+							);
+						}
+						return <span className="text-muted-foreground text-sm">—</span>;
 					}
 
+					// For movies: display runtime
 					return (
 						<span className="text-muted-foreground text-sm">
-							{formatRuntime(runtime)}
+							{formatRuntime(item.runtime)}
 						</span>
 					);
 				},
 				size: 150,
 			},
 			{
-				id: "informations",
-				header: "Informations",
-				cell: (info) => {
-					const item = info.row.original;
-					return (
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={(e) => {
-								e.stopPropagation();
-								setSelectedItem(item);
-								setDetailsModalOpen(true);
-							}}
-							className="h-8 cursor-pointer gap-1.5 px-3 text-xs"
-						>
-							<Eye className="h-3 w-3" />
-							{content.watchlists.preview}
-						</Button>
-					);
-				},
-				size: 120,
-			},
-			{
 				id: "actions",
-				header: "",
-				cell: () => null,
-				size: 80,
+				header: "Actions",
+				cell: () => null, // Rendered in DraggableRow
+				size: 120,
 			},
 		],
 		[content, formatRuntime]
@@ -828,12 +806,19 @@ export function WatchlistItemsTableOffline({
 	const isCustomOrder = sorting.length === 0;
 
 	// Use sorted items if sorting is active, otherwise use local state
+	// Apply pagination if provided
 	const displayItems = useMemo(() => {
-		if (!isCustomOrder) {
-			return items;
+		let itemsToDisplay = items;
+
+		// Apply pagination if currentPage and itemsPerPage are provided
+		if (itemsPerPage !== undefined && itemsPerPage < items.length) {
+			const startIndex = (currentPage - 1) * itemsPerPage;
+			const endIndex = startIndex + itemsPerPage;
+			itemsToDisplay = items.slice(startIndex, endIndex);
 		}
-		return items;
-	}, [items, isCustomOrder]);
+
+		return itemsToDisplay;
+	}, [items, isCustomOrder, currentPage, itemsPerPage]);
 
 	const table = useReactTable({
 		data: displayItems,
@@ -909,7 +894,7 @@ export function WatchlistItemsTableOffline({
 									loadingItem={loadingItem}
 									hoveredRow={hoveredRow}
 									setHoveredRow={setHoveredRow}
-									handleRemoveItem={handleRemoveItem}
+									onConfirmDelete={setItemToDelete}
 									handleMoveItem={handleMoveItem}
 									handleAddToWatchlist={handleAddToWatchlist}
 									otherWatchlists={otherWatchlists}
@@ -934,6 +919,49 @@ export function WatchlistItemsTableOffline({
 					platforms={selectedItem.platformList}
 				/>
 			)}
+
+			{/* Delete Confirmation Modal */}
+			<AlertDialog.Root
+				open={!!itemToDelete}
+				onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
+			>
+				<AlertDialog.Portal>
+					<AlertDialog.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
+					<AlertDialog.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] rounded-lg border p-6 shadow-lg">
+						<AlertDialog.Title className="text-lg font-semibold">
+							Confirmer la suppression
+						</AlertDialog.Title>
+						<AlertDialog.Description className="text-muted-foreground mt-2 text-sm">
+							Voulez-vous vraiment supprimer « {itemToDelete?.title} » de cette
+							watchlist ?
+						</AlertDialog.Description>
+						<div className="mt-6 flex justify-end gap-3">
+							<AlertDialog.Cancel asChild>
+								<button
+									type="button"
+									className="border-border hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium transition-colors"
+								>
+									Annuler
+								</button>
+							</AlertDialog.Cancel>
+							<AlertDialog.Action asChild>
+								<button
+									type="button"
+									className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+									onClick={() => {
+										if (itemToDelete) {
+											handleRemoveItem(itemToDelete.tmdbId);
+											setItemToDelete(null);
+										}
+									}}
+								>
+									Supprimer
+								</button>
+							</AlertDialog.Action>
+						</div>
+					</AlertDialog.Content>
+				</AlertDialog.Portal>
+			</AlertDialog.Root>
 		</div>
 	);
 }

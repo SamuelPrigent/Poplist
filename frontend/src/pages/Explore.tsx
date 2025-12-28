@@ -4,6 +4,7 @@ import {
 	ChevronsUpDown,
 	ChevronLeft,
 	ChevronRight,
+	Eye,
 	Plus,
 	Star,
 } from "lucide-react";
@@ -392,7 +393,11 @@ export function Explore() {
 
 						if (!itemExists) {
 							// Fetch providers and details from TMDB via backend
-							console.log("[Explore] Fetching providers and details for:", mediaItem.id, itemType);
+							console.log(
+								"[Explore] Fetching providers and details for:",
+								mediaItem.id,
+								itemType
+							);
 
 							const [platformList, mediaDetails] = await Promise.all([
 								watchlistAPI.fetchTMDBProviders(
@@ -408,7 +413,10 @@ export function Explore() {
 							]);
 
 							console.log("[Explore] Received platformList:", platformList);
-							console.log("[Explore] Received runtime:", mediaDetails.details.runtime);
+							console.log(
+								"[Explore] Received runtime:",
+								mediaDetails.details.runtime
+							);
 
 							const newItem = {
 								tmdbId: mediaItem.id.toString(),
@@ -470,7 +478,7 @@ export function Explore() {
 	}, [mediaTypes, content]);
 
 	return (
-		<div className="bg-background mb-24 min-h-screen py-12">
+		<div className="bg-background mb-24 min-h-screen p-12">
 			<div className="container mx-auto px-4">
 				{/* Header */}
 				<div className="mb-12 text-left">
@@ -577,7 +585,9 @@ export function Explore() {
 								<Command>
 									<CommandInput placeholder={content.explore.filters.search} />
 									<CommandList>
-										<CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
+										<CommandEmpty>
+											{content.explore.filters.noYearFound}
+										</CommandEmpty>
 										<CommandGroup>
 											{availableYearsFrom.map((year) => (
 												<CommandItem
@@ -624,7 +634,9 @@ export function Explore() {
 								<Command>
 									<CommandInput placeholder={content.explore.filters.search} />
 									<CommandList>
-										<CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
+										<CommandEmpty>
+											{content.explore.filters.noYearFound}
+										</CommandEmpty>
 										<CommandGroup>
 											{availableYearsTo.map((year) => (
 												<CommandItem
@@ -716,25 +728,19 @@ export function Explore() {
 					<>
 						<div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 							{media.map((item, index) => (
-								<div
+								<button
+									type="button"
 									key={`${item.id}-${index}-${page}`}
-									className="group relative overflow-hidden rounded-lg text-left transition-opacity"
+									className="group relative cursor-pointer overflow-hidden rounded-lg text-left"
+									onClick={() => handleItemClick(item)}
 								>
-									{/* Main Click Action */}
-									<button
-										type="button"
-										className="absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0"
-										onClick={() => handleItemClick(item)}
-										aria-label={`Voir les détails de ${item.title || item.name}`}
-									/>
-
-									{/* Poster */}
-									<div className="bg-muted pointer-events-none aspect-2/3 overflow-hidden rounded-lg">
+									{/* Poster with zoom */}
+									<div className="bg-muted aspect-2/3 overflow-hidden rounded-lg">
 										{item.poster_path ? (
 											<img
 												src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
 												alt={item.title || item.name}
-												className="h-full w-full object-cover transition-transform group-hover:scale-105"
+												className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 											/>
 										) : (
 											<div className="text-muted-foreground flex h-full items-center justify-center">
@@ -743,7 +749,27 @@ export function Explore() {
 										)}
 									</div>
 
-									{/* Add button */}
+									{/* Dark overlay with centered eye icon on hover */}
+									<div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 transition-all duration-300 group-hover:bg-black/50">
+										<div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+											<Eye className="h-7 w-7 text-white" />
+										</div>
+									</div>
+
+									{/* Bottom gradient - always visible */}
+									<div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 rounded-b-lg bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+									{/* Rating badge */}
+									{item.vote_average > 0 && (
+										<div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 backdrop-blur-sm">
+											<Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+											<span className="text-sm font-semibold text-white">
+												{item.vote_average.toFixed(1)}
+											</span>
+										</div>
+									)}
+
+									{/* Add button in top right */}
 									{(isAuthenticated || watchlists.length > 0) && (
 										<div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
 											<DropdownMenu.Root
@@ -762,7 +788,7 @@ export function Explore() {
 												<DropdownMenu.Trigger asChild>
 													<button
 														type="button"
-														className="cursor-pointer rounded-full bg-black/80 p-2 text-white backdrop-blur-sm hover:bg-black"
+														className="cursor-pointer rounded-full bg-black/70 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black"
 														disabled={addingTo === item.id}
 														onClick={(e) => e.stopPropagation()}
 													>
@@ -805,20 +831,7 @@ export function Explore() {
 											</DropdownMenu.Root>
 										</div>
 									)}
-
-									{/* Info overlay */}
-									<div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
-										<h3 className="line-clamp-2 text-sm font-semibold text-white">
-											{item.title || item.name}
-										</h3>
-										{item.vote_average > 0 && (
-											<div className="mt-1 flex items-center gap-1 text-xs text-gray-300">
-												<Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-												{item.vote_average.toFixed(1)}
-											</div>
-										)}
-									</div>
-								</div>
+								</button>
 							))}
 						</div>
 

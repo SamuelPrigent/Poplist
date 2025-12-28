@@ -8,7 +8,7 @@ export function RightSectionPreview() {
 				<div className="relative aspect-4/3">
 					<img
 						src={watchlistsPreview}
-						alt="Aperçu de l'application WatchlistHub"
+						alt="Aperçu de l'application Poplist"
 						className="relative top-[10px] left-[-21px] h-full w-full object-cover object-left"
 					/>
 				</div>

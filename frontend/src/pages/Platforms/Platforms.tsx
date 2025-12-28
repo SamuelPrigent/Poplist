@@ -118,8 +118,8 @@ export function Platforms() {
 								const mockWatchlist: Watchlist = {
 									_id: platformId,
 									ownerId: {
-										email: "featured@watchlisthub.app",
-										username: "WatchlistHub",
+										email: "featured@poplist.app",
+										username: "Poplist",
 									},
 									name: categoryInfo.name,
 									description: categoryInfo.description,
