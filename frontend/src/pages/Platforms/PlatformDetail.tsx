@@ -1,7 +1,7 @@
 import { ArrowLeft, Film } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
+import { ListCard } from "@/components/List/ListCard";
 import { useAuth } from "@/context/auth-context";
 import {
 	getWatchProviderLogo,
@@ -162,11 +162,11 @@ export function PlatformDetail() {
 								const showCollaborativeBadge = isCollaborator;
 
 								return (
-									<WatchlistCard
+									<ListCard
 										key={watchlist._id}
 										watchlist={watchlist}
 										content={content}
-										href={`/account/watchlist/${watchlist._id}`}
+										href={`/account/list/${watchlist._id}`}
 										showMenu={false}
 										showOwner={true}
 										showSavedBadge={showSavedBadge}

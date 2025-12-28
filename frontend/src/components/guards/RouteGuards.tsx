@@ -9,7 +9,7 @@ interface RouteGuardProps {
 
 /**
  * ProtectedRoute: Requires authentication
- * Redirects to /local/watchlists if not authenticated and coming from account watchlists
+ * Redirects to /local/lists if not authenticated and coming from account lists
  * Otherwise redirects to home page
  */
 export function ProtectedRoute({ children }: RouteGuardProps) {
@@ -27,9 +27,9 @@ export function ProtectedRoute({ children }: RouteGuardProps) {
 	}
 
 	if (!isAuthenticated) {
-		// If user was on account watchlists, redirect to local watchlists
-		if (location.pathname.startsWith("/account/watchlist")) {
-			return <Navigate to="/local/watchlists" replace />;
+		// If user was on account lists, redirect to local lists
+		if (location.pathname.startsWith("/account/list")) {
+			return <Navigate to="/local/lists" replace />;
 		}
 		// Otherwise redirect to home page
 		return <Navigate to="/" replace />;
@@ -40,7 +40,7 @@ export function ProtectedRoute({ children }: RouteGuardProps) {
 
 /**
  * PublicOnlyRoute: For local/unauthenticated users
- * Redirects to /account/watchlists if authenticated
+ * Redirects to /account/lists if authenticated
  */
 export function PublicOnlyRoute({ children }: RouteGuardProps) {
 	const { isAuthenticated, isLoading } = useAuth();
@@ -62,17 +62,17 @@ export function PublicOnlyRoute({ children }: RouteGuardProps) {
 	}
 
 	if (isAuthenticated) {
-		return <Navigate to="/account/watchlists" replace />;
+		return <Navigate to="/account/lists" replace />;
 	}
 
 	return <>{children}</>;
 }
 
 /**
- * OfflineWatchlistRoute: For local watchlist detail pages
- * Redirects to /account/watchlist/:id (same ID) if authenticated
+ * OfflineListRoute: For local list detail pages
+ * Redirects to /account/list/:id (same ID) if authenticated
  */
-export function OfflineWatchlistRoute({ children }: RouteGuardProps) {
+export function OfflineListRoute({ children }: RouteGuardProps) {
 	const { id } = useParams<{ id: string }>();
 	const { isAuthenticated, isLoading } = useAuth();
 
@@ -87,20 +87,20 @@ export function OfflineWatchlistRoute({ children }: RouteGuardProps) {
 	}
 
 	if (isAuthenticated) {
-		return <Navigate to={`/account/watchlist/${id}`} replace />;
+		return <Navigate to={`/account/list/${id}`} replace />;
 	}
 
 	return <>{children}</>;
 }
 
 /**
- * OnlineWatchlistRoute: For account/authenticated watchlist detail pages
+ * OnlineListRoute: For account/authenticated list detail pages
  * Allows access if:
  * - User is authenticated (backend will check ownership/collaboration)
- * - OR watchlist is public (accessible to everyone)
- * Redirects to home page if not authenticated AND watchlist is not public
+ * - OR list is public (accessible to everyone)
+ * Redirects to home page if not authenticated AND list is not public
  */
-export function OnlineWatchlistRoute({ children }: RouteGuardProps) {
+export function OnlineListRoute({ children }: RouteGuardProps) {
 	const { id } = useParams<{ id: string }>();
 	const { isAuthenticated, isLoading: authLoading } = useAuth();
 	const [checkingPublic, setCheckingPublic] = useState(false);

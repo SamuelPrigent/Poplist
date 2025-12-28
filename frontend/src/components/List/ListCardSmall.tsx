@@ -1,27 +1,27 @@
 import { Film } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-interface WatchlistCardSmallProps {
+interface ListCardSmallProps {
 	watchlist: Watchlist;
 	onClick?: () => void;
 }
 
-export function WatchlistCardSmall({
+export function ListCardSmall({
 	watchlist,
 	onClick,
-}: WatchlistCardSmallProps) {
+}: ListCardSmallProps) {
 	const navigate = useNavigate();
-	const thumbnailUrl = useWatchlistThumbnail(watchlist);
+	const thumbnailUrl = useListThumbnail(watchlist);
 	const { content } = useLanguageStore();
 
 	const handleClick = () => {
 		if (onClick) {
 			onClick();
 		} else {
-			navigate(`/account/watchlist/${watchlist._id}`);
+			navigate(`/account/list/${watchlist._id}`);
 		}
 	};
 

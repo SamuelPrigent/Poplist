@@ -1,7 +1,7 @@
 import { ArrowLeft, Film } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
+import { ListCard } from "@/components/List/ListCard";
 import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { scrollToTop } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { useLanguageStore } from "@/store/language";
 
 const SKELETONS = Array.from({ length: 10 }, (_, i) => i);
 
-export function CommunityWatchlists() {
+export function CommunityLists() {
 	const { content } = useLanguageStore();
 	const { user } = useAuth();
 	const navigate = useNavigate();
@@ -114,11 +114,11 @@ export function CommunityWatchlists() {
 							const showCollaborativeBadge = isCollaborator;
 
 							return (
-								<WatchlistCard
+								<ListCard
 									key={watchlist._id}
 									watchlist={watchlist}
 									content={content}
-									href={`/account/watchlist/${watchlist._id}`}
+									href={`/account/list/${watchlist._id}`}
 									showMenu={false}
 									showOwner={true}
 									showSavedBadge={showSavedBadge}

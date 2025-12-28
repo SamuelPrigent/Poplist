@@ -7,7 +7,7 @@ import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 
-interface DeleteWatchlistDialogProps {
+interface DeleteListDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSuccess?: () => void;
@@ -15,13 +15,13 @@ interface DeleteWatchlistDialogProps {
 	offline?: boolean;
 }
 
-export function DeleteWatchlistDialog({
+export function DeleteListDialog({
 	open,
 	onOpenChange,
 	onSuccess,
 	watchlist,
 	offline = false,
-}: DeleteWatchlistDialogProps) {
+}: DeleteListDialogProps) {
 	const { content } = useLanguageStore();
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
@@ -49,8 +49,8 @@ export function DeleteWatchlistDialog({
 				if (onSuccess) {
 					onSuccess();
 				} else {
-					// If no onSuccess callback, navigate back to watchlists page
-					navigate("/local/watchlists");
+					// If no onSuccess callback, navigate back to lists page
+					navigate("/local/lists");
 				}
 			} else {
 				// Online mode: delete via API
@@ -60,8 +60,8 @@ export function DeleteWatchlistDialog({
 				if (onSuccess) {
 					onSuccess();
 				} else {
-					// If no onSuccess callback, navigate back to watchlists page
-					navigate("/account/watchlists");
+					// If no onSuccess callback, navigate back to lists page
+					navigate("/account/lists");
 				}
 			}
 		} catch (err) {

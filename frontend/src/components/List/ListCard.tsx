@@ -8,11 +8,11 @@ import { useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import checkGreenIcon from "@/assets/checkGreenFull.svg";
 import teamIcon from "@/assets/team.svg";
-import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
 
-interface WatchlistCardProps {
+interface ListCardProps {
 	watchlist: Watchlist;
 	content: Content;
 	href: string;
@@ -32,7 +32,7 @@ interface WatchlistCardProps {
 	};
 }
 
-export function WatchlistCard({
+export function ListCard({
 	watchlist,
 	content,
 	href,
@@ -45,9 +45,9 @@ export function WatchlistCard({
 	showCollaborativeBadge = false,
 	categoryGradient,
 	draggableProps,
-}: WatchlistCardProps) {
+}: ListCardProps) {
 	const navigate = useNavigate();
-	const thumbnailUrl = useWatchlistThumbnail(watchlist);
+	const thumbnailUrl = useListThumbnail(watchlist);
 	const editButtonRef = useRef<HTMLDivElement>(null);
 	const deleteButtonRef = useRef<HTMLDivElement>(null);
 

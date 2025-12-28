@@ -83,9 +83,9 @@ export function AuthDrawer({
 				await signup(email, password);
 			}
 
-			// If user was on an offline watchlist page, redirect to watchlists page
+			// If user was on an offline list page, redirect to lists page
 			if (location.pathname.includes("/offline-")) {
-				navigate("/account/watchlists");
+				navigate("/account/lists");
 			}
 
 			onClose();
@@ -119,9 +119,9 @@ export function AuthDrawer({
 				window.removeEventListener("message", handleMessage);
 				await refetch();
 
-				// If user was on an offline watchlist page, redirect to watchlists page
+				// If user was on an offline list page, redirect to lists page
 				if (location.pathname.includes("/offline-")) {
-					navigate("/account/watchlists");
+					navigate("/account/lists");
 				}
 
 				onClose();

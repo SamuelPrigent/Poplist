@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { WatchlistCardImg } from "@/components/Watchlist/WatchlistCardImg";
+import { ListCardImg } from "@/components/List/ListCardImg";
 import {
 	getWatchProviderLogo,
 	watchlistAPI,
@@ -133,7 +133,7 @@ export function Platforms() {
 								};
 
 								return (
-									<WatchlistCardImg
+									<ListCardImg
 										key={platformId}
 										watchlist={mockWatchlist}
 										content={content}

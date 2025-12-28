@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import checkGreenIcon from "@/assets/checkGreenFull.svg";
 import plusIcon from "@/assets/plus2.svg";
 import shareIcon from "@/assets/share.svg";
-import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Collaborator, Watchlist, WatchlistOwner } from "@/lib/api-client";
 // import { getTMDBImageUrl } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-interface WatchlistHeaderProps {
+interface ListHeaderProps {
 	watchlist: Watchlist;
 	actionButton?: React.ReactNode;
 	menuButton?: React.ReactNode;
@@ -34,13 +34,13 @@ function isWatchlistOwner(
 	);
 }
 
-export const WATCHLIST_HEADER_BUTTON_CLASS =
+export const LIST_HEADER_BUTTON_CLASS =
 	"group relative flex h-[80%] items-center justify-center rounded-lg p-3 transition-all cursor-pointer  hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
-export const WATCHLIST_HEADER_ICON_CLASS =
+export const LIST_HEADER_ICON_CLASS =
 	"h-6 w-6 transition-all opacity-60 group-hover:opacity-100";
 
-export function WatchlistHeader({
+export function ListHeader({
 	watchlist,
 	actionButton,
 	menuButton,
@@ -53,14 +53,14 @@ export function WatchlistHeader({
 	onDuplicate,
 	showDuplicateButton = false,
 	collaboratorButton,
-}: WatchlistHeaderProps) {
+}: ListHeaderProps) {
 	const navigate = useNavigate();
 	const { content } = useLanguageStore();
 	const [showSaveAnimation, setShowSaveAnimation] = useState(false);
 
 	// Get cover image (custom or auto-generated thumbnail)
 	// Use the hook to handle both online (Cloudinary) and offline (base64) thumbnails
-	const generatedThumbnail = useWatchlistThumbnail(watchlist);
+	const generatedThumbnail = useListThumbnail(watchlist);
 	const coverImage = watchlist.imageUrl || generatedThumbnail;
 
 	const itemCount = watchlist.items.length;
@@ -305,7 +305,7 @@ export function WatchlistHeader({
 												setTimeout(() => setShowSaveAnimation(false), 200);
 												await onSave();
 											}}
-											className={WATCHLIST_HEADER_BUTTON_CLASS}
+											className={LIST_HEADER_BUTTON_CLASS}
 											title={
 												isSaved
 													? content.watchlists.tooltips.unsave
@@ -353,11 +353,11 @@ export function WatchlistHeader({
 										<button
 											type="button"
 											onClick={onDuplicate}
-											className={WATCHLIST_HEADER_BUTTON_CLASS}
+											className={LIST_HEADER_BUTTON_CLASS}
 											title={content.watchlists.tooltips.duplicate}
 										>
 											<Copy
-												className={`${WATCHLIST_HEADER_ICON_CLASS} text-white`}
+												className={`${LIST_HEADER_ICON_CLASS} text-white`}
 											/>
 										</button>
 									)}
@@ -365,13 +365,13 @@ export function WatchlistHeader({
 										<button
 											type="button"
 											onClick={onShare}
-											className={WATCHLIST_HEADER_BUTTON_CLASS}
+											className={LIST_HEADER_BUTTON_CLASS}
 											title={content.watchlists.tooltips.share}
 										>
 											<img
 												src={shareIcon}
 												alt="Share"
-												className={`${WATCHLIST_HEADER_ICON_CLASS} brightness-0 invert`}
+												className={`${LIST_HEADER_ICON_CLASS} brightness-0 invert`}
 											/>
 										</button>
 									)}

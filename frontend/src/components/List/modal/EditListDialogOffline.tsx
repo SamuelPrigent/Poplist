@@ -16,20 +16,20 @@ import {
 } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 
-interface EditWatchlistDialogOfflineProps {
+interface EditListDialogOfflineProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSuccess: () => void;
 	watchlist: Watchlist;
 }
 
-export interface EditWatchlistDialogOfflineRef {
+export interface EditListDialogOfflineRef {
 	openFilePicker: () => void;
 }
 
-export const EditWatchlistDialogOffline = forwardRef<
-	EditWatchlistDialogOfflineRef,
-	EditWatchlistDialogOfflineProps
+export const EditListDialogOffline = forwardRef<
+	EditListDialogOfflineRef,
+	EditListDialogOfflineProps
 >(({ open, onOpenChange, onSuccess, watchlist }, ref) => {
 	const { content } = useLanguageStore();
 	const [name, setName] = useState("");
@@ -271,4 +271,4 @@ export const EditWatchlistDialogOffline = forwardRef<
 	);
 });
 
-EditWatchlistDialogOffline.displayName = "EditWatchlistDialogOffline";
+EditListDialogOffline.displayName = "EditListDialogOffline";

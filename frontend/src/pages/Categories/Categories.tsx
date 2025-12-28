@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { WatchlistCardGenre } from "@/components/Watchlist/WatchlistCardGenre";
+import { ListCardGenre } from "@/components/List/ListCardGenre";
 import {
 	type Watchlist,
 	type WatchlistItem,
@@ -128,7 +128,7 @@ export function Categories() {
 							};
 
 							return (
-								<WatchlistCardGenre
+								<ListCardGenre
 									key={categoryId}
 									watchlist={mockWatchlist}
 									content={content}

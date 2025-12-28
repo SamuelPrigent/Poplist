@@ -11,7 +11,7 @@ import vindiesel from "../../assets/categories/vindiesel.png";
 import avatar from "../../assets/categories/avatar.png";
 import animal from "../../assets/categories/perroquet.png";
 
-interface WatchlistCardGenre {
+interface ListCardGenreProps {
 	watchlist: Watchlist;
 	content: Content;
 	href: string;
@@ -107,14 +107,14 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 	return [r * 255, g * 255, b * 255];
 }
 
-export function WatchlistCardGenre({
+export function ListCardGenre({
 	watchlist,
 	content,
 	href,
 	genreId,
 	showOwner = false,
 	index = 0,
-}: WatchlistCardGenre) {
+}: ListCardGenreProps) {
 	// Apply color variation based on card index
 	const colors = {
 		from: varyColor(baseColors.from, index),

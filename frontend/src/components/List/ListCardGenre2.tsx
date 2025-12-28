@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
 
-interface WatchlistCardGenre2 {
+interface ListCardGenre2Props {
 	watchlist: Watchlist;
 	content: Content;
 	href: string;
@@ -141,13 +141,13 @@ function Meteors({ number = 3 }: { number?: number }) {
 	);
 }
 
-export function WatchlistCardGenre2({
+export function ListCardGenre2({
 	watchlist,
 	content,
 	href,
 	showOwner = false,
 	index = 0,
-}: WatchlistCardGenre2) {
+}: ListCardGenre2Props) {
 	// Apply color variation based on card index
 	const colors = {
 		from: varyColor(baseColors.from, index),

@@ -118,7 +118,7 @@ function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 	);
 }
 
-interface WatchlistItemsTableProps {
+interface ListItemsTableProps {
 	watchlist: Watchlist;
 	onUpdate: () => void;
 	isOwner?: boolean;
@@ -369,7 +369,7 @@ function DraggableRow({
 	);
 }
 
-export function WatchlistItemsTable({
+export function ListItemsTable({
 	watchlist,
 	//   onUpdate,
 	isOwner = true,
@@ -377,7 +377,7 @@ export function WatchlistItemsTable({
 	//   offline: _offline = false,
 	currentPage = 1,
 	itemsPerPage,
-}: WatchlistItemsTableProps) {
+}: ListItemsTableProps) {
 	const { content } = useLanguageStore();
 
 	// Both owners and collaborators can edit
@@ -954,7 +954,10 @@ export function WatchlistItemsTable({
 				onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
 			>
 				<AlertDialog.Portal>
-					<AlertDialog.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
+					<AlertDialog.Overlay
+						className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+						onClick={() => setItemToDelete(null)}
+					/>
 					<AlertDialog.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] rounded-lg border p-6 shadow-lg">
 						<AlertDialog.Title className="text-lg font-semibold">
 							Confirmer la suppression

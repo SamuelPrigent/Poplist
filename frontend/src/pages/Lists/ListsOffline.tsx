@@ -42,10 +42,10 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { CreateWatchlistDialog } from "@/components/Watchlist/modal/CreateWatchlistDialog";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
-import { EditWatchlistDialogOffline } from "@/components/Watchlist/modal/EditWatchlistDialogOffline";
-import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+import { CreateListDialog } from "@/components/List/modal/CreateListDialog";
+import { DeleteListDialog } from "@/components/List/modal/DeleteListDialog";
+import { EditListDialogOffline } from "@/components/List/modal/EditListDialogOffline";
+import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Watchlist } from "@/lib/api-client";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
@@ -76,7 +76,7 @@ function WatchlistCardOffline({
 	draggableProps,
 }: WatchlistCardOfflineProps) {
 	const navigate = useNavigate();
-	const thumbnailUrl = useWatchlistThumbnail(watchlist);
+	const thumbnailUrl = useListThumbnail(watchlist);
 	const editButtonRef = useRef<HTMLDivElement>(null);
 	const deleteButtonRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +111,7 @@ function WatchlistCardOffline({
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
-					navigate(`/local/watchlist/${watchlist._id}`);
+					navigate(`/local/list/${watchlist._id}`);
 				}
 			}}
 			className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
@@ -119,7 +119,7 @@ function WatchlistCardOffline({
 			{/* Cover Image */}
 			<button
 				type="button"
-				onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+				onClick={() => navigate(`/local/list/${watchlist._id}`)}
 				tabIndex={-1}
 				className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md"
 			>
@@ -141,7 +141,7 @@ function WatchlistCardOffline({
 			{/* Text Info */}
 			<button
 				type="button"
-				onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+				onClick={() => navigate(`/local/list/${watchlist._id}`)}
 				tabIndex={-1}
 				className="line-clamp-2 w-full text-left text-sm font-semibold text-white"
 			>
@@ -151,7 +151,7 @@ function WatchlistCardOffline({
 			<div className="mt-2 text-xs">
 				<button
 					type="button"
-					onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+					onClick={() => navigate(`/local/list/${watchlist._id}`)}
 					tabIndex={-1}
 					className="text-muted-foreground"
 				>
@@ -164,7 +164,7 @@ function WatchlistCardOffline({
 			<div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
 				<button
 					type="button"
-					onClick={() => navigate(`/local/watchlist/${watchlist._id}`)}
+					onClick={() => navigate(`/local/list/${watchlist._id}`)}
 					tabIndex={-1}
 				>
 					{watchlist.items.length}{" "}
@@ -286,7 +286,7 @@ function SortableWatchlistCardOffline({
 	);
 }
 
-export function WatchlistsOffline() {
+export function ListsOffline() {
 	const { content } = useLanguageStore();
 	const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -458,7 +458,7 @@ export function WatchlistsOffline() {
 				</Button>
 			</div>
 
-			<CreateWatchlistDialog
+			<CreateListDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
 				onSuccess={handleCreateSuccess}
@@ -467,13 +467,13 @@ export function WatchlistsOffline() {
 
 			{selectedWatchlist && (
 				<>
-					<EditWatchlistDialogOffline
+					<EditListDialogOffline
 						open={editDialogOpen}
 						onOpenChange={setEditDialogOpen}
 						onSuccess={fetchWatchlists}
 						watchlist={selectedWatchlist}
 					/>
-					<DeleteWatchlistDialog
+					<DeleteListDialog
 						open={deleteDialogOpen}
 						onOpenChange={setDeleteDialogOpen}
 						onSuccess={fetchWatchlists}

@@ -24,7 +24,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { ItemDetailsModal } from "@/components/Watchlist/modal/ItemDetailsModal";
+import { ItemDetailsModal } from "@/components/List/modal/ItemDetailsModal";
 import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";

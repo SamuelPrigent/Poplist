@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
 
-interface WatchlistCardImgProps {
+interface ListCardImgProps {
 	watchlist: Watchlist;
 	content: Content;
 	href: string;
@@ -10,13 +10,13 @@ interface WatchlistCardImgProps {
 	showOwner?: boolean;
 }
 
-export function WatchlistCardImg({
+export function ListCardImg({
 	watchlist,
 	content,
 	href,
 	logoUrl,
 	showOwner = false,
-}: WatchlistCardImgProps) {
+}: ListCardImgProps) {
 	return (
 		<Link
 			to={href}

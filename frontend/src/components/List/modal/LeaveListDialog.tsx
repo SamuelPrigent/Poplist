@@ -7,19 +7,19 @@ import { Button } from "@/components/ui/button";
 import { watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-interface LeaveWatchlistDialogProps {
+interface LeaveListDialogProps {
 	watchlistId: string;
 	watchlistName: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
 
-export function LeaveWatchlistDialog({
+export function LeaveListDialog({
 	watchlistId,
 	watchlistName,
 	open,
 	onOpenChange,
-}: LeaveWatchlistDialogProps) {
+}: LeaveListDialogProps) {
 	const navigate = useNavigate();
 	const { content } = useLanguageStore();
 	const [isLeaving, setIsLeaving] = useState(false);
@@ -30,10 +30,10 @@ export function LeaveWatchlistDialog({
 			await watchlistAPI.leaveWatchlist(watchlistId);
 			toast.success(
 				content.watchlists.collaborators.leaveSuccess ||
-					"Vous avez quitté la watchlist"
+					"Vous avez quitté la liste"
 			);
 			onOpenChange(false);
-			navigate("/account/watchlists");
+			navigate("/account/lists");
 		} catch (error) {
 			console.error("Failed to leave watchlist:", error);
 			toast.error(

@@ -1,8 +1,8 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import {
-	OfflineWatchlistRoute,
-	OnlineWatchlistRoute,
+	OfflineListRoute,
+	OnlineListRoute,
 	ProtectedRoute,
 	PublicOnlyRoute,
 } from "./components/guards/RouteGuards";
@@ -20,11 +20,11 @@ import { Platforms } from "./pages/Platforms/Platforms";
 import { Home } from "./pages/Home";
 import { Landing } from "./pages/Landing";
 import { UserProfile } from "./pages/User/UserProfile";
-import { CommunityWatchlists } from "./pages/Watchlists/CommunityWatchlists";
-import { WatchlistDetail } from "./pages/Watchlists/WatchlistDetail";
-import { WatchlistDetailOffline } from "./pages/Watchlists/WatchlistDetailOffline";
-import { Watchlists } from "./pages/Watchlists/Watchlists";
-import { WatchlistsOffline } from "./pages/Watchlists/WatchlistsOffline";
+import { CommunityLists } from "./pages/Lists/CommunityLists";
+import { ListDetail } from "./pages/Lists/ListDetail";
+import { ListDetailOffline } from "./pages/Lists/ListDetailOffline";
+import { Lists } from "./pages/Lists/Lists";
+import { ListsOffline } from "./pages/Lists/ListsOffline";
 
 function App() {
 	return (
@@ -43,8 +43,8 @@ function App() {
 								<Route path="/platforms" element={<Platforms />} />
 								<Route path="/platform/:id" element={<PlatformDetail />} />
 								<Route
-									path="/community-watchlists"
-									element={<CommunityWatchlists />}
+									path="/community-lists"
+									element={<CommunityLists />}
 								/>
 
 								{/* Profile page */}
@@ -57,47 +57,47 @@ function App() {
 									}
 								/>
 
-								{/* Smart redirect for /watchlists - goes to account or local based on status */}
+								{/* Smart redirect for /lists - goes to account or local based on status */}
 								<Route
-									path="/watchlists"
+									path="/lists"
 									element={
 										<SmartRedirect
-											authenticatedPath="/account/watchlists"
-											unauthenticatedPath="/local/watchlists"
+											authenticatedPath="/account/lists"
+											unauthenticatedPath="/local/lists"
 										/>
 									}
 								/>
 
 								<Route
-									path="/account/watchlists"
+									path="/account/lists"
 									element={
 										<ProtectedRoute>
-											<Watchlists />
+											<Lists />
 										</ProtectedRoute>
 									}
 								/>
 								<Route
-									path="/local/watchlists"
+									path="/local/lists"
 									element={
 										<PublicOnlyRoute>
-											<WatchlistsOffline />
+											<ListsOffline />
 										</PublicOnlyRoute>
 									}
 								/>
 								<Route
-									path="/account/watchlist/:id"
+									path="/account/list/:id"
 									element={
-										<OnlineWatchlistRoute>
-											<WatchlistDetail />
-										</OnlineWatchlistRoute>
+										<OnlineListRoute>
+											<ListDetail />
+										</OnlineListRoute>
 									}
 								/>
 								<Route
-									path="/local/watchlist/:id"
+									path="/local/list/:id"
 									element={
-										<OfflineWatchlistRoute>
-											<WatchlistDetailOffline />
-										</OfflineWatchlistRoute>
+										<OfflineListRoute>
+											<ListDetailOffline />
+										</OfflineListRoute>
 									}
 								/>
 
