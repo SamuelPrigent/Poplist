@@ -7,20 +7,20 @@ import cancelUserIcon from "@/assets/cancelUser.svg";
 import pointIcon from "@/assets/points.svg";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
-import { AddCollaboratorPopover } from "@/components/Watchlist/AddCollaboratorPopover";
-import { AddItemModal } from "@/components/Watchlist/modal/AddItemModal";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
+import { AddCollaboratorPopover } from "@/components/List/AddCollaboratorPopover";
+import { AddItemModal } from "@/components/List/modal/AddItemModal";
+import { DeleteListDialog } from "@/components/List/modal/DeleteListDialog";
 import {
-	EditWatchlistDialog,
-	type EditWatchlistDialogRef,
-} from "@/components/Watchlist/modal/EditWatchlistDialog";
-import { LeaveWatchlistDialog } from "@/components/Watchlist/modal/LeaveWatchlistDialog";
+	EditListDialog,
+	type EditListDialogRef,
+} from "@/components/List/modal/EditListDialog";
+import { LeaveListDialog } from "@/components/List/modal/LeaveListDialog";
 import {
-	WATCHLIST_HEADER_BUTTON_CLASS,
-	WATCHLIST_HEADER_ICON_CLASS,
-	WatchlistHeader,
-} from "@/components/Watchlist/WatchlistHeader";
-import { WatchlistItemsTable } from "@/components/Watchlist/WatchlistItemsTable";
+	LIST_HEADER_BUTTON_CLASS,
+	LIST_HEADER_ICON_CLASS,
+	ListHeader,
+} from "@/components/List/ListHeader";
+import { ListItemsTable } from "@/components/List/ListItemsTable";
 import { useAuth } from "@/context/auth-context";
 import {
 	type Collaborator,
@@ -29,7 +29,7 @@ import {
 } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-export function WatchlistDetail() {
+export function ListDetail() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const { content } = useLanguageStore();
@@ -44,7 +44,7 @@ export function WatchlistDetail() {
 	const [isOwner, setIsOwner] = useState(false);
 	const [isCollaborator, setIsCollaborator] = useState(false);
 	const [isSaved, setIsSaved] = useState(false);
-	const editDialogRef = useRef<EditWatchlistDialogRef>(null);
+	const editDialogRef = useRef<EditListDialogRef>(null);
 
 	// Pagination states
 	const [currentPage, setCurrentPage] = useState(1);
@@ -57,7 +57,7 @@ export function WatchlistDetail() {
 
 	const fetchWatchlist = useCallback(async () => {
 		if (!id) {
-			navigate("/account/watchlists", { replace: true });
+			navigate("/account/lists", { replace: true });
 			return;
 		}
 
@@ -144,8 +144,8 @@ export function WatchlistDetail() {
 							Cette watchlist n'existe pas ou a été supprimée.
 						</p>
 					</div>
-					<Button onClick={() => navigate("/account/watchlists")}>
-						Retour à mes watchlists
+					<Button onClick={() => navigate("/account/lists")}>
+						Retour à mes listes
 					</Button>
 				</div>
 			</div>
@@ -163,7 +163,7 @@ export function WatchlistDetail() {
 	const handleShare = async () => {
 		if (!id) return;
 
-		const url = `${window.location.origin}/account/watchlist/${id}`;
+		const url = `${window.location.origin}/account/list/${id}`;
 
 		try {
 			await navigator.clipboard.writeText(url);
@@ -228,10 +228,10 @@ export function WatchlistDetail() {
 			const { watchlist: duplicatedWatchlist } =
 				await watchlistAPI.duplicateWatchlist(id);
 
-			toast.success("Watchlist dupliquée", { id: loadingToast });
+			toast.success("Liste dupliquée", { id: loadingToast });
 
-			// Redirect to the new duplicated watchlist
-			navigate(`/account/watchlist/${duplicatedWatchlist._id}`);
+			// Redirect to the new duplicated list
+			navigate(`/account/list/${duplicatedWatchlist._id}`);
 		} catch (error) {
 			console.error("❌ Failed to duplicate watchlist:", error);
 			toast.error("Impossible de dupliquer la watchlist", { id: loadingToast });
@@ -248,7 +248,7 @@ export function WatchlistDetail() {
 
 	return (
 		<div className="from-background via-background/95 to-background mb-16 min-h-screen bg-linear-to-b">
-			<WatchlistHeader
+			<ListHeader
 				watchlist={watchlist}
 				actionButton={
 					isOwner || isCollaborator ? (
@@ -265,11 +265,11 @@ export function WatchlistDetail() {
 					isOwner ? (
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild>
-								<button type="button" className={WATCHLIST_HEADER_BUTTON_CLASS}>
+								<button type="button" className={LIST_HEADER_BUTTON_CLASS}>
 									<img
 										src={pointIcon}
 										alt="Menu"
-										className={`${WATCHLIST_HEADER_ICON_CLASS} brightness-0 invert`}
+										className={`${LIST_HEADER_ICON_CLASS} brightness-0 invert`}
 									/>
 								</button>
 							</DropdownMenu.Trigger>
@@ -319,11 +319,11 @@ export function WatchlistDetail() {
 						>
 							<button
 								type="button"
-								className={WATCHLIST_HEADER_BUTTON_CLASS}
+								className={LIST_HEADER_BUTTON_CLASS}
 								title={content.watchlists.tooltips.inviteCollaborator}
 							>
 								<UserPlus
-									className={`${WATCHLIST_HEADER_ICON_CLASS} text-white`}
+									className={`${LIST_HEADER_ICON_CLASS} text-white`}
 								/>
 							</button>
 						</AddCollaboratorPopover>
@@ -331,7 +331,7 @@ export function WatchlistDetail() {
 						<button
 							type="button"
 							onClick={() => setLeaveDialogOpen(true)}
-							className={WATCHLIST_HEADER_BUTTON_CLASS}
+							className={LIST_HEADER_BUTTON_CLASS}
 							title={
 								content.watchlists.collaborators?.leaveTitle ||
 								"Quitter la watchlist"
@@ -340,7 +340,7 @@ export function WatchlistDetail() {
 							<img
 								src={cancelUserIcon}
 								alt="Leave"
-								className={`${WATCHLIST_HEADER_ICON_CLASS} brightness-0 invert`}
+								className={`${LIST_HEADER_ICON_CLASS} brightness-0 invert`}
 							/>
 						</button>
 					) : null
@@ -348,7 +348,7 @@ export function WatchlistDetail() {
 			/>
 
 			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-				<WatchlistItemsTable
+				<ListItemsTable
 					watchlist={watchlist}
 					onUpdate={fetchWatchlist}
 					isOwner={isOwner}
@@ -386,7 +386,7 @@ export function WatchlistDetail() {
 
 			{/* Edit Watchlist Modal - only for owners */}
 			{isOwner && (
-				<EditWatchlistDialog
+				<EditListDialog
 					ref={editDialogRef}
 					open={editModalOpen}
 					onOpenChange={setEditModalOpen}
@@ -398,18 +398,18 @@ export function WatchlistDetail() {
 
 			{/* Delete Watchlist Dialog - only for owners */}
 			{isOwner && (
-				<DeleteWatchlistDialog
+				<DeleteListDialog
 					open={deleteDialogOpen}
 					onOpenChange={setDeleteDialogOpen}
 					watchlist={watchlist}
-					onSuccess={() => navigate("/account/watchlists")}
+					onSuccess={() => navigate("/account/lists")}
 					offline={false}
 				/>
 			)}
 
 			{/* Leave Watchlist Dialog - only for collaborators */}
 			{isCollaborator && !isOwner && id !== undefined && (
-				<LeaveWatchlistDialog
+				<LeaveListDialog
 					open={leaveDialogOpen}
 					onOpenChange={setLeaveDialogOpen}
 					watchlistId={id}

@@ -8,7 +8,7 @@ interface SmartRedirectProps {
 
 /**
  * SmartRedirect: Redirects based on authentication status
- * Used for routes like /watchlists that should go to different places
+ * Used for routes like /lists that should go to different places
  * depending on whether the user is authenticated or not
  */
 export function SmartRedirect({
@@ -36,10 +36,10 @@ export function SmartRedirect({
 }
 
 /**
- * SmartWatchlistRedirect: Redirects watchlist detail pages based on auth status
- * Preserves the watchlist ID in the URL
+ * SmartListRedirect: Redirects list detail pages based on auth status
+ * Preserves the list ID in the URL
  */
-export function SmartWatchlistRedirect() {
+export function SmartListRedirect() {
 	const { id } = useParams<{ id: string }>();
 	const { isAuthenticated, isLoading } = useAuth();
 
@@ -54,7 +54,7 @@ export function SmartWatchlistRedirect() {
 	}
 
 	const redirectPath = isAuthenticated
-		? `/account/watchlist/${id}`
-		: `/local/watchlist/${id}`;
+		? `/account/list/${id}`
+		: `/local/list/${id}`;
 	return <Navigate to={redirectPath} replace />;
 }

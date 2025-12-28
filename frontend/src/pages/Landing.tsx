@@ -36,10 +36,10 @@ export function Landing() {
 	const { isAuthenticated } = useAuth();
 	const [trending, setTrending] = useState<TrendingItem[]>([]);
 
-	// Determine the watchlist URL based on authentication status
+	// Determine the lists URL based on authentication status
 	const watchlistsUrl = isAuthenticated
-		? "/account/watchlists"
-		: "/local/watchlists";
+		? "/account/lists"
+		: "/local/lists";
 
 	useEffect(() => {
 		const fetchData = async () => {

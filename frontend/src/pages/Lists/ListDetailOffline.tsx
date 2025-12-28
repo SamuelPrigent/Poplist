@@ -3,19 +3,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
-import { AddItemModal } from "@/components/Watchlist/modal/AddItemModal";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
+import { AddItemModal } from "@/components/List/modal/AddItemModal";
+import { DeleteListDialog } from "@/components/List/modal/DeleteListDialog";
 import {
-	EditWatchlistDialogOffline,
-	type EditWatchlistDialogOfflineRef,
-} from "@/components/Watchlist/modal/EditWatchlistDialogOffline";
-import { WatchlistItemsTableOffline } from "@/components/Watchlist/WatchlistItemsTableOffline";
-import { useWatchlistThumbnail } from "@/hooks/useWatchlistThumbnail";
+	EditListDialogOffline,
+	type EditListDialogOfflineRef,
+} from "@/components/List/modal/EditListDialogOffline";
+import { ListItemsTableOffline } from "@/components/List/ListItemsTableOffline";
+import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Watchlist } from "@/lib/api-client";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
 
-export function WatchlistDetailOffline() {
+export function ListDetailOffline() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const { content } = useLanguageStore();
@@ -25,7 +25,7 @@ export function WatchlistDetailOffline() {
 	const [addModalOpen, setAddModalOpen] = useState(false);
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const editDialogRef = useRef<EditWatchlistDialogOfflineRef>(null);
+	const editDialogRef = useRef<EditListDialogOfflineRef>(null);
 
 	// Pagination states
 	const [currentPage, setCurrentPage] = useState(1);
@@ -72,7 +72,7 @@ export function WatchlistDetailOffline() {
 
 	// Get cover image (custom or auto-generated thumbnail)
 	// Always call hooks at the top level, before any early returns
-	const generatedThumbnail = useWatchlistThumbnail(watchlist);
+	const generatedThumbnail = useListThumbnail(watchlist);
 	const coverImage = watchlist?.imageUrl || generatedThumbnail;
 	const itemCount = watchlist?.items.length || 0;
 
@@ -115,8 +115,8 @@ export function WatchlistDetailOffline() {
 							Cette watchlist n'existe pas ou a été supprimée.
 						</p>
 					</div>
-					<Button onClick={() => navigate("/local/watchlists")}>
-						Retour à mes watchlists
+					<Button onClick={() => navigate("/local/lists")}>
+						Retour à mes listes
 					</Button>
 				</div>
 			</div>
@@ -230,7 +230,7 @@ export function WatchlistDetailOffline() {
 			</div>
 
 			<div className="container mx-auto mt-4 px-4 py-8">
-				<WatchlistItemsTableOffline
+				<ListItemsTableOffline
 					watchlist={watchlist}
 					currentPage={currentPage}
 					itemsPerPage={itemsPerPage}
@@ -262,7 +262,7 @@ export function WatchlistDetailOffline() {
 			/>
 
 			{/* Edit Watchlist Modal */}
-			<EditWatchlistDialogOffline
+			<EditListDialogOffline
 				ref={editDialogRef}
 				open={editModalOpen}
 				onOpenChange={setEditModalOpen}
@@ -271,11 +271,11 @@ export function WatchlistDetailOffline() {
 			/>
 
 			{/* Delete Watchlist Dialog */}
-			<DeleteWatchlistDialog
+			<DeleteListDialog
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
 				watchlist={watchlist}
-				onSuccess={() => navigate("/local/watchlists")}
+				onSuccess={() => navigate("/local/lists")}
 				offline={true}
 			/>
 		</div>

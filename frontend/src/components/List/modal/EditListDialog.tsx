@@ -9,7 +9,7 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlatformSelector } from "@/components/Watchlist/PlatformSelector";
+import { PlatformSelector } from "@/components/List/PlatformSelector";
 import {
 	type Watchlist,
 	type WatchlistCategories,
@@ -28,7 +28,7 @@ import {
 	type PlatformCategory,
 } from "@/types/categories";
 
-interface EditWatchlistDialogProps {
+interface EditListDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSuccess: () => void;
@@ -36,13 +36,13 @@ interface EditWatchlistDialogProps {
 	offline?: boolean;
 }
 
-export interface EditWatchlistDialogRef {
+export interface EditListDialogRef {
 	openFilePicker: () => void;
 }
 
-export const EditWatchlistDialog = forwardRef<
-	EditWatchlistDialogRef,
-	EditWatchlistDialogProps
+export const EditListDialog = forwardRef<
+	EditListDialogRef,
+	EditListDialogProps
 >(({ open, onOpenChange, onSuccess, watchlist, offline = false }, ref) => {
 	const { content } = useLanguageStore();
 	const [name, setName] = useState("");
@@ -475,4 +475,4 @@ export const EditWatchlistDialog = forwardRef<
 	);
 });
 
-EditWatchlistDialog.displayName = "EditWatchlistDialog";
+EditListDialog.displayName = "EditListDialog";

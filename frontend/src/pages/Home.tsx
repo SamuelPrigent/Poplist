@@ -3,12 +3,12 @@ import { Film, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { MoviePoster } from "@/components/Home/MoviePoster";
-import { ItemDetailsModal } from "@/components/Watchlist/modal/ItemDetailsModal";
-import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
-// import { WatchlistCardImg } from "@/components/Watchlist/WatchlistCardImg";
-import { WatchlistCardGenre } from "@/components/Watchlist/WatchlistCardGenre";
-// import { WatchlistCardGenre2 } from "@/components/Watchlist/WatchlistCardGenre2";
-import { WatchlistCardSmall } from "@/components/Watchlist/WatchlistCardSmall";
+import { ItemDetailsModal } from "@/components/List/modal/ItemDetailsModal";
+import { ListCard } from "@/components/List/ListCard";
+// import { ListCardImg } from "@/components/List/ListCardImg";
+import { ListCardGenre } from "@/components/List/ListCardGenre";
+// import { ListCardGenre2 } from "@/components/List/ListCardGenre2";
+import { ListCardSmall } from "@/components/List/ListCardSmall";
 import { useAuth } from "@/context/auth-context";
 import {
 	tmdbAPI,
@@ -360,7 +360,7 @@ export function Home() {
 							</p>
 						</div>
 						<Link
-							to={user ? "/account/watchlists" : "/local/watchlists"}
+							to={user ? "/account/lists" : "/local/lists"}
 							className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
 						>
 							{content.home.library.seeAll}
@@ -369,13 +369,13 @@ export function Home() {
 
 					<div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
 						{userWatchlists.slice(0, 4).map((watchlist) => (
-							<WatchlistCardSmall
+							<ListCardSmall
 								key={watchlist._id}
 								watchlist={watchlist}
 								onClick={() => {
 									window.location.href = user
-										? `/account/watchlist/${watchlist._id}`
-										: `/local/watchlist/${watchlist._id}`;
+										? `/account/list/${watchlist._id}`
+										: `/local/list/${watchlist._id}`;
 								}}
 							/>
 						))}
@@ -435,7 +435,7 @@ export function Home() {
 						};
 
 						return (
-							<WatchlistCardGenre
+							<ListCardGenre
 								key={category.id}
 								watchlist={mockWatchlist}
 								content={content}
@@ -503,7 +503,7 @@ export function Home() {
 						};
 
 						return (
-							<WatchlistCardImg
+							<ListCardImg
 								key={platformId}
 								watchlist={mockWatchlist}
 								content={content}
@@ -561,11 +561,11 @@ export function Home() {
 							const showCollaborativeBadge = isCollaborator;
 
 							return (
-								<WatchlistCard
+								<ListCard
 									key={watchlist._id}
 									watchlist={watchlist}
 									content={content}
-									href={`/account/watchlist/${watchlist._id}`}
+									href={`/account/list/${watchlist._id}`}
 									showMenu={false}
 									showOwner={true}
 									showSavedBadge={showSavedBadge}

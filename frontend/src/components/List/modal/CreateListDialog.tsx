@@ -3,7 +3,7 @@ import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlatformSelector } from "@/components/Watchlist/PlatformSelector";
+import { PlatformSelector } from "@/components/List/PlatformSelector";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import {
@@ -13,19 +13,19 @@ import {
 	type PlatformCategory,
 } from "@/types/categories";
 
-interface CreateWatchlistDialogProps {
+interface CreateListDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSuccess: (watchlist?: Watchlist) => void;
 	offline?: boolean;
 }
 
-export function CreateWatchlistDialog({
+export function CreateListDialog({
 	open,
 	onOpenChange,
 	onSuccess,
 	offline = false,
-}: CreateWatchlistDialogProps) {
+}: CreateListDialogProps) {
 	const { content } = useLanguageStore();
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");

@@ -29,8 +29,8 @@ export function Header() {
 		await logout();
 
 		// Smart redirect based on current route
-		if (location.pathname === "/account/watchlists") {
-			navigate("/local/watchlists");
+		if (location.pathname === "/account/lists") {
+			navigate("/local/lists");
 		} else if (location.pathname.startsWith("/account/")) {
 			navigate("/home");
 		}
@@ -64,7 +64,7 @@ export function Header() {
 
 					<div className="flex items-center gap-4">
 						<Link
-							to="/watchlists"
+							to="/lists"
 							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
 						>
 							<Bookmark

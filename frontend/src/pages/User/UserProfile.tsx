@@ -9,7 +9,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
+import { ListCard } from "@/components/List/ListCard";
 import type { Watchlist } from "@/lib/api-client";
 import { userAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
@@ -130,11 +130,11 @@ export function UserProfile() {
 
 				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 					{watchlists.map((watchlist) => (
-						<WatchlistCard
+						<ListCard
 							key={watchlist._id}
 							watchlist={watchlist}
 							content={content}
-							href={`/account/watchlist/${watchlist._id}`}
+							href={`/account/list/${watchlist._id}`}
 							showVisibility={false}
 							showSavedBadge={false}
 							showCollaborativeBadge={false}

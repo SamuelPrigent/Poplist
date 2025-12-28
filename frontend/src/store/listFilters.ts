@@ -10,7 +10,7 @@ interface WatchlistFiltersState {
 	toggleSaved: () => void;
 }
 
-export const useWatchlistFiltersStore = create<WatchlistFiltersState>()(
+export const useListFiltersStore = create<WatchlistFiltersState>()(
 	persist(
 		(set) => ({
 			showOwned: true,

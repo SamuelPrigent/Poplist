@@ -26,14 +26,14 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { CreateWatchlistDialog } from "@/components/Watchlist/modal/CreateWatchlistDialog";
-import { DeleteWatchlistDialog } from "@/components/Watchlist/modal/DeleteWatchlistDialog";
-import { EditWatchlistDialog } from "@/components/Watchlist/modal/EditWatchlistDialog";
-import { WatchlistCard } from "@/components/Watchlist/WatchlistCard";
+import { CreateListDialog } from "@/components/List/modal/CreateListDialog";
+import { DeleteListDialog } from "@/components/List/modal/DeleteListDialog";
+import { EditListDialog } from "@/components/List/modal/EditListDialog";
+import { ListCard } from "@/components/List/ListCard";
 import type { Watchlist } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
-import { useWatchlistFiltersStore } from "@/store/watchlistFilters";
+import { useListFiltersStore } from "@/store/listFilters";
 import { Section } from "@/components/layout/Section";
 
 interface SortableWatchlistCardProps {
@@ -74,10 +74,10 @@ function SortableWatchlistCard({
 	};
 
 	return (
-		<WatchlistCard
+		<ListCard
 			watchlist={watchlist}
 			content={content}
-			href={`/account/watchlist/${watchlist._id}`}
+			href={`/account/list/${watchlist._id}`}
 			onEdit={isOwner ? onEdit : undefined}
 			onDelete={isOwner ? onDelete : undefined}
 			showMenu={isOwner}
@@ -96,10 +96,10 @@ function SortableWatchlistCard({
 	);
 }
 
-export function Watchlists() {
+export function Lists() {
 	const { content } = useLanguageStore();
 	const { showOwned, showSaved, toggleOwned, toggleSaved } =
-		useWatchlistFiltersStore();
+		useListFiltersStore();
 	const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -276,7 +276,7 @@ export function Watchlists() {
 				</Button>
 			</div>
 
-			<CreateWatchlistDialog
+			<CreateListDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
 				onSuccess={handleCreateSuccess}
@@ -284,13 +284,13 @@ export function Watchlists() {
 
 			{selectedWatchlist && (
 				<>
-					<EditWatchlistDialog
+					<EditListDialog
 						open={editDialogOpen}
 						onOpenChange={setEditDialogOpen}
 						onSuccess={fetchWatchlists}
 						watchlist={selectedWatchlist}
 					/>
-					<DeleteWatchlistDialog
+					<DeleteListDialog
 						open={deleteDialogOpen}
 						onOpenChange={setDeleteDialogOpen}
 						onSuccess={fetchWatchlists}
