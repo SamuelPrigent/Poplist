@@ -4,7 +4,11 @@ import { ArrowLeft, Calendar, Check, Eye, Search, Star, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { FullMediaDetails, Watchlist, WatchlistItem } from "@/lib/api-client";
+import type {
+	FullMediaDetails,
+	Watchlist,
+	WatchlistItem,
+} from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
 import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
@@ -51,7 +55,9 @@ export function AddItemModal({
 	const [loadingDetails, setLoadingDetails] = useState(false);
 
 	// Fresh watchlist items - fetched when modal opens to avoid stale data
-	const [freshWatchlistItems, setFreshWatchlistItems] = useState<WatchlistItem[]>(watchlist.items);
+	const [freshWatchlistItems, setFreshWatchlistItems] = useState<
+		WatchlistItem[]
+	>(watchlist.items);
 
 	// Get language code from store
 	const languageCode = language === "fr" ? "fr-FR" : "en-US";
@@ -66,13 +72,17 @@ export function AddItemModal({
 				if (offline) {
 					// Offline mode: read from localStorage
 					const localWatchlists = getLocalWatchlists();
-					const freshWatchlist = localWatchlists.find((w) => w._id === watchlist._id);
+					const freshWatchlist = localWatchlists.find(
+						(w) => w._id === watchlist._id
+					);
 					if (freshWatchlist) {
 						setFreshWatchlistItems(freshWatchlist.items);
 					}
 				} else {
 					// Online mode: fetch from API
-					const { watchlist: freshWatchlist } = await watchlistAPI.getById(watchlist._id);
+					const { watchlist: freshWatchlist } = await watchlistAPI.getById(
+						watchlist._id
+					);
 					setFreshWatchlistItems(freshWatchlist.items);
 				}
 			} catch (error) {
@@ -208,7 +218,11 @@ export function AddItemModal({
 				if (watchlistIndex === -1) return;
 
 				// Fetch providers and details from TMDB via backend
-				console.log("[AddItemModal] Fetching providers and details for:", item.id, item.media_type);
+				console.log(
+					"[AddItemModal] Fetching providers and details for:",
+					item.id,
+					item.media_type
+				);
 
 				const [platformList, mediaDetails] = await Promise.all([
 					watchlistAPI.fetchTMDBProviders(
@@ -224,7 +238,10 @@ export function AddItemModal({
 				]);
 
 				console.log("[AddItemModal] Received platformList:", platformList);
-				console.log("[AddItemModal] Received runtime:", mediaDetails.details.runtime);
+				console.log(
+					"[AddItemModal] Received runtime:",
+					mediaDetails.details.runtime
+				);
 
 				// Add item to watchlist
 				const newItem = {
@@ -379,7 +396,7 @@ export function AddItemModal({
 
 						{/* Inline Details View */}
 						{selectedItem && (
-							<div className="flex-1 overflow-y-auto px-6 pt-6 pb-6">
+							<div className="flex-1 overflow-y-auto px-6 pt-6 pb-10">
 								{loadingDetails ? (
 									<div className="flex items-center justify-center py-12">
 										<div className="text-muted-foreground text-sm">
@@ -404,7 +421,10 @@ export function AddItemModal({
 												<div className="h-48 w-32 overflow-hidden rounded-lg shadow-lg">
 													{itemDetails.posterUrl ? (
 														<img
-															src={itemDetails.posterUrl.replace("w500", "w300")}
+															src={itemDetails.posterUrl.replace(
+																"w500",
+																"w300"
+															)}
 															alt={itemDetails.title}
 															className="h-full w-full object-cover"
 														/>
@@ -420,7 +440,9 @@ export function AddItemModal({
 											<div className="flex-1 space-y-3">
 												{/* Title row with button on the right */}
 												<div className="flex items-start justify-between gap-4">
-													<h2 className="text-2xl font-bold">{itemDetails.title}</h2>
+													<h2 className="text-2xl font-bold">
+														{itemDetails.title}
+													</h2>
 													{/* Add/Remove button - positioned next to title */}
 													{isItemInWatchlist(selectedItem.id) ? (
 														<Button
@@ -433,8 +455,12 @@ export function AddItemModal({
 																<X className="absolute inset-0 h-4 w-4 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100" />
 															</span>
 															<span className="relative">
-																<span className="transition-opacity duration-200 group-hover/btn:opacity-0">{content.watchlists.added}</span>
-																<span className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100">Retirer</span>
+																<span className="transition-opacity duration-200 group-hover/btn:opacity-0">
+																	{content.watchlists.added}
+																</span>
+																<span className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100">
+																	Retirer
+																</span>
 															</span>
 														</Button>
 													) : (
@@ -458,7 +484,9 @@ export function AddItemModal({
 														<div className="flex items-center gap-1">
 															<Calendar className="h-4 w-4" />
 															<span>
-																{new Date(itemDetails.releaseDate).getFullYear()}
+																{new Date(
+																	itemDetails.releaseDate
+																).getFullYear()}
 															</span>
 														</div>
 													)}
@@ -530,7 +558,7 @@ export function AddItemModal({
 						{!selectedItem && (
 							<div
 								ref={scrollContainerRef}
-								className="flex-1 overflow-y-auto px-6 pb-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500"
+								className="flex-1 overflow-y-auto px-6 pb-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb:hover]:bg-gray-500 [&::-webkit-scrollbar-track]:bg-transparent"
 								style={{
 									maxHeight: "calc(80vh - 200px)",
 									scrollbarColor: "#4b5563 transparent",
@@ -585,7 +613,7 @@ export function AddItemModal({
 														transform: `translateY(${virtualItem.start}px)`,
 													}}
 												>
-													<div className="flex items-center gap-4 rounded-md p-3 transition-colors hover:bg-muted/50">
+													<div className="hover:bg-muted/50 flex items-center gap-4 rounded-md p-3 transition-colors">
 														{/* Poster + Title clickable together */}
 														<button
 															type="button"
@@ -654,8 +682,12 @@ export function AddItemModal({
 																		<X className="absolute inset-0 h-4 w-4 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100" />
 																	</span>
 																	<span className="relative">
-																		<span className="transition-opacity duration-200 group-hover/btn:opacity-0">{content.watchlists.added}</span>
-																		<span className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100">Retirer</span>
+																		<span className="transition-opacity duration-200 group-hover/btn:opacity-0">
+																			{content.watchlists.added}
+																		</span>
+																		<span className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100">
+																			Retirer
+																		</span>
 																	</span>
 																</Button>
 															) : (

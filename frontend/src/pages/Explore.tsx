@@ -728,11 +728,18 @@ export function Explore() {
 					<>
 						<div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 							{media.map((item, index) => (
-								<button
-									type="button"
+								<div
+									role="button"
+									tabIndex={0}
 									key={`${item.id}-${index}-${page}`}
 									className="group relative cursor-pointer overflow-hidden rounded-lg text-left"
 									onClick={() => handleItemClick(item)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											handleItemClick(item);
+										}
+									}}
 								>
 									{/* Poster with zoom */}
 									<div className="bg-muted aspect-2/3 overflow-hidden rounded-lg">
@@ -831,7 +838,7 @@ export function Explore() {
 											</DropdownMenu.Root>
 										</div>
 									)}
-								</button>
+								</div>
 							))}
 						</div>
 

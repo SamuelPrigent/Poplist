@@ -333,10 +333,10 @@ export async function getWatchProviders(
 				: [{ name: "Inconnu", logoPath: "" }];
 
 		// Debug log
-		console.log(
-			`[TMDB] Watch providers for ${type} ${tmdbId} in ${region}:`,
-			result
-		);
+		// console.log(
+		// 	`[TMDB] Watch providers for ${type} ${tmdbId} in ${region}:`,
+		// 	result
+		// );
 
 		cache.set(cacheKey, result);
 		return result;
