@@ -1,6 +1,6 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Calendar, Clock, Star, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Calendar, ChevronLeft, ChevronRight, Clock, Star, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { type FullMediaDetails, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { WatchProviderList } from "../WatchProviderBubble";
@@ -11,6 +11,8 @@ interface ItemDetailsModalProps {
 	tmdbId: string;
 	type: "movie" | "tv";
 	platforms?: Array<{ name: string; logoPath: string }>;
+	onPrevious?: () => void;
+	onNext?: () => void;
 }
 
 export function ItemDetailsModal({
@@ -19,6 +21,8 @@ export function ItemDetailsModal({
 	tmdbId,
 	type,
 	platforms = [],
+	onPrevious,
+	onNext,
 }: ItemDetailsModalProps) {
 	const { language, content } = useLanguageStore(); // use it for (acteur principaux, etc)
 	const [details, setDetails] = useState<FullMediaDetails | null>(null);
@@ -94,6 +98,27 @@ export function ItemDetailsModal({
 		return () => window.removeEventListener("resize", checkTruncation);
 	}, [details?.overview, isOverviewExpanded]);
 
+	// Keyboard navigation handler
+	const handleKeyDown = useCallback(
+		(e: KeyboardEvent) => {
+			if (!open) return;
+			if (e.key === "ArrowLeft" && onPrevious) {
+				e.preventDefault();
+				onPrevious();
+			} else if (e.key === "ArrowRight" && onNext) {
+				e.preventDefault();
+				onNext();
+			}
+		},
+		[open, onPrevious, onNext]
+	);
+
+	useEffect(() => {
+		if (!open || (!onPrevious && !onNext)) return;
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [open, onPrevious, onNext, handleKeyDown]);
+
 	const formatRuntime = (minutes: number | undefined) => {
 		if (!minutes) return null;
 		if (minutes < 60) return `${minutes}min`;
@@ -150,7 +175,68 @@ export function ItemDetailsModal({
 		<DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
 			<DialogPrimitive.Portal>
 				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
-				<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 max-h-[90vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none">
+
+				{/* Navigation arrows - positioned outside modal with margin */}
+				{onPrevious && (
+					<div
+						role="button"
+						tabIndex={0}
+						data-nav-button
+						onClick={(e) => {
+							e.stopPropagation();
+							onPrevious();
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								onPrevious();
+							}
+						}}
+						className="border-border bg-background pointer-events-auto fixed top-1/2 left-[calc(50%-526px)] z-[100] flex aspect-square w-14 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all hover:brightness-105"
+						aria-label="Previous"
+					>
+						<ChevronLeft className="h-6 w-6" />
+					</div>
+				)}
+				{onNext && (
+					<div
+						role="button"
+						tabIndex={0}
+						data-nav-button
+						onClick={(e) => {
+							e.stopPropagation();
+							onNext();
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								onNext();
+							}
+						}}
+						className="border-border bg-background pointer-events-auto fixed top-1/2 right-[calc(50%-526px)] z-[100] flex aspect-square w-14 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all hover:brightness-105"
+						aria-label="Next"
+					>
+						<ChevronRight className="h-6 w-6" />
+					</div>
+				)}
+
+				<DialogPrimitive.Content
+					onPointerDownOutside={(e) => {
+						// Prevent closing when clicking on navigation buttons
+						const target = e.target as HTMLElement;
+						if (target.closest("[data-nav-button]")) {
+							e.preventDefault();
+						}
+					}}
+					onInteractOutside={(e) => {
+						// Prevent closing when interacting with navigation buttons
+						const target = e.target as HTMLElement;
+						if (target.closest("[data-nav-button]")) {
+							e.preventDefault();
+						}
+					}}
+					className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 max-h-[90vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none"
+				>
 					{/* Hidden Title and Description for accessibility - always rendered */}
 					<DialogPrimitive.Title className="sr-only">
 						{details?.title || content.watchlists.itemDetails.mediaDetails}
