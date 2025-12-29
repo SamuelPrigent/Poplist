@@ -130,6 +130,7 @@ export function Explore() {
 		tmdbId: string;
 		type: "movie" | "tv";
 	} | null>(null);
+	const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
 	// Year picker state
 	const [yearFrom, setYearFrom] = useState<string>(yearFromParam);
@@ -454,13 +455,28 @@ export function Explore() {
 		}
 	};
 
-	const handleItemClick = (item: MediaItem) => {
+	const handleItemClick = (item: MediaItem, index: number) => {
 		const itemType = item.title ? "movie" : "tv";
 		setSelectedItem({
 			tmdbId: item.id.toString(),
 			type: itemType,
 		});
+		setSelectedIndex(index);
 		setDetailsModalOpen(true);
+	};
+
+	const handleNavigatePrevious = () => {
+		if (selectedIndex > 0) {
+			const prevItem = media[selectedIndex - 1];
+			handleItemClick(prevItem, selectedIndex - 1);
+		}
+	};
+
+	const handleNavigateNext = () => {
+		if (selectedIndex < media.length - 1) {
+			const nextItem = media[selectedIndex + 1];
+			handleItemClick(nextItem, selectedIndex + 1);
+		}
 	};
 
 	// Get available genres based on selected media types
@@ -733,11 +749,11 @@ export function Explore() {
 									tabIndex={0}
 									key={`${item.id}-${index}-${page}`}
 									className="group relative cursor-pointer overflow-hidden rounded-lg text-left"
-									onClick={() => handleItemClick(item)}
+									onClick={() => handleItemClick(item, index)}
 									onKeyDown={(e) => {
 										if (e.key === "Enter" || e.key === " ") {
 											e.preventDefault();
-											handleItemClick(item);
+											handleItemClick(item, index);
 										}
 									}}
 								>
@@ -884,10 +900,13 @@ export function Explore() {
 						setDetailsModalOpen(open);
 						if (!open) {
 							setSelectedItem(null);
+							setSelectedIndex(-1);
 						}
 					}}
 					tmdbId={selectedItem.tmdbId}
 					type={selectedItem.type}
+					onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
+					onNext={selectedIndex < media.length - 1 ? handleNavigateNext : undefined}
 				/>
 			)}
 		</div>
