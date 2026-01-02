@@ -590,6 +590,7 @@ export const pt: Content = {
 	userProfile: {
 		profile: "Perfil",
 		publicWatchlists: "Listas públicas",
+		publicWatchlist: "Lista pública",
 		watchlists: "listas",
 		watchlist: "lista",
 		noPublicWatchlists: "Nenhuma lista publicada.",

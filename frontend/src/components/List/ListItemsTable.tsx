@@ -389,6 +389,7 @@ export function ListItemsTable({
 	const [loadingItem, setLoadingItem] = useState<string | null>(null);
 	const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
+	const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 	const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
 	const [addingTo, setAddingTo] = useState<string | null>(null);
 	const [itemToDelete, setItemToDelete] = useState<WatchlistItem | null>(null);
@@ -651,12 +652,14 @@ export function ListItemsTable({
 				},
 				cell: (info) => {
 					const item = info.row.original;
+					const rowIndex = info.row.index;
 					return (
 						<button
 							type="button"
 							onClick={(e) => {
 								e.stopPropagation();
 								setSelectedItem(item);
+								setSelectedIndex(rowIndex);
 								setDetailsModalOpen(true);
 							}}
 							className="group/cell flex cursor-pointer items-center gap-3 text-left"
@@ -844,6 +847,23 @@ export function ListItemsTable({
 		return itemsToDisplay;
 	}, [items, isCustomOrder, currentPage, itemsPerPage]);
 
+	// Navigation handlers for details modal
+	const handleNavigatePrevious = useCallback(() => {
+		if (selectedIndex > 0) {
+			const prevItem = displayItems[selectedIndex - 1];
+			setSelectedItem(prevItem);
+			setSelectedIndex(selectedIndex - 1);
+		}
+	}, [selectedIndex, displayItems]);
+
+	const handleNavigateNext = useCallback(() => {
+		if (selectedIndex < displayItems.length - 1) {
+			const nextItem = displayItems[selectedIndex + 1];
+			setSelectedItem(nextItem);
+			setSelectedIndex(selectedIndex + 1);
+		}
+	}, [selectedIndex, displayItems]);
+
 	const table = useReactTable({
 		data: displayItems,
 		columns,
@@ -941,10 +961,21 @@ export function ListItemsTable({
 			{selectedItem && (
 				<ItemDetailsModal
 					open={detailsModalOpen}
-					onOpenChange={setDetailsModalOpen}
+					onOpenChange={(open) => {
+						setDetailsModalOpen(open);
+						if (!open) {
+							setSelectedIndex(-1);
+						}
+					}}
 					tmdbId={selectedItem.tmdbId}
 					type={selectedItem.type}
 					platforms={selectedItem.platformList}
+					onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
+					onNext={
+						selectedIndex < displayItems.length - 1
+							? handleNavigateNext
+							: undefined
+					}
 				/>
 			)}
 

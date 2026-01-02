@@ -123,12 +123,12 @@ export function UserProfile() {
 				hasWatchlists={true}
 			/>
 
-			<div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8 pt-16">
+			<div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8 pt-10 pb-16">
 				<h2 className="mb-7 text-2xl font-semibold text-white">
 					{content.userProfile.publicWatchlists}
 				</h2>
 
-				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+				<div className="grid grid-cols-1 gap-6 sm:grid-cols-3 xl:grid-cols-5">
 					{watchlists.map((watchlist) => (
 						<ListCard
 							key={watchlist._id}

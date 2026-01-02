@@ -7,7 +7,7 @@ import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { useLanguageStore } from "@/store/language";
 import play from "../../assets/play.png";
 
-export function Header() {
+export function Navbar() {
 	const { isAuthenticated, user, logout } = useAuth();
 	const { content } = useLanguageStore();
 	const navigate = useNavigate();

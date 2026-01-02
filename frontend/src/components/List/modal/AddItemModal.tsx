@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Check, Eye, Search, Star, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NavigationArrows } from "@/components/ui/NavigationArrows";
 import type {
 	FullMediaDetails,
 	Watchlist,
@@ -51,6 +52,7 @@ export function AddItemModal({
 
 	// State for inline details view
 	const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
+	const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 	const [itemDetails, setItemDetails] = useState<FullMediaDetails | null>(null);
 	const [loadingDetails, setLoadingDetails] = useState(false);
 
@@ -109,6 +111,7 @@ export function AddItemModal({
 				setSearchQuery("");
 				setSearchResults([]);
 				setSelectedItem(null);
+				setSelectedIndex(-1);
 				setItemDetails(null);
 			}, 300);
 			return () => clearTimeout(timer);
@@ -175,8 +178,9 @@ export function AddItemModal({
 	};
 
 	// Handle viewing item details inline
-	const handleViewDetails = async (item: SearchResult) => {
+	const handleViewDetails = async (item: SearchResult, index: number) => {
 		setSelectedItem(item);
+		setSelectedIndex(index);
 		setLoadingDetails(true);
 		setItemDetails(null);
 
@@ -197,7 +201,23 @@ export function AddItemModal({
 	// Handle going back from details view
 	const handleBackFromDetails = () => {
 		setSelectedItem(null);
+		setSelectedIndex(-1);
 		setItemDetails(null);
+	};
+
+	// Navigation handlers for details view
+	const handleNavigatePrevious = () => {
+		if (selectedIndex > 0) {
+			const prevItem = searchResults[selectedIndex - 1];
+			handleViewDetails(prevItem, selectedIndex - 1);
+		}
+	};
+
+	const handleNavigateNext = () => {
+		if (selectedIndex < searchResults.length - 1) {
+			const nextItem = searchResults[selectedIndex + 1];
+			handleViewDetails(nextItem, selectedIndex + 1);
+		}
 	};
 
 	const handleAddItem = async (item: SearchResult) => {
@@ -359,6 +379,20 @@ export function AddItemModal({
 		<DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
 			<DialogPrimitive.Portal>
 				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
+
+				{/* Navigation arrows - only shown when viewing details */}
+				{selectedItem && (
+					<NavigationArrows
+						onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
+						onNext={
+							selectedIndex < searchResults.length - 1
+								? handleNavigateNext
+								: undefined
+						}
+						enableKeyboard={!!selectedItem}
+					/>
+				)}
+
 				<DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-[1000px] translate-x-[-50%] translate-y-[-50%] rounded-lg border shadow-lg duration-200">
 					<div className="flex max-h-[80vh] flex-col">
 						{/* Header */}
@@ -617,7 +651,7 @@ export function AddItemModal({
 														{/* Poster + Title clickable together */}
 														<button
 															type="button"
-															onClick={() => handleViewDetails(item)}
+															onClick={() => handleViewDetails(item, virtualItem.index)}
 															className="group/cell flex flex-1 cursor-pointer items-center gap-4 text-left"
 														>
 															{/* Poster with eye overlay */}

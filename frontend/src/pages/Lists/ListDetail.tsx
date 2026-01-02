@@ -322,9 +322,7 @@ export function ListDetail() {
 								className={LIST_HEADER_BUTTON_CLASS}
 								title={content.watchlists.tooltips.inviteCollaborator}
 							>
-								<UserPlus
-									className={`${LIST_HEADER_ICON_CLASS} text-white`}
-								/>
+								<UserPlus className={`${LIST_HEADER_ICON_CLASS} text-white`} />
 							</button>
 						</AddCollaboratorPopover>
 					) : isCollaborator ? (

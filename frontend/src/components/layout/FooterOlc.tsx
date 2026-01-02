@@ -1,4 +1,4 @@
-import { ChevronDown, Coffee } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { authAPI } from "@/lib/api-client";
@@ -59,19 +59,8 @@ export function Footer() {
 	return (
 		<footer className="border-border bg-background border-t py-6">
 			<div className="container mx-auto flex items-center justify-between px-4">
-				<div className="flex items-center gap-4">
-					<div className="text-muted-foreground text-sm">
-						{content.footer.appName}
-					</div>
-					<a
-						href="https://buymeacoffee.com/samuelprigl"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors"
-					>
-						<Coffee className="h-4 w-4" />
-						<span className="hidden sm:inline">Buy me a coffee</span>
-					</a>
+				<div className="text-muted-foreground text-sm">
+					{content.footer.appName}
 				</div>
 
 				<div className="relative" ref={dropdownRef}>

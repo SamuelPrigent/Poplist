@@ -1,7 +1,8 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Calendar, ChevronLeft, ChevronRight, Clock, Star, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Calendar, Clock, Star, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { type FullMediaDetails, watchlistAPI } from "@/lib/api-client";
+import { NavigationArrows } from "@/components/ui/NavigationArrows";
 import { useLanguageStore } from "@/store/language";
 import { WatchProviderList } from "../WatchProviderBubble";
 
@@ -98,27 +99,6 @@ export function ItemDetailsModal({
 		return () => window.removeEventListener("resize", checkTruncation);
 	}, [details?.overview, isOverviewExpanded]);
 
-	// Keyboard navigation handler
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			if (!open) return;
-			if (e.key === "ArrowLeft" && onPrevious) {
-				e.preventDefault();
-				onPrevious();
-			} else if (e.key === "ArrowRight" && onNext) {
-				e.preventDefault();
-				onNext();
-			}
-		},
-		[open, onPrevious, onNext]
-	);
-
-	useEffect(() => {
-		if (!open || (!onPrevious && !onNext)) return;
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [open, onPrevious, onNext, handleKeyDown]);
-
 	const formatRuntime = (minutes: number | undefined) => {
 		if (!minutes) return null;
 		if (minutes < 60) return `${minutes}min`;
@@ -176,49 +156,12 @@ export function ItemDetailsModal({
 			<DialogPrimitive.Portal>
 				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
 
-				{/* Navigation arrows - positioned outside modal with margin */}
-				{onPrevious && (
-					<div
-						role="button"
-						tabIndex={0}
-						data-nav-button
-						onClick={(e) => {
-							e.stopPropagation();
-							onPrevious();
-						}}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								e.preventDefault();
-								onPrevious();
-							}
-						}}
-						className="border-border bg-background pointer-events-auto fixed top-1/2 left-[calc(50%-526px)] z-[100] flex aspect-square w-14 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all hover:brightness-105"
-						aria-label="Previous"
-					>
-						<ChevronLeft className="h-6 w-6" />
-					</div>
-				)}
-				{onNext && (
-					<div
-						role="button"
-						tabIndex={0}
-						data-nav-button
-						onClick={(e) => {
-							e.stopPropagation();
-							onNext();
-						}}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								e.preventDefault();
-								onNext();
-							}
-						}}
-						className="border-border bg-background pointer-events-auto fixed top-1/2 right-[calc(50%-526px)] z-[100] flex aspect-square w-14 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all hover:brightness-105"
-						aria-label="Next"
-					>
-						<ChevronRight className="h-6 w-6" />
-					</div>
-				)}
+				{/* Navigation arrows */}
+				<NavigationArrows
+					onPrevious={onPrevious}
+					onNext={onNext}
+					enableKeyboard={open}
+				/>
 
 				<DialogPrimitive.Content
 					onPointerDownOutside={(e) => {

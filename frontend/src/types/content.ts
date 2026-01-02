@@ -497,6 +497,7 @@ export interface Content {
 	userProfile: {
 		profile: string;
 		publicWatchlists: string;
+		publicWatchlist: string;
 		watchlists: string;
 		watchlist: string;
 		noPublicWatchlists: string;

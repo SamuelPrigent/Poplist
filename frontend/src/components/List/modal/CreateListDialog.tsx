@@ -3,14 +3,12 @@ import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlatformSelector } from "@/components/List/PlatformSelector";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import {
 	GENRE_CATEGORIES,
 	getCategoryInfo,
 	type GenreCategory,
-	type PlatformCategory,
 } from "@/types/categories";
 
 interface CreateListDialogProps {
@@ -31,9 +29,6 @@ export function CreateListDialog({
 	const [description, setDescription] = useState("");
 	const [isPublic, setIsPublic] = useState(false);
 	const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
-	const [providerCategories, setProviderCategories] = useState<
-		PlatformCategory[]
-	>([]);
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -48,17 +43,14 @@ export function CreateListDialog({
 		);
 	};
 
-	// Clear categories when watchlist becomes private
+	// Clear genres when watchlist becomes private
 	useEffect(() => {
 		if (!isPublic) {
 			if (genreCategories.length > 0) {
 				setGenreCategories([]);
 			}
-			if (providerCategories.length > 0) {
-				setProviderCategories([]);
-			}
 		}
-	}, [isPublic, genreCategories.length, providerCategories.length]);
+	}, [isPublic, genreCategories.length]);
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -99,16 +91,9 @@ export function CreateListDialog({
 		setLoading(true);
 
 		try {
-			// Build categories object in new format
-			const hasGenres = genreCategories.length > 0;
-			const hasProviders = providerCategories.length > 0;
-			const categoriesData =
-				hasGenres || hasProviders
-					? {
-							genre: hasGenres ? genreCategories : undefined,
-							watchProvider: hasProviders ? providerCategories : undefined,
-						}
-					: undefined;
+			// Build genres array
+			const genresData =
+				genreCategories.length > 0 ? genreCategories : undefined;
 
 			if (offline) {
 				// Offline mode: create in localStorage
@@ -119,7 +104,7 @@ export function CreateListDialog({
 					description: description.trim() || undefined,
 					imageUrl: imagePreview || undefined,
 					isPublic: false, // Offline watchlists cannot be public
-					categories: undefined, // Offline watchlists don't support categories
+					genres: undefined, // Offline watchlists don't support genres
 					collaborators: [],
 					items: [],
 					likedBy: [],
@@ -132,7 +117,6 @@ export function CreateListDialog({
 				setDescription("");
 				setIsPublic(false);
 				setGenreCategories([]);
-				setProviderCategories([]);
 				setImageFile(null);
 				setImagePreview(null);
 
@@ -144,7 +128,7 @@ export function CreateListDialog({
 					name: name.trim(),
 					description: description.trim() || undefined,
 					isPublic,
-					categories: categoriesData,
+					genres: genresData,
 				});
 
 				// Upload cover image if provided
@@ -157,7 +141,6 @@ export function CreateListDialog({
 				setDescription("");
 				setIsPublic(false);
 				setGenreCategories([]);
-				setProviderCategories([]);
 				setImageFile(null);
 				setImagePreview(null);
 
@@ -178,7 +161,6 @@ export function CreateListDialog({
 		setDescription("");
 		setIsPublic(false);
 		setGenreCategories([]);
-		setProviderCategories([]);
 		setImageFile(null);
 		setImagePreview(null);
 		setError(null);
@@ -281,19 +263,6 @@ export function CreateListDialog({
 													</button>
 												))}
 											</div>
-										</div>
-
-										{/* Platform Categories */}
-										<div className="space-y-2">
-											<p className="text-sm font-medium">
-												{content.watchlists.platformCategories ||
-													"Plateformes de streaming"}
-											</p>
-											<PlatformSelector
-												selected={providerCategories}
-												onChange={setProviderCategories}
-												disabled={loading}
-											/>
 										</div>
 									</>
 								)}

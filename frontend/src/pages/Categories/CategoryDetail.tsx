@@ -6,16 +6,16 @@ import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { scrollToTop } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
-import { getCategoryInfo, type WatchlistCategory } from "@/types/categories";
+import { getCategoryInfo, type GenreCategory } from "@/types/categories";
 
 // Category header colors (Hex with 35% opacity - 59 in hex)
 // Based on the color variation logic with 35° hue rotation per index
 const CATEGORY_HEADER_COLORS: Record<string, string> = {
 	movies: "#11314475", // Index 0: bleu
-	series: "#21114496", // Index 1: +35° rotation -> Greenish
+	series: "#20125094", // Index 1: +35° rotation -> Greenish
 	anime: "#3611449b", // Index 2: +70° rotation -> Pinkish
 	enfant: "#3c114483", // Index 3: +105° rotation -> Orange
-	documentaries: "#451c0b86", // Index 4: +140° rotation -> Purple
+	documentaries: "#45120b85", // Index 4: +140° rotation -> Purple
 	jeunesse: "#41370d74", // Index 5: Similar to above
 	action: "#273a0a67", // Index 6: +210° rotation -> Red
 };
@@ -30,7 +30,7 @@ export function CategoryDetail() {
 	const [loading, setLoading] = useState(true);
 
 	const categoryInfo = id
-		? getCategoryInfo(id as WatchlistCategory, content)
+		? getCategoryInfo(id as GenreCategory, content)
 		: null;
 
 	useEffect(() => {
@@ -42,8 +42,8 @@ export function CategoryDetail() {
 			if (!id) return;
 
 			try {
-				// Fetch category watchlists
-				const data = await watchlistAPI.getWatchlistsByCategory(id);
+				// Fetch genre watchlists
+				const data = await watchlistAPI.getWatchlistsByGenre(id);
 				setWatchlists(data.watchlists || []);
 
 				// Fetch user's watchlists if authenticated
@@ -82,7 +82,7 @@ export function CategoryDetail() {
 			{/* Header with subtle gradient */}
 			<div className="relative w-full">
 				<div
-					className="relative h-[197px] w-full overflow-hidden"
+					className="relative h-[165px] w-full overflow-hidden"
 					style={{
 						background: `linear-gradient(to bottom, ${CATEGORY_HEADER_COLORS[id || "movies"] || "#4A90E259"}, transparent 60%)`,
 					}}
@@ -90,7 +90,7 @@ export function CategoryDetail() {
 					{/* Content */}
 					<div className="relative container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) flex-col justify-start px-10 pt-[1.7rem]">
 						{/* Back Button */}
-						<div className="mb-6">
+						<div className="mb-4">
 							<button
 								type="button"
 								onClick={() => navigate(-1)}
@@ -103,10 +103,10 @@ export function CategoryDetail() {
 
 						{/* Title and Description */}
 						<div>
-							<h1 className="mb-3 text-5xl font-bold text-white drop-shadow-lg md:text-6xl">
+							<h1 className="mb-2 text-5xl font-bold text-white drop-shadow-lg">
 								{categoryInfo.name}
 							</h1>
-							<p className="max-w-2xl text-base text-white/90 drop-shadow-md">
+							<p className="text-muted-foreground max-w-2xl text-base">
 								{categoryInfo.description}
 							</p>
 						</div>

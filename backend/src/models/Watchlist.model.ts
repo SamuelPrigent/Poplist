@@ -17,11 +17,6 @@ export interface WatchlistItem {
 	addedAt: Date;
 }
 
-export interface WatchlistCategories {
-	genre?: string[];
-	watchProvider?: string[];
-}
-
 export interface IWatchlist extends Document {
 	ownerId: Types.ObjectId;
 	name: string;
@@ -29,7 +24,7 @@ export interface IWatchlist extends Document {
 	imageUrl?: string; // Custom cover image URL (Cloudinary)
 	thumbnailUrl?: string; // Auto-generated 2x2 poster grid thumbnail (Cloudinary)
 	isPublic: boolean;
-	categories?: WatchlistCategories | string[]; // New format: { genre: [], watchProvider: [] } | Old format: string[] for backward compatibility
+	genres?: string[]; // Genre categories for discoverability
 	collaborators: Types.ObjectId[];
 	items: WatchlistItem[];
 	likedBy: Types.ObjectId[]; // Array of user IDs who liked/saved this watchlist
@@ -73,8 +68,8 @@ const watchlistSchema = new Schema<IWatchlist>(
 		imageUrl: { type: String },
 		thumbnailUrl: { type: String },
 		isPublic: { type: Boolean, default: false },
-		categories: {
-			type: Schema.Types.Mixed, // Accepts both old format (string[]) and new format ({ genre: [], watchProvider: [] })
+		genres: {
+			type: [String],
 			default: undefined,
 		},
 		collaborators: {
@@ -100,9 +95,7 @@ const watchlistSchema = new Schema<IWatchlist>(
 
 // Compound index for efficient queries
 watchlistSchema.index({ ownerId: 1, createdAt: -1 });
-watchlistSchema.index({ categories: 1, isPublic: 1 }); // For filtering public watchlists by category (old format - backward compatibility)
-watchlistSchema.index({ "categories.genre": 1, isPublic: 1 }); // For filtering public watchlists by genre (new format)
-watchlistSchema.index({ "categories.watchProvider": 1, isPublic: 1 }); // For filtering public watchlists by watch provider (new format)
+watchlistSchema.index({ genres: 1, isPublic: 1 }); // For filtering public watchlists by genre
 watchlistSchema.index({ isPublic: 1, createdAt: -1 }); // For filtering and sorting public watchlists
 
 export const Watchlist = mongoose.model<IWatchlist>(

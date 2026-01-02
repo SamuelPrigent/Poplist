@@ -74,14 +74,14 @@ router.post(
 router.get("/public/featured", watchlistController.getPublicWatchlists);
 router.get("/public/:id", watchlistController.getPublicWatchlist);
 
-// Category filtering (no auth required)
+// Genre filtering (no auth required)
 router.get(
-	"/by-category/:category",
-	watchlistController.getWatchlistsByCategory
+	"/by-genre/:genre",
+	watchlistController.getWatchlistsByGenre
 );
 router.get(
-	"/count-by-category/:category",
-	watchlistController.getWatchlistCountByCategory
+	"/count-by-genre/:genre",
+	watchlistController.getWatchlistCountByGenre
 );
 
 // Search route (no auth required) - avec cache 30 jours
