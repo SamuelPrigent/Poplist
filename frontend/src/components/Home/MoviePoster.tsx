@@ -48,7 +48,7 @@ export function MoviePoster({
 				</div>
 
 				{/* Bottom gradient - always visible, darker at bottom */}
-				<div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+				<div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
 
 				{/* Rating badge */}
 				{voteAverage && voteAverage > 0 && (
