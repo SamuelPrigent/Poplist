@@ -1,7 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ListCardGenre } from "@/components/List/ListCardGenre";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
 	type Watchlist,
 	type WatchlistItem,
@@ -26,18 +26,17 @@ export function Categories() {
 	useEffect(() => {
 		const fetchCategoryCounts = async () => {
 			try {
-				const categoryIds = [...GENRE_CATEGORIES];
+				const genreIds = [...GENRE_CATEGORIES];
 
 				const counts: Record<string, number> = {};
 				await Promise.all(
-					categoryIds.map(async (categoryId) => {
+					genreIds.map(async (genreId) => {
 						try {
-							const data =
-								await watchlistAPI.getWatchlistsByCategory(categoryId);
-							counts[categoryId] = data.watchlists?.length || 0;
+							const data = await watchlistAPI.getWatchlistsByGenre(genreId);
+							counts[genreId] = data.watchlists?.length || 0;
 						} catch (error) {
-							console.error(`Failed to fetch count for ${categoryId}:`, error);
-							counts[categoryId] = 0;
+							console.error(`Failed to fetch count for ${genreId}:`, error);
+							counts[genreId] = 0;
 						}
 					})
 				);
@@ -59,32 +58,17 @@ export function Categories() {
 
 	return (
 		<div className="bg-background min-h-screen pb-20">
-			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-12">
-				{/* Back Button */}
-				<div className="mb-8">
-					<button
-						type="button"
-						onClick={handleBackClick}
-						className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
-					>
-						<ArrowLeft className="h-4 w-4" />
-						<span>{content.watchlists.back}</span>
-					</button>
-				</div>
-
-				{/* Header */}
-				<div className="mb-12">
-					<h1 className="mb-4 text-4xl font-bold text-white">
-						Toutes les catégories
-					</h1>
-					<p className="text-muted-foreground text-lg">
-						Explorez nos collections thématiques
-					</p>
-				</div>
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-6.5 pb-20">
+				<PageHeader
+					title={content.categories.title}
+					subtitle={content.categories.subtitle}
+					backLabel={content.watchlists.back}
+					onBack={handleBackClick}
+				/>
 
 				{/* Categories Grid */}
 				{loading ? (
-					<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+					<div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
 						{[...Array(10)].map((_, i) => (
 							<div
 								key={i}

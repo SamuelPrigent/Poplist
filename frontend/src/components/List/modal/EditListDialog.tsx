@@ -9,10 +9,8 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlatformSelector } from "@/components/List/PlatformSelector";
 import {
 	type Watchlist,
-	type WatchlistCategories,
 	type WatchlistItem,
 	watchlistAPI,
 } from "@/lib/api-client";
@@ -25,7 +23,6 @@ import {
 	GENRE_CATEGORIES,
 	getCategoryInfo,
 	type GenreCategory,
-	type PlatformCategory,
 } from "@/types/categories";
 
 interface EditListDialogProps {
@@ -49,9 +46,6 @@ export const EditListDialog = forwardRef<
 	const [description, setDescription] = useState("");
 	const [isPublic, setIsPublic] = useState(false);
 	const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
-	const [providerCategories, setProviderCategories] = useState<
-		PlatformCategory[]
-	>([]);
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -80,42 +74,21 @@ export const EditListDialog = forwardRef<
 			setDescription(watchlist.description || "");
 			setIsPublic(watchlist.isPublic);
 
-			// Parse categories - support both old and new formats
-			const cats = watchlist.categories;
-			if (Array.isArray(cats)) {
-				// Old format: string[] - separate by known platforms
-				// const genres: GenreCategory[] = [];
-				// const providers: PlatformCategory[] = [];
-				// We'll just set empty arrays for now since we can't distinguish in old format without platform constants
-				setGenreCategories([]);
-				setProviderCategories([]);
-			} else if (cats && typeof cats === "object") {
-				// New format: { genre?: string[], watchProvider?: string[] }
-				const typedCats = cats as WatchlistCategories;
-				setGenreCategories((typedCats.genre || []) as GenreCategory[]);
-				setProviderCategories(
-					(typedCats.watchProvider || []) as PlatformCategory[]
-				);
-			} else {
-				setGenreCategories([]);
-				setProviderCategories([]);
-			}
+			// Parse genres from watchlist
+			setGenreCategories((watchlist.genres || []) as GenreCategory[]);
 
 			setImagePreview(watchlist.imageUrl || null);
 		}
 	}, [open, watchlist]);
 
-	// Clear categories when watchlist becomes private
+	// Clear genres when watchlist becomes private
 	useEffect(() => {
 		if (!isPublic) {
 			if (genreCategories.length > 0) {
 				setGenreCategories([]);
 			}
-			if (providerCategories.length > 0) {
-				setProviderCategories([]);
-			}
 		}
-	}, [isPublic, genreCategories.length, providerCategories.length]);
+	}, [isPublic, genreCategories.length]);
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -156,16 +129,9 @@ export const EditListDialog = forwardRef<
 		setLoading(true);
 
 		try {
-			// Build categories object in new format
-			const hasGenres = genreCategories.length > 0;
-			const hasProviders = providerCategories.length > 0;
-			const categoriesData =
-				hasGenres || hasProviders
-					? {
-							genre: hasGenres ? genreCategories : undefined,
-							watchProvider: hasProviders ? providerCategories : undefined,
-						}
-					: undefined;
+			// Build genres array
+			const genresData =
+				genreCategories.length > 0 ? genreCategories : undefined;
 
 			if (offline) {
 				// Offline mode: update in localStorage
@@ -183,7 +149,7 @@ export const EditListDialog = forwardRef<
 						description: description.trim() || undefined,
 						imageUrl: imagePreview || undefined,
 						isPublic,
-						categories: categoriesData,
+						genres: genresData,
 						updatedAt: new Date().toISOString(),
 					};
 					watchlists[index] = updatedWatchlist;
@@ -215,7 +181,7 @@ export const EditListDialog = forwardRef<
 					name: string;
 					description?: string;
 					isPublic: boolean;
-					categories?: typeof categoriesData;
+					genres?: string[];
 				} = {
 					name: name.trim(),
 					isPublic,
@@ -228,9 +194,9 @@ export const EditListDialog = forwardRef<
 					updates.description = description.trim();
 				}
 
-				// Add categories if any are selected
-				if (categoriesData) {
-					updates.categories = categoriesData;
+				// Add genres if any are selected
+				if (genresData) {
+					updates.genres = genresData;
 				}
 
 				await watchlistAPI.update(watchlist._id, updates);
@@ -430,19 +396,6 @@ export const EditListDialog = forwardRef<
 											</button>
 										))}
 									</div>
-								</div>
-
-								{/* Platform Categories */}
-								<div className="space-y-2">
-									<p className="text-sm font-medium">
-										{content.watchlists.platformCategories ||
-											"Plateformes de streaming"}
-									</p>
-									<PlatformSelector
-										selected={providerCategories}
-										onChange={setProviderCategories}
-										disabled={loading}
-									/>
 								</div>
 							</>
 						)}

@@ -62,20 +62,12 @@ function extractPublicIdFromUrl(imageUrl: string): string | null {
 }
 
 /**
- * Build MongoDB query filter for category search
- * Supports both old format (categories: string[]) and new format (categories: { genre: [], watchProvider: [] })
- * @param category - The category to search for (e.g., "netflix", "action")
+ * Build MongoDB query filter for genre search
+ * @param genre - The genre to search for (e.g., "action", "movies")
  * @returns MongoDB query filter object
  */
-function buildCategoryFilter(category: string) {
-	// Search in both old and new formats using $or
-	return {
-		$or: [
-			{ categories: category }, // Old format: categories is array containing the value
-			{ "categories.genre": category }, // New format: search in genre array
-			{ "categories.watchProvider": category }, // New format: search in watchProvider array
-		],
-	};
+function buildGenreFilter(genre: string) {
+	return { genres: genre };
 }
 
 const platformSchema = z.object({
@@ -95,22 +87,11 @@ const watchlistItemSchema = z.object({
 	addedAt: z.string().or(z.date()).optional(),
 });
 
-// Categories schema - supports both old and new formats for backward compatibility
-// Old format: string[]
-// New format: { genre?: string[], watchProvider?: string[] }
-const categoriesSchema = z.union([
-	z.array(z.string()), // Old format
-	z.object({
-		genre: z.array(z.string()).optional(),
-		watchProvider: z.array(z.string()).optional(),
-	}), // New format
-]);
-
 const createWatchlistSchema = z.object({
 	name: z.string().min(1).max(100),
 	description: z.string().max(500).optional(),
 	isPublic: z.boolean().default(false),
-	categories: categoriesSchema.optional(),
+	genres: z.array(z.string()).optional(),
 	items: z.array(watchlistItemSchema).default([]),
 	fromLocalStorage: z.boolean().optional(),
 });
@@ -119,7 +100,7 @@ const updateWatchlistSchema = z.object({
 	name: z.string().min(1).max(100).optional(),
 	description: z.string().max(500).optional(),
 	isPublic: z.boolean().optional(),
-	categories: categoriesSchema.optional(),
+	genres: z.array(z.string()).optional(),
 	items: z.array(watchlistItemSchema).optional(),
 });
 
@@ -329,7 +310,7 @@ export async function createWatchlist(
 			name: data.name,
 			description: data.description,
 			isPublic: data.isPublic,
-			categories: data.categories,
+			genres: data.genres,
 			items: data.items,
 		});
 
@@ -419,7 +400,7 @@ export async function updateWatchlist(
 		if (data.description !== undefined)
 			watchlist.description = data.description;
 		if (data.isPublic !== undefined) watchlist.isPublic = data.isPublic;
-		if (data.categories !== undefined) watchlist.categories = data.categories;
+		if (data.genres !== undefined) watchlist.genres = data.genres;
 		if (data.items) {
 			// Transform items to ensure addedAt is a Date and platformList is properly formatted
 			watchlist.items = data.items.map((item) => {
@@ -696,28 +677,28 @@ export async function getPublicWatchlists(
 	}
 }
 
-// Get public watchlists by category
-export async function getWatchlistsByCategory(
+// Get public watchlists by genre
+export async function getWatchlistsByGenre(
 	req: Request,
 	res: Response
 ): Promise<void> {
 	try {
-		const { category } = req.params;
+		const { genre } = req.params;
 
-		if (!category || category.trim().length === 0) {
-			res.status(400).json({ error: "Category parameter is required" });
+		if (!genre || genre.trim().length === 0) {
+			res.status(400).json({ error: "Genre parameter is required" });
 			return;
 		}
 
 		const watchlists = await Watchlist.find({
 			isPublic: true,
-			...buildCategoryFilter(category),
+			...buildGenreFilter(genre),
 		})
 			.populate("ownerId", "email username avatarUrl")
 			.populate("collaborators", "email username avatarUrl")
 			.sort({ createdAt: -1 })
 			.select(
-				"_id name description imageUrl thumbnailUrl items categories ownerId collaborators createdAt"
+				"_id name description imageUrl thumbnailUrl items genres ownerId collaborators createdAt"
 			);
 
 		res.json({ watchlists });
@@ -727,25 +708,25 @@ export async function getWatchlistsByCategory(
 	}
 }
 
-// Get count of public watchlists by category
-export async function getWatchlistCountByCategory(
+// Get count of public watchlists by genre
+export async function getWatchlistCountByGenre(
 	req: Request,
 	res: Response
 ): Promise<void> {
 	try {
-		const { category } = req.params;
+		const { genre } = req.params;
 
-		if (!category || category.trim().length === 0) {
-			res.status(400).json({ error: "Category parameter is required" });
+		if (!genre || genre.trim().length === 0) {
+			res.status(400).json({ error: "Genre parameter is required" });
 			return;
 		}
 
 		const count = await Watchlist.countDocuments({
 			isPublic: true,
-			...buildCategoryFilter(category),
+			...buildGenreFilter(genre),
 		});
 
-		res.json({ category, count });
+		res.json({ genre, count });
 	} catch (error) {
 		console.log(error);
 		return;
@@ -1682,7 +1663,7 @@ export async function duplicateWatchlist(
 			name: `${originalWatchlist.name} (copy)`,
 			description: originalWatchlist.description,
 			isPublic: false, // Duplicates are private by default
-			categories: originalWatchlist.categories,
+			genres: originalWatchlist.genres,
 			items: originalWatchlist.items,
 			thumbnailUrl: originalWatchlist.thumbnailUrl, // Temporary - use original's thumbnail for instant display
 			// Don't copy imageUrl - custom images should not be duplicated

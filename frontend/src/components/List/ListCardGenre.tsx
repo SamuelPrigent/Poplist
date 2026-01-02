@@ -141,7 +141,7 @@ export function ListCardGenre({
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.2, ease: "easeOut" }}
-				className="relative mb-3 aspect-square w-full overflow-hidden rounded-xl bg-[hsl(227,6%,31%)]"
+				className="relative mb-3 aspect-32/29 w-full overflow-hidden rounded-xl bg-[hsl(227,6%,31%)]"
 			>
 				{/* Animated gradient border */}
 				<motion.div

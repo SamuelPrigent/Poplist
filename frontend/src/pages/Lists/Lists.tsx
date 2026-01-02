@@ -231,7 +231,7 @@ export function Lists() {
 	return (
 		<Section className="mb-20">
 			{/* Title */}
-			<div className="mt-5 mb-6">
+			<div className="mt-0 mb-6">
 				<h1 className="mb-1 text-3xl font-bold text-white">
 					{content.watchlists.title}
 				</h1>

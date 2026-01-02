@@ -8,15 +8,13 @@ import {
 } from "./components/guards/RouteGuards";
 import { SmartRedirect } from "./components/guards/SmartRedirect";
 import { Footer } from "./components/layout/Footer";
-import { Header } from "./components/layout/Header";
+import { Navbar } from "./components/layout/Navbar";
 import { ToasterLight } from "./components/ui/sonner-light";
 import { AuthProvider } from "./context/AuthContext";
 import { Account } from "./pages/Account";
 import { Categories } from "./pages/Categories/Categories";
 import { CategoryDetail } from "./pages/Categories/CategoryDetail";
 import { Explore } from "./pages/Explore";
-import { PlatformDetail } from "./pages/Platforms/PlatformDetail";
-import { Platforms } from "./pages/Platforms/Platforms";
 import { Home } from "./pages/Home";
 import { Landing } from "./pages/Landing";
 import { UserProfile } from "./pages/User/UserProfile";
@@ -32,7 +30,7 @@ function App() {
 			<BrowserRouter>
 				<AuthProvider>
 					<div className="bg-background flex min-h-screen flex-col">
-						<Header />
+						<Navbar />
 						<main className="flex-1">
 							<Routes>
 								<Route path="/" element={<Landing />} />
@@ -40,12 +38,7 @@ function App() {
 								<Route path="/explore" element={<Explore />} />
 								<Route path="/categories" element={<Categories />} />
 								<Route path="/category/:id" element={<CategoryDetail />} />
-								<Route path="/platforms" element={<Platforms />} />
-								<Route path="/platform/:id" element={<PlatformDetail />} />
-								<Route
-									path="/community-lists"
-									element={<CommunityLists />}
-								/>
+								<Route path="/community-lists" element={<CommunityLists />} />
 
 								{/* Profile page */}
 								<Route

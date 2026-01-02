@@ -1,6 +1,5 @@
 import type { Watchlist } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
-import { PLATFORM_CATEGORIES } from "@/types/categories";
 
 const STORAGE_KEY = "watchlists";
 
@@ -84,39 +83,11 @@ export async function mergeLocalWatchlistsToDB(): Promise<void> {
 			};
 		});
 
-		// Transform categories from old format to new format if needed
-		const cats = watchlist.categories;
-		let categoriesData;
-
-		if (Array.isArray(cats)) {
-			// Old format: string[] - separate by known platforms
-			const genres: string[] = [];
-			const providers: string[] = [];
-
-			for (const cat of cats) {
-				if (PLATFORM_CATEGORIES.includes(cat as any)) {
-					providers.push(cat);
-				} else {
-					genres.push(cat);
-				}
-			}
-
-			categoriesData = {
-				genre: genres.length > 0 ? genres : undefined,
-				watchProvider: providers.length > 0 ? providers : undefined,
-			};
-		} else if (cats && typeof cats === "object") {
-			// Already in new format
-			categoriesData = cats;
-		} else {
-			categoriesData = undefined;
-		}
-
 		return watchlistAPI.create({
 			name: watchlist.name,
 			description: watchlist.description,
 			isPublic: watchlist.isPublic,
-			categories: categoriesData,
+			genres: watchlist.genres,
 			items: items,
 			fromLocalStorage: true,
 		});

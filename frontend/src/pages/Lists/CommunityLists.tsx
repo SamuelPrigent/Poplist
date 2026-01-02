@@ -1,7 +1,8 @@
-import { ArrowLeft, Film } from "lucide-react";
+import { Film } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ListCard } from "@/components/List/ListCard";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/context/auth-context";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { scrollToTop } from "@/lib/utils";
@@ -59,28 +60,13 @@ export function CommunityLists() {
 
 	return (
 		<div className="bg-background min-h-screen pb-20">
-			<div className="container mx-auto px-4 py-12">
-				{/* Back Button */}
-				<div className="mb-8">
-					<button
-						type="button"
-						onClick={handleBackClick}
-						className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
-					>
-						<ArrowLeft className="h-4 w-4" />
-						<span>{content.watchlists.back}</span>
-					</button>
-				</div>
-
-				{/* Header */}
-				<div className="mb-12">
-					<h1 className="mb-4 text-4xl font-bold text-white">
-						{content.home.communityWatchlists.title}
-					</h1>
-					<p className="text-muted-foreground text-lg">
-						{content.home.communityWatchlists.subtitle}
-					</p>
-				</div>
+			<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-6.5 pb-20">
+				<PageHeader
+					title={content.home.communityWatchlists.title}
+					subtitle={content.home.communityWatchlists.subtitle}
+					backLabel={content.watchlists.back}
+					onBack={handleBackClick}
+				/>
 
 				{/* Watchlists Grid */}
 				{loading ? (

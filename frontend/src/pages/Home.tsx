@@ -77,6 +77,7 @@ export function Home() {
 		tmdbId: string;
 		type: "movie" | "tv";
 	} | null>(null);
+	const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
 	const fetchPublicWatchlists = useCallback(async () => {
 		try {
@@ -189,31 +190,26 @@ export function Home() {
 				);
 				setRecommendations(selectedRecommendations);
 
-				// Fetch category counts for genres and platforms
-				const categoryIds = [
+				// Fetch category counts for genres only (platforms removed)
+				const genreIds = [
 					"movies",
 					"series",
 					"anime",
 					"action",
 					"enfant",
 					"documentaries",
-					"netflix",
-					"prime-video",
-					"disney-plus",
-					"apple-tv",
-					"crunchyroll",
+					"jeunesse",
 				];
 
 				const counts: Record<string, number> = {};
 				await Promise.all(
-					categoryIds.map(async (categoryId) => {
+					genreIds.map(async (genreId) => {
 						try {
-							const data =
-								await watchlistAPI.getWatchlistsByCategory(categoryId);
-							counts[categoryId] = data.watchlists?.length || 0;
+							const data = await watchlistAPI.getWatchlistsByGenre(genreId);
+							counts[genreId] = data.watchlists?.length || 0;
 						} catch (error) {
-							console.error(`Failed to fetch count for ${categoryId}:`, error);
-							counts[categoryId] = 0;
+							console.error(`Failed to fetch count for ${genreId}:`, error);
+							counts[genreId] = 0;
 						}
 					})
 				);
@@ -316,12 +312,27 @@ export function Home() {
 		}
 	};
 
-	const handleOpenDetails = (item: TrendingItem) => {
+	const handleOpenDetails = (item: TrendingItem, index: number) => {
 		setSelectedItem({
 			tmdbId: item.id.toString(),
 			type: item.media_type || "movie",
 		});
+		setSelectedIndex(index);
 		setDetailsModalOpen(true);
+	};
+
+	const handleNavigatePrevious = () => {
+		if (selectedIndex > 0) {
+			const prevItem = safeRecommendations[selectedIndex - 1];
+			handleOpenDetails(prevItem, selectedIndex - 1);
+		}
+	};
+
+	const handleNavigateNext = () => {
+		if (selectedIndex < safeRecommendations.length - 1) {
+			const nextItem = safeRecommendations[selectedIndex + 1];
+			handleOpenDetails(nextItem, selectedIndex + 1);
+		}
 	};
 
 	// Featured categories - using getCategoryInfo for translations
@@ -349,10 +360,10 @@ export function Home() {
 		<div className="bg-background min-h-screen pb-20">
 			{/* My Watchlists - Library Section */}
 			{userWatchlists.length > 0 && (
-				<Section className="pb-7">
+				<Section className="pb-5">
 					<div className="mb-6 flex items-center justify-between">
 						<div>
-							<h2 className="text-2xl font-bold text-white">
+							<h2 className="text-3xl font-bold text-white">
 								{content.home.library.title}
 							</h2>
 							<p className="text-muted-foreground mt-1 text-sm">
@@ -387,7 +398,7 @@ export function Home() {
 			<Section>
 				<div className="mb-6 flex items-center justify-between">
 					<div>
-						<h2 className="text-2xl font-bold text-white">
+						<h2 className="text-3xl font-bold text-white">
 							{content.home.categories.title}
 						</h2>
 						<p className="text-muted-foreground mt-1 text-sm">
@@ -396,7 +407,7 @@ export function Home() {
 					</div>
 					<Link
 						to="/categories"
-						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
 					>
 						{content.home.categories.seeMore}
 					</Link>
@@ -448,78 +459,12 @@ export function Home() {
 					})}
 				</div>
 			</Section>
-			{/* Platforms Section */}
-			{/* <Section>
-				<div className="mb-6 flex items-center justify-between">
-					<div>
-						<h2 className="text-2xl font-bold text-white">
-							{content.home.platformsSection.title}
-						</h2>
-						<p className="text-muted-foreground mt-1 text-sm">
-							{content.home.platformsSection.subtitle}
-						</p>
-					</div>
-					<Link
-						to="/platforms"
-						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
-					>
-						{content.home.platformsSection.seeAll}
-					</Link>
-				</div>
-
-				<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-					{PLATFORM_CATEGORIES_WITH_LOGOS.slice(0, 5).map((platformId) => {
-						const categoryInfo = getCategoryInfo(platformId, content);
-						const itemCount = categoryCounts[platformId] || 0;
-						const logo = getWatchProviderLogo(platformId);
-						const placeholderTimestamp = "1970-01-01T00:00:00.000Z";
-						const placeholderItems: WatchlistItem[] = Array.from(
-							{ length: itemCount },
-							(_, index) => ({
-								tmdbId: `${platformId}-item-${index}`,
-								title: categoryInfo.name,
-								posterUrl: "",
-								type: "movie",
-								platformList: [],
-								addedAt: placeholderTimestamp,
-							})
-						);
-
-						const mockWatchlist: Watchlist = {
-							_id: platformId,
-							ownerId: {
-								email: "featured@poplist.app",
-								username: "Poplist",
-							},
-							name: categoryInfo.name,
-							description: categoryInfo.description,
-							imageUrl: "",
-							isPublic: true,
-							collaborators: [],
-							items: placeholderItems,
-							createdAt: placeholderTimestamp,
-							updatedAt: placeholderTimestamp,
-							likedBy: [],
-						};
-
-						return (
-							<ListCardImg
-								key={platformId}
-								watchlist={mockWatchlist}
-								content={content}
-								href={`/platform/${platformId}`}
-								logoUrl={logo || ""}
-							/>
-						);
-					})}
-				</div>
-			</Section> */}
 
 			{/* Popular Watchlists Section */}
 			<Section>
 				<div className="mb-6 flex items-center justify-between">
 					<div>
-						<h2 className="text-2xl font-bold text-white">
+						<h2 className="text-3xl font-bold text-white">
 							{content.home.popularWatchlists.title}
 						</h2>
 						<p className="text-muted-foreground mt-1 text-sm">
@@ -527,8 +472,8 @@ export function Home() {
 						</p>
 					</div>
 					<Link
-						to="/community-watchlists"
-						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+						to="/community-lists"
+						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
 					>
 						{content.home.popularWatchlists.seeMore}
 					</Link>
@@ -588,7 +533,7 @@ export function Home() {
 			<Section>
 				<div className="mb-6 flex items-center justify-between">
 					<div>
-						<h2 className="text-2xl font-bold text-white">
+						<h2 className="text-3xl font-bold text-white">
 							{content.home.recommendations.title}
 						</h2>
 						<p className="text-muted-foreground mt-1 text-sm">
@@ -597,14 +542,14 @@ export function Home() {
 					</div>
 					<Link
 						to="/explore"
-						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+						className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
 					>
 						{content.home.recommendations.seeMore}
 					</Link>
 				</div>
 
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-					{safeRecommendations.map((item) => (
+					{safeRecommendations.map((item, index) => (
 						<div key={item.id} className="group relative">
 							<MoviePoster
 								id={item.id}
@@ -613,7 +558,7 @@ export function Home() {
 								posterPath={item.poster_path}
 								voteAverage={item.vote_average}
 								overview={item.overview}
-								onClick={() => handleOpenDetails(item)}
+								onClick={() => handleOpenDetails(item, index)}
 							/>
 
 							{/* Add button in top right - small */}
@@ -687,10 +632,17 @@ export function Home() {
 						setDetailsModalOpen(open);
 						if (!open) {
 							setSelectedItem(null);
+							setSelectedIndex(-1);
 						}
 					}}
 					tmdbId={selectedItem.tmdbId}
 					type={selectedItem.type}
+					onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
+					onNext={
+						selectedIndex < safeRecommendations.length - 1
+							? handleNavigateNext
+							: undefined
+					}
 				/>
 			)}
 		</div>

@@ -259,11 +259,6 @@ export interface UserProfileResponse {
 	totalPublicWatchlists: number;
 }
 
-export interface WatchlistCategories {
-	genre?: string[];
-	watchProvider?: string[];
-}
-
 export interface Watchlist {
 	_id: string;
 	ownerId: string | WatchlistOwner;
@@ -272,7 +267,7 @@ export interface Watchlist {
 	imageUrl?: string;
 	thumbnailUrl?: string; // Auto-generated 2x2 poster grid (Cloudinary)
 	isPublic: boolean;
-	categories?: WatchlistCategories | string[]; // New format: { genre: [], watchProvider: [] } | Old format: string[] for backward compatibility
+	genres?: string[]; // Genre categories for discoverability
 	collaborators: string[] | Collaborator[]; // Can be IDs or populated collaborator objects
 	items: WatchlistItem[];
 	createdAt: string;
@@ -322,7 +317,7 @@ export const watchlistAPI = {
 		name: string;
 		description?: string;
 		isPublic?: boolean;
-		categories?: WatchlistCategories | string[];
+		genres?: string[];
 		items?: WatchlistItem[];
 		fromLocalStorage?: boolean;
 	}): Promise<{ watchlist: Watchlist }> =>
@@ -337,6 +332,7 @@ export const watchlistAPI = {
 			name?: string;
 			description?: string;
 			isPublic?: boolean;
+			genres?: string[];
 			items?: WatchlistItem[];
 		}
 	): Promise<{ watchlist: Watchlist }> =>
@@ -577,10 +573,10 @@ export const watchlistAPI = {
 	getAllPublicWatchlists: (): Promise<{ watchlists: Watchlist[] }> =>
 		request("/watchlists/public/all"),
 
-	getWatchlistsByCategory: (
-		category: string
+	getWatchlistsByGenre: (
+		genre: string
 	): Promise<{ watchlists: Watchlist[] }> =>
-		request(`/watchlists/by-category/${category}`),
+		request(`/watchlists/by-genre/${genre}`),
 
 	saveWatchlist: (id: string): Promise<{ message: string }> =>
 		request(`/watchlists/${id}/like-and-save`, {
