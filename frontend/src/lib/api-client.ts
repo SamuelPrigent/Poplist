@@ -1,6 +1,8 @@
 import type { User } from "@/context/auth-context";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// Utilise le proxy Next.js rewrites pour éviter les problèmes de cookies cross-site
+// Les requêtes vers /api/* sont automatiquement forwardées vers le backend
+const API_URL = "/api";
 
 // Helper to get TMDB image URL through proxy to avoid CORS issues
 export function getTMDBImageUrl(logoPath: string): string {
