@@ -9,9 +9,7 @@ import type {
 	Watchlist,
 } from "./api-client";
 
-// Pour les Server Components, on utilise l'URL backend directement
-// car les rewrites ne fonctionnent que côté client
-const API_URL = process.env.BACKEND_URL || "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 /**
  * Fetch public/featured watchlists

@@ -5,7 +5,7 @@
 
 const THUMBNAIL_SIZE = 500; // 500x500 total
 const POSTER_SIZE = 250; // Each poster is 250x250
-const API_URL = "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 /**
  * Convert TMDB image URL to proxy URL to avoid CORS issues

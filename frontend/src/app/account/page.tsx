@@ -85,8 +85,10 @@ export default function AccountPage() {
 
 			setUsernameChecking(true);
 			try {
+				const apiUrl =
+					process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 				const response = await fetch(
-					`/api/auth/username/check/${usernameToCheck}`,
+					`${apiUrl}/auth/username/check/${usernameToCheck}`,
 				);
 				const data = await response.json();
 

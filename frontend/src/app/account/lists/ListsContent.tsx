@@ -19,7 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Film, Plus } from 'lucide-react';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { CreateListDialog } from '@/components/List/modal/CreateListDialog';
@@ -300,49 +300,31 @@ export function ListsContent() {
               items={filteredWatchlists.map(w => w._id)}
               strategy={rectSortingStrategy}
             >
-              <m.div
-                key={`grid-${showOwned}-${showSaved}`}
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: {
-                      staggerChildren: 0.0005,
-                      delayChildren: 0,
-                    },
-                  },
-                }}
-                className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-              >
-                {filteredWatchlists.map(watchlist => (
-                  <m.div
-                    key={watchlist._id}
-                    variants={{
-                      hidden: { opacity: 0 },
-                      visible: {
-                        opacity: 1,
-                        transition: {
-                          duration: 0.15,
-                        },
-                      },
-                    }}
-                  >
-                    <SortableWatchlistCard
-                      watchlist={watchlist}
-                      onEdit={wl => {
-                        setSelectedWatchlist(wl);
-                        setEditDialogOpen(true);
-                      }}
-                      onDelete={wl => {
-                        setSelectedWatchlist(wl);
-                        setDeleteDialogOpen(true);
-                      }}
-                    />
-                  </m.div>
-                ))}
-              </m.div>
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {filteredWatchlists.map(watchlist => (
+                    <m.div
+                      key={watchlist._id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <SortableWatchlistCard
+                        watchlist={watchlist}
+                        onEdit={wl => {
+                          setSelectedWatchlist(wl);
+                          setEditDialogOpen(true);
+                        }}
+                        onDelete={wl => {
+                          setSelectedWatchlist(wl);
+                          setDeleteDialogOpen(true);
+                        }}
+                      />
+                    </m.div>
+                  ))}
+                </AnimatePresence>
+              </div>
             </SortableContext>
           </DndContext>
         </LazyMotion>

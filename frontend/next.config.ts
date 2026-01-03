@@ -1,19 +1,7 @@
 import type { NextConfig } from 'next';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
-
 const nextConfig: NextConfig = {
   devIndicators: false,
-
-  // Proxy API requests to backend (résout les problèmes de cookies cross-site)
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${BACKEND_URL}/:path*`,
-      },
-    ];
-  },
   // Optimisation des images
   images: {
     remotePatterns: [

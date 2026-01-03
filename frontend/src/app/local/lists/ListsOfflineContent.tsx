@@ -18,7 +18,8 @@ import {
 	useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronRight, Database, Film, Plus } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { ChevronRight, Database, Edit, Film, MoreVertical, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -141,6 +142,42 @@ function WatchlistCardOffline({
 						? content.watchlists.item
 						: content.watchlists.items}
 				</button>
+
+				{/* More Menu */}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger asChild>
+						<button
+							type="button"
+							onClick={(e) => e.stopPropagation()}
+							className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all group-hover:opacity-100 hover:brightness-125 hover:backdrop-brightness-150 focus-visible:opacity-100"
+						>
+							<MoreVertical className="h-4 w-4" />
+						</button>
+					</DropdownMenu.Trigger>
+
+					<DropdownMenu.Portal>
+						<DropdownMenu.Content
+							className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1 shadow-md"
+							sideOffset={5}
+						>
+							<DropdownMenu.Item
+								className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
+								onSelect={() => onEdit(watchlist)}
+							>
+								<Edit className="mr-2 h-4 w-4" />
+								<span>{content.watchlists.edit}</span>
+							</DropdownMenu.Item>
+
+							<DropdownMenu.Item
+								className="relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm text-red-500 transition-colors outline-none select-none hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
+								onSelect={() => onDelete(watchlist)}
+							>
+								<Trash2 className="mr-2 h-4 w-4" />
+								<span>{content.watchlists.delete}</span>
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu.Portal>
+				</DropdownMenu.Root>
 			</div>
 		</div>
 	);
