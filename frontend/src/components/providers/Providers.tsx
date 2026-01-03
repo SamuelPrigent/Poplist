@@ -2,7 +2,7 @@
 
 import { Toaster } from "@/components/ui/sonner";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { AuthProvider } from "./AuthProvider";
+import { AuthProvider } from "@/context/AuthContext";
 
 function AuthRedirectHandler({ children }: { children: React.ReactNode }) {
 	// Surveille les changements d'état auth et redirige si nécessaire

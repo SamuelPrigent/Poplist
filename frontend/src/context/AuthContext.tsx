@@ -5,9 +5,64 @@ import { authAPI, setAuthErrorHandler } from "@/lib/api-client";
 import { type Language, useLanguageStore } from "@/store/language";
 import { AuthContext, type AuthContextValue, type User } from "./auth-context";
 
+// Clé localStorage pour l'état d'auth optimiste
+const AUTH_STORAGE_KEY = "poplist_auth";
+
+// Lire l'état d'auth depuis localStorage (côté client uniquement)
+function getStoredAuthState(): { wasAuthenticated: boolean; cachedUser: User | null } {
+	if (typeof window === "undefined") {
+		return { wasAuthenticated: false, cachedUser: null };
+	}
+	try {
+		const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+		if (stored) {
+			const parsed = JSON.parse(stored);
+			return {
+				wasAuthenticated: parsed.isAuthenticated ?? false,
+				cachedUser: parsed.user ?? null,
+			};
+		}
+	} catch {
+		// Ignore parsing errors
+	}
+	return { wasAuthenticated: false, cachedUser: null };
+}
+
+// Sauvegarder l'état d'auth dans localStorage
+function setStoredAuthState(isAuthenticated: boolean, user: User | null) {
+	if (typeof window === "undefined") return;
+	try {
+		if (isAuthenticated && user) {
+			localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ isAuthenticated: true, user }));
+		} else {
+			localStorage.removeItem(AUTH_STORAGE_KEY);
+		}
+	} catch {
+		// Ignore storage errors
+	}
+}
+
+// Lazy initializer - lit localStorage immédiatement côté client
+function getInitialAuthState() {
+	if (typeof window === "undefined") {
+		// SSR: pas de localStorage
+		return { user: null, optimisticAuth: false, isLoading: true };
+	}
+	// Client: lire localStorage immédiatement
+	const { wasAuthenticated, cachedUser } = getStoredAuthState();
+	return {
+		user: cachedUser,
+		optimisticAuth: wasAuthenticated,
+		isLoading: false,
+	};
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-	const [user, setUser] = useState<User | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
+	// Lire localStorage dès le premier render côté client
+	const initial = getInitialAuthState();
+	const [user, setUser] = useState<User | null>(initial.user);
+	const [isLoading, setIsLoading] = useState(initial.isLoading);
+	const [optimisticAuth, setOptimisticAuth] = useState(initial.optimisticAuth);
 	const { setLanguage } = useLanguageStore();
 
 	const fetchUser = useCallback(async () => {
@@ -15,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			const response = await authAPI.me();
 			const fetchedUser = (response as { user: User }).user;
 			setUser(fetchedUser);
+			setOptimisticAuth(true);
+			setStoredAuthState(true, fetchedUser);
 
 			// Set language from user profile if available
 			if (fetchedUser.language) {
@@ -23,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		} catch {
 			// 401 is expected when user is not authenticated - silent fail
 			setUser(null);
-		} finally {
-			setIsLoading(false);
+			setOptimisticAuth(false);
+			setStoredAuthState(false, null);
 		}
 	}, [setLanguage]);
 
@@ -40,6 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			);
 		}
 		setUser(null);
+		setOptimisticAuth(false);
+		setStoredAuthState(false, null);
 	}, []);
 
 	useEffect(() => {
@@ -51,12 +110,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	const login = async (email: string, password: string) => {
 		const response = await authAPI.login(email, password);
-		setUser((response as { user: User }).user);
+		const loggedInUser = (response as { user: User }).user;
+		setUser(loggedInUser);
+		setOptimisticAuth(true);
+		setStoredAuthState(true, loggedInUser);
 	};
 
 	const signup = async (email: string, password: string) => {
 		const response = await authAPI.signup(email, password);
-		setUser((response as { user: User }).user);
+		const signedUpUser = (response as { user: User }).user;
+		setUser(signedUpUser);
+		setOptimisticAuth(true);
+		setStoredAuthState(true, signedUpUser);
 
 		// Merge local watchlists to database after successful signup
 		try {
@@ -70,6 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const logout = async () => {
 		await authAPI.logout();
 		setUser(null);
+		setOptimisticAuth(false);
+		setStoredAuthState(false, null);
 	};
 
 	const refetch = async () => {
@@ -90,10 +157,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setUser(null);
 	};
 
+	// isAuthenticated utilise l'état optimiste pendant le chargement pour éviter le flicker
+	// Une fois le chargement terminé, on utilise l'état réel
+	const isAuthenticated = isLoading ? (optimisticAuth ?? false) : !!user;
+
 	const value: AuthContextValue = {
 		user,
 		isLoading,
-		isAuthenticated: !!user,
+		isAuthenticated,
 		login,
 		signup,
 		logout,
