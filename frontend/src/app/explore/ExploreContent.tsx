@@ -34,7 +34,7 @@ interface MediaItem {
   vote_average: number;
 }
 
-const API_URL = '/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Generate 36 stable skeleton keys (6 columns × 6 rows)
 // const SKELETON_KEYS = Array.from({ length: 36 }, (_, i) => `skeleton-${i + 1}`);

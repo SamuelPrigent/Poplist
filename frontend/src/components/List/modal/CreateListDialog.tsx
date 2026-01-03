@@ -124,16 +124,20 @@ export function CreateListDialog({
 				onOpenChange(false);
 			} else {
 				// Online mode: create via API
-				const { watchlist } = await watchlistAPI.create({
+				let { watchlist } = await watchlistAPI.create({
 					name: name.trim(),
 					description: description.trim() || undefined,
 					isPublic,
 					genres: genresData,
 				});
 
-				// Upload cover image if provided
+				// Upload cover image if provided and update watchlist with imageUrl
 				if (imagePreview) {
-					await watchlistAPI.uploadCover(watchlist._id, imagePreview);
+					const uploadResult = await watchlistAPI.uploadCover(
+						watchlist._id,
+						imagePreview,
+					);
+					watchlist = uploadResult.watchlist;
 				}
 
 				// Reset form
@@ -143,7 +147,13 @@ export function CreateListDialog({
 				setGenreCategories([]);
 				setImagePreview(null);
 
-				onSuccess(watchlist);
+				// Add ownership flags for optimistic update (these are normally added by getMine)
+				onSuccess({
+					...watchlist,
+					isOwner: true,
+					isCollaborator: false,
+					isSaved: false,
+				});
 				onOpenChange(false);
 			}
 		} catch (err) {

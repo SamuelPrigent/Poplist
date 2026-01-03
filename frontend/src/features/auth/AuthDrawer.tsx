@@ -15,7 +15,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { useLanguageStore } from "@/store/language";
 
-const API_URL = "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 interface AuthDrawerProps {
 	open: boolean;

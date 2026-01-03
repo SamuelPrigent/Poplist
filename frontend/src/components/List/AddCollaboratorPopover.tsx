@@ -13,7 +13,7 @@ import {
 import { type Collaborator, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-const API_URL = "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 interface AddCollaboratorPopoverProps {
 	watchlistId: string;

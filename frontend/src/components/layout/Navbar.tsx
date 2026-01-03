@@ -73,7 +73,7 @@ export function Navbar() {
 
 					<div className="flex items-center gap-4">
 						<Link
-							href="/lists"
+							href={isAuthenticated ? "/account/lists" : "/local/lists"}
 							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
 						>
 							<Bookmark
