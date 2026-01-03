@@ -9,11 +9,14 @@ export default function ListsRedirectPage() {
 	const { isAuthenticated, isLoading } = useAuth();
 
 	useEffect(() => {
+		console.log("[ListsRedirect]", { isLoading, isAuthenticated });
 		if (isLoading) return;
 
 		if (isAuthenticated) {
+			console.log("[ListsRedirect] -> /account/lists");
 			router.replace("/account/lists");
 		} else {
+			console.log("[ListsRedirect] -> /local/lists");
 			router.replace("/local/lists");
 		}
 	}, [isAuthenticated, isLoading, router]);
