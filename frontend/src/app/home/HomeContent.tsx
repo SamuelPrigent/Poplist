@@ -457,7 +457,7 @@ export function HomeContent() {
 							variants={containerVariants}
 							className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
 						>
-							{publicWatchlists.slice(0, 10).map((watchlist) => {
+							{publicWatchlists.slice(0, 10).map((watchlist, index) => {
 								const userWatchlist = userWatchlists.find(
 									(uw) => uw._id === watchlist._id,
 								);
@@ -479,6 +479,7 @@ export function HomeContent() {
 											showOwner={true}
 											showSavedBadge={showSavedBadge}
 											showCollaborativeBadge={showCollaborativeBadge}
+											priority={index < 5}
 										/>
 									</m.div>
 								);

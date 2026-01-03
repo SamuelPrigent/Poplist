@@ -13,8 +13,6 @@ import {
 import { type Collaborator, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
 interface AddCollaboratorPopoverProps {
 	watchlistId: string;
 	collaborators: Collaborator[];
@@ -56,7 +54,7 @@ export function AddCollaboratorPopover({
 		const timeoutId = setTimeout(async () => {
 			try {
 				const response = await fetch(
-					`${API_URL}/auth/username/check/${encodeURIComponent(username)}`,
+					`/api/auth/username/check/${encodeURIComponent(username)}`,
 				);
 				const data = await response.json();
 

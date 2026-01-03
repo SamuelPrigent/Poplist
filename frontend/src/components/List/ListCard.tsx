@@ -26,6 +26,7 @@ interface ListCardProps {
 	showSavedBadge?: boolean;
 	showCollaborativeBadge?: boolean;
 	categoryGradient?: string;
+	priority?: boolean;
 	draggableProps?: {
 		ref: (node: HTMLElement | null) => void;
 		style?: React.CSSProperties;
@@ -46,6 +47,7 @@ export function ListCard({
 	showSavedBadge = false,
 	showCollaborativeBadge = false,
 	categoryGradient,
+	priority = false,
 	draggableProps,
 }: ListCardProps) {
 	const router = useRouter();
@@ -110,6 +112,7 @@ export function ListCard({
 							fill
 							sizes="(max-width: 768px) 50vw, 25vw"
 							className="object-cover"
+							priority={priority}
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
@@ -138,6 +141,7 @@ export function ListCard({
 							fill
 							sizes="(max-width: 768px) 50vw, 25vw"
 							className="object-cover"
+							priority={priority}
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
