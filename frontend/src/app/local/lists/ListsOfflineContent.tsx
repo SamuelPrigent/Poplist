@@ -39,6 +39,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Watchlist } from "@/lib/api-client";
@@ -228,6 +229,8 @@ function SortableWatchlistCardOffline({
 
 export function ListsOfflineContent() {
 	const { content } = useLanguageStore();
+	const { user } = useAuth();
+	const router = useRouter();
 	const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -239,6 +242,13 @@ export function ListsOfflineContent() {
 	const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
 	const [popoverOpen, setPopoverOpen] = useState(false);
 	const popoverTimeoutRef = useRef<number | null>(null);
+
+	// Redirect to account lists if authenticated
+	useEffect(() => {
+		if (user) {
+			router.push("/account/lists");
+		}
+	}, [user, router]);
 
 	// Handle popover hover with delay
 	const handlePopoverEnter = () => {

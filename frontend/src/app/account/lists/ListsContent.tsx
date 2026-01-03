@@ -20,8 +20,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Film, Plus } from 'lucide-react';
 import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
+import { useAuth } from '@/context/auth-context';
 import { CreateListDialog } from '@/components/List/modal/CreateListDialog';
 import { DeleteListDialog } from '@/components/List/modal/DeleteListDialog';
 import { EditListDialog } from '@/components/List/modal/EditListDialog';
@@ -88,6 +90,8 @@ function SortableWatchlistCard({ watchlist, onEdit, onDelete }: SortableWatchlis
 
 export function ListsContent() {
   const { content } = useLanguageStore();
+  const { user } = useAuth();
+  const router = useRouter();
   const { showOwned, showSaved, toggleOwned, toggleSaved } = useListFiltersStore();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +99,13 @@ export function ListsContent() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedWatchlist, setSelectedWatchlist] = useState<Watchlist | null>(null);
+
+  // Redirect to local lists if not authenticated
+  useEffect(() => {
+    if (user === null) {
+      router.push('/local/lists');
+    }
+  }, [user, router]);
 
   // Setup drag sensors
   const sensors = useSensors(

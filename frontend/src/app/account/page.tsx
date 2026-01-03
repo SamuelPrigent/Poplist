@@ -52,6 +52,13 @@ export default function AccountPage() {
 	const [avatarUploading, setAvatarUploading] = useState(false);
 	const [avatarDeleting, setAvatarDeleting] = useState(false);
 
+	// Redirect to home if not authenticated
+	useEffect(() => {
+		if (user === null) {
+			router.push("/home");
+		}
+	}, [user, router]);
+
 	// Update username when user changes
 	useEffect(() => {
 		if (user?.username) {
