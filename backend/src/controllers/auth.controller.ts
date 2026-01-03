@@ -262,11 +262,12 @@ export async function googleCallback(
 		});
 		await user.save();
 
-		// Set cookies
-		setAccessTokenCookie(res, accessToken);
-		setRefreshTokenCookie(res, refreshToken);
+		// Note: On n'utilise PAS setAccessTokenCookie/setRefreshTokenCookie ici
+		// car les cookies seraient sur le domaine backend, pas frontend.
+		// On envoie les tokens via postMessage, le frontend les enverra
+		// à /auth/set-tokens via le proxy pour avoir les cookies sur le bon domaine.
 
-		// Return popup close page
+		// Return popup close page with tokens in postMessage
 		const clientURL = getClientURL();
 		res.send(`
       <!DOCTYPE html>
@@ -277,7 +278,11 @@ export async function googleCallback(
         <body>
           <script>
             if (window.opener) {
-              window.opener.postMessage({ status: 'success' }, '${clientURL}');
+              window.opener.postMessage({
+                status: 'success',
+                accessToken: '${accessToken}',
+                refreshToken: '${refreshToken}'
+              }, '${clientURL}');
               window.close();
             } else {
               window.location.href = '${clientURL}';
@@ -681,4 +686,32 @@ export async function checkUsernameAvailability(
 		available: !existingUser,
 		username,
 	});
+}
+
+/**
+ * Set tokens as cookies - utilisé par le frontend après OAuth
+ * pour avoir les cookies sur le domaine frontend (via proxy)
+ */
+const setTokensSchema = z.object({
+	accessToken: z.string(),
+	refreshToken: z.string(),
+});
+
+export async function setTokens(req: Request, res: Response): Promise<void> {
+	try {
+		const { accessToken, refreshToken } = setTokensSchema.parse(req.body);
+
+		// Set cookies via response headers
+		// Ces cookies seront sur le domaine frontend car la requête passe par le proxy
+		setAccessTokenCookie(res, accessToken);
+		setRefreshTokenCookie(res, refreshToken);
+
+		res.json({ message: "Tokens set successfully" });
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			res.status(400).json({ error: "Invalid tokens", details: error.errors });
+			return;
+		}
+		res.status(500).json({ error: "Failed to set tokens" });
+	}
 }

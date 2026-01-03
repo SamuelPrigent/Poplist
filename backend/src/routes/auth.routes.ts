@@ -15,6 +15,7 @@ router.get("/google/callback", authController.googleCallback);
 // Token management
 router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
+router.post("/set-tokens", authController.setTokens);
 
 // User profile
 router.get("/me", requireAuth, authController.me);
