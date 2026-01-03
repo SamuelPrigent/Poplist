@@ -45,9 +45,10 @@ interface SortableWatchlistCardProps {
   watchlist: Watchlist;
   onEdit: (watchlist: Watchlist) => void;
   onDelete: (watchlist: Watchlist) => void;
+  priority?: boolean;
 }
 
-function SortableWatchlistCard({ watchlist, onEdit, onDelete }: SortableWatchlistCardProps) {
+function SortableWatchlistCard({ watchlist, onEdit, onDelete, priority = false }: SortableWatchlistCardProps) {
   const { content } = useLanguageStore();
 
   // Use isOwner flag from backend
@@ -78,6 +79,7 @@ function SortableWatchlistCard({ watchlist, onEdit, onDelete }: SortableWatchlis
       showVisibility={true}
       showSavedBadge={!isOwner && !watchlist.isCollaborator && watchlist.isSaved}
       showCollaborativeBadge={watchlist.isCollaborator === true}
+      priority={priority}
       draggableProps={{
         ref: setNodeRef,
         style,
@@ -313,7 +315,7 @@ export function ListsContent() {
             >
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 <AnimatePresence initial={false} mode="popLayout">
-                  {filteredWatchlists.map(watchlist => (
+                  {filteredWatchlists.map((watchlist, index) => (
                     <m.div
                       key={watchlist._id}
                       initial={{ opacity: 0, scale: 0.9 }}
@@ -331,6 +333,7 @@ export function ListsContent() {
                           setSelectedWatchlist(wl);
                           setDeleteDialogOpen(true);
                         }}
+                        priority={index < 4}
                       />
                     </m.div>
                   ))}

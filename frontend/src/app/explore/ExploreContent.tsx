@@ -34,8 +34,6 @@ interface MediaItem {
   vote_average: number;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
 // Generate 36 stable skeleton keys (6 columns × 6 rows)
 // const SKELETON_KEYS = Array.from({ length: 36 }, (_, i) => `skeleton-${i + 1}`);
 
@@ -323,10 +321,9 @@ export function ExploreContent() {
               params.append(`${dateField}.lte`, dateTo);
             }
 
-            const url = `${API_URL}/tmdb/discover/${type}`;
-            const fullUrl = `${url}?${params.toString()}`;
+            const url = `/api/tmdb/discover/${type}?${params.toString()}`;
 
-            const response = await fetch(fullUrl);
+            const response = await fetch(url);
             const data = await response.json();
 
             allResults = [...allResults, ...(data.results || [])];

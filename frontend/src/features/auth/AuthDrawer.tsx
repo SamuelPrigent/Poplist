@@ -15,7 +15,9 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { useLanguageStore } from "@/store/language";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// URL backend pour la vérification d'origine OAuth (le popup s'ouvre sur le backend)
+const BACKEND_ORIGIN =
+	process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 interface AuthDrawerProps {
 	open: boolean;
@@ -105,7 +107,7 @@ export function AuthDrawer({
 		const top = window.screen.height / 2 - height / 2;
 
 		window.open(
-			`${API_URL}/auth/google`,
+			"/api/auth/google",
 			"Google Login",
 			`width=${width},height=${height},left=${left},top=${top}`,
 		);
@@ -113,7 +115,7 @@ export function AuthDrawer({
 		// Listen for postMessage from popup
 		const handleMessage = async (event: MessageEvent) => {
 			// Check that message comes from our backend
-			if (event.origin !== API_URL) {
+			if (event.origin !== BACKEND_ORIGIN) {
 				return;
 			}
 

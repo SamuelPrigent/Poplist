@@ -1,15 +1,11 @@
 import type { User } from "@/context/auth-context";
 
-// En production, appelle le backend directement (cookies cross-site avec sameSite=none)
-// En dev, utilise localhost
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
 // Helper to get TMDB image URL through proxy to avoid CORS issues
 export function getTMDBImageUrl(logoPath: string): string {
 	if (!logoPath || !logoPath.startsWith("/")) {
 		return "";
 	}
-	return `${API_URL}/image-proxy?path=${encodeURIComponent(logoPath)}`;
+	return `/api/image-proxy?path=${encodeURIComponent(logoPath)}`;
 }
 
 // Helper to get local watch provider logo based on provider name
@@ -74,7 +70,7 @@ async function refreshAccessToken(): Promise<boolean> {
 
 	refreshPromise = (async () => {
 		try {
-			const response = await fetch(`${API_URL}/auth/refresh`, {
+			const response = await fetch("/api/auth/refresh", {
 				method: "POST",
 				credentials: "include",
 			});
@@ -117,7 +113,7 @@ async function request<T>(
 		config.body = JSON.stringify(body);
 	}
 
-	const response = await fetch(`${API_URL}${endpoint}`, config);
+	const response = await fetch(`/api${endpoint}`, config);
 
 	// Handle 401 Unauthorized - try to refresh token
 	// Exclude /auth/refresh, /auth/logout, and /auth/me from auto-refresh

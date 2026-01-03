@@ -80,6 +80,7 @@ export default function ListDetailPage() {
 				setIsCollaborator(response.isCollaborator || false);
 				setIsSaved(response.isSaved || false);
 			} else {
+				// Non authentifié : essayer d'accéder à la version publique
 				const response = await watchlistAPI.getPublic(id);
 				data = response.watchlist;
 				setIsOwner(false);
@@ -90,6 +91,20 @@ export default function ListDetailPage() {
 			setWatchlist(data);
 		} catch (err) {
 			console.error("Failed to fetch watchlist:", err);
+			const errorMessage = err instanceof Error ? err.message : "";
+
+			// Si non authentifié et accès refusé → watchlist privée, rediriger vers /home
+			if (!isAuthenticated) {
+				router.replace("/home");
+				return;
+			}
+
+			// Si authentifié mais accès refusé (pas owner/collaborateur d'une liste privée)
+			if (errorMessage.includes("not found") || errorMessage.includes("Forbidden") || errorMessage.includes("Unauthorized")) {
+				router.replace("/home");
+				return;
+			}
+
 			setNotFound(true);
 		} finally {
 			setLoading(false);
