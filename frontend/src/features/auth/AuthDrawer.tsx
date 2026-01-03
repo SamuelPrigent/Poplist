@@ -122,16 +122,31 @@ export function AuthDrawer({
 			if (event.data.status === "success") {
 				window.removeEventListener("message", handleMessage);
 
-				// Wait a bit for cookie to be set, then refetch user
-				await new Promise((resolve) => setTimeout(resolve, 200));
-				await refetch();
+				try {
+					// Set tokens via proxy to have cookies on frontend domain
+					const { accessToken, refreshToken } = event.data;
+					if (accessToken && refreshToken) {
+						await fetch("/api/auth/set-tokens", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							credentials: "include",
+							body: JSON.stringify({ accessToken, refreshToken }),
+						});
+					}
 
-				// Close drawer after user is updated
-				onClose();
+					// Refetch user after cookies are set
+					await refetch();
 
-				// If user was on an offline list page, redirect to lists page
-				if (pathname.includes("/offline-")) {
-					router.push("/account/lists");
+					// Close drawer after user is updated
+					onClose();
+
+					// If user was on an offline list page, redirect to lists page
+					if (pathname.includes("/offline-")) {
+						router.push("/account/lists");
+					}
+				} catch (err) {
+					console.error("Failed to set OAuth tokens:", err);
+					setError("Failed to complete authentication");
 				}
 			} else if (event.data.status === "error") {
 				window.removeEventListener("message", handleMessage);
