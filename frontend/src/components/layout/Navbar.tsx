@@ -4,7 +4,7 @@ import { Bookmark, LogOut, User as UserIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
@@ -17,6 +17,12 @@ export function Navbar() {
 	const pathname = usePathname();
 	const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+	const [mounted, setMounted] = useState(false);
+
+	// Évite le mismatch SSR/client - on render l'UI auth seulement après mount
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	const openLogin = () => {
 		setAuthMode("login");
@@ -72,61 +78,66 @@ export function Navbar() {
 					</div>
 
 					<div className="flex items-center gap-4">
-						<Link
-							href={isAuthenticated ? "/account/lists" : "/local/lists"}
-							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
-						>
-							<Bookmark
-								className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}
-							/>
-						</Link>
-
-						{isAuthenticated ? (
-							<div className="flex items-center gap-2">
-								<button
-									type="button"
-									onClick={() => router.push("/account")}
-									className="bg-muted/50 hover:bg-muted flex cursor-pointer items-center gap-2 rounded-full px-4 py-1.5 transition-colors"
-								>
-									<div className="bg-muted flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
-										{user?.avatarUrl ? (
-											<Image
-												src={user.avatarUrl}
-												alt={user.username}
-												width={20}
-												height={20}
-												className="h-full w-full object-cover"
-											/>
-										) : (
-											<UserIcon className="h-3.5 w-3.5" />
-										)}
-									</div>
-									<span className="text-sm font-medium">{user?.username}</span>
-								</button>
-								<Button
-									className="cursor-pointer"
-									variant="ghost"
-									size="icon"
-									onClick={handleLogout}
-								>
-									<LogOut className="h-4 w-4" />
-								</Button>
-							</div>
-						) : (
+						{/* Render seulement après mount pour éviter hydration mismatch */}
+						{mounted && (
 							<>
-								<Button
-									className="focus-visible:ring-offset-background rounded-squircle cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
-									variant="outline"
-									onClick={openLogin}
+								<Link
+									href={isAuthenticated ? "/account/lists" : "/local/lists"}
+									className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
 								>
-									{content.header.login}
-								</Button>
-								<Button
-									className="focus-visible:ring-offset-background rounded-squircle cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
-									onClick={openSignup}
-								>
-									{content.header.signup}
-								</Button>
+									<Bookmark
+										className={`h-5 w-5 ${isAuthenticated ? "fill-white" : ""}`}
+									/>
+								</Link>
+
+								{isAuthenticated ? (
+									<div className="flex items-center gap-2">
+										<button
+											type="button"
+											onClick={() => router.push("/account")}
+											className="bg-muted/50 hover:bg-muted flex cursor-pointer items-center gap-2 rounded-full px-4 py-1.5 transition-colors"
+										>
+											<div className="bg-muted flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
+												{user?.avatarUrl ? (
+													<Image
+														src={user.avatarUrl}
+														alt={user.username}
+														width={20}
+														height={20}
+														className="h-full w-full object-cover"
+													/>
+												) : (
+													<UserIcon className="h-3.5 w-3.5" />
+												)}
+											</div>
+											<span className="text-sm font-medium">{user?.username}</span>
+										</button>
+										<Button
+											className="cursor-pointer"
+											variant="ghost"
+											size="icon"
+											onClick={handleLogout}
+										>
+											<LogOut className="h-4 w-4" />
+										</Button>
+									</div>
+								) : (
+									<>
+										<Button
+											className="focus-visible:ring-offset-background rounded-squircle cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
+											variant="outline"
+											onClick={openLogin}
+										>
+											{content.header.login}
+										</Button>
+										<Button
+											className="focus-visible:ring-offset-background rounded-squircle cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
+											onClick={openSignup}
+										>
+											{content.header.signup}
+										</Button>
+									</>
+								)}
 							</>
 						)}
 					</div>
