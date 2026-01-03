@@ -19,9 +19,6 @@ export function useAuthRedirect() {
 	const wasAuthenticated = useRef<boolean | null>(null);
 
 	useEffect(() => {
-		// DEBUG - à retirer après
-		console.log("[AuthRedirect]", { isLoading, isAuthenticated, was: wasAuthenticated.current, pathname });
-
 		// Attendre que le chargement initial soit terminé
 		if (isLoading) return;
 
@@ -33,13 +30,11 @@ export function useAuthRedirect() {
 
 		// Détecter un logout (était auth, ne l'est plus)
 		if (wasAuthenticated.current && !isAuthenticated) {
-			console.log("[AuthRedirect] LOGOUT detected -> redirecting");
 			handleLogoutRedirect(pathname, router);
 		}
 
 		// Détecter un login (n'était pas auth, l'est maintenant)
 		if (!wasAuthenticated.current && isAuthenticated) {
-			console.log("[AuthRedirect] LOGIN detected");
 			handleLoginRedirect(pathname, router);
 		}
 
