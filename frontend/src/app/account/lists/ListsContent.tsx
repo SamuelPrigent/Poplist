@@ -92,7 +92,7 @@ function SortableWatchlistCard({ watchlist, onEdit, onDelete, priority = false }
 
 export function ListsContent() {
   const { content } = useLanguageStore();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { showOwned, showSaved, toggleOwned, toggleSaved } = useListFiltersStore();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
@@ -102,12 +102,12 @@ export function ListsContent() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedWatchlist, setSelectedWatchlist] = useState<Watchlist | null>(null);
 
-  // Redirect to local lists if not authenticated
+  // Redirect to local lists if not authenticated (wait for auth to load first)
   useEffect(() => {
-    if (user === null) {
+    if (!authLoading && user === null) {
       router.push('/local/lists');
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Setup drag sensors
   const sensors = useSensors(

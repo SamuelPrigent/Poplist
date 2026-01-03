@@ -23,7 +23,7 @@ import { userAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
 export default function AccountPage() {
-	const { user, updateUsername, changePassword, deleteAccount, refetch } =
+	const { user, isLoading, updateUsername, changePassword, deleteAccount, refetch } =
 		useAuth();
 	const { toast } = useToast();
 	const { content } = useLanguageStore();
@@ -52,12 +52,12 @@ export default function AccountPage() {
 	const [avatarUploading, setAvatarUploading] = useState(false);
 	const [avatarDeleting, setAvatarDeleting] = useState(false);
 
-	// Redirect to home if not authenticated
+	// Redirect to home if not authenticated (wait for auth to load first)
 	useEffect(() => {
-		if (user === null) {
+		if (!isLoading && user === null) {
 			router.push("/home");
 		}
-	}, [user, router]);
+	}, [user, isLoading, router]);
 
 	// Update username when user changes
 	useEffect(() => {
