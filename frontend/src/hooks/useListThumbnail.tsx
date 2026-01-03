@@ -28,9 +28,7 @@ function isOfflineWatchlist(watchlist: Watchlist): boolean {
 	return !/^[0-9a-fA-F]{24}$/.test(id);
 }
 
-export function useListThumbnail(
-	watchlist: Watchlist | null,
-): string | null {
+export function useListThumbnail(watchlist: Watchlist | null): string | null {
 	const [localThumbnail, setLocalThumbnail] = useState<string | null>(null);
 
 	// Priority 3: Generate local thumbnail for offline watchlists

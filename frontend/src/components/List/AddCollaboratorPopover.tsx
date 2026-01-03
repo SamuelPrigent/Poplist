@@ -1,3 +1,5 @@
+"use client";
+
 import { Check, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -11,7 +13,7 @@ import {
 import { type Collaborator, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 interface AddCollaboratorPopoverProps {
 	watchlistId: string;
@@ -54,12 +56,11 @@ export function AddCollaboratorPopover({
 		const timeoutId = setTimeout(async () => {
 			try {
 				const response = await fetch(
-					`${API_URL}/auth/username/check/${encodeURIComponent(username)}`
+					`${API_URL}/auth/username/check/${encodeURIComponent(username)}`,
 				);
 				const data = await response.json();
 
 				// For collaborator adding: username EXISTS (available=false) is VALID
-				// Opposite of signup flow where available=true is valid
 				if (response.ok && !data.available) {
 					setValidationState("valid");
 				} else {
@@ -81,8 +82,8 @@ export function AddCollaboratorPopover({
 			setIsAdding(true);
 			await watchlistAPI.addCollaborator(watchlistId, username.trim());
 			toast.success(
-				content.watchlists.collaborators.addSuccess ||
-					`${username} ajouté comme collaborateur`
+				content.watchlists.collaborators?.addSuccess ||
+					`${username} ajouté comme collaborateur`,
 			);
 			setUsername("");
 			setValidationState("idle");
@@ -92,8 +93,8 @@ export function AddCollaboratorPopover({
 			toast.error(
 				error instanceof Error
 					? error.message
-					: content.watchlists.collaborators.addError ||
-							"Échec de l'ajout du collaborateur"
+					: content.watchlists.collaborators?.addError ||
+							"Échec de l'ajout du collaborateur",
 			);
 		} finally {
 			setIsAdding(false);
@@ -102,13 +103,13 @@ export function AddCollaboratorPopover({
 
 	const handleRemoveCollaborator = async (
 		collaboratorId: string,
-		collaboratorUsername: string
+		collaboratorUsername: string,
 	) => {
 		try {
 			await watchlistAPI.removeCollaborator(watchlistId, collaboratorId);
 			toast.success(
-				content.watchlists.collaborators.removeSuccess ||
-					`${collaboratorUsername} retiré`
+				content.watchlists.collaborators?.removeSuccess ||
+					`${collaboratorUsername} retiré`,
 			);
 			onCollaboratorRemoved();
 		} catch (error) {
@@ -116,8 +117,8 @@ export function AddCollaboratorPopover({
 			toast.error(
 				error instanceof Error
 					? error.message
-					: content.watchlists.collaborators.removeError ||
-							"Échec de la suppression du collaborateur"
+					: content.watchlists.collaborators?.removeError ||
+							"Échec de la suppression du collaborateur",
 			);
 		}
 	};
@@ -148,18 +149,18 @@ export function AddCollaboratorPopover({
 				<div className="space-y-4">
 					<div>
 						<h3 className="mb-2 text-sm font-semibold">
-							{content.watchlists.collaborators.addTitle ||
+							{content.watchlists.collaborators?.addTitle ||
 								"Ajouter un collaborateur"}
 						</h3>
 						<p className="text-muted-foreground mb-3 text-xs">
-							{content.watchlists.collaborators.addDescription ||
+							{content.watchlists.collaborators?.addDescription ||
 								"Entrez le nom d'utilisateur de la personne à ajouter"}
 						</p>
 
 						<div className="relative">
 							<Input
 								placeholder={
-									content.watchlists.collaborators.usernamePlaceholder ||
+									content.watchlists.collaborators?.usernamePlaceholder ||
 									"Nom d'utilisateur"
 								}
 								value={username}
@@ -184,15 +185,15 @@ export function AddCollaboratorPopover({
 							size="sm"
 						>
 							{isAdding
-								? content.watchlists.collaborators.adding || "Ajout..."
-								: content.watchlists.collaborators.add || "Ajouter"}
+								? content.watchlists.collaborators?.adding || "Ajout..."
+								: content.watchlists.collaborators?.add || "Ajouter"}
 						</Button>
 					</div>
 
 					{collaborators.length > 0 && (
 						<div className="border-t pt-3">
 							<h4 className="text-muted-foreground mb-2 text-xs font-semibold">
-								{content.watchlists.collaborators.currentTitle ||
+								{content.watchlists.collaborators?.currentTitle ||
 									"Collaborateurs actuels"}
 							</h4>
 							<div className="space-y-1">
@@ -214,12 +215,12 @@ export function AddCollaboratorPopover({
 											onClick={() =>
 												handleRemoveCollaborator(
 													collaborator._id,
-													collaborator.username
+													collaborator.username,
 												)
 											}
 											className="text-muted-foreground cursor-pointer rounded transition-colors hover:text-red-500"
 											title={
-												content.watchlists.collaborators.remove || "Retirer"
+												content.watchlists.collaborators?.remove || "Retirer"
 											}
 										>
 											<X className="h-4 w-4" />

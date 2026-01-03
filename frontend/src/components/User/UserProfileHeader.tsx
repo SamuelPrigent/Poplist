@@ -1,5 +1,8 @@
+"use client";
+
 import { ArrowLeft, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useLanguageStore } from "@/store/language";
 
 interface UserProfileHeaderProps {
@@ -17,14 +20,14 @@ export function UserProfileHeader({
 	totalPublicWatchlists,
 	hasWatchlists,
 }: UserProfileHeaderProps) {
-	const navigate = useNavigate();
+	const router = useRouter();
 	const { content } = useLanguageStore();
 
 	const handleBack = () => {
 		if (hasWatchlists) {
-			navigate(-1);
+			router.back();
 		} else {
-			navigate("/home");
+			router.push("/home");
 		}
 	};
 
@@ -51,12 +54,13 @@ export function UserProfileHeader({
 					<div className="shrink-0">
 						<div className="relative h-28 w-28 overflow-hidden rounded-full shadow-xl">
 							{user.avatarUrl ? (
-								<img
+								<Image
 									src={user.avatarUrl}
 									alt={user.username}
-									className="h-full w-full object-cover"
-									loading="lazy"
-									decoding="async"
+									fill
+									sizes="112px"
+									className="object-cover"
+									priority
 								/>
 							) : (
 								<div className="bg-muted/50 flex h-full w-full items-center justify-center">

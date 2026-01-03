@@ -1,17 +1,20 @@
+"use client";
+
 import { Bookmark, LogOut, User as UserIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { useLanguageStore } from "@/store/language";
-import play from "../../assets/play.png";
 
 export function Navbar() {
 	const { isAuthenticated, user, logout } = useAuth();
 	const { content } = useLanguageStore();
-	const navigate = useNavigate();
-	const location = useLocation();
+	const router = useRouter();
+	const pathname = usePathname();
 	const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
@@ -29,10 +32,10 @@ export function Navbar() {
 		await logout();
 
 		// Smart redirect based on current route
-		if (location.pathname === "/account/lists") {
-			navigate("/local/lists");
-		} else if (location.pathname.startsWith("/account/")) {
-			navigate("/home");
+		if (pathname === "/account/lists") {
+			router.push("/local/lists");
+		} else if (pathname.startsWith("/account/")) {
+			router.push("/home");
 		}
 		// For other pages, no redirect needed (stays on current page)
 	};
@@ -43,19 +46,25 @@ export function Navbar() {
 				<div className="mx-auto flex h-16 w-[92%] max-w-(--maxWidth) items-center justify-between px-4">
 					<div className="flex items-center gap-6">
 						<div className="flex items-center gap-2">
-							<img src={play} className="h-4 w-4" alt="" />
-							<Link to="/" className="rounded text-xl font-bold text-white">
+							<Image
+								src="/play.png"
+								width={16}
+								height={16}
+								alt=""
+								className="h-4 w-4"
+							/>
+							<Link href="/" className="rounded text-xl font-bold text-white">
 								{content.header.appName}
 							</Link>
 						</div>
 						<Link
-							to="/home"
+							href="/home"
 							className="text-muted-foreground rounded p-1 text-sm font-medium transition-colors hover:text-white"
 						>
 							{content.header.home}
 						</Link>
 						<Link
-							to="/explore"
+							href="/explore"
 							className="text-muted-foreground rounded p-1 text-sm font-medium transition-colors hover:text-white"
 						>
 							{content.header.explore}
@@ -64,7 +73,7 @@ export function Navbar() {
 
 					<div className="flex items-center gap-4">
 						<Link
-							to="/lists"
+							href="/lists"
 							className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
 						>
 							<Bookmark
@@ -76,14 +85,16 @@ export function Navbar() {
 							<div className="flex items-center gap-2">
 								<button
 									type="button"
-									onClick={() => navigate("/account")}
+									onClick={() => router.push("/account")}
 									className="bg-muted/50 hover:bg-muted flex cursor-pointer items-center gap-2 rounded-full px-4 py-1.5 transition-colors"
 								>
 									<div className="bg-muted flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
 										{user?.avatarUrl ? (
-											<img
+											<Image
 												src={user.avatarUrl}
 												alt={user.username}
+												width={20}
+												height={20}
 												className="h-full w-full object-cover"
 											/>
 										) : (

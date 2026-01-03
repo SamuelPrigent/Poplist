@@ -1,5 +1,8 @@
+"use client";
+
 import { ListChecks, Sparkles, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import Image from "next/image";
+import Link from "next/link";
 import type { Content } from "@/types/content";
 
 interface TrendingItem {
@@ -48,6 +51,14 @@ export function HeroSection({
 		return groupIdx * 4;
 	};
 
+	const handleScrollToFeatures = () => {
+		const featuresSection = document.querySelector("section:nth-of-type(3)");
+		featuresSection?.scrollIntoView({
+			behavior: "smooth",
+			block: "start",
+		});
+	};
+
 	return (
 		<section className="to-background relative min-h-[80vh] overflow-hidden bg-linear-to-br from-slate-900">
 			{/* Organized Watchlist Background Grid - Static */}
@@ -73,11 +84,11 @@ export function HeroSection({
 
 										const col3Items = createWatchlistGroup(
 											trending,
-											col3Idx * 4
+											col3Idx * 4,
 										);
 										const col4Items = createWatchlistGroup(
 											trending,
-											col4Idx * 4
+											col4Idx * 4,
 										);
 
 										if (col3Items.length === 0 || col4Items.length === 0)
@@ -94,13 +105,15 @@ export function HeroSection({
 										return combinedItems.map((item, renderIdx) => (
 											<div
 												key={`poster-${groupIdx}-${renderIdx}`}
-												className="aspect-2/3 overflow-hidden rounded-sm bg-slate-800"
+												className="relative aspect-2/3 overflow-hidden rounded-sm bg-slate-800"
 											>
 												{item?.poster_path && (
-													<img
+													<Image
 														src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
 														alt=""
-														className="h-full w-full object-cover opacity-60"
+														fill
+														sizes="50px"
+														className="object-cover opacity-60"
 													/>
 												)}
 											</div>
@@ -110,7 +123,7 @@ export function HeroSection({
 									// For all other columns, use normal logic
 									const groupItems = createWatchlistGroup(
 										trending,
-										getStartIdx(groupIdx)
+										getStartIdx(groupIdx),
 									);
 									if (groupItems.length === 0) return null;
 
@@ -119,13 +132,15 @@ export function HeroSection({
 										return (
 											<div
 												key={`poster-${groupIdx}-${slotIdx}`}
-												className="aspect-2/3 overflow-hidden rounded-sm bg-slate-800"
+												className="relative aspect-2/3 overflow-hidden rounded-sm bg-slate-800"
 											>
 												{item?.poster_path && (
-													<img
+													<Image
 														src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
 														alt=""
-														className="h-full w-full object-cover opacity-60"
+														fill
+														sizes="50px"
+														className="object-cover opacity-60"
 													/>
 												)}
 											</div>
@@ -180,22 +195,14 @@ export function HeroSection({
 				{/* CTA Buttons */}
 				<div className="flex flex-wrap items-center justify-center gap-4">
 					<Link
-						to={watchlistsUrl}
+						href={watchlistsUrl}
 						className="corner-squircle inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-6 py-[1.4rem] text-sm font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"
 					>
 						{content.home.hero.cta}
 					</Link>
 					<button
 						type="button"
-						onClick={() => {
-							const featuresSection = document.querySelector(
-								"section:nth-of-type(3)"
-							);
-							featuresSection?.scrollIntoView({
-								behavior: "smooth",
-								block: "start",
-							});
-						}}
+						onClick={handleScrollToFeatures}
 						className="corner-squircle inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-gray-400/30 bg-transparent px-6 py-[1.4rem] text-sm font-semibold whitespace-nowrap text-gray-200 transition-colors hover:border-gray-400/50 hover:bg-gray-400/10"
 					>
 						{content.home.hero.ctaSecondary}

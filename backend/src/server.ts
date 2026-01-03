@@ -61,10 +61,26 @@ console.log("🔍 [ENV DEBUG] CLIENT_URL (cleaned):", CLIENT_URL);
 const MONGO_URL =
 	process.env.MONGO_URL || "mongodb://localhost:27017/watchlisthub";
 
+// Build list of allowed origins for CORS
+const allowedOrigins = [
+	CLIENT_URL,
+	"http://localhost:3001", // Next.js dev server
+	"http://localhost:5173", // Vite dev server
+].filter((origin, index, self) => self.indexOf(origin) === index); // Remove duplicates
+
+console.log("🔍 [ENV DEBUG] Allowed CORS origins:", allowedOrigins);
+
 // Middleware
 app.use(
 	cors({
-		origin: CLIENT_URL,
+		origin: (origin, callback) => {
+			// Allow requests with no origin (like mobile apps or curl requests)
+			if (!origin) return callback(null, true);
+			if (allowedOrigins.includes(origin)) {
+				return callback(null, true);
+			}
+			return callback(new Error("Not allowed by CORS"));
+		},
 		credentials: true,
 	})
 );

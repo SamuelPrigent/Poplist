@@ -1,5 +1,8 @@
+"use client";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Image as ImageIcon, Pencil, X } from "lucide-react";
+import Image from "next/image";
 import {
 	forwardRef,
 	useEffect,
@@ -96,7 +99,7 @@ export const EditListDialogOffline = forwardRef<
 			// Offline mode: update in localStorage
 			const watchlists = JSON.parse(localStorage.getItem("watchlists") || "[]");
 			const index = watchlists.findIndex(
-				(w: Watchlist) => w._id === watchlist._id
+				(w: Watchlist) => w._id === watchlist._id,
 			);
 
 			if (index !== -1) {
@@ -134,7 +137,7 @@ export const EditListDialogOffline = forwardRef<
 			onOpenChange(false);
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to update watchlist"
+				err instanceof Error ? err.message : "Failed to update watchlist",
 			);
 		} finally {
 			setLoading(false);
@@ -167,10 +170,12 @@ export const EditListDialogOffline = forwardRef<
 								>
 									{imagePreview ? (
 										<>
-											<img
+											<Image
 												src={imagePreview}
 												alt="Watchlist cover"
-												className="h-full w-full object-cover"
+												fill
+												sizes="192px"
+												className="object-cover"
 											/>
 											{/* Hover Overlay */}
 											<div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">

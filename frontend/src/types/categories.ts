@@ -26,7 +26,7 @@ export interface CategoryInfo {
 // Helper function to get translated category info
 export const getCategoryInfo = (
 	categoryId: GenreCategory,
-	content: Content
+	content: Content,
 ): CategoryInfo => {
 	const translations = content.categories.list[categoryId];
 	const baseInfo = CATEGORY_INFO[categoryId];

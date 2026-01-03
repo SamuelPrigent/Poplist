@@ -1,13 +1,15 @@
+"use client";
+
 import type {
 	DraggableAttributes,
 	DraggableSyntheticListeners,
 } from "@dnd-kit/core";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Edit, Film, MoreVertical, Trash2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import checkGreenIcon from "@/assets/checkGreenFull.svg";
-import teamIcon from "@/assets/team.svg";
 import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Watchlist } from "@/lib/api-client";
 import type { Content } from "@/types/content";
@@ -46,7 +48,7 @@ export function ListCard({
 	categoryGradient,
 	draggableProps,
 }: ListCardProps) {
-	const navigate = useNavigate();
+	const router = useRouter();
 	const thumbnailUrl = useListThumbnail(watchlist);
 	const editButtonRef = useRef<HTMLDivElement>(null);
 	const deleteButtonRef = useRef<HTMLDivElement>(null);
@@ -87,7 +89,6 @@ export function ListCard({
 	const cardContent = (
 		<>
 			{/* Cover Image */}
-			{/* Cover Image */}
 			{handleClick ? (
 				<button
 					type="button"
@@ -97,19 +98,18 @@ export function ListCard({
 				>
 					{categoryGradient ? (
 						<div className="relative flex h-full w-full items-center justify-center p-4">
-							{/* Dark overlay for better text contrast */}
 							<div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
 							<span className="relative z-10 text-center text-lg font-bold text-white drop-shadow-lg">
 								{watchlist.name}
 							</span>
 						</div>
 					) : thumbnailUrl ? (
-						<img
+						<Image
 							src={thumbnailUrl}
 							alt={watchlist.name}
-							className="h-full w-full object-cover"
-							loading="lazy"
-							decoding="async"
+							fill
+							sizes="(max-width: 768px) 50vw, 25vw"
+							className="object-cover"
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
@@ -126,19 +126,18 @@ export function ListCard({
 				>
 					{categoryGradient ? (
 						<div className="relative flex h-full w-full items-center justify-center p-4">
-							{/* Dark overlay for better text contrast */}
 							<div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
 							<span className="relative z-10 text-center text-lg font-bold text-white drop-shadow-lg">
 								{watchlist.name}
 							</span>
 						</div>
 					) : thumbnailUrl ? (
-						<img
+						<Image
 							src={thumbnailUrl}
 							alt={watchlist.name}
-							className="h-full w-full object-cover"
-							loading="lazy"
-							decoding="async"
+							fill
+							sizes="(max-width: 768px) 50vw, 25vw"
+							className="object-cover"
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
@@ -150,19 +149,25 @@ export function ListCard({
 
 			{/* Text Info */}
 			<div className="flex items-center gap-1">
-				{/* Saved Badge - Indicates this is a followed watchlist */}
+				{/* Saved Badge */}
 				{showSavedBadge && (
-					<img src={checkGreenIcon} alt="Suivi" className="h-4 w-4 shrink-0" />
+					<Image
+						src="/checkGreenFull.svg"
+						alt="Suivi"
+						width={16}
+						height={16}
+						className="h-4 w-4 shrink-0"
+					/>
 				)}
 
-				{/* Collaborative Badge - Indicates this is a collaborative watchlist */}
+				{/* Collaborative Badge */}
 				{showCollaborativeBadge && (
-					//   <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-muted/80">
-					// {/* <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(0deg_85.8%_55.11%_/_54%)]"> */}
 					<div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[hsl(207.87deg_100%_34.92%_/57%)]">
-						<img
-							src={teamIcon}
+						<Image
+							src="/team.svg"
 							alt="Collaborative"
+							width={12}
+							height={12}
 							className="h-3 w-3 brightness-0 invert"
 						/>
 					</div>
@@ -196,8 +201,8 @@ export function ListCard({
 							onClick={(e) => {
 								e.preventDefault();
 								e.stopPropagation();
-								navigate(
-									`/user/${(watchlist.ownerId as { username: string }).username}`
+								router.push(
+									`/user/${(watchlist.ownerId as { username: string }).username}`,
 								);
 							}}
 							className="cursor-pointer rounded-md text-white capitalize hover:underline"
@@ -260,7 +265,6 @@ export function ListCard({
 					<DropdownMenu.Root
 						onOpenChange={(open) => {
 							if (!open) {
-								// Remove focus when dropdown closes
 								setTimeout(() => {
 									if (document.activeElement instanceof HTMLElement) {
 										document.activeElement.blur();
@@ -341,7 +345,7 @@ export function ListCard({
 
 	return (
 		<Link
-			to={href}
+			href={href}
 			className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
 		>
 			{cardContent}

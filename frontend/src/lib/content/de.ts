@@ -17,8 +17,7 @@ export const de: Content = {
 		loginDescription:
 			"Willkommen zurück! Melden Sie sich an, um auf Ihre Listen zuzugreifen.",
 		signupTitle: "Registrieren",
-		signupDescription:
-			"Erstellen Sie ein Konto, um Ihre Listen zu speichern.",
+		signupDescription: "Erstellen Sie ein Konto, um Ihre Listen zu speichern.",
 		continueWithGoogle: "Mit Google fortfahren",
 		or: "Oder",
 		email: "E-Mail",
@@ -76,8 +75,7 @@ export const de: Content = {
 			"Beginnen Sie damit, Filme und Serien zu Ihrer Liste hinzuzufügen, um Ihre Warteschlange zu organisieren.",
 		edit: "Bearbeiten",
 		editWatchlist: "Liste bearbeiten",
-		editWatchlistDescription:
-			"Bearbeiten Sie die Informationen Ihrer Liste.",
+		editWatchlistDescription: "Bearbeiten Sie die Informationen Ihrer Liste.",
 		deleteWatchlist: "Liste löschen",
 		deleteWatchlistConfirm:
 			'Möchten Sie "{name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
@@ -384,8 +382,7 @@ export const de: Content = {
 
 	explore: {
 		title: "Erkunden",
-		subtitle:
-			"Entdecken Sie neue Listen, die von der Community geteilt werden",
+		subtitle: "Entdecken Sie neue Listen, die von der Community geteilt werden",
 		searchPlaceholder: "Nach einer Liste suchen...",
 		filters: {
 			all: "Alle",

@@ -1,5 +1,7 @@
+"use client";
+
 import { Film } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import Image from "next/image";
 import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
@@ -9,37 +11,26 @@ interface ListCardSmallProps {
 	onClick?: () => void;
 }
 
-export function ListCardSmall({
-	watchlist,
-	onClick,
-}: ListCardSmallProps) {
-	const navigate = useNavigate();
+export function ListCardSmall({ watchlist, onClick }: ListCardSmallProps) {
 	const thumbnailUrl = useListThumbnail(watchlist);
 	const { content } = useLanguageStore();
-
-	const handleClick = () => {
-		if (onClick) {
-			onClick();
-		} else {
-			navigate(`/account/list/${watchlist._id}`);
-		}
-	};
 
 	return (
 		<button
 			type="button"
-			onClick={handleClick}
+			onClick={onClick}
 			className="group bg-muted/30 hover:bg-muted/50 flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg p-3 text-left transition-all"
 		>
 			{/* Thumbnail - Square */}
 			<div className="bg-muted relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
 				{thumbnailUrl ? (
-					<img
+					<Image
 						src={thumbnailUrl}
 						alt={watchlist.name}
-						className="h-full w-full object-cover"
-						loading="lazy"
-						decoding="async"
+						fill
+						sizes="64px"
+						className="object-cover"
+						loading="eager"
 					/>
 				) : (
 					<div className="flex h-full w-full items-center justify-center">

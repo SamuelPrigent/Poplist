@@ -1,3 +1,5 @@
+"use client";
+
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./button";
@@ -107,7 +109,7 @@ export function Pagination({
 										>
 											Page {page}
 										</DropdownMenu.Item>
-									)
+									),
 								)}
 							</DropdownMenu.Content>
 						</DropdownMenu.Portal>
