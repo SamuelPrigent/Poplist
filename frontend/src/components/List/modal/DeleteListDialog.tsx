@@ -1,7 +1,9 @@
+"use client";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AlertTriangle, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
@@ -23,7 +25,7 @@ export function DeleteListDialog({
 	offline = false,
 }: DeleteListDialogProps) {
 	const { content } = useLanguageStore();
-	const navigate = useNavigate();
+	const router = useRouter();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -35,10 +37,10 @@ export function DeleteListDialog({
 			if (offline) {
 				// Offline mode: delete from localStorage
 				const watchlists = JSON.parse(
-					localStorage.getItem("watchlists") || "[]"
+					localStorage.getItem("watchlists") || "[]",
 				);
 				const filtered = watchlists.filter(
-					(w: Watchlist) => w._id !== watchlist._id
+					(w: Watchlist) => w._id !== watchlist._id,
 				);
 				localStorage.setItem("watchlists", JSON.stringify(filtered));
 
@@ -50,7 +52,7 @@ export function DeleteListDialog({
 					onSuccess();
 				} else {
 					// If no onSuccess callback, navigate back to lists page
-					navigate("/local/lists");
+					router.push("/local/lists");
 				}
 			} else {
 				// Online mode: delete via API
@@ -61,12 +63,12 @@ export function DeleteListDialog({
 					onSuccess();
 				} else {
 					// If no onSuccess callback, navigate back to lists page
-					navigate("/account/lists");
+					router.push("/account/lists");
 				}
 			}
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to delete watchlist"
+				err instanceof Error ? err.message : "Failed to delete watchlist",
 			);
 		} finally {
 			setLoading(false);
@@ -96,7 +98,7 @@ export function DeleteListDialog({
 						<DialogPrimitive.Description className="text-muted-foreground text-sm">
 							{content.watchlists.deleteWatchlistConfirm.replace(
 								"{name}",
-								watchlist.name
+								watchlist.name,
 							)}
 						</DialogPrimitive.Description>
 

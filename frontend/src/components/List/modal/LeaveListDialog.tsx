@@ -1,7 +1,9 @@
+"use client";
+
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { watchlistAPI } from "@/lib/api-client";
@@ -20,7 +22,7 @@ export function LeaveListDialog({
 	open,
 	onOpenChange,
 }: LeaveListDialogProps) {
-	const navigate = useNavigate();
+	const router = useRouter();
 	const { content } = useLanguageStore();
 	const [isLeaving, setIsLeaving] = useState(false);
 
@@ -29,18 +31,18 @@ export function LeaveListDialog({
 			setIsLeaving(true);
 			await watchlistAPI.leaveWatchlist(watchlistId);
 			toast.success(
-				content.watchlists.collaborators.leaveSuccess ||
-					"Vous avez quitté la liste"
+				content.watchlists.collaborators?.leaveSuccess ||
+					"Vous avez quitté la liste",
 			);
 			onOpenChange(false);
-			navigate("/account/lists");
+			router.push("/account/lists");
 		} catch (error) {
 			console.error("Failed to leave watchlist:", error);
 			toast.error(
 				error instanceof Error
 					? error.message
-					: content.watchlists.collaborators.leaveError ||
-							"Échec de la sortie de la watchlist"
+					: content.watchlists.collaborators?.leaveError ||
+							"Échec de la sortie de la watchlist",
 			);
 		} finally {
 			setIsLeaving(false);
@@ -64,12 +66,12 @@ export function LeaveListDialog({
 					</Dialog.Close>
 
 					<Dialog.Title className="text-lg font-semibold text-yellow-500">
-						{content.watchlists.collaborators.leaveTitle ||
+						{content.watchlists.collaborators?.leaveTitle ||
 							"Quitter la watchlist ?"}
 					</Dialog.Title>
 
 					<Dialog.Description className="text-muted-foreground mt-2 text-sm">
-						{content.watchlists.collaborators.leaveDescription ||
+						{content.watchlists.collaborators?.leaveDescription ||
 							`Êtes-vous sûr de vouloir quitter "${watchlistName}" ? Vous perdrez vos droits de collaborateur et ne pourrez plus modifier cette watchlist.`}
 					</Dialog.Description>
 
@@ -88,8 +90,8 @@ export function LeaveListDialog({
 							className="focus-visible:ring-offset-background cursor-pointer bg-yellow-600 text-white hover:bg-yellow-700 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
 						>
 							{isLeaving
-								? content.watchlists.collaborators.leaving || "Sortie..."
-								: content.watchlists.collaborators.leave || "Quitter"}
+								? content.watchlists.collaborators?.leaving || "Sortie..."
+								: content.watchlists.collaborators?.leave || "Quitter"}
 						</Button>
 					</div>
 				</Dialog.Content>

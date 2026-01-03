@@ -77,10 +77,10 @@ export async function uploadAvatar(req: Request, res: Response): Promise<void> {
 			if (user.avatarUrl) {
 				const oldPublicId = extractPublicIdFromUrl(user.avatarUrl);
 				if (oldPublicId) {
-					console.log("🗑️  [CLOUDINARY] Deleting old avatar:", oldPublicId);
+					// console.log("🗑️  [CLOUDINARY] Deleting old avatar:", oldPublicId);
 					try {
 						await cloudinary.uploader.destroy(oldPublicId);
-						console.log("✅ [CLOUDINARY] Old avatar deleted successfully");
+						// console.log("✅ [CLOUDINARY] Old avatar deleted successfully");
 					} catch (error) {
 						console.warn(
 							"⚠️  [CLOUDINARY] Failed to delete old avatar:",
@@ -90,7 +90,7 @@ export async function uploadAvatar(req: Request, res: Response): Promise<void> {
 				}
 			}
 
-			console.log("☁️  [CLOUDINARY] Uploading new avatar to Cloudinary...");
+			// console.log("☁️  [CLOUDINARY] Uploading new avatar to Cloudinary...");
 
 			// Upload to Cloudinary
 			const result = await cloudinary.uploader.upload(req.body.imageData, {
@@ -102,7 +102,7 @@ export async function uploadAvatar(req: Request, res: Response): Promise<void> {
 				resource_type: "image",
 			});
 
-			console.log("✅ [CLOUDINARY] Upload successful:", result.secure_url);
+			// console.log("✅ [CLOUDINARY] Upload successful:", result.secure_url);
 
 			// Update user with new avatar URL
 			user.avatarUrl = result.secure_url;
@@ -138,7 +138,7 @@ export async function deleteAvatar(req: Request, res: Response): Promise<void> {
 		}
 		const userId = req.user.sub;
 
-		console.log("🗑️  [DELETE] Starting avatar deletion for user:", userId);
+		// console.log("🗑️  [DELETE] Starting avatar deletion for user:", userId);
 
 		const user = await User.findById(userId);
 
@@ -166,7 +166,7 @@ export async function deleteAvatar(req: Request, res: Response): Promise<void> {
 		}
 
 		try {
-			console.log("☁️  [CLOUDINARY] Deleting avatar:", publicId);
+			// console.log("☁️  [CLOUDINARY] Deleting avatar:", publicId);
 
 			// Delete from Cloudinary
 			const result = await cloudinary.uploader.destroy(publicId);

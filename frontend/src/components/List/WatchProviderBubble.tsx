@@ -1,5 +1,7 @@
+"use client";
+
+import Image from "next/image";
 import { getWatchProviderLogo } from "@/lib/api-client";
-// import appleTv from "../../assets/watchProvider/appleTv.svg";
 
 export interface WatchProviderBubbleProps {
 	providerName: string;
@@ -32,11 +34,12 @@ export function WatchProviderBubble({
 			className="bg-muted relative h-9 w-9 shrink-0 overflow-hidden rounded-lg"
 			title={providerName}
 		>
-			<img
+			<Image
 				src={localLogo}
 				alt={providerName}
-				className="aspect-auto h-full w-full object-contain p-1"
-				loading="lazy"
+				fill
+				sizes="36px"
+				className="object-contain p-1"
 			/>
 			{/* Gradient overlay for depth */}
 			<div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />

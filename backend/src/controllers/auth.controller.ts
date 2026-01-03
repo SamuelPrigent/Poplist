@@ -169,13 +169,13 @@ export async function login(req: Request, res: Response): Promise<void> {
 }
 
 export async function googleAuth(_req: Request, res: Response): Promise<void> {
-	console.log("🔵 [Google Auth] Starting OAuth flow...");
-	console.log(
-		"🔵 [Google Auth] Redirect URI configured:",
-		process.env.CLIENT_URL || "http://localhost:5173"
-	);
+	// console.log("🔵 [Google Auth] Starting OAuth flow...");
+	// console.log(
+	// 	"🔵 [Google Auth] Redirect URI configured:",
+	// 	process.env.CLIENT_URL || "http://localhost:5173"
+	// );
+	// console.log("🔵 [Google Auth] Generated auth URL:", authUrl);
 	const authUrl = getGoogleAuthURL();
-	console.log("🔵 [Google Auth] Generated auth URL:", authUrl);
 	res.redirect(authUrl);
 }
 
@@ -184,8 +184,8 @@ export async function googleCallback(
 	res: Response
 ): Promise<void> {
 	try {
-		console.log("🟢 [Google Callback] Received callback from Google");
-		console.log("🟢 [Google Callback] Query params:", req.query);
+		// console.log("🟢 [Google Callback] Received callback from Google");
+		// console.log("🟢 [Google Callback] Query params:", req.query);
 
 		const { code } = req.query;
 
@@ -197,16 +197,16 @@ export async function googleCallback(
 			return;
 		}
 
-		console.log(
-			"🟢 [Google Callback] Authorization code received, fetching user info..."
-		);
+		// console.log(
+		// 	"🟢 [Google Callback] Authorization code received, fetching user info..."
+		// );
 
 		// Get user info from Google
 		const { googleId, email } = await getGoogleUserInfo(code);
-		console.log("🟢 [Google Callback] User info retrieved:", {
-			googleId,
-			email,
-		});
+		// console.log("🟢 [Google Callback] User info retrieved:", {
+		// 	googleId,
+		// 	email,
+		// });
 
 		// Find or create user
 		let user = await User.findOne({ $or: [{ googleId }, { email }] });

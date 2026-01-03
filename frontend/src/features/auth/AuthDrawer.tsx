@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+"use client";
+
 import { Eye, EyeOff } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,7 +15,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { useLanguageStore } from "@/store/language";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 interface AuthDrawerProps {
 	open: boolean;
@@ -49,8 +51,8 @@ export function AuthDrawer({
 	initialMode = "login",
 }: AuthDrawerProps) {
 	const { content } = useLanguageStore();
-	const navigate = useNavigate();
-	const location = useLocation();
+	const router = useRouter();
+	const pathname = usePathname();
 	const [mode, setMode] = useState<"login" | "signup">(initialMode);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -84,8 +86,8 @@ export function AuthDrawer({
 			}
 
 			// If user was on an offline list page, redirect to lists page
-			if (location.pathname.includes("/offline-")) {
-				navigate("/account/lists");
+			if (pathname.includes("/offline-")) {
+				router.push("/account/lists");
 			}
 
 			onClose();
@@ -105,7 +107,7 @@ export function AuthDrawer({
 		window.open(
 			`${API_URL}/auth/google`,
 			"Google Login",
-			`width=${width},height=${height},left=${left},top=${top}`
+			`width=${width},height=${height},left=${left},top=${top}`,
 		);
 
 		// Listen for postMessage from popup
@@ -117,14 +119,18 @@ export function AuthDrawer({
 
 			if (event.data.status === "success") {
 				window.removeEventListener("message", handleMessage);
+
+				// Wait a bit for cookie to be set, then refetch user
+				await new Promise((resolve) => setTimeout(resolve, 200));
 				await refetch();
 
-				// If user was on an offline list page, redirect to lists page
-				if (location.pathname.includes("/offline-")) {
-					navigate("/account/lists");
-				}
-
+				// Close drawer after user is updated
 				onClose();
+
+				// If user was on an offline list page, redirect to lists page
+				if (pathname.includes("/offline-")) {
+					router.push("/account/lists");
+				}
 			} else if (event.data.status === "error") {
 				window.removeEventListener("message", handleMessage);
 				setError(event.data.message || "Google authentication failed");
@@ -136,7 +142,7 @@ export function AuthDrawer({
 			() => {
 				window.removeEventListener("message", handleMessage);
 			},
-			5 * 60 * 1000
+			5 * 60 * 1000,
 		);
 
 		window.addEventListener("message", handleMessage);

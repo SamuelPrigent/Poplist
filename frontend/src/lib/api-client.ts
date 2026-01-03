@@ -1,13 +1,6 @@
 import type { User } from "@/context/auth-context";
-import appleTvLogo from "@/assets/watchProvider/appleTv.svg";
-import crunchyrollLogo from "@/assets/watchProvider/Crunchyroll.svg";
-import disneyPlusLogo from "@/assets/watchProvider/disneyplus.svg";
-import hboLogo from "@/assets/watchProvider/hbo.svg";
-import netflixLogo from "@/assets/watchProvider/netflix.svg";
-import primeVideoLogo from "@/assets/watchProvider/primeVideo.svg";
-import youtubeLogo from "@/assets/watchProvider/youtube.svg";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 // Helper to get TMDB image URL through proxy to avoid CORS issues
 export function getTMDBImageUrl(logoPath: string): string {
@@ -20,23 +13,23 @@ export function getTMDBImageUrl(logoPath: string): string {
 // Helper to get local watch provider logo based on provider name
 export function getWatchProviderLogo(providerName: string): string | null {
 	const nameMap: Record<string, string | null> = {
-		netflix: netflixLogo,
-		"amazon prime video": primeVideoLogo,
-		"amazon prime video with ads": primeVideoLogo,
-		"prime video": primeVideoLogo,
-		"prime-video": primeVideoLogo,
-		youtube: youtubeLogo,
-		"apple tv": appleTvLogo,
-		"apple tv+": appleTvLogo,
-		"apple tv plus": appleTvLogo,
-		"apple-tv": appleTvLogo,
-		"disney plus": disneyPlusLogo,
-		"disney+": disneyPlusLogo,
-		"disney-plus": disneyPlusLogo,
-		crunchyroll: crunchyrollLogo,
-		"hbo max": hboLogo,
-		"hbo-max": hboLogo,
-		hbo: hboLogo,
+		netflix: "/watchProvider/netflix.svg",
+		"amazon prime video": "/watchProvider/primeVideo.svg",
+		"amazon prime video with ads": "/watchProvider/primeVideo.svg",
+		"prime video": "/watchProvider/primeVideo.svg",
+		"prime-video": "/watchProvider/primeVideo.svg",
+		youtube: "/watchProvider/youtube.svg",
+		"apple tv": "/watchProvider/appleTv.svg",
+		"apple tv+": "/watchProvider/appleTv.svg",
+		"apple tv plus": "/watchProvider/appleTv.svg",
+		"apple-tv": "/watchProvider/appleTv.svg",
+		"disney plus": "/watchProvider/disneyplus.svg",
+		"disney+": "/watchProvider/disneyplus.svg",
+		"disney-plus": "/watchProvider/disneyplus.svg",
+		crunchyroll: "/watchProvider/Crunchyroll.svg",
+		"hbo max": "/watchProvider/hbo.svg",
+		"hbo-max": "/watchProvider/hbo.svg",
+		hbo: "/watchProvider/hbo.svg",
 	};
 
 	const normalized = providerName.toLowerCase().trim();
@@ -105,7 +98,7 @@ async function refreshAccessToken(): Promise<boolean> {
 
 async function request<T>(
 	endpoint: string,
-	options: RequestOptions = {}
+	options: RequestOptions = {},
 ): Promise<T> {
 	const { body, _isRetry, ...restOptions } = options;
 
@@ -306,7 +299,7 @@ export const watchlistAPI = {
 		request("/watchlists/mine"),
 
 	getById: (
-		id: string
+		id: string,
 	): Promise<{
 		watchlist: Watchlist;
 		isSaved: boolean;
@@ -334,7 +327,7 @@ export const watchlistAPI = {
 			isPublic?: boolean;
 			genres?: string[];
 			items?: WatchlistItem[];
-		}
+		},
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}`, {
 			method: "PUT",
@@ -348,7 +341,7 @@ export const watchlistAPI = {
 
 	addCollaborator: (
 		id: string,
-		username: string
+		username: string,
 	): Promise<{ message: string; collaborator: Collaborator }> =>
 		request(`/watchlists/${id}/collaborators`, {
 			method: "POST",
@@ -357,7 +350,7 @@ export const watchlistAPI = {
 
 	removeCollaborator: (
 		id: string,
-		collaboratorId: string
+		collaboratorId: string,
 	): Promise<{ message: string }> =>
 		request(`/watchlists/${id}/collaborators/${collaboratorId}`, {
 			method: "DELETE",
@@ -378,7 +371,7 @@ export const watchlistAPI = {
 			type: "movie" | "tv";
 			language?: string;
 			region?: string;
-		}
+		},
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/items`, {
 			method: "POST",
@@ -393,7 +386,7 @@ export const watchlistAPI = {
 	moveItem: (
 		id: string,
 		tmdbId: string,
-		position: "first" | "last"
+		position: "first" | "last",
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/items/${tmdbId}/position`, {
 			method: "PUT",
@@ -402,7 +395,7 @@ export const watchlistAPI = {
 
 	reorderItems: (
 		id: string,
-		orderedTmdbIds: string[]
+		orderedTmdbIds: string[],
 	): Promise<{ watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/items/reorder`, {
 			method: "PUT",
@@ -410,7 +403,7 @@ export const watchlistAPI = {
 		}),
 
 	reorderWatchlists: (
-		orderedWatchlistIds: string[]
+		orderedWatchlistIds: string[],
 	): Promise<{ message: string }> =>
 		request(`/watchlists/reorder`, {
 			method: "PUT",
@@ -419,7 +412,7 @@ export const watchlistAPI = {
 
 	uploadCover: (
 		id: string,
-		imageData: string
+		imageData: string,
 	): Promise<{ watchlist: Watchlist; imageUrl: string }> =>
 		request(`/watchlists/${id}/upload-cover`, {
 			method: "POST",
@@ -427,7 +420,7 @@ export const watchlistAPI = {
 		}),
 
 	deleteCover: (
-		id: string
+		id: string,
 	): Promise<{ message: string; watchlist: Watchlist }> =>
 		request(`/watchlists/${id}/cover`, {
 			method: "DELETE",
@@ -436,11 +429,11 @@ export const watchlistAPI = {
 	fetchTMDBProviders: async (
 		tmdbId: string,
 		type: "movie" | "tv",
-		region: string = "FR"
+		region: string = "FR",
 	): Promise<Platform[]> => {
 		try {
 			const response = await request(
-				`/tmdb/${type}/${tmdbId}/providers?region=${region}`
+				`/tmdb/${type}/${tmdbId}/providers?region=${region}`,
 			);
 			const data = response as {
 				results: {
@@ -482,7 +475,7 @@ export const watchlistAPI = {
 					...regionData.flatrate.map((p) => ({
 						name: p.provider_name,
 						logoPath: p.logo_path,
-					}))
+					})),
 				);
 			}
 
@@ -491,7 +484,7 @@ export const watchlistAPI = {
 					...regionData.buy.map((p) => ({
 						name: p.provider_name,
 						logoPath: p.logo_path,
-					}))
+					})),
 				);
 			}
 
@@ -500,7 +493,7 @@ export const watchlistAPI = {
 					...regionData.rent.map((p) => ({
 						name: p.provider_name,
 						logoPath: p.logo_path,
-					}))
+					})),
 				);
 			}
 
@@ -551,18 +544,18 @@ export const watchlistAPI = {
 	getItemDetails: (
 		tmdbId: string,
 		type: "movie" | "tv",
-		language?: string
+		language?: string,
 	): Promise<{ details: FullMediaDetails }> => {
 		const searchParams = new URLSearchParams();
 		if (language) searchParams.append("language", language);
 		const query = searchParams.toString();
 		return request(
-			`/watchlists/items/${tmdbId}/${type}/details${query ? `?${query}` : ""}`
+			`/watchlists/items/${tmdbId}/${type}/details${query ? `?${query}` : ""}`,
 		);
 	},
 
 	getPublicWatchlists: (
-		limit?: number
+		limit?: number,
 	): Promise<{ watchlists: Watchlist[] }> => {
 		const searchParams = new URLSearchParams();
 		if (limit) searchParams.append("limit", limit.toString());
@@ -573,9 +566,7 @@ export const watchlistAPI = {
 	getAllPublicWatchlists: (): Promise<{ watchlists: Watchlist[] }> =>
 		request("/watchlists/public/all"),
 
-	getWatchlistsByGenre: (
-		genre: string
-	): Promise<{ watchlists: Watchlist[] }> =>
+	getWatchlistsByGenre: (genre: string): Promise<{ watchlists: Watchlist[] }> =>
 		request(`/watchlists/by-genre/${genre}`),
 
 	saveWatchlist: (id: string): Promise<{ message: string }> =>
@@ -597,7 +588,7 @@ export const watchlistAPI = {
 // User API
 export const userAPI = {
 	uploadAvatar: (
-		imageData: string
+		imageData: string,
 	): Promise<{ user: User; avatarUrl: string }> =>
 		request("/user/upload-avatar", {
 			method: "POST",
@@ -624,7 +615,7 @@ export const userAPI = {
 export const tmdbAPI = {
 	getTrending: (
 		timeWindow: "day" | "week" = "day",
-		page: number = 1
+		page: number = 1,
 	): Promise<{
 		results: Array<{
 			id: number;

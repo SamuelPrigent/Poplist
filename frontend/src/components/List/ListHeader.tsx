@@ -1,12 +1,11 @@
+"use client";
+
 import { ArrowLeft, Copy, Film, Pencil, User } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import checkGreenIcon from "@/assets/checkGreenFull.svg";
-import plusIcon from "@/assets/plus2.svg";
-import shareIcon from "@/assets/share.svg";
 import { useListThumbnail } from "@/hooks/useListThumbnail";
 import type { Collaborator, Watchlist, WatchlistOwner } from "@/lib/api-client";
-// import { getTMDBImageUrl } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
 interface ListHeaderProps {
@@ -25,7 +24,7 @@ interface ListHeaderProps {
 }
 
 function isWatchlistOwner(
-	value: Watchlist["ownerId"]
+	value: Watchlist["ownerId"],
 ): value is WatchlistOwner {
 	return (
 		typeof value === "object" &&
@@ -54,12 +53,11 @@ export function ListHeader({
 	showDuplicateButton = false,
 	collaboratorButton,
 }: ListHeaderProps) {
-	const navigate = useNavigate();
+	const router = useRouter();
 	const { content } = useLanguageStore();
 	const [showSaveAnimation, setShowSaveAnimation] = useState(false);
 
 	// Get cover image (custom or auto-generated thumbnail)
-	// Use the hook to handle both online (Cloudinary) and offline (base64) thumbnails
 	const generatedThumbnail = useListThumbnail(watchlist);
 	const coverImage = watchlist.imageUrl || generatedThumbnail;
 
@@ -81,7 +79,7 @@ export function ListHeader({
 				<div className="mb-8">
 					<button
 						type="button"
-						onClick={() => navigate(-1)}
+						onClick={() => router.back()}
 						className="text-muted-foreground flex cursor-pointer items-center gap-2 rounded text-sm transition-colors hover:text-white"
 					>
 						<ArrowLeft className="h-4 w-4" />
@@ -100,12 +98,13 @@ export function ListHeader({
 							>
 								{coverImage ? (
 									<>
-										<img
+										<Image
 											src={coverImage}
 											alt={watchlist.name}
-											className="h-full w-full object-cover"
-											loading="lazy"
-											decoding="async"
+											fill
+											sizes="224px"
+											className="object-cover"
+											priority
 										/>
 										{/* Hover Overlay */}
 										<div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
@@ -124,12 +123,13 @@ export function ListHeader({
 						) : (
 							<div className="group relative h-56 w-56 overflow-hidden rounded-lg shadow-2xl">
 								{coverImage ? (
-									<img
+									<Image
 										src={coverImage}
 										alt={watchlist.name}
-										className="h-full w-full object-cover"
-										loading="lazy"
-										decoding="async"
+										fill
+										sizes="224px"
+										className="object-cover"
+										priority
 									/>
 								) : (
 									<div className="bg-muted/50 flex h-full w-full items-center justify-center">
@@ -171,16 +171,16 @@ export function ListHeader({
 						<div className="text-muted-foreground flex items-center gap-2 text-sm">
 							{ownerUsername && (
 								<>
-									{/* flex c */}
 									<div className="flex items-center gap-2">
 										<div className="flex items-center">
-											{/* user + username */}
 											<div className="flex items-center gap-1">
 												<div className="bg-muted flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
 													{ownerAvatarUrl ? (
-														<img
+														<Image
 															src={ownerAvatarUrl}
 															alt={ownerUsername || "Owner"}
+															width={24}
+															height={24}
 															className="h-full w-full object-cover"
 														/>
 													) : (
@@ -189,7 +189,7 @@ export function ListHeader({
 												</div>
 												<button
 													type="button"
-													onClick={() => navigate(`/user/${ownerUsername}`)}
+													onClick={() => router.push(`/user/${ownerUsername}`)}
 													className="cursor-pointer rounded-lg font-semibold text-white capitalize hover:underline"
 												>
 													{ownerUsername}
@@ -206,7 +206,7 @@ export function ListHeader({
 													{(watchlist.collaborators as Collaborator[])
 														.filter(
 															(c): c is Collaborator =>
-																typeof c === "object" && c !== null
+																typeof c === "object" && c !== null,
 														)
 														.slice(0, 3)
 														.map((collaborator) => (
@@ -220,15 +220,17 @@ export function ListHeader({
 																		avatarUrl?: string;
 																	}
 																).avatarUrl ? (
-																	<img
+																	<Image
 																		src={
 																			(
 																				collaborator as Collaborator & {
 																					avatarUrl?: string;
 																				}
-																			).avatarUrl
+																			).avatarUrl || ""
 																		}
 																		alt={collaborator.username}
+																		width={24}
+																		height={24}
 																		className="h-full w-full object-cover"
 																	/>
 																) : (
@@ -238,7 +240,7 @@ export function ListHeader({
 														))}
 													{(watchlist.collaborators as Collaborator[]).filter(
 														(c): c is Collaborator =>
-															typeof c === "object" && c !== null
+															typeof c === "object" && c !== null,
 													).length > 3 && (
 														<div
 															className="bg-muted ring-background flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ring-2"
@@ -249,7 +251,7 @@ export function ListHeader({
 																watchlist.collaborators as Collaborator[]
 															).filter(
 																(c): c is Collaborator =>
-																	typeof c === "object" && c !== null
+																	typeof c === "object" && c !== null,
 															).length - 3}
 														</div>
 													)}
@@ -300,7 +302,6 @@ export function ListHeader({
 										<button
 											type="button"
 											onClick={async () => {
-												// Trigger animation on every click (both save and unsave)
 												setShowSaveAnimation(true);
 												setTimeout(() => setShowSaveAnimation(false), 200);
 												await onSave();
@@ -312,12 +313,12 @@ export function ListHeader({
 													: content.watchlists.tooltips.save
 											}
 										>
-											{/* Container to maintain fixed size */}
 											<div className="relative h-6 w-6">
-												{/* Plus Icon - shown when not saved */}
-												<img
-													src={plusIcon}
+												<Image
+													src="/plus2.svg"
 													alt="Save"
+													width={24}
+													height={24}
 													className={`absolute inset-0 h-6 w-6 transition-opacity ${
 														isSaved
 															? "opacity-0"
@@ -329,10 +330,11 @@ export function ListHeader({
 														transitionDuration: isSaved ? "0ms" : "200ms",
 													}}
 												/>
-												{/* Check Green Icon - shown when saved */}
-												<img
-													src={checkGreenIcon}
+												<Image
+													src="/checkGreenFull.svg"
 													alt="Saved"
+													width={24}
+													height={24}
 													className={`absolute inset-0 h-6 w-6 transition-opacity ${
 														isSaved
 															? showSaveAnimation
@@ -368,9 +370,11 @@ export function ListHeader({
 											className={LIST_HEADER_BUTTON_CLASS}
 											title={content.watchlists.tooltips.share}
 										>
-											<img
-												src={shareIcon}
+											<Image
+												src="/share.svg"
 												alt="Share"
+												width={24}
+												height={24}
 												className={`${LIST_HEADER_ICON_CLASS} brightness-0 invert`}
 											/>
 										</button>

@@ -12,15 +12,15 @@ function getOAuthConfig() {
 		process.env.GOOGLE_REDIRECT_URI ||
 		`http://localhost:${process.env.PORT || "3000"}/auth/google/callback`;
 
-	console.log(
-		"🔍 [Google Config] CLIENT_ID:",
-		CLIENT_ID ? `✅ ${CLIENT_ID.substring(0, 20)}...` : "❌ EMPTY"
-	);
-	console.log(
-		"🔍 [Google Config] CLIENT_SECRET:",
-		CLIENT_SECRET ? "✅ Present" : "❌ EMPTY"
-	);
-	console.log("🔍 [Google Config] REDIRECT_URI:", REDIRECT_URI);
+	// console.log(
+	// 	"🔍 [Google Config] CLIENT_ID:",
+	// 	CLIENT_ID ? `✅ ${CLIENT_ID.substring(0, 20)}...` : "❌ EMPTY"
+	// );
+	// console.log(
+	// 	"🔍 [Google Config] CLIENT_SECRET:",
+	// 	CLIENT_SECRET ? "✅ Present" : "❌ EMPTY"
+	// );
+	// console.log("🔍 [Google Config] REDIRECT_URI:", REDIRECT_URI);
 
 	return { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI };
 }

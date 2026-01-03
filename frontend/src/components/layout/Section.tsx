@@ -12,7 +12,7 @@ export function Section({
 		<section
 			className={cn(
 				"container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-12 py-11",
-				className
+				className,
 			)}
 		>
 			{children}

@@ -602,8 +602,7 @@ export const es: Content = {
 			"Este usuario aún no ha publicado ninguna lista pública.",
 		loading: "Cargando perfil...",
 		notFound: "Usuario no encontrado",
-		notFoundDescription:
-			"El usuario que buscas no existe o ha sido eliminado.",
+		notFoundDescription: "El usuario que buscas no existe o ha sido eliminado.",
 		backToHome: "Volver al inicio",
 	},
 };

@@ -1,3 +1,5 @@
+"use client";
+
 import {
 	closestCenter,
 	DndContext,
@@ -39,6 +41,7 @@ import {
 	Plus,
 	Trash2,
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	Empty,
@@ -62,24 +65,22 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
 
 	return (
 		<>
-			{/* Skeleton - shown while loading */}
 			{!loaded && <div className="bg-muted absolute inset-0 animate-pulse" />}
-			{/* Actual image */}
-			<img
+			<Image
 				src={src}
 				alt={alt}
-				className={`h-full w-full object-cover transition-opacity duration-200 ${
+				fill
+				sizes="48px"
+				className={`object-cover transition-opacity duration-200 ${
 					loaded ? "opacity-100" : "opacity-0"
 				}`}
-				loading="lazy"
-				decoding="async"
 				onLoad={() => setLoaded(true)}
 			/>
 		</>
 	);
 }
 
-// Bracket icon component (left/right arrows)
+// Bracket icon component
 function BracketIcon({ className }: { className?: string }) {
 	return (
 		<svg
@@ -89,6 +90,7 @@ function BracketIcon({ className }: { className?: string }) {
 			viewBox="0 0 24 24"
 			className={className}
 		>
+			<title className="invisible">Filter</title>
 			<path
 				fill="currentColor"
 				d="M9.71 6.29a1 1 0 0 0-1.42 0l-5 5a1 1 0 0 0 0 1.42l5 5a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42L5.41 12l4.3-4.29a1 1 0 0 0 0-1.42m11 5l-5-5a1 1 0 0 0-1.42 1.42l4.3 4.29l-4.3 4.29a1 1 0 0 0 0 1.42a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0 0-1.42"
@@ -97,7 +99,6 @@ function BracketIcon({ className }: { className?: string }) {
 	);
 }
 
-// Sort icon component that shows bracket (neutral), arrow down (asc), or arrow up (desc)
 function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 	if (sortState === "asc") {
 		return (
@@ -109,7 +110,6 @@ function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 			<ArrowUp className="h-4 w-4 text-green-500 transition-all duration-150" />
 		);
 	}
-	// Neutral state: bracket rotated 90deg to show up/down arrows
 	return (
 		<BracketIcon className="h-4 w-4 rotate-90 opacity-40 transition-all duration-150" />
 	);
@@ -117,12 +117,11 @@ function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 
 interface ListItemsTableOfflineProps {
 	watchlist: Watchlist;
-	//   onUpdate: () => void;
+	onUpdate?: () => void;
 	currentPage?: number;
 	itemsPerPage?: number;
 }
 
-// Extend RowData for custom meta
 declare module "@tanstack/react-table" {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	interface TableMeta<TData extends RowData> {
@@ -189,14 +188,13 @@ function DraggableRow({
 			className={cn(
 				"group transition-colors duration-150 select-none",
 				!isLastRow && "border-border border-b",
-				hoveredRow === item.tmdbId && "bg-muted/30"
+				hoveredRow === item.tmdbId && "bg-muted/30",
 			)}
 		>
 			{row.getVisibleCells().map((cell, cellIndex: number) => {
 				const totalCells = row.getVisibleCells().length;
 				const isActionsColumn = cellIndex === totalCells - 1;
 
-				// Actions column (last column) - not draggable
 				if (isActionsColumn) {
 					return (
 						<td
@@ -209,10 +207,9 @@ function DraggableRow({
 									"flex items-center gap-1 transition-opacity",
 									hoveredRow === item.tmdbId
 										? "opacity-100"
-										: "opacity-0 group-hover:opacity-100"
+										: "opacity-0 group-hover:opacity-100",
 								)}
 							>
-								{/* Add to watchlist button */}
 								<DropdownMenu.Root
 									onOpenChange={(open) => {
 										if (!open) {
@@ -266,7 +263,6 @@ function DraggableRow({
 									</DropdownMenu.Portal>
 								</DropdownMenu.Root>
 
-								{/* Delete button - only for canEdit */}
 								{canEdit && (
 									<button
 										type="button"
@@ -282,7 +278,6 @@ function DraggableRow({
 									</button>
 								)}
 
-								{/* More options menu - only for canEdit */}
 								{canEdit && (
 									<DropdownMenu.Root
 										onOpenChange={(open) => {
@@ -341,7 +336,6 @@ function DraggableRow({
 					);
 				}
 
-				// All other columns (draggable if not disabled)
 				return (
 					<td
 						key={cell.id}
@@ -358,6 +352,7 @@ function DraggableRow({
 
 export function ListItemsTableOffline({
 	watchlist,
+	onUpdate,
 	currentPage = 1,
 	itemsPerPage,
 }: ListItemsTableOfflineProps) {
@@ -372,30 +367,24 @@ export function ListItemsTableOffline({
 	const [otherWatchlists, setOtherWatchlists] = useState<Watchlist[]>([]);
 	const [itemToDelete, setItemToDelete] = useState<WatchlistItem | null>(null);
 
-	// Determine if user can edit this watchlist (owned)
 	const canEdit = watchlist.ownerId === "offline";
 
-	// Sync with parent when watchlist changes
 	useEffect(() => {
 		setItems(watchlist.items);
 	}, [watchlist.items]);
 
-	// Load other watchlists for "Add to watchlist" feature
 	const loadOtherWatchlists = useCallback(() => {
 		const allWatchlists = getLocalWatchlists();
-		// Filter to exclude current watchlist and only show owned offline watchlists
 		const filtered = allWatchlists.filter(
-			(wl) => wl._id !== watchlist._id && wl.ownerId === "offline"
+			(wl) => wl._id !== watchlist._id && wl.ownerId === "offline",
 		);
 		setOtherWatchlists(filtered);
 	}, [watchlist._id]);
 
-	// Load watchlists on mount and when watchlist ID changes
 	useEffect(() => {
 		loadOtherWatchlists();
 	}, [loadOtherWatchlists]);
 
-	// Listen for localStorage changes (from other tabs or same tab)
 	useEffect(() => {
 		const handleStorageChange = (e: StorageEvent) => {
 			if (e.key === "watchlists") {
@@ -403,28 +392,25 @@ export function ListItemsTableOffline({
 			}
 		};
 
-		// Listen for storage events from other tabs
-		window.addEventListener("storage", handleStorageChange);
-
-		// Also listen for custom events from same tab
 		const handleCustomStorageChange = () => {
 			loadOtherWatchlists();
 		};
+
+		window.addEventListener("storage", handleStorageChange);
 		window.addEventListener(
 			"localStorageWatchlistsChanged",
-			handleCustomStorageChange
+			handleCustomStorageChange,
 		);
 
 		return () => {
 			window.removeEventListener("storage", handleStorageChange);
 			window.removeEventListener(
 				"localStorageWatchlistsChanged",
-				handleCustomStorageChange
+				handleCustomStorageChange,
 			);
 		};
 	}, [loadOtherWatchlists]);
 
-	// Setup drag sensors
 	const sensors = useSensors(
 		useSensor(MouseSensor, {
 			activationConstraint: {
@@ -439,7 +425,7 @@ export function ListItemsTableOffline({
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
-		})
+		}),
 	);
 
 	const formatRuntime = useCallback((minutes: number | undefined) => {
@@ -463,25 +449,20 @@ export function ListItemsTableOffline({
 		watchlists[watchlistIndex].items = updatedItems;
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
 
-		// Dispatch custom event for same-tab detection
 		window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
-
-		// Invalidate thumbnail cache so it regenerates with new items
 		deleteCachedThumbnail(watchlist._id);
+		onUpdate?.();
 	};
 
 	const handleRemoveItem = async (tmdbId: string) => {
 		try {
 			setLoadingItem(tmdbId);
-			// Update local state immediately
 			const newItems = items.filter((item) => item.tmdbId !== tmdbId);
 			setItems(newItems);
-			// Update localStorage
 			updateLocalStorage(newItems);
 		} catch (error) {
 			console.error("Failed to remove item:", error);
 			alert("Failed to remove item");
-			// Revert on error
 			setItems(watchlist.items);
 		} finally {
 			setLoadingItem(null);
@@ -494,7 +475,6 @@ export function ListItemsTableOffline({
 			const itemIndex = items.findIndex((item) => item.tmdbId === tmdbId);
 			if (itemIndex === -1) return;
 
-			// Update local state immediately
 			const newItems = [...items];
 			const [movedItem] = newItems.splice(itemIndex, 1);
 			if (position === "first") {
@@ -503,13 +483,10 @@ export function ListItemsTableOffline({
 				newItems.push(movedItem);
 			}
 			setItems(newItems);
-
-			// Update localStorage
 			updateLocalStorage(newItems);
 		} catch (error) {
 			console.error("Failed to move item:", error);
 			alert("Failed to move item");
-			// Revert on error
 			setItems(watchlist.items);
 		} finally {
 			setLoadingItem(null);
@@ -518,49 +495,41 @@ export function ListItemsTableOffline({
 
 	const handleAddToWatchlist = async (
 		tmdbId: string,
-		targetWatchlistId: string
+		targetWatchlistId: string,
 	) => {
 		try {
 			setLoadingItem(tmdbId);
 
-			// Find the item to add
 			const itemToAdd = items.find((item) => item.tmdbId === tmdbId);
 			if (!itemToAdd) return;
 
-			// Load all watchlists from localStorage
 			const localWatchlists = localStorage.getItem(STORAGE_KEY);
 			if (!localWatchlists) return;
 
 			const watchlists: Watchlist[] = JSON.parse(localWatchlists);
 			const targetIndex = watchlists.findIndex(
-				(w) => w._id === targetWatchlistId
+				(w) => w._id === targetWatchlistId,
 			);
 			if (targetIndex === -1) return;
 
-			// Check if item already exists in target watchlist
 			const itemExists = watchlists[targetIndex].items.some(
-				(item) => item.tmdbId === tmdbId
+				(item) => item.tmdbId === tmdbId,
 			);
 
 			if (itemExists) {
 				return;
 			}
 
-			// Add item to target watchlist
 			watchlists[targetIndex].items.push({
 				...itemToAdd,
 				addedAt: new Date().toISOString(),
 			});
 			watchlists[targetIndex].updatedAt = new Date().toISOString();
 
-			// Update localStorage
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-
-			// Dispatch custom event for same-tab detection
 			window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
-
-			// Invalidate thumbnail cache for target watchlist
 			deleteCachedThumbnail(targetWatchlistId);
+			onUpdate?.();
 		} catch (error) {
 			console.error("Failed to add item to watchlist:", error);
 		} finally {
@@ -581,7 +550,6 @@ export function ListItemsTableOffline({
 		}
 	};
 
-	// Define columns
 	const columns = useMemo<ColumnDef<WatchlistItem>[]>(
 		() => [
 			{
@@ -598,11 +566,11 @@ export function ListItemsTableOffline({
 						<div
 							onClick={() => {
 								if (!isSorted) {
-									column.toggleSorting(false); // asc
+									column.toggleSorting(false);
 								} else if (isSorted === "asc") {
-									column.toggleSorting(true); // desc
+									column.toggleSorting(true);
 								} else {
-									column.clearSorting(); // custom order
+									column.clearSorting();
 								}
 							}}
 							className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
@@ -640,12 +608,10 @@ export function ListItemsTableOffline({
 							}}
 							className="group/cell flex cursor-pointer items-center gap-3 text-left"
 						>
-							{/* Poster with overlay triggered by hovering cell (poster or title) */}
 							<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
 								{item.posterUrl ? (
 									<>
 										<PosterImage src={item.posterUrl} alt={item.title} />
-										{/* Hover overlay with eye icon - appears when hovering poster OR title */}
 										<div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
 											<Eye className="h-5 w-5 text-white" />
 										</div>
@@ -656,7 +622,6 @@ export function ListItemsTableOffline({
 									</div>
 								)}
 							</div>
-							{/* Title with underline on hover */}
 							<span className="font-medium text-white underline-offset-2 transition-colors group-hover/cell:underline">
 								{item.title}
 							</span>
@@ -676,7 +641,7 @@ export function ListItemsTableOffline({
 								"inline-block rounded-full px-2 py-1 text-xs font-medium",
 								type === "movie"
 									? "bg-blue-500/10 text-blue-400"
-									: "bg-purple-500/10 text-purple-400"
+									: "bg-purple-500/10 text-purple-400",
 							)}
 						>
 							{type === "movie"
@@ -693,25 +658,22 @@ export function ListItemsTableOffline({
 				cell: (info) => {
 					const rawPlatforms = info.getValue() as unknown;
 
-					// Handle both old format (string[]) and new format (Platform[])
 					const platforms: { name: string; logoPath: string }[] = Array.isArray(
-						rawPlatforms
+						rawPlatforms,
 					)
 						? rawPlatforms
 								.filter((p) => p !== null && p !== undefined && p !== "")
 								.map((p) => {
-									// Handle string format (old data)
 									if (typeof p === "string") {
 										return p.trim() ? { name: p, logoPath: "" } : null;
 									}
-									// Handle object format (new data)
 									if (p && typeof p === "object" && p.name && p.name.trim()) {
 										return { name: p.name, logoPath: p.logoPath || "" };
 									}
 									return null;
 								})
 								.filter(
-									(p): p is { name: string; logoPath: string } => p !== null
+									(p): p is { name: string; logoPath: string } => p !== null,
 								)
 						: [];
 
@@ -727,11 +689,11 @@ export function ListItemsTableOffline({
 						<div
 							onClick={() => {
 								if (!isSorted) {
-									column.toggleSorting(false); // asc (shortest to longest)
+									column.toggleSorting(false);
 								} else if (isSorted === "asc") {
-									column.toggleSorting(true); // desc (longest to shortest)
+									column.toggleSorting(true);
 								} else {
-									column.clearSorting(); // custom order
+									column.clearSorting();
 								}
 							}}
 							className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
@@ -756,7 +718,6 @@ export function ListItemsTableOffline({
 					);
 				},
 				accessorFn: (row) => {
-					// For sorting: TV shows use episodes * 35min, movies use runtime
 					if (row.type === "tv" && row.numberOfEpisodes) {
 						return row.numberOfEpisodes * 35;
 					}
@@ -765,7 +726,6 @@ export function ListItemsTableOffline({
 				cell: (info) => {
 					const item = info.row.original;
 
-					// For TV shows: display "X saisons · Y épisodes"
 					if (item.type === "tv") {
 						const seasons = item.numberOfSeasons;
 						const episodes = item.numberOfEpisodes;
@@ -775,18 +735,17 @@ export function ListItemsTableOffline({
 								parts.push(`${seasons} ${seasons > 1 ? "saisons" : "saison"}`);
 							}
 							if (episodes) {
-								parts.push(`${episodes} ép.`);
+								parts.push(`${episodes} ep`);
 							}
 							return (
 								<span className="text-muted-foreground text-sm">
-									{parts.join(" · ")}
+									{parts.join(", ")}
 								</span>
 							);
 						}
 						return <span className="text-muted-foreground text-sm">—</span>;
 					}
 
-					// For movies: display runtime
 					return (
 						<span className="text-muted-foreground text-sm">
 							{formatRuntime(item.runtime)}
@@ -798,22 +757,18 @@ export function ListItemsTableOffline({
 			{
 				id: "actions",
 				header: "Actions",
-				cell: () => null, // Rendered in DraggableRow
+				cell: () => null,
 				size: 120,
 			},
 		],
-		[content, formatRuntime]
+		[content, formatRuntime],
 	);
 
-	// Determine if we're in custom order mode (no sorting)
 	const isCustomOrder = sorting.length === 0;
 
-	// Use sorted items if sorting is active, otherwise use local state
-	// Apply pagination if provided
 	const displayItems = useMemo(() => {
 		let itemsToDisplay = items;
 
-		// Apply pagination if currentPage and itemsPerPage are provided
 		if (itemsPerPage !== undefined && itemsPerPage < items.length) {
 			const startIndex = (currentPage - 1) * itemsPerPage;
 			const endIndex = startIndex + itemsPerPage;
@@ -821,9 +776,8 @@ export function ListItemsTableOffline({
 		}
 
 		return itemsToDisplay;
-	}, [items, isCustomOrder, currentPage, itemsPerPage]);
+	}, [items, currentPage, itemsPerPage]);
 
-	// Navigation handlers for details modal
 	const handleNavigatePrevious = useCallback(() => {
 		if (selectedIndex > 0) {
 			const prevItem = displayItems[selectedIndex - 1];
@@ -868,68 +822,69 @@ export function ListItemsTableOffline({
 	}
 
 	return (
-		<div className="border-border bg-card mb-32 overflow-hidden rounded-lg border">
-			<DndContext
-				sensors={sensors}
-				collisionDetection={closestCenter}
-				onDragEnd={handleDragEnd}
-			>
-				<table className="w-full">
-					<thead>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<tr
-								key={headerGroup.id}
-								className="border-border border-b"
-								style={{ backgroundColor: "rgb(51 59 70 / 27%)" }}
-							>
-								{headerGroup.headers.map((header) => (
-									<th
-										key={header.id}
-										className="text-muted-foreground px-4 py-4 text-left text-sm font-semibold transition-colors duration-150 select-none"
-										style={{ width: header.column.getSize() }}
-									>
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef.header,
-													header.getContext()
-												)}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						<SortableContext
-							items={displayItems.map((item) => item.tmdbId)}
-							strategy={verticalListSortingStrategy}
-							disabled={!isCustomOrder}
-						>
-							{table.getRowModel().rows.map((row, index) => (
-								<DraggableRow
-									key={row.original.tmdbId}
-									item={row.original}
-									index={index}
-									row={row}
-									loadingItem={loadingItem}
-									hoveredRow={hoveredRow}
-									setHoveredRow={setHoveredRow}
-									onConfirmDelete={setItemToDelete}
-									handleMoveItem={handleMoveItem}
-									handleAddToWatchlist={handleAddToWatchlist}
-									otherWatchlists={otherWatchlists}
-									totalItems={displayItems.length}
-									isDragDisabled={!isCustomOrder}
-									canEdit={canEdit}
-									content={content}
-								/>
+		<>
+			<div className="border-border bg-card mb-2 overflow-hidden rounded-lg border">
+				<DndContext
+					sensors={sensors}
+					collisionDetection={closestCenter}
+					onDragEnd={handleDragEnd}
+				>
+					<table className="w-full">
+						<thead>
+							{table.getHeaderGroups().map((headerGroup) => (
+								<tr
+									key={headerGroup.id}
+									className="border-border border-b"
+									style={{ backgroundColor: "rgb(51 59 70 / 27%)" }}
+								>
+									{headerGroup.headers.map((header) => (
+										<th
+											key={header.id}
+											className="text-muted-foreground px-4 py-4 text-left text-sm font-semibold transition-colors duration-150 select-none"
+											style={{ width: header.column.getSize() }}
+										>
+											{header.isPlaceholder
+												? null
+												: flexRender(
+														header.column.columnDef.header,
+														header.getContext(),
+													)}
+										</th>
+									))}
+								</tr>
 							))}
-						</SortableContext>
-					</tbody>
-				</table>
-			</DndContext>
+						</thead>
+						<tbody>
+							<SortableContext
+								items={displayItems.map((item) => item.tmdbId)}
+								strategy={verticalListSortingStrategy}
+								disabled={!isCustomOrder}
+							>
+								{table.getRowModel().rows.map((row, index) => (
+									<DraggableRow
+										key={row.original.tmdbId}
+										item={row.original}
+										index={index}
+										row={row}
+										loadingItem={loadingItem}
+										hoveredRow={hoveredRow}
+										setHoveredRow={setHoveredRow}
+										onConfirmDelete={setItemToDelete}
+										handleMoveItem={handleMoveItem}
+										handleAddToWatchlist={handleAddToWatchlist}
+										otherWatchlists={otherWatchlists}
+										totalItems={displayItems.length}
+										isDragDisabled={!isCustomOrder}
+										canEdit={canEdit}
+										content={content}
+									/>
+								))}
+							</SortableContext>
+						</tbody>
+					</table>
+				</DndContext>
+			</div>
 
-			{/* Item Details Modal */}
 			{selectedItem && (
 				<ItemDetailsModal
 					open={detailsModalOpen}
@@ -951,7 +906,6 @@ export function ListItemsTableOffline({
 				/>
 			)}
 
-			{/* Delete Confirmation Modal */}
 			<AlertDialog.Root
 				open={!!itemToDelete}
 				onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
@@ -996,6 +950,6 @@ export function ListItemsTableOffline({
 					</AlertDialog.Content>
 				</AlertDialog.Portal>
 			</AlertDialog.Root>
-		</div>
+		</>
 	);
 }

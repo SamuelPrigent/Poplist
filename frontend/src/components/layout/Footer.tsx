@@ -1,3 +1,5 @@
+"use client";
+
 import { ChevronDown, Coffee } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth-context";

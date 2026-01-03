@@ -1,5 +1,8 @@
+"use client";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Image as ImageIcon, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +10,8 @@ import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import {
 	GENRE_CATEGORIES,
-	getCategoryInfo,
 	type GenreCategory,
+	getCategoryInfo,
 } from "@/types/categories";
 
 interface CreateListDialogProps {
@@ -29,7 +32,6 @@ export function CreateListDialog({
 	const [description, setDescription] = useState("");
 	const [isPublic, setIsPublic] = useState(false);
 	const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
-	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function CreateListDialog({
 		setGenreCategories((prev) =>
 			prev.includes(category)
 				? prev.filter((c) => c !== category)
-				: [...prev, category]
+				: [...prev, category],
 		);
 	};
 
@@ -68,7 +70,6 @@ export function CreateListDialog({
 			return;
 		}
 
-		setImageFile(file);
 		setError(null);
 
 		// Create preview
@@ -117,7 +118,6 @@ export function CreateListDialog({
 				setDescription("");
 				setIsPublic(false);
 				setGenreCategories([]);
-				setImageFile(null);
 				setImagePreview(null);
 
 				onSuccess(newWatchlist);
@@ -132,7 +132,7 @@ export function CreateListDialog({
 				});
 
 				// Upload cover image if provided
-				if (imageFile && imagePreview) {
+				if (imagePreview) {
 					await watchlistAPI.uploadCover(watchlist._id, imagePreview);
 				}
 
@@ -141,7 +141,6 @@ export function CreateListDialog({
 				setDescription("");
 				setIsPublic(false);
 				setGenreCategories([]);
-				setImageFile(null);
 				setImagePreview(null);
 
 				onSuccess(watchlist);
@@ -149,7 +148,7 @@ export function CreateListDialog({
 			}
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to create watchlist"
+				err instanceof Error ? err.message : "Failed to create watchlist",
 			);
 		} finally {
 			setLoading(false);
@@ -161,7 +160,6 @@ export function CreateListDialog({
 		setDescription("");
 		setIsPublic(false);
 		setGenreCategories([]);
-		setImageFile(null);
 		setImagePreview(null);
 		setError(null);
 		onOpenChange(false);
@@ -280,15 +278,16 @@ export function CreateListDialog({
 							<div className="mt-2 flex items-center gap-4">
 								{imagePreview ? (
 									<div className="border-border relative h-24 w-24 overflow-hidden rounded-md border">
-										<img
+										<Image
 											src={imagePreview}
 											alt="Preview"
-											className="h-full w-full object-cover"
+											fill
+											sizes="96px"
+											className="object-cover"
 										/>
 										<button
 											type="button"
 											onClick={() => {
-												setImageFile(null);
 												setImagePreview(null);
 											}}
 											className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"

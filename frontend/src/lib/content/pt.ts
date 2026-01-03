@@ -86,8 +86,7 @@ export const pt: Content = {
 		deleting: "A eliminar...",
 		delete: "Eliminar",
 		addItem: "Adicionar",
-		searchMoviesAndSeries:
-			"Pesquise e adicione filmes ou séries à sua lista",
+		searchMoviesAndSeries: "Pesquise e adicione filmes ou séries à sua lista",
 		searchPlaceholder: "Pesquisar um filme ou série...",
 		searching: "A pesquisar...",
 		noResults: "Nenhum resultado encontrado",

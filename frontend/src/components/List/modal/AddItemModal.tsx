@@ -1,18 +1,21 @@
+"use client";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowLeft, Calendar, Check, Eye, Search, Star, X } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { NavigationArrows } from "@/components/ui/NavigationArrows";
+import { NavigationArrows } from "@/components/ui/navigation-arrows";
 import type {
 	FullMediaDetails,
 	Watchlist,
 	WatchlistItem,
 } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
-import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
+import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 
 interface AddItemModalProps {
@@ -56,7 +59,7 @@ export function AddItemModal({
 	const [itemDetails, setItemDetails] = useState<FullMediaDetails | null>(null);
 	const [loadingDetails, setLoadingDetails] = useState(false);
 
-	// Fresh watchlist items - fetched when modal opens to avoid stale data
+	// Fresh watchlist items - fetched when modal opens
 	const [freshWatchlistItems, setFreshWatchlistItems] = useState<
 		WatchlistItem[]
 	>(watchlist.items);
@@ -72,41 +75,36 @@ export function AddItemModal({
 		const fetchFreshItems = async () => {
 			try {
 				if (offline) {
-					// Offline mode: read from localStorage
 					const localWatchlists = getLocalWatchlists();
 					const freshWatchlist = localWatchlists.find(
-						(w) => w._id === watchlist._id
+						(w) => w._id === watchlist._id,
 					);
 					if (freshWatchlist) {
 						setFreshWatchlistItems(freshWatchlist.items);
 					}
 				} else {
-					// Online mode: fetch from API
 					const { watchlist: freshWatchlist } = await watchlistAPI.getById(
-						watchlist._id
+						watchlist._id,
 					);
 					setFreshWatchlistItems(freshWatchlist.items);
 				}
 			} catch (error) {
 				console.error("Failed to fetch fresh watchlist items:", error);
-				// Fallback to prop data
 				setFreshWatchlistItems(watchlist.items);
 			}
 		};
 
 		fetchFreshItems();
-	}, [open, watchlist._id, offline]);
+	}, [open, watchlist._id, offline, watchlist.items]);
 
-	// Call onSuccess and clear state when modal closes (if items were added or removed)
+	// Call onSuccess when modal closes if items were added/removed
 	useEffect(() => {
 		if (!open) {
-			// If items were added or removed during this session, notify parent to refresh
 			if (addedItemIds.size > 0 || removedItemIds.size > 0) {
 				onSuccess();
 				setAddedItemIds(new Set());
 				setRemovedItemIds(new Set());
 			}
-			// Clear search and details after a delay to avoid flickering
 			const timer = setTimeout(() => {
 				setSearchQuery("");
 				setSearchResults([]);
@@ -141,7 +139,7 @@ export function AddItemModal({
 				setLoading(false);
 			}
 		},
-		[languageCode, region]
+		[languageCode, region],
 	);
 
 	const onSearchChange = (value: string) => {
@@ -151,7 +149,7 @@ export function AddItemModal({
 			clearTimeout(searchTimeoutRef.current);
 		}
 
-		searchTimeoutRef.current = setTimeout(() => {
+		searchTimeoutRef.current = window.setTimeout(() => {
 			handleSearch(value);
 		}, 500);
 	};
@@ -165,10 +163,8 @@ export function AddItemModal({
 	});
 
 	const isItemInWatchlist = (tmdbId: number) => {
-		// Check both fresh watchlist items and items added during this session
-		// But exclude items that were removed during this session
 		const existsInWatchlist = freshWatchlistItems.some(
-			(item) => item.tmdbId === tmdbId.toString()
+			(item) => item.tmdbId === tmdbId.toString(),
 		);
 		const wasAddedThisSession = addedItemIds.has(tmdbId);
 		const wasRemovedThisSession = removedItemIds.has(tmdbId);
@@ -188,7 +184,7 @@ export function AddItemModal({
 			const { details } = await watchlistAPI.getItemDetails(
 				item.id.toString(),
 				item.media_type,
-				languageCode
+				languageCode,
 			);
 			setItemDetails(details);
 		} catch (error) {
@@ -198,14 +194,12 @@ export function AddItemModal({
 		}
 	};
 
-	// Handle going back from details view
 	const handleBackFromDetails = () => {
 		setSelectedItem(null);
 		setSelectedIndex(-1);
 		setItemDetails(null);
 	};
 
-	// Navigation handlers for details view
 	const handleNavigatePrevious = () => {
 		if (selectedIndex > 0) {
 			const prevItem = searchResults[selectedIndex - 1];
@@ -225,45 +219,30 @@ export function AddItemModal({
 
 		try {
 			if (offline) {
-				// Offline mode: add to localStorage
 				const STORAGE_KEY = "watchlists";
 				const localWatchlists = localStorage.getItem(STORAGE_KEY);
 				if (!localWatchlists) return;
 
 				const watchlists: Watchlist[] = JSON.parse(localWatchlists);
 				const watchlistIndex = watchlists.findIndex(
-					(w) => w._id === watchlist._id
+					(w) => w._id === watchlist._id,
 				);
 
 				if (watchlistIndex === -1) return;
-
-				// Fetch providers and details from TMDB via backend
-				console.log(
-					"[AddItemModal] Fetching providers and details for:",
-					item.id,
-					item.media_type
-				);
 
 				const [platformList, mediaDetails] = await Promise.all([
 					watchlistAPI.fetchTMDBProviders(
 						item.id.toString(),
 						item.media_type,
-						region
+						region,
 					),
 					watchlistAPI.getItemDetails(
 						item.id.toString(),
 						item.media_type,
-						languageCode
+						languageCode,
 					),
 				]);
 
-				console.log("[AddItemModal] Received platformList:", platformList);
-				console.log(
-					"[AddItemModal] Received runtime:",
-					mediaDetails.details.runtime
-				);
-
-				// Add item to watchlist
 				const newItem = {
 					tmdbId: item.id.toString(),
 					title: item.title || item.name || "",
@@ -276,17 +255,10 @@ export function AddItemModal({
 					addedAt: new Date().toISOString(),
 				};
 
-				console.log("[AddItemModal] Adding new item:", newItem);
-
 				watchlists[watchlistIndex].items.push(newItem);
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-
-				// Invalidate thumbnail cache so it regenerates with new item
 				deleteCachedThumbnail(watchlist._id);
-
-				console.log("[AddItemModal] Item added successfully!");
 			} else {
-				// Online mode: add via API
 				await watchlistAPI.addItem(watchlist._id, {
 					tmdbId: item.id.toString(),
 					type: item.media_type,
@@ -295,16 +267,12 @@ export function AddItemModal({
 				});
 			}
 
-			// Add to local state to immediately disable button
 			setAddedItemIds((prev) => new Set(prev).add(item.id));
-			// Remove from removed set if it was there
 			setRemovedItemIds((prev) => {
 				const newSet = new Set(prev);
 				newSet.delete(item.id);
 				return newSet;
 			});
-
-			// Don't call onSuccess() here - it will be called when modal closes
 		} catch (error) {
 			console.error("Error adding item:", error);
 		}
@@ -313,34 +281,27 @@ export function AddItemModal({
 	const handleRemoveItem = async (item: SearchResult) => {
 		try {
 			if (offline) {
-				// Offline mode: remove from localStorage
 				const STORAGE_KEY = "watchlists";
 				const localWatchlists = localStorage.getItem(STORAGE_KEY);
 				if (!localWatchlists) return;
 
 				const watchlists: Watchlist[] = JSON.parse(localWatchlists);
 				const watchlistIndex = watchlists.findIndex(
-					(w) => w._id === watchlist._id
+					(w) => w._id === watchlist._id,
 				);
 
 				if (watchlistIndex === -1) return;
 
-				// Remove item from watchlist
 				watchlists[watchlistIndex].items = watchlists[
 					watchlistIndex
 				].items.filter((i) => i.tmdbId !== item.id.toString());
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-
-				// Invalidate thumbnail cache
 				deleteCachedThumbnail(watchlist._id);
 			} else {
-				// Online mode: remove via API
 				await watchlistAPI.removeItem(watchlist._id, item.id.toString());
 			}
 
-			// Track removal in local state
 			setRemovedItemIds((prev) => new Set(prev).add(item.id));
-			// Remove from added set if it was there
 			setAddedItemIds((prev) => {
 				const newSet = new Set(prev);
 				newSet.delete(item.id);
@@ -380,7 +341,6 @@ export function AddItemModal({
 			<DialogPrimitive.Portal>
 				<DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
 
-				{/* Navigation arrows - only shown when viewing details */}
 				{selectedItem && (
 					<NavigationArrows
 						onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
@@ -411,7 +371,7 @@ export function AddItemModal({
 							</DialogPrimitive.Close>
 						</div>
 
-						{/* Search Bar - hidden when viewing details */}
+						{/* Search Bar */}
 						{!selectedItem && (
 							<div className="p-6 pb-4">
 								<div className="relative">
@@ -439,7 +399,6 @@ export function AddItemModal({
 									</div>
 								) : itemDetails ? (
 									<>
-										{/* Back button */}
 										<button
 											type="button"
 											onClick={handleBackFromDetails}
@@ -450,17 +409,18 @@ export function AddItemModal({
 										</button>
 
 										<div className="flex gap-5">
-											{/* Poster */}
 											<div className="shrink-0">
-												<div className="h-48 w-32 overflow-hidden rounded-lg shadow-lg">
+												<div className="relative h-48 w-32 overflow-hidden rounded-lg shadow-lg">
 													{itemDetails.posterUrl ? (
-														<img
+														<Image
 															src={itemDetails.posterUrl.replace(
 																"w500",
-																"w300"
+																"w300",
 															)}
 															alt={itemDetails.title}
-															className="h-full w-full object-cover"
+															fill
+															sizes="128px"
+															className="object-cover"
 														/>
 													) : (
 														<div className="bg-muted text-muted-foreground flex h-full w-full items-center justify-center">
@@ -470,14 +430,11 @@ export function AddItemModal({
 												</div>
 											</div>
 
-											{/* Info */}
 											<div className="flex-1 space-y-3">
-												{/* Title row with button on the right */}
 												<div className="flex items-start justify-between gap-4">
 													<h2 className="text-2xl font-bold">
 														{itemDetails.title}
 													</h2>
-													{/* Add/Remove button - positioned next to title */}
 													{isItemInWatchlist(selectedItem.id) ? (
 														<Button
 															variant="outline"
@@ -519,7 +476,7 @@ export function AddItemModal({
 															<Calendar className="h-4 w-4" />
 															<span>
 																{new Date(
-																	itemDetails.releaseDate
+																	itemDetails.releaseDate,
 																).getFullYear()}
 															</span>
 														</div>
@@ -541,7 +498,6 @@ export function AddItemModal({
 														)}
 												</div>
 
-												{/* Rating */}
 												{itemDetails.voteCount > 0 && (
 													<div className="flex items-center gap-1">
 														<Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -555,7 +511,6 @@ export function AddItemModal({
 													</div>
 												)}
 
-												{/* Genres */}
 												{itemDetails.genres.length > 0 && (
 													<div className="flex flex-wrap gap-2">
 														{itemDetails.genres.map((genre) => (
@@ -569,7 +524,6 @@ export function AddItemModal({
 													</div>
 												)}
 
-												{/* Synopsis - truncated to 3 lines */}
 												{itemDetails.overview && (
 													<p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
 														{itemDetails.overview}
@@ -588,14 +542,13 @@ export function AddItemModal({
 							</div>
 						)}
 
-						{/* Results - hidden when viewing details */}
+						{/* Results */}
 						{!selectedItem && (
 							<div
 								ref={scrollContainerRef}
-								className="flex-1 overflow-y-auto px-6 pb-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb:hover]:bg-gray-500 [&::-webkit-scrollbar-track]:bg-transparent"
+								className="flex-1 overflow-y-auto px-6 pb-6"
 								style={{
 									maxHeight: "calc(80vh - 200px)",
-									scrollbarColor: "#4b5563 transparent",
 								}}
 							>
 								{loading && (
@@ -648,23 +601,23 @@ export function AddItemModal({
 													}}
 												>
 													<div className="hover:bg-muted/50 flex items-center gap-4 rounded-md p-3 transition-colors">
-														{/* Poster + Title clickable together */}
 														<button
 															type="button"
-															onClick={() => handleViewDetails(item, virtualItem.index)}
+															onClick={() =>
+																handleViewDetails(item, virtualItem.index)
+															}
 															className="group/cell flex flex-1 cursor-pointer items-center gap-4 text-left"
 														>
-															{/* Poster with eye overlay */}
 															<div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-md">
 																{posterUrl ? (
 																	<>
-																		<img
+																		<Image
 																			src={posterUrl}
-																			alt={item.title || item.name}
-																			loading="lazy"
-																			className="h-full w-full object-cover"
+																			alt={item.title || item.name || ""}
+																			fill
+																			sizes="64px"
+																			className="object-cover"
 																		/>
-																		{/* Hover overlay with eye icon - appears when hovering poster OR title */}
 																		<div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
 																			<Eye className="h-5 w-5 text-white" />
 																		</div>
@@ -676,9 +629,7 @@ export function AddItemModal({
 																)}
 															</div>
 
-															{/* Info */}
 															<div className="flex-1 space-y-1">
-																{/* Title with underline on hover */}
 																<h3 className="line-clamp-1 font-semibold underline-offset-2 group-hover/cell:underline">
 																	{item.title || item.name}
 																</h3>
@@ -703,7 +654,6 @@ export function AddItemModal({
 															</div>
 														</button>
 
-														{/* Add/Remove Button */}
 														<div className="shrink-0">
 															{isInWatchlist ? (
 																<Button

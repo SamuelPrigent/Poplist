@@ -1,4 +1,7 @@
+"use client";
+
 import { Eye, Film, Star } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 interface MoviePosterProps {
@@ -27,11 +30,12 @@ export function MoviePoster({
 			<div className="bg-muted relative mb-3 aspect-2/3 overflow-hidden rounded-lg shadow-lg">
 				{/* Image with zoom on hover */}
 				{posterPath && !imageError ? (
-					<img
+					<Image
 						src={`https://image.tmdb.org/t/p/w500${posterPath}`}
-						alt={displayTitle}
-						className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-						loading="lazy"
+						alt={displayTitle || "Movie poster"}
+						fill
+						sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+						className="object-cover transition-transform duration-300 group-hover:scale-105"
 						onError={() => setImageError(true)}
 					/>
 				) : (

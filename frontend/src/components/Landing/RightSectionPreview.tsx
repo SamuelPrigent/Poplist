@@ -1,4 +1,6 @@
-import watchlistsPreview from "@/assets/preview/watchlists.png";
+"use client";
+
+import Image from "next/image";
 
 export function RightSectionPreview() {
 	return (
@@ -6,10 +8,13 @@ export function RightSectionPreview() {
 			<div className="border-border relative overflow-hidden rounded-[30px] border-4">
 				{/* Real app screenshot */}
 				<div className="relative aspect-4/3">
-					<img
-						src={watchlistsPreview}
-						alt="Aperçu de l'application Poplist"
-						className="relative top-[10px] left-[-21px] h-full w-full object-cover object-left"
+					<Image
+						src="/preview/watchlists.png"
+						alt="Apercu de l'application Poplist"
+						fill
+						sizes="(max-width: 768px) 100vw, 45vw"
+						className="relative top-[10px] left-[-21px] object-cover object-left"
+						priority
 					/>
 				</div>
 				{/* Gradient fade overlay */}

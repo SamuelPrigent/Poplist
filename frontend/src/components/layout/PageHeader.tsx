@@ -1,4 +1,7 @@
+"use client";
+
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PageHeaderProps {
 	title: string;
@@ -17,14 +20,10 @@ export function PageHeader({
 		<>
 			{/* Back Button */}
 			<div className="mt-1 mb-3">
-				<button
-					type="button"
-					onClick={onBack}
-					className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
-				>
+				<Button variant="nav-link" size="auto" onClick={onBack}>
 					<ArrowLeft className="h-4 w-4" />
 					<span>{backLabel}</span>
-				</button>
+				</Button>
 			</div>
 
 			{/* Header */}

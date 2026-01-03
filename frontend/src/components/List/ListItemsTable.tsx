@@ -1,3 +1,5 @@
+"use client";
+
 import {
 	closestCenter,
 	DndContext,
@@ -39,6 +41,7 @@ import {
 	Plus,
 	Trash2,
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	Empty,
@@ -67,14 +70,14 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
 			{/* Skeleton - shown while loading */}
 			{!loaded && <div className="bg-muted absolute inset-0 animate-pulse" />}
 			{/* Actual image */}
-			<img
+			<Image
 				src={src}
 				alt={alt}
-				className={`h-full w-full object-cover transition-opacity duration-200 ${
+				fill
+				sizes="48px"
+				className={`object-cover transition-opacity duration-200 ${
 					loaded ? "opacity-100" : "opacity-0"
 				}`}
-				loading="lazy"
-				decoding="async"
 				onLoad={() => setLoaded(true)}
 			/>
 		</>
@@ -112,7 +115,6 @@ function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 			<ArrowUp className="h-4 w-4 text-green-500 transition-all duration-150" />
 		);
 	}
-	// Neutral state: bracket rotated 90deg to show up/down arrows
 	return (
 		<BracketIcon className="h-4 w-4 rotate-90 opacity-40 transition-all duration-150" />
 	);
@@ -192,7 +194,7 @@ function DraggableRow({
 
 	// Filter watchlists for the "add to" dropdown
 	const availableWatchlists = watchlists.filter(
-		(w) => w._id !== currentWatchlistId && (w.isOwner || w.isCollaborator)
+		(w) => w._id !== currentWatchlistId && (w.isOwner || w.isCollaborator),
 	);
 
 	return (
@@ -204,7 +206,7 @@ function DraggableRow({
 			className={cn(
 				"group transition-colors duration-150 select-none",
 				!isLastRow && "border-border border-b",
-				hoveredRow === item.tmdbId && "bg-muted/30"
+				hoveredRow === item.tmdbId && "bg-muted/30",
 			)}
 		>
 			{row.getVisibleCells().map((cell, cellIndex: number) => {
@@ -224,7 +226,7 @@ function DraggableRow({
 									"flex items-center gap-1 transition-opacity",
 									hoveredRow === item.tmdbId
 										? "opacity-100"
-										: "opacity-0 group-hover:opacity-100"
+										: "opacity-0 group-hover:opacity-100",
 								)}
 							>
 								{/* Add to watchlist button */}
@@ -371,10 +373,8 @@ function DraggableRow({
 
 export function ListItemsTable({
 	watchlist,
-	//   onUpdate,
 	isOwner = true,
 	isCollaborator = false,
-	//   offline: _offline = false,
 	currentPage = 1,
 	itemsPerPage,
 }: ListItemsTableProps) {
@@ -409,11 +409,9 @@ export function ListItemsTable({
 				})
 				.catch(console.error);
 		} else {
-			// User is not authenticated - load from localStorage with ownership info
 			const localWatchlists = getLocalWatchlistsWithOwnership();
-			// Only show owned watchlists (isOwner === true), excluding current one
 			const ownedWatchlists = localWatchlists.filter(
-				(wl) => wl.isOwner && wl._id !== watchlist._id
+				(wl) => wl.isOwner && wl._id !== watchlist._id,
 			);
 			setWatchlists(ownedWatchlists);
 		}
@@ -440,14 +438,14 @@ export function ListItemsTable({
 		window.addEventListener("storage", handleStorageChange);
 		window.addEventListener(
 			"localStorageWatchlistsChanged",
-			handleCustomStorageChange
+			handleCustomStorageChange,
 		);
 
 		return () => {
 			window.removeEventListener("storage", handleStorageChange);
 			window.removeEventListener(
 				"localStorageWatchlistsChanged",
-				handleCustomStorageChange
+				handleCustomStorageChange,
 			);
 		};
 	}, [isAuthenticated, loadWatchlists]);
@@ -467,7 +465,7 @@ export function ListItemsTable({
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
-		})
+		}),
 	);
 
 	const formatRuntime = useCallback((minutes: number | undefined) => {
@@ -480,7 +478,7 @@ export function ListItemsTable({
 
 	const handleAddToWatchlist = async (
 		watchlistId: string,
-		item: WatchlistItem
+		item: WatchlistItem,
 	) => {
 		try {
 			setAddingTo(item.tmdbId);
@@ -500,14 +498,11 @@ export function ListItemsTable({
 	const handleRemoveItem = async (tmdbId: string) => {
 		try {
 			setLoadingItem(tmdbId);
-			// Update local state immediately
 			const newItems = items.filter((item) => item.tmdbId !== tmdbId);
 			setItems(newItems);
 
-			// Call API
 			await watchlistAPI.removeItem(watchlist._id, tmdbId);
 
-			// Regenerate thumbnail if watchlist has no custom image
 			if (!watchlist.imageUrl && newItems.length > 0) {
 				const posterUrls = newItems
 					.slice(0, 4)
@@ -517,12 +512,9 @@ export function ListItemsTable({
 					await generateAndCacheThumbnail(watchlist._id, posterUrls);
 				}
 			}
-
-			// Don't call onUpdate() to avoid refetching and losing scroll position
 		} catch (error) {
 			console.error("Failed to remove item:", error);
 			alert("Failed to remove item");
-			// Revert on error
 			setItems(watchlist.items);
 		} finally {
 			setLoadingItem(null);
@@ -535,7 +527,6 @@ export function ListItemsTable({
 			const itemIndex = items.findIndex((item) => item.tmdbId === tmdbId);
 			if (itemIndex === -1) return;
 
-			// Update local state immediately
 			const newItems = [...items];
 			const [movedItem] = newItems.splice(itemIndex, 1);
 			if (position === "first") {
@@ -545,10 +536,8 @@ export function ListItemsTable({
 			}
 			setItems(newItems);
 
-			// Call API
 			await watchlistAPI.moveItem(watchlist._id, tmdbId, position);
 
-			// Regenerate thumbnail if watchlist has no custom image
 			if (!watchlist.imageUrl && newItems.length > 0) {
 				const posterUrls = newItems
 					.slice(0, 4)
@@ -558,12 +547,9 @@ export function ListItemsTable({
 					await generateAndCacheThumbnail(watchlist._id, posterUrls);
 				}
 			}
-
-			// Don't call onUpdate() to avoid refetching and losing scroll position
 		} catch (error) {
 			console.error("Failed to move item:", error);
 			alert("Failed to move item");
-			// Revert on error
 			setItems(watchlist.items);
 		} finally {
 			setLoadingItem(null);
@@ -580,12 +566,10 @@ export function ListItemsTable({
 			const newItems = arrayMove(items, oldIndex, newIndex);
 			setItems(newItems);
 
-			// Persist to backend
 			try {
 				const orderedTmdbIds = newItems.map((item) => item.tmdbId);
 				await watchlistAPI.reorderItems(watchlist._id, orderedTmdbIds);
 
-				// Regenerate thumbnail if watchlist has no custom image
 				if (!watchlist.imageUrl && newItems.length > 0) {
 					const posterUrls = newItems
 						.slice(0, 4)
@@ -595,11 +579,8 @@ export function ListItemsTable({
 						await generateAndCacheThumbnail(watchlist._id, posterUrls);
 					}
 				}
-
-				// Don't call onUpdate() to avoid refetching and resetting the local state
 			} catch (error) {
 				console.error("Failed to reorder items:", error);
-				// Revert on error
 				setItems(items);
 			}
 		}
@@ -622,11 +603,11 @@ export function ListItemsTable({
 						<div
 							onClick={() => {
 								if (!isSorted) {
-									column.toggleSorting(false); // asc
+									column.toggleSorting(false);
 								} else if (isSorted === "asc") {
-									column.toggleSorting(true); // desc
+									column.toggleSorting(true);
 								} else {
-									column.clearSorting(); // custom order
+									column.clearSorting();
 								}
 							}}
 							className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
@@ -664,12 +645,10 @@ export function ListItemsTable({
 							}}
 							className="group/cell flex cursor-pointer items-center gap-3 text-left"
 						>
-							{/* Poster with overlay triggered by hovering cell (poster or title) */}
 							<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
 								{item.posterUrl ? (
 									<>
 										<PosterImage src={item.posterUrl} alt={item.title} />
-										{/* Hover overlay with eye icon - appears when hovering poster OR title */}
 										<div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
 											<Eye className="h-5 w-5 text-white" />
 										</div>
@@ -680,7 +659,6 @@ export function ListItemsTable({
 									</div>
 								)}
 							</div>
-							{/* Title with underline on hover */}
 							<span className="font-medium text-white underline-offset-2 transition-colors group-hover/cell:underline">
 								{item.title}
 							</span>
@@ -700,7 +678,7 @@ export function ListItemsTable({
 								"inline-block rounded-full px-2 py-1 text-xs font-medium",
 								type === "movie"
 									? "bg-blue-500/10 text-blue-400"
-									: "bg-purple-500/10 text-purple-400"
+									: "bg-purple-500/10 text-purple-400",
 							)}
 						>
 							{type === "movie"
@@ -717,25 +695,22 @@ export function ListItemsTable({
 				cell: (info) => {
 					const rawPlatforms = info.getValue() as unknown;
 
-					// Handle both old format (string[]) and new format (Platform[])
 					const platforms: { name: string; logoPath: string }[] = Array.isArray(
-						rawPlatforms
+						rawPlatforms,
 					)
 						? rawPlatforms
 								.filter((p) => p !== null && p !== undefined && p !== "")
 								.map((p) => {
-									// Handle string format (old data)
 									if (typeof p === "string") {
 										return p.trim() ? { name: p, logoPath: "" } : null;
 									}
-									// Handle object format (new data)
 									if (p && typeof p === "object" && p.name && p.name.trim()) {
 										return { name: p.name, logoPath: p.logoPath || "" };
 									}
 									return null;
 								})
 								.filter(
-									(p): p is { name: string; logoPath: string } => p !== null
+									(p): p is { name: string; logoPath: string } => p !== null,
 								)
 						: [];
 
@@ -751,11 +726,11 @@ export function ListItemsTable({
 						<div
 							onClick={() => {
 								if (!isSorted) {
-									column.toggleSorting(false); // asc (shortest to longest)
+									column.toggleSorting(false);
 								} else if (isSorted === "asc") {
-									column.toggleSorting(true); // desc (longest to shortest)
+									column.toggleSorting(true);
 								} else {
-									column.clearSorting(); // custom order
+									column.clearSorting();
 								}
 							}}
 							className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
@@ -780,7 +755,6 @@ export function ListItemsTable({
 					);
 				},
 				accessorFn: (row) => {
-					// For sorting: TV shows use episodes * 35min, movies use runtime
 					if (row.type === "tv" && row.numberOfEpisodes) {
 						return row.numberOfEpisodes * 35;
 					}
@@ -789,7 +763,6 @@ export function ListItemsTable({
 				cell: (info) => {
 					const item = info.row.original;
 
-					// For TV shows: display "X saisons · Y épisodes"
 					if (item.type === "tv") {
 						const seasons = item.numberOfSeasons;
 						const episodes = item.numberOfEpisodes;
@@ -810,7 +783,6 @@ export function ListItemsTable({
 						return <span className="text-muted-foreground text-sm">—</span>;
 					}
 
-					// For movies: display runtime
 					return (
 						<span className="text-muted-foreground text-sm">
 							{formatRuntime(item.runtime)}
@@ -822,22 +794,18 @@ export function ListItemsTable({
 			{
 				id: "actions",
 				header: "Actions",
-				cell: () => null, // Rendered in DraggableRow
+				cell: () => null,
 				size: 120,
 			},
 		],
-		[content, formatRuntime]
+		[content, formatRuntime],
 	);
 
-	// Determine if we're in custom order mode (no sorting)
 	const isCustomOrder = sorting.length === 0;
 
-	// Use sorted items if sorting is active, otherwise use local state
-	// Apply pagination if provided
 	const displayItems = useMemo(() => {
 		let itemsToDisplay = items;
 
-		// Apply pagination if currentPage and itemsPerPage are provided
 		if (itemsPerPage !== undefined && itemsPerPage < items.length) {
 			const startIndex = (currentPage - 1) * itemsPerPage;
 			const endIndex = startIndex + itemsPerPage;
@@ -845,9 +813,8 @@ export function ListItemsTable({
 		}
 
 		return itemsToDisplay;
-	}, [items, isCustomOrder, currentPage, itemsPerPage]);
+	}, [items, currentPage, itemsPerPage]);
 
-	// Navigation handlers for details modal
 	const handleNavigatePrevious = useCallback(() => {
 		if (selectedIndex > 0) {
 			const prevItem = displayItems[selectedIndex - 1];
@@ -917,7 +884,7 @@ export function ListItemsTable({
 												? null
 												: flexRender(
 														header.column.columnDef.header,
-														header.getContext()
+														header.getContext(),
 													)}
 										</th>
 									))}

@@ -1,8 +1,11 @@
+"use client";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Calendar, Clock, Star, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { NavigationArrows } from "@/components/ui/navigation-arrows";
 import { type FullMediaDetails, watchlistAPI } from "@/lib/api-client";
-import { NavigationArrows } from "@/components/ui/NavigationArrows";
 import { useLanguageStore } from "@/store/language";
 import { WatchProviderList } from "../WatchProviderBubble";
 
@@ -25,7 +28,7 @@ export function ItemDetailsModal({
 	onPrevious,
 	onNext,
 }: ItemDetailsModalProps) {
-	const { language, content } = useLanguageStore(); // use it for (acteur principaux, etc)
+	const { language, content } = useLanguageStore();
 	const [details, setDetails] = useState<FullMediaDetails | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [_error, setError] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export function ItemDetailsModal({
 	const [showSeeMore, setShowSeeMore] = useState(false);
 	const [posterLoaded, setPosterLoaded] = useState(false);
 	const [loadedActorImages, setLoadedActorImages] = useState<Set<string>>(
-		new Set()
+		new Set(),
 	);
 	const overviewRef = useRef<HTMLParagraphElement>(null);
 
@@ -60,12 +63,11 @@ export function ItemDetailsModal({
 				const { details: data } = await watchlistAPI.getItemDetails(
 					tmdbId,
 					type,
-					languageCode
+					languageCode,
 				);
 				setDetails(data);
 			} catch (err) {
 				console.error("Failed to fetch item details:", err);
-				// Don't show error - item doesn't exist on TMDB
 				setError(null);
 				setDetails(null);
 			} finally {
@@ -91,10 +93,8 @@ export function ItemDetailsModal({
 			}
 		};
 
-		// Check after render
 		checkTruncation();
 
-		// Also check on window resize in case layout changes
 		window.addEventListener("resize", checkTruncation);
 		return () => window.removeEventListener("resize", checkTruncation);
 	}, [details?.overview, isOverviewExpanded]);
@@ -114,16 +114,15 @@ export function ItemDetailsModal({
 	};
 
 	const formatRating = (rating: number) => {
-		return (rating / 2).toFixed(1); // Convert from 10-point to 5-star scale
+		return (rating / 2).toFixed(1);
 	};
 
 	const localizeCharacter = (character: string) => {
-		// Replace "(voice)" with localized version - TMDB doesn't always translate this
 		return character.replace(/\(voice\)/gi, `(${voiceTranslation})`);
 	};
 
 	const renderStars = (rating: number) => {
-		const stars = rating / 2; // Convert to 5-star scale
+		const stars = rating / 2;
 		const fullStars = Math.floor(stars);
 		const hasHalfStar = stars % 1 >= 0.5;
 
@@ -165,14 +164,12 @@ export function ItemDetailsModal({
 
 				<DialogPrimitive.Content
 					onPointerDownOutside={(e) => {
-						// Prevent closing when clicking on navigation buttons
 						const target = e.target as HTMLElement;
 						if (target.closest("[data-nav-button]")) {
 							e.preventDefault();
 						}
 					}}
 					onInteractOutside={(e) => {
-						// Prevent closing when interacting with navigation buttons
 						const target = e.target as HTMLElement;
 						if (target.closest("[data-nav-button]")) {
 							e.preventDefault();
@@ -180,7 +177,7 @@ export function ItemDetailsModal({
 					}}
 					className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 max-h-[90vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none"
 				>
-					{/* Hidden Title and Description for accessibility - always rendered */}
+					{/* Hidden Title and Description for accessibility */}
 					<DialogPrimitive.Title className="sr-only">
 						{details?.title || content.watchlists.itemDetails.mediaDetails}
 					</DialogPrimitive.Title>
@@ -206,25 +203,25 @@ export function ItemDetailsModal({
 						<>
 							{/* Backdrop Background */}
 							<div className="relative overflow-hidden">
-								{/* Backdrop Image as background - limited height */}
+								{/* Backdrop Image as background */}
 								{details.backdropUrl ? (
 									<>
-										{/* Image */}
 										<div className="absolute inset-x-0 top-0 z-0 h-68">
-											<img
+											<Image
 												src={details.backdropUrl}
 												alt={details.title}
-												className="h-full w-full object-cover object-top"
+												fill
+												sizes="(max-width: 896px) 100vw, 896px"
+												className="object-cover object-top"
 											/>
 										</div>
-										{/* Gradient overlay - independent and extended */}
 										<div className="to-background absolute inset-x-0 top-0 z-1 h-[calc(17rem+2px)] bg-linear-to-b from-black/90 via-black/80 via-80%" />
 									</>
 								) : (
 									<div className="bg-muted absolute inset-0 z-0" />
 								)}
 
-								{/* Close Button - Fixed position */}
+								{/* Close Button */}
 								<DialogPrimitive.Close className="absolute top-4 right-4 z-20 cursor-pointer rounded-full bg-black/60 p-2 text-white opacity-70 transition-opacity hover:opacity-100">
 									<X className="h-5 w-5" />
 									<span className="sr-only">Close</span>
@@ -238,15 +235,15 @@ export function ItemDetailsModal({
 											<div className="relative h-48 w-32 overflow-hidden rounded-lg">
 												{details.posterUrl ? (
 													<>
-														{/* Skeleton - shown while loading */}
 														{!posterLoaded && (
 															<div className="bg-muted absolute inset-0 animate-pulse" />
 														)}
-														{/* Actual image */}
-														<img
+														<Image
 															src={details.posterUrl}
 															alt={details.title}
-															className={`h-full w-full object-cover transition-opacity duration-200 ${
+															fill
+															sizes="128px"
+															className={`object-cover transition-opacity duration-200 ${
 																posterLoaded ? "opacity-100" : "opacity-0"
 															}`}
 															onLoad={() => setPosterLoaded(true)}
@@ -262,7 +259,7 @@ export function ItemDetailsModal({
 
 										{/* Info */}
 										<div className="min-w-0 flex-1 space-y-4">
-											{/* Title (Visual) */}
+											{/* Title */}
 											<div>
 												<h2 className="truncate pr-12 text-3xl font-bold">
 													{details.title}
@@ -389,15 +386,15 @@ export function ItemDetailsModal({
 														<div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
 															{actor.profileUrl ? (
 																<>
-																	{/* Skeleton - shown while loading */}
 																	{!loadedActorImages.has(actor.profileUrl) && (
 																		<div className="bg-muted absolute inset-0 animate-pulse" />
 																	)}
-																	{/* Actual image */}
-																	<img
+																	<Image
 																		src={actor.profileUrl}
 																		alt={actor.name}
-																		className={`h-full w-full object-cover transition-opacity duration-200 ${
+																		fill
+																		sizes="64px"
+																		className={`object-cover transition-opacity duration-200 ${
 																			loadedActorImages.has(actor.profileUrl)
 																				? "opacity-100"
 																				: "opacity-0"
