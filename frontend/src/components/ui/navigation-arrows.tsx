@@ -52,7 +52,7 @@ export function NavigationArrows({
 							onPrevious();
 						}
 					}}
-					className="pointer-events-auto fixed top-1/2 left-4 z-100 flex aspect-square w-16 -translate-y-1/2 cursor-pointer items-center justify-center"
+					className="pointer-events-auto fixed top-1/2 left-4 z-100 hidden aspect-square w-16 -translate-y-1/2 cursor-pointer items-center justify-center min-[1070px]:flex"
 					aria-label="Previous"
 				>
 					<ChevronLeft className="h-9 w-9 opacity-90 transition-opacity hover:opacity-100" />
@@ -73,7 +73,7 @@ export function NavigationArrows({
 							onNext();
 						}
 					}}
-					className="pointer-events-auto fixed top-1/2 right-4 z-100 flex aspect-square w-16 -translate-y-1/2 cursor-pointer items-center justify-center"
+					className="pointer-events-auto fixed top-1/2 right-4 z-100 hidden aspect-square w-16 -translate-y-1/2 cursor-pointer items-center justify-center min-[1070px]:flex"
 					aria-label="Next"
 				>
 					<ChevronRight className="h-9 w-9 opacity-90 transition-opacity hover:opacity-100" />
