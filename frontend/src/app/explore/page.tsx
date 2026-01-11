@@ -16,7 +16,7 @@ function ExploreLoading() {
           <div className="bg-muted h-6 w-96 animate-pulse rounded-lg" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {Array.from({ length: 36 }).map((_, i) => (
+          {Array.from({ length: 60 }).map((_, i) => (
             <div key={`skeleton-${i}`} className="bg-muted aspect-2/3 animate-pulse rounded-lg" />
           ))}
         </div>

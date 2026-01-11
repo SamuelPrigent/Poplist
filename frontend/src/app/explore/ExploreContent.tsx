@@ -22,6 +22,7 @@ import { type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { deleteCachedThumbnail } from '@/lib/thumbnailGenerator';
+import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
 
@@ -58,24 +59,25 @@ const getGenres = (content: Content) => ({
     { id: 53, name: content.explore.genres.thriller },
   ],
   tv: [
-    { id: 10759, name: content.explore.genres.actionAdventure },
     { id: 16, name: content.explore.genres.animation },
     { id: 35, name: content.explore.genres.comedy },
     { id: 80, name: content.explore.genres.crime },
     { id: 99, name: content.explore.genres.documentary },
     { id: 18, name: content.explore.genres.drama },
     { id: 10751, name: content.explore.genres.family },
+    { id: 10765, name: content.explore.genres.fantasy },
     { id: 10762, name: content.explore.genres.kids },
     { id: 9648, name: content.explore.genres.mystery },
-    { id: 10765, name: content.explore.genres.sciFiFantasy },
     { id: 10766, name: content.explore.genres.soap },
     { id: 37, name: content.explore.genres.western },
   ],
 });
 
 export function ExploreContent() {
-  const { content } = useLanguageStore();
+  const { content, language } = useLanguageStore();
   const { isAuthenticated } = useAuth();
+  const tmdbLanguage = getTMDBLanguage(language);
+  const tmdbRegion = getTMDBRegion(language);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -107,9 +109,9 @@ export function ExploreContent() {
     [searchParams]
   );
 
-  const selectedGenre = useMemo(() => {
-    const genre = searchParams.get('genre');
-    return genre ? Number(genre) : null;
+  const selectedGenres = useMemo(() => {
+    const genres = searchParams.get('genres');
+    return genres ? genres.split(',').map(Number) : [];
   }, [searchParams]);
 
   // Extract year from date params (format: YYYY-MM-DD -> YYYY)
@@ -199,9 +201,24 @@ export function ExploreContent() {
     });
   };
 
-  const updateGenre = (genre: number | null) => {
+  const toggleGenre = (genre: number) => {
+    let newGenres = [...selectedGenres];
+
+    if (newGenres.includes(genre)) {
+      newGenres = newGenres.filter(g => g !== genre);
+    } else {
+      newGenres.push(genre);
+    }
+
     updateSearchParams({
-      genre: genre === null ? null : genre.toString(),
+      genres: newGenres.length > 0 ? newGenres.join(',') : null,
+      page: '1',
+    });
+  };
+
+  const clearGenres = () => {
+    updateSearchParams({
+      genres: null,
       page: '1',
     });
   };
@@ -270,10 +287,9 @@ export function ExploreContent() {
     const fetchMedia = async () => {
       setLoading(true);
       try {
-        const itemsPerDisplayPage = 36; // 6 columns × 6 rows
-        const itemsPerTMDBPage = 20;
-        const startTMDBPage = Math.floor(((page - 1) * itemsPerDisplayPage) / itemsPerTMDBPage) + 1;
-        const pagesNeeded = Math.ceil(itemsPerDisplayPage / itemsPerTMDBPage);
+        const itemsPerDisplayPage = 60; // 6 columns × 10 rows = exactly 3 TMDB pages
+        const pagesNeeded = 3; // 60 items / 20 per TMDB page = 3 pages exactly
+        const startTMDBPage = (page - 1) * pagesNeeded + 1;
 
         // Fetch for each selected media type
         const fetchPromises = mediaTypes.map(async type => {
@@ -283,7 +299,7 @@ export function ExploreContent() {
           for (let i = 0; i < pagesNeeded; i++) {
             const currentTMDBPage = startTMDBPage + i;
             const params = new URLSearchParams({
-              language: 'fr-FR',
+              language: tmdbLanguage,
               page: currentTMDBPage.toString(),
             });
 
@@ -298,12 +314,13 @@ export function ExploreContent() {
 
             params.append('sort_by', sortBy);
 
-            // Always add minimum vote count to avoid absurd results
+            // Always add minimum vote count and rating to avoid absurd results
             params.append('vote_count.gte', '100');
+            params.append('vote_average.gte', '5.0');
 
-            // Add genre filter
-            if (selectedGenre) {
-              params.append('with_genres', selectedGenre.toString());
+            // Add genre filter (OR logic with pipe separator)
+            if (selectedGenres.length > 0) {
+              params.append('with_genres', selectedGenres.join('|'));
             }
 
             // Add date filters (year transformed to YYYY-01-01 and YYYY-12-31)
@@ -351,20 +368,16 @@ export function ExploreContent() {
           combinedResults = fetchedData[0]?.results || [];
         }
 
-        // Calculate the starting index for this display page
-        const startIndex = ((page - 1) * itemsPerDisplayPage) % itemsPerTMDBPage;
-
-        // Slice to get exactly 36 items for this page
-        const displayResults = combinedResults.slice(startIndex, startIndex + itemsPerDisplayPage);
+        // Take exactly 60 items for this page (no offset needed since we fetch exactly 3 TMDB pages)
+        const displayResults = combinedResults.slice(0, itemsPerDisplayPage);
 
         setMedia(displayResults);
 
         // Use the highest total pages from all fetched types
+        // Each display page = 3 TMDB pages, so divide by 3
         const maxTotalPages = Math.max(...fetchedData.map(d => d.totalPages));
-        const totalDisplayPages = Math.ceil(
-          (maxTotalPages * itemsPerTMDBPage) / itemsPerDisplayPage
-        );
-        setTotalPages(Math.min(totalDisplayPages, 500));
+        const totalDisplayPages = Math.floor(maxTotalPages / pagesNeeded);
+        setTotalPages(Math.min(totalDisplayPages, 166)); // 166 * 3 = 498 TMDB pages (under 500 limit)
       } catch (error) {
         console.error('Failed to fetch media:', error);
       } finally {
@@ -373,7 +386,7 @@ export function ExploreContent() {
     };
 
     fetchMedia();
-  }, [mediaTypes, filterType, selectedGenre, page, yearFrom, yearTo]);
+  }, [mediaTypes, filterType, selectedGenres, page, yearFrom, yearTo, tmdbLanguage]);
 
   const handleAddToWatchlist = async (watchlistId: string, mediaItem: MediaItem) => {
     try {
@@ -386,8 +399,8 @@ export function ExploreContent() {
         await watchlistAPI.addItem(watchlistId, {
           tmdbId: mediaItem.id.toString(),
           type: itemType,
-          language: 'fr-FR',
-          region: 'FR',
+          language: tmdbLanguage,
+          region: tmdbRegion,
         });
       } else {
         const localWatchlists = localStorage.getItem('watchlists');
@@ -402,15 +415,15 @@ export function ExploreContent() {
 
             if (!itemExists) {
               const [platformList, mediaDetails] = await Promise.all([
-                watchlistAPI.fetchTMDBProviders(mediaItem.id.toString(), itemType, 'FR'),
-                watchlistAPI.getItemDetails(mediaItem.id.toString(), itemType, 'fr-FR'),
+                watchlistAPI.fetchTMDBProviders(mediaItem.id.toString(), itemType, tmdbRegion),
+                watchlistAPI.getItemDetails(mediaItem.id.toString(), itemType, tmdbLanguage),
               ]);
 
               const newItem = {
                 tmdbId: mediaItem.id.toString(),
                 title: mediaItem.title || mediaItem.name || '',
                 posterUrl: mediaItem.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${mediaItem.poster_path}`
+                  ? `https://image.tmdb.org/t/p/w342${mediaItem.poster_path}`
                   : '',
                 type: itemType,
                 platformList,
@@ -487,41 +500,40 @@ export function ExploreContent() {
         <div className="mb-8 space-y-4">
           {/* Main Filters Row - Media Type + Sort Type */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Media Type Filter - Multi-select in dark container */}
-            <div className="bg-muted/50 rounded-md p-1">
-              <div
-                className={cn(
-                  'flex items-center rounded-md',
-                  mediaTypes.length === 2 && 'bg-white'
-                )}
+            {/* Media Type Filter - Multi-select with inline checkmarks */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => toggleMediaType('movie')}
+                className="cursor-pointer"
               >
-                <button
-                  type="button"
-                  onClick={() => toggleMediaType('movie')}
-                  className={cn(
-                    'cursor-pointer px-4 py-2 text-sm font-medium transition-colors',
-                    mediaTypes.includes('movie')
-                      ? 'bg-white text-black'
-                      : 'text-muted-foreground hover:text-foreground bg-transparent',
-                    mediaTypes.length === 2 ? 'rounded-l-md bg-transparent' : 'rounded-md'
-                  )}
-                >
-                  {content.explore.filters.movies}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleMediaType('tv')}
-                  className={cn(
-                    'cursor-pointer px-4 py-2 text-sm font-medium transition-colors',
-                    mediaTypes.includes('tv')
-                      ? 'bg-white text-black'
-                      : 'text-muted-foreground hover:text-foreground bg-transparent',
-                    mediaTypes.length === 2 ? 'rounded-r-md bg-transparent' : 'rounded-md'
-                  )}
-                >
-                  {content.explore.filters.series}
-                </button>
-              </div>
+                {mediaTypes.includes('movie') ? (
+                  <span className="flex animate-fade-in items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black">
+                    <Check className="h-4 w-4" />
+                    {content.explore.filters.movies}
+                  </span>
+                ) : (
+                  <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium">
+                    {content.explore.filters.movies}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleMediaType('tv')}
+                className="cursor-pointer"
+              >
+                {mediaTypes.includes('tv') ? (
+                  <span className="flex animate-fade-in items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black">
+                    <Check className="h-4 w-4" />
+                    {content.explore.filters.series}
+                  </span>
+                ) : (
+                  <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium">
+                    {content.explore.filters.series}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Sort Filter - Single select in dark container */}
@@ -663,29 +675,36 @@ export function ExploreContent() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => updateGenre(null)}
-              className={cn(
-                'cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-                selectedGenre === null
-                  ? 'bg-white text-black'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              )}
+              onClick={() => clearGenres()}
+              className="cursor-pointer"
             >
-              {content.explore.filters.all}
+              {selectedGenres.length === 0 ? (
+                <span className="flex animate-fade-in items-center rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black">
+                  {content.explore.filters.all}
+                </span>
+              ) : (
+                <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center rounded-lg px-3 py-1.5 text-sm font-medium">
+                  {content.explore.filters.all}
+                </span>
+              )}
             </button>
             {availableGenres.map(genre => (
               <button
                 type="button"
                 key={genre.id}
-                onClick={() => updateGenre(genre.id)}
-                className={cn(
-                  'cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-                  selectedGenre === genre.id
-                    ? 'bg-white text-black'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                )}
+                onClick={() => toggleGenre(genre.id)}
+                className="cursor-pointer"
               >
-                {genre.name}
+                {selectedGenres.includes(genre.id) ? (
+                  <span className="flex animate-fade-in items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black">
+                    <Check className="h-3.5 w-3.5" />
+                    {genre.name}
+                  </span>
+                ) : (
+                  <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium">
+                    {genre.name}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -707,9 +726,9 @@ export function ExploreContent() {
               />
             ) : (
               <m.div
-                key={`grid-${page}-${mediaTypes.join(
+                key={`grid-${page}-${mediaTypes.join('-')}-${filterType}-${selectedGenres.join(
                   '-'
-                )}-${filterType}-${selectedGenre}-${yearFrom}-${yearTo}`}
+                )}-${yearFrom}-${yearTo}`}
                 ref={gridRef}
                 initial="hidden"
                 animate="visible"
@@ -756,7 +775,7 @@ export function ExploreContent() {
                       <div className="bg-muted relative aspect-2/3 overflow-hidden rounded-lg">
                         {item.poster_path ? (
                           <Image
-                            src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                            src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
                             alt={item.title || item.name || ''}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"

@@ -56,6 +56,7 @@ import { watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 import { generateAndCacheThumbnail } from "@/lib/thumbnailGenerator";
+import { getTMDBLanguage, getTMDBRegion } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
 import { ItemDetailsModal } from "./modal/ItemDetailsModal";
@@ -378,7 +379,9 @@ export function ListItemsTable({
 	currentPage = 1,
 	itemsPerPage,
 }: ListItemsTableProps) {
-	const { content } = useLanguageStore();
+	const { content, language } = useLanguageStore();
+	const tmdbLanguage = getTMDBLanguage(language);
+	const tmdbRegion = getTMDBRegion(language);
 
 	// Both owners and collaborators can edit
 	const canEdit = isOwner || isCollaborator;
@@ -485,8 +488,8 @@ export function ListItemsTable({
 			await watchlistAPI.addItem(watchlistId, {
 				tmdbId: item.tmdbId,
 				type: item.type,
-				language: "fr-FR",
-				region: "FR",
+				language: tmdbLanguage,
+				region: tmdbRegion,
 			});
 		} catch (error) {
 			console.error("Failed to add to watchlist:", error);

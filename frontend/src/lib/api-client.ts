@@ -636,4 +636,56 @@ export const tmdbAPI = {
 		});
 		return request(`/tmdb/trending/${timeWindow}?${searchParams.toString()}`);
 	},
+
+	getDiscover: (
+		mediaType: "movie" | "tv",
+		options: {
+			page?: number;
+			language?: string;
+			sortBy?: string;
+			voteCountGte?: number;
+			voteAverageGte?: number;
+			releaseDateGte?: string;
+			releaseDateLte?: string;
+		} = {},
+	): Promise<{
+		results: Array<{
+			id: number;
+			title?: string;
+			name?: string;
+			poster_path?: string;
+			backdrop_path?: string;
+			overview?: string;
+			vote_average?: number;
+			vote_count?: number;
+			release_date?: string;
+			first_air_date?: string;
+		}>;
+		page: number;
+		total_pages: number;
+		total_results: number;
+	}> => {
+		const searchParams = new URLSearchParams();
+		searchParams.set("page", (options.page || 1).toString());
+		searchParams.set("language", options.language || "fr-FR");
+		searchParams.set("sort_by", options.sortBy || "popularity.desc");
+
+		if (options.voteCountGte) {
+			searchParams.set("vote_count.gte", options.voteCountGte.toString());
+		}
+		if (options.voteAverageGte) {
+			searchParams.set("vote_average.gte", options.voteAverageGte.toString());
+		}
+
+		const dateField =
+			mediaType === "movie" ? "primary_release_date" : "first_air_date";
+		if (options.releaseDateGte) {
+			searchParams.set(`${dateField}.gte`, options.releaseDateGte);
+		}
+		if (options.releaseDateLte) {
+			searchParams.set(`${dateField}.lte`, options.releaseDateLte);
+		}
+
+		return request(`/tmdb/discover/${mediaType}?${searchParams.toString()}`);
+	},
 };

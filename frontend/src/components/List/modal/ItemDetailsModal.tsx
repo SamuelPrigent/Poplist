@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { NavigationArrows } from "@/components/ui/navigation-arrows";
 import { type FullMediaDetails, watchlistAPI } from "@/lib/api-client";
+import { getTMDBLanguage } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import { WatchProviderList } from "../WatchProviderBubble";
 
@@ -40,8 +41,7 @@ export function ItemDetailsModal({
 	);
 	const overviewRef = useRef<HTMLParagraphElement>(null);
 
-	const languageCode =
-		language === "fr" ? "fr-FR" : language === "es" ? "es-ES" : "en-US";
+	const languageCode = getTMDBLanguage(language);
 	const voiceTranslation =
 		language === "fr" ? "voix" : language === "es" ? "voz" : "voice";
 

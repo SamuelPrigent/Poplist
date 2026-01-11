@@ -114,7 +114,7 @@ class TMDBCache {
 const cache = new TMDBCache();
 
 // Helper to build TMDB image URL
-function buildImageUrl(path: string | null, size: string = "w500"): string {
+function buildImageUrl(path: string | null, size: string = "w342"): string {
 	if (!path) return "";
 	return `https://image.tmdb.org/t/p/${size}${path}`;
 }
