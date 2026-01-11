@@ -99,9 +99,8 @@ export function ExploreContent() {
   );
 
   // Use useMemo to memoize derived values from searchParams
-  const mediaTypes = useMemo(() => {
-    const typesParam = searchParams.get('types') || 'movie';
-    return typesParam.split(',') as ('movie' | 'tv')[];
+  const mediaType = useMemo(() => {
+    return (searchParams.get('type') || 'movie') as 'movie' | 'tv';
   }, [searchParams]);
 
   const filterType = useMemo(
@@ -177,19 +176,11 @@ export function ExploreContent() {
   }, [yearFrom, yearTo, searchParams, updateSearchParams]);
 
   // Helper functions to update URL params
-  const toggleMediaType = (type: 'movie' | 'tv') => {
-    let newTypes = [...mediaTypes];
-
-    if (newTypes.includes(type)) {
-      newTypes = newTypes.filter(t => t !== type);
-      // Prevent empty selection
-      if (newTypes.length === 0) return;
-    } else {
-      newTypes.push(type);
-    }
-
+  const setMediaType = (type: 'movie' | 'tv') => {
+    if (type === mediaType) return;
     updateSearchParams({
-      types: newTypes.join(','),
+      type,
+      genres: null, // Reset genres when changing media type (different genre IDs)
       page: '1',
     });
   };
@@ -291,92 +282,60 @@ export function ExploreContent() {
         const pagesNeeded = 3; // 60 items / 20 per TMDB page = 3 pages exactly
         const startTMDBPage = (page - 1) * pagesNeeded + 1;
 
-        // Fetch for each selected media type
-        const fetchPromises = mediaTypes.map(async type => {
-          let allResults: MediaItem[] = [];
-          let totalPages = 1;
+        let allResults: MediaItem[] = [];
+        let fetchedTotalPages = 1;
 
-          for (let i = 0; i < pagesNeeded; i++) {
-            const currentTMDBPage = startTMDBPage + i;
-            const params = new URLSearchParams({
-              language: tmdbLanguage,
-              page: currentTMDBPage.toString(),
-            });
+        for (let i = 0; i < pagesNeeded; i++) {
+          const currentTMDBPage = startTMDBPage + i;
+          const params = new URLSearchParams({
+            language: tmdbLanguage,
+            page: currentTMDBPage.toString(),
+          });
 
-            // Always use discover endpoint
-            let sortBy = 'popularity.desc';
+          // Always use discover endpoint
+          const sortBy = filterType === 'top_rated' ? 'vote_average.desc' : 'popularity.desc';
+          params.append('sort_by', sortBy);
 
-            if (filterType === 'popular') {
-              sortBy = 'popularity.desc';
-            } else if (filterType === 'top_rated') {
-              sortBy = 'vote_average.desc';
-            }
+          // Always add minimum vote count and rating to avoid absurd results
+          params.append('vote_count.gte', '100');
+          params.append('vote_average.gte', '5.0');
 
-            params.append('sort_by', sortBy);
-
-            // Always add minimum vote count and rating to avoid absurd results
-            params.append('vote_count.gte', '100');
-            params.append('vote_average.gte', '5.0');
-
-            // Add genre filter (OR logic with pipe separator)
-            if (selectedGenres.length > 0) {
-              params.append('with_genres', selectedGenres.join('|'));
-            }
-
-            // Add date filters (year transformed to YYYY-01-01 and YYYY-12-31)
-            const dateFrom = yearFrom ? `${yearFrom}-01-01` : '';
-            const dateTo = yearTo ? `${yearTo}-12-31` : '';
-
-            // Use correct date field based on media type
-            // Movies: primary_release_date | TV Shows: first_air_date
-            const dateField = type === 'movie' ? 'primary_release_date' : 'first_air_date';
-
-            if (dateFrom) {
-              params.append(`${dateField}.gte`, dateFrom);
-            }
-            if (dateTo) {
-              params.append(`${dateField}.lte`, dateTo);
-            }
-
-            const url = `/api/tmdb/discover/${type}?${params.toString()}`;
-
-            const response = await fetch(url);
-            const data = await response.json();
-
-            allResults = [...allResults, ...(data.results || [])];
-            totalPages = data.total_pages || 1;
+          // Add genre filter (OR logic with pipe separator)
+          if (selectedGenres.length > 0) {
+            params.append('with_genres', selectedGenres.join('|'));
           }
 
-          return { type, results: allResults, totalPages };
-        });
+          // Add date filters (year transformed to YYYY-01-01 and YYYY-12-31)
+          const dateFrom = yearFrom ? `${yearFrom}-01-01` : '';
+          const dateTo = yearTo ? `${yearTo}-12-31` : '';
 
-        const fetchedData = await Promise.all(fetchPromises);
+          // Use correct date field based on media type
+          // Movies: primary_release_date | TV Shows: first_air_date
+          const dateField = mediaType === 'movie' ? 'primary_release_date' : 'first_air_date';
 
-        // If both movie and tv are selected, alternate results
-        let combinedResults: MediaItem[] = [];
-        if (mediaTypes.length === 2) {
-          const movieResults = fetchedData.find(d => d.type === 'movie')?.results || [];
-          const tvResults = fetchedData.find(d => d.type === 'tv')?.results || [];
-          const maxLength = Math.max(movieResults.length, tvResults.length);
-
-          for (let i = 0; i < maxLength; i++) {
-            if (movieResults[i]) combinedResults.push(movieResults[i]);
-            if (tvResults[i]) combinedResults.push(tvResults[i]);
+          if (dateFrom) {
+            params.append(`${dateField}.gte`, dateFrom);
           }
-        } else {
-          // Single type selected
-          combinedResults = fetchedData[0]?.results || [];
+          if (dateTo) {
+            params.append(`${dateField}.lte`, dateTo);
+          }
+
+          const url = `/api/tmdb/discover/${mediaType}?${params.toString()}`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          allResults = [...allResults, ...(data.results || [])];
+          fetchedTotalPages = data.total_pages || 1;
         }
 
-        // Take exactly 60 items for this page (no offset needed since we fetch exactly 3 TMDB pages)
-        const displayResults = combinedResults.slice(0, itemsPerDisplayPage);
+        // Take exactly 60 items for this page
+        const displayResults = allResults.slice(0, itemsPerDisplayPage);
 
         setMedia(displayResults);
 
-        // Use the highest total pages from all fetched types
         // Each display page = 3 TMDB pages, so divide by 3
-        const maxTotalPages = Math.max(...fetchedData.map(d => d.totalPages));
-        const totalDisplayPages = Math.floor(maxTotalPages / pagesNeeded);
+        const totalDisplayPages = Math.floor(fetchedTotalPages / pagesNeeded);
         setTotalPages(Math.min(totalDisplayPages, 166)); // 166 * 3 = 498 TMDB pages (under 500 limit)
       } catch (error) {
         console.error('Failed to fetch media:', error);
@@ -386,7 +345,7 @@ export function ExploreContent() {
     };
 
     fetchMedia();
-  }, [mediaTypes, filterType, selectedGenres, page, yearFrom, yearTo, tmdbLanguage]);
+  }, [mediaType, filterType, selectedGenres, page, yearFrom, yearTo, tmdbLanguage]);
 
   const handleAddToWatchlist = async (watchlistId: string, mediaItem: MediaItem) => {
     try {
@@ -478,14 +437,8 @@ export function ExploreContent() {
   // Get available genres based on selected media types
   const availableGenres = useMemo(() => {
     const genres = getGenres(content);
-    if (mediaTypes.length === 2) {
-      const combined = [...genres.movie, ...genres.tv];
-      // Deduplicate by id
-      const uniqueGenres = Array.from(new Map(combined.map(g => [g.id, g])).values());
-      return uniqueGenres;
-    }
-    return mediaTypes[0] === 'movie' ? genres.movie : genres.tv;
-  }, [mediaTypes, content]);
+    return mediaType === 'movie' ? genres.movie : genres.tv;
+  }, [mediaType, content]);
 
   return (
     <div className="bg-background mb-24 min-h-screen p-12">
@@ -500,40 +453,34 @@ export function ExploreContent() {
         <div className="mb-8 space-y-4">
           {/* Main Filters Row - Media Type + Sort Type */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Media Type Filter - Multi-select with inline checkmarks */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => toggleMediaType('movie')}
-                className="cursor-pointer"
-              >
-                {mediaTypes.includes('movie') ? (
-                  <span className="flex animate-fade-in items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black">
-                    <Check className="h-4 w-4" />
-                    {content.explore.filters.movies}
-                  </span>
-                ) : (
-                  <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium">
-                    {content.explore.filters.movies}
-                  </span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleMediaType('tv')}
-                className="cursor-pointer"
-              >
-                {mediaTypes.includes('tv') ? (
-                  <span className="flex animate-fade-in items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black">
-                    <Check className="h-4 w-4" />
-                    {content.explore.filters.series}
-                  </span>
-                ) : (
-                  <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium">
-                    {content.explore.filters.series}
-                  </span>
-                )}
-              </button>
+            {/* Media Type Filter - Single select switch */}
+            <div className="bg-muted/50 rounded-md p-1">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setMediaType('movie')}
+                  className={cn(
+                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                    mediaType === 'movie'
+                      ? 'bg-white text-black'
+                      : 'text-muted-foreground hover:text-foreground bg-transparent'
+                  )}
+                >
+                  {content.explore.filters.movies}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMediaType('tv')}
+                  className={cn(
+                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                    mediaType === 'tv'
+                      ? 'bg-white text-black'
+                      : 'text-muted-foreground hover:text-foreground bg-transparent'
+                  )}
+                >
+                  {content.explore.filters.series}
+                </button>
+              </div>
             </div>
 
             {/* Sort Filter - Single select in dark container */}
@@ -726,9 +673,7 @@ export function ExploreContent() {
               />
             ) : (
               <m.div
-                key={`grid-${page}-${mediaTypes.join('-')}-${filterType}-${selectedGenres.join(
-                  '-'
-                )}-${yearFrom}-${yearTo}`}
+                key={`grid-${page}-${mediaType}-${filterType}-${selectedGenres.join('-')}-${yearFrom}-${yearTo}`}
                 ref={gridRef}
                 initial="hidden"
                 animate="visible"
