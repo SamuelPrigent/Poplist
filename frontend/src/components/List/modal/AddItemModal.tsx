@@ -308,7 +308,7 @@ export function AddItemModal({
 
   const buildPosterUrl = (path: string | null) => {
     if (!path) return '';
-    return `https://image.tmdb.org/t/p/w200${path}`;
+    return `https://image.tmdb.org/t/p/w185${path}`;
   };
 
   return (
@@ -384,7 +384,7 @@ export function AddItemModal({
                         <div className="relative h-48 w-32 overflow-hidden rounded-lg shadow-lg">
                           {itemDetails.posterUrl ? (
                             <Image
-                              src={resizeTMDBPoster(itemDetails.posterUrl, 'w300')}
+                              src={resizeTMDBPoster(itemDetails.posterUrl, 'w185')}
                               alt={itemDetails.title}
                               fill
                               sizes="128px"
