@@ -224,11 +224,8 @@ export function ListCardGenre({
       {showOwner && (
         <p className="text-muted-foreground mt-1 text-xs">
           par{' '}
-          {typeof watchlist.ownerId === 'object' &&
-          watchlist.ownerId !== null &&
-          'username' in watchlist.ownerId &&
-          watchlist.ownerId.username ? (
-            <span className="text-white capitalize">{watchlist.ownerId.username}</span>
+          {watchlist.owner?.username ? (
+            <span className="text-white capitalize">{watchlist.owner.username}</span>
           ) : (
             <span className="capitalize">Anonyme</span>
           )}

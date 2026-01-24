@@ -53,9 +53,9 @@ function handleLogoutRedirect(
 		return;
 	}
 
-	// Sur /account/list/[id] → aller vers /home
+	// Sur /lists/[id] → aller vers /home
 	// (idéalement on vérifierait si la liste est publique, mais pour simplifier)
-	if (pathname.startsWith("/account/list/")) {
+	if (pathname.startsWith("/lists/")) {
 		router.push("/home");
 		return;
 	}
@@ -96,7 +96,7 @@ export function useRequireAuth() {
 	useEffect(() => {
 		if (!isLoading && !isAuthenticated) {
 			// Redirection selon la page actuelle
-			if (pathname.startsWith("/account/list")) {
+			if (pathname.startsWith("/lists/")) {
 				router.replace("/local/lists");
 			} else {
 				router.replace("/home");

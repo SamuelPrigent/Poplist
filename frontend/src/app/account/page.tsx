@@ -4,6 +4,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
 	AlertTriangle,
 	Check,
+	Eye,
+	EyeOff,
 	Loader2,
 	Trash2,
 	Upload,
@@ -17,15 +19,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
-import { useToast } from "@/hooks/use-toast";
 import { userAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
 export default function AccountPage() {
 	const { user, isLoading, updateUsername, changePassword, deleteAccount, refetch } =
 		useAuth();
-	const { toast } = useToast();
 	const { content } = useLanguageStore();
 	const router = useRouter();
 
@@ -43,6 +44,14 @@ export default function AccountPage() {
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [passwordLoading, setPasswordLoading] = useState(false);
 
+	// Password visibility state
+	const [showOldPassword, setShowOldPassword] = useState(false);
+	const [showNewPassword, setShowNewPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+	// Password error state
+	const [passwordError, setPasswordError] = useState<string | null>(null);
+
 	// Delete account state
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -51,6 +60,14 @@ export default function AccountPage() {
 	// Avatar state
 	const [avatarUploading, setAvatarUploading] = useState(false);
 	const [avatarDeleting, setAvatarDeleting] = useState(false);
+
+	// Client-side mount state (for hydration consistency)
+	const [mounted, setMounted] = useState(false);
+
+	// Set mounted state for hydration consistency
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Redirect to home if not authenticated (wait for auth to load first)
 	useEffect(() => {
@@ -135,18 +152,15 @@ export default function AccountPage() {
 		setUsernameLoading(true);
 		try {
 			await updateUsername(username);
-			toast({
-				title: content.profile.toasts.usernameUpdated,
+			toast.success(content.profile.toasts.usernameUpdated, {
 				description: content.profile.toasts.usernameUpdatedDesc,
 			});
 		} catch (error) {
-			toast({
-				title: content.profile.toasts.error,
+			toast.error(content.profile.toasts.error, {
 				description:
 					error instanceof Error
 						? error.message
 						: content.profile.toasts.updateFailed,
-				variant: "destructive",
 			});
 		} finally {
 			setUsernameLoading(false);
@@ -155,35 +169,31 @@ export default function AccountPage() {
 
 	const handleChangePassword = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setPasswordError(null);
 
 		if (newPassword !== confirmPassword) {
-			toast({
-				title: content.profile.toasts.error,
-				description: content.profile.toasts.passwordMismatch,
-				variant: "destructive",
-			});
+			setPasswordError(content.profile.toasts.passwordMismatch);
 			return;
 		}
 
 		setPasswordLoading(true);
 		try {
 			await changePassword(oldPassword, newPassword);
-			toast({
-				title: content.profile.toasts.passwordChanged,
+			toast.success(content.profile.toasts.passwordChanged, {
 				description: content.profile.toasts.passwordChangedDesc,
 			});
 			setOldPassword("");
 			setNewPassword("");
 			setConfirmPassword("");
+			setShowOldPassword(false);
+			setShowNewPassword(false);
+			setShowConfirmPassword(false);
 		} catch (error) {
-			toast({
-				title: content.profile.toasts.error,
-				description:
-					error instanceof Error
-						? error.message
-						: content.profile.toasts.passwordChangeFailed,
-				variant: "destructive",
-			});
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: content.profile.toasts.passwordChangeFailed;
+			setPasswordError(errorMessage);
 		} finally {
 			setPasswordLoading(false);
 		}
@@ -193,20 +203,17 @@ export default function AccountPage() {
 		setDeleteLoading(true);
 		try {
 			await deleteAccount(deleteConfirmation);
-			toast({
-				title: content.profile.toasts.accountDeleted,
+			toast.success(content.profile.toasts.accountDeleted, {
 				description: content.profile.toasts.accountDeletedDesc,
 			});
 			setDeleteDialogOpen(false);
 			router.push("/");
 		} catch (error) {
-			toast({
-				title: content.profile.toasts.error,
+			toast.error(content.profile.toasts.error, {
 				description:
 					error instanceof Error
 						? error.message
 						: content.profile.toasts.accountDeleteFailed,
-				variant: "destructive",
 			});
 		} finally {
 			setDeleteLoading(false);
@@ -219,20 +226,16 @@ export default function AccountPage() {
 
 		// Validate file type
 		if (!file.type.startsWith("image/")) {
-			toast({
-				title: content.profile.toasts.error,
+			toast.error(content.profile.toasts.error, {
 				description: content.profile.avatarSection.validation.invalidFileType,
-				variant: "destructive",
 			});
 			return;
 		}
 
 		// Validate file size (max 5MB)
 		if (file.size > 5 * 1024 * 1024) {
-			toast({
-				title: content.profile.toasts.error,
+			toast.error(content.profile.toasts.error, {
 				description: content.profile.avatarSection.validation.fileTooLarge,
-				variant: "destructive",
 			});
 			return;
 		}
@@ -249,18 +252,15 @@ export default function AccountPage() {
 					// Refresh user data to get the new avatar URL
 					await refetch();
 
-					toast({
-						title: content.profile.avatarSection.toasts.updated,
+					toast.success(content.profile.avatarSection.toasts.updated, {
 						description: content.profile.avatarSection.toasts.updatedDesc,
 					});
 				} catch (error) {
-					toast({
-						title: content.profile.toasts.error,
+					toast.error(content.profile.toasts.error, {
 						description:
 							error instanceof Error
 								? error.message
 								: content.profile.avatarSection.validation.uploadFailed,
-						variant: "destructive",
 					});
 				} finally {
 					setAvatarUploading(false);
@@ -268,10 +268,8 @@ export default function AccountPage() {
 			};
 			reader.readAsDataURL(file);
 		} catch (error) {
-			toast({
-				title: content.profile.toasts.error,
+			toast.error(content.profile.toasts.error, {
 				description: content.profile.avatarSection.validation.readFailed,
-				variant: "destructive",
 			});
 			setAvatarUploading(false);
 			return error;
@@ -286,18 +284,15 @@ export default function AccountPage() {
 			// Refresh user data to remove the avatar URL
 			await refetch();
 
-			toast({
-				title: content.profile.avatarSection.toasts.deleted,
+			toast.success(content.profile.avatarSection.toasts.deleted, {
 				description: content.profile.avatarSection.toasts.deletedDesc,
 			});
 		} catch (error) {
-			toast({
-				title: content.profile.toasts.error,
+			toast.error(content.profile.toasts.error, {
 				description:
 					error instanceof Error
 						? error.message
 						: content.profile.avatarSection.validation.deleteFailed,
-				variant: "destructive",
 			});
 		} finally {
 			setAvatarDeleting(false);
@@ -330,7 +325,7 @@ export default function AccountPage() {
 							<div className="flex items-center gap-6">
 								{/* Avatar Display */}
 								<div className="relative">
-									{user?.avatarUrl ? (
+									{mounted && user?.avatarUrl ? (
 										<Image
 											src={user.avatarUrl}
 											alt={user.username || "Avatar"}
@@ -374,7 +369,7 @@ export default function AccountPage() {
 												) : (
 													<>
 														<Upload className="mr-2 h-4 w-4" />
-														{user?.avatarUrl
+														{mounted && user?.avatarUrl
 															? content.profile.avatarSection.changeButton
 															: content.profile.avatarSection.uploadButton}
 													</>
@@ -382,7 +377,7 @@ export default function AccountPage() {
 											</Button>
 										</label>
 
-										{user?.avatarUrl && (
+										{mounted && user?.avatarUrl && (
 											<Button
 												className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
 												type="button"
@@ -471,8 +466,8 @@ export default function AccountPage() {
 					</CardContent>
 				</Card>
 
-				{/* Password Section - Only show if user has password */}
-				{user?.hasPassword && (
+				{/* Password Section - Only show if user has password (mounted check for hydration) */}
+				{mounted && user?.hasPassword && (
 					<Card>
 						<CardContent className="pt-6">
 							<form onSubmit={handleChangePassword} className="space-y-4">
@@ -480,45 +475,90 @@ export default function AccountPage() {
 									<Label htmlFor="oldPassword">
 										{content.profile.passwordSection.currentPasswordLabel}
 									</Label>
-									<Input
-										id="oldPassword"
-										type="password"
-										value={oldPassword}
-										onChange={(e) => setOldPassword(e.target.value)}
-										placeholder={
-											content.profile.passwordSection.currentPasswordPlaceholder
-										}
-									/>
+									<div className="relative">
+										<Input
+											id="oldPassword"
+											type={oldPassword.length === 0 ? "text" : showOldPassword ? "text" : "password"}
+											value={oldPassword}
+											onChange={(e) => setOldPassword(e.target.value)}
+											placeholder={
+												content.profile.passwordSection.currentPasswordPlaceholder
+											}
+											className="pr-10"
+										/>
+										<button
+											type="button"
+											onClick={() => setShowOldPassword(!showOldPassword)}
+											className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+											tabIndex={-1}
+										>
+											{showOldPassword ? (
+												<Eye className="h-4 w-4" />
+											) : (
+												<EyeOff className="h-4 w-4" />
+											)}
+										</button>
+									</div>
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor="newPassword">
 										{content.profile.passwordSection.newPasswordLabel}
 									</Label>
-									<Input
-										id="newPassword"
-										type="password"
-										value={newPassword}
-										onChange={(e) => setNewPassword(e.target.value)}
-										placeholder={
-											content.profile.passwordSection.newPasswordPlaceholder
-										}
-										minLength={8}
-									/>
+									<div className="relative">
+										<Input
+											id="newPassword"
+											type={newPassword.length === 0 ? "text" : showNewPassword ? "text" : "password"}
+											value={newPassword}
+											onChange={(e) => setNewPassword(e.target.value)}
+											placeholder={
+												content.profile.passwordSection.newPasswordPlaceholder
+											}
+											minLength={8}
+											className="pr-10"
+										/>
+										<button
+											type="button"
+											onClick={() => setShowNewPassword(!showNewPassword)}
+											className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+											tabIndex={-1}
+										>
+											{showNewPassword ? (
+												<Eye className="h-4 w-4" />
+											) : (
+												<EyeOff className="h-4 w-4" />
+											)}
+										</button>
+									</div>
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor="confirmPassword">
 										{content.profile.passwordSection.confirmPasswordLabel}
 									</Label>
-									<Input
-										id="confirmPassword"
-										type="password"
-										value={confirmPassword}
-										onChange={(e) => setConfirmPassword(e.target.value)}
-										placeholder={
-											content.profile.passwordSection.confirmPasswordPlaceholder
-										}
-										minLength={8}
-									/>
+									<div className="relative">
+										<Input
+											id="confirmPassword"
+											type={confirmPassword.length === 0 ? "text" : showConfirmPassword ? "text" : "password"}
+											value={confirmPassword}
+											onChange={(e) => setConfirmPassword(e.target.value)}
+											placeholder={
+												content.profile.passwordSection.confirmPasswordPlaceholder
+											}
+											minLength={8}
+											className="pr-10"
+										/>
+										<button
+											type="button"
+											onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+											className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+											tabIndex={-1}
+										>
+											{showConfirmPassword ? (
+												<Eye className="h-4 w-4" />
+											) : (
+												<EyeOff className="h-4 w-4" />
+											)}
+										</button>
+									</div>
 								</div>
 								<Button
 									className="cursor-pointer"
@@ -535,6 +575,12 @@ export default function AccountPage() {
 									)}
 									{content.profile.passwordSection.changeButton}
 								</Button>
+
+								{passwordError && (
+									<div className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-500">
+										{passwordError}
+									</div>
+								)}
 							</form>
 						</CardContent>
 					</Card>

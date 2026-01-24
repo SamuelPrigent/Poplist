@@ -16,8 +16,7 @@ import { useLanguageStore } from "@/store/language";
 interface AddCollaboratorPopoverProps {
 	watchlistId: string;
 	collaborators: Collaborator[];
-	onCollaboratorAdded: () => void;
-	onCollaboratorRemoved: () => void;
+	onCollaboratorsChange: (collaborators: Collaborator[]) => void;
 	children: React.ReactNode;
 }
 
@@ -26,8 +25,7 @@ type ValidationState = "idle" | "checking" | "valid" | "invalid" | "error";
 export function AddCollaboratorPopover({
 	watchlistId,
 	collaborators,
-	onCollaboratorAdded,
-	onCollaboratorRemoved,
+	onCollaboratorsChange,
 	children,
 }: AddCollaboratorPopoverProps) {
 	const { content } = useLanguageStore();
@@ -78,14 +76,17 @@ export function AddCollaboratorPopover({
 
 		try {
 			setIsAdding(true);
-			await watchlistAPI.addCollaborator(watchlistId, username.trim());
+			const { collaborators: updated } = await watchlistAPI.addCollaborator(
+				watchlistId,
+				username.trim(),
+			);
 			toast.success(
 				content.watchlists.collaborators?.addSuccess ||
 					`${username} ajouté comme collaborateur`,
 			);
 			setUsername("");
 			setValidationState("idle");
-			onCollaboratorAdded();
+			onCollaboratorsChange(updated);
 		} catch (error) {
 			console.error("Failed to add collaborator:", error);
 			toast.error(
@@ -104,12 +105,15 @@ export function AddCollaboratorPopover({
 		collaboratorUsername: string,
 	) => {
 		try {
-			await watchlistAPI.removeCollaborator(watchlistId, collaboratorId);
+			const { collaborators: updated } = await watchlistAPI.removeCollaborator(
+				watchlistId,
+				collaboratorId,
+			);
 			toast.success(
 				content.watchlists.collaborators?.removeSuccess ||
 					`${collaboratorUsername} retiré`,
 			);
-			onCollaboratorRemoved();
+			onCollaboratorsChange(updated);
 		} catch (error) {
 			console.error("Failed to remove collaborator:", error);
 			toast.error(
@@ -197,13 +201,21 @@ export function AddCollaboratorPopover({
 							<div className="space-y-1">
 								{collaborators.map((collaborator) => (
 									<div
-										key={collaborator._id}
+										key={collaborator.id}
 										className="bg-muted/50 flex items-center justify-between rounded-md p-2 text-sm"
 									>
 										<div className="flex items-center gap-2">
-											<div className="bg-muted flex h-7 w-7 items-center justify-center rounded-full">
-												<User className="text-muted-foreground h-4 w-4" />
-											</div>
+											{collaborator.avatarUrl ? (
+												<img
+													src={collaborator.avatarUrl}
+													alt={collaborator.username}
+													className="h-7 w-7 rounded-full object-cover"
+												/>
+											) : (
+												<div className="bg-muted flex h-7 w-7 items-center justify-center rounded-full">
+													<User className="text-muted-foreground h-4 w-4" />
+												</div>
+											)}
 											<span className="font-medium">
 												{collaborator.username}
 											</span>
@@ -212,7 +224,7 @@ export function AddCollaboratorPopover({
 											type="button"
 											onClick={() =>
 												handleRemoveCollaborator(
-													collaborator._id,
+													collaborator.id,
 													collaborator.username,
 												)
 											}

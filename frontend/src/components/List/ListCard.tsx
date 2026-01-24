@@ -196,22 +196,17 @@ export function ListCard({
 			{showOwner && (
 				<p className="text-muted-foreground mt-1 text-xs">
 					{"par "}
-					{typeof watchlist.ownerId === "object" &&
-					watchlist.ownerId !== null &&
-					"username" in watchlist.ownerId &&
-					watchlist.ownerId.username ? (
+					{watchlist.owner?.username ? (
 						<button
 							type="button"
 							onClick={(e) => {
 								e.preventDefault();
 								e.stopPropagation();
-								router.push(
-									`/user/${(watchlist.ownerId as { username: string }).username}`,
-								);
+								router.push(`/user/${watchlist.owner!.username}`);
 							}}
 							className="cursor-pointer rounded-md text-white capitalize hover:underline"
 						>
-							{watchlist.ownerId.username}
+							{watchlist.owner.username}
 						</button>
 					) : (
 						<span className="capitalize">Anonyme</span>
@@ -250,15 +245,15 @@ export function ListCard({
 						className="text-muted-foreground cursor-pointer"
 						tabIndex={-1}
 					>
-						{watchlist.items.length}{" "}
-						{watchlist.items.length === 1
+						{watchlist.items?.length ?? 0}{" "}
+						{(watchlist.items?.length ?? 0) === 1
 							? content.watchlists.item
 							: content.watchlists.items}
 					</button>
 				) : (
 					<span className="text-muted-foreground">
-						{watchlist.items.length}{" "}
-						{watchlist.items.length === 1
+						{watchlist.items?.length ?? 0}{" "}
+						{(watchlist.items?.length ?? 0) === 1
 							? content.watchlists.item
 							: content.watchlists.items}
 					</span>

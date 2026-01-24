@@ -60,17 +60,18 @@ export async function mergeLocalWatchlistsToDB(): Promise<void> {
 						? addedAt.toISOString()
 						: new Date().toISOString();
 
+			const rawTmdbId = (itemData.tmdbId as string | number) || (itemData.id as number) || 0;
+			const tmdbId = typeof rawTmdbId === 'string' ? parseInt(rawTmdbId, 10) : rawTmdbId;
+
 			return {
-				tmdbId:
-					(itemData.tmdbId as string) ||
-					(itemData.id as number)?.toString() ||
-					"",
+				tmdbId,
 				title: (itemData.title as string) || "",
-				posterUrl:
+				posterPath:
+					(itemData.posterPath as string) ||
 					(itemData.posterUrl as string) ||
 					(itemData.poster_path as string) ||
-					"",
-				type: (itemType === "tv" ? "tv" : "movie") as "movie" | "tv",
+					null,
+				mediaType: (itemType === "tv" ? "tv" : "movie") as "movie" | "tv",
 				platformList,
 				runtime: itemData.runtime as number | undefined,
 				numberOfSeasons:

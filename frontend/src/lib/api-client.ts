@@ -116,14 +116,13 @@ async function request<T>(
 	const response = await fetch(`/api${endpoint}`, config);
 
 	// Handle 401 Unauthorized - try to refresh token
-	// Exclude /auth/refresh, /auth/logout, and /auth/me from auto-refresh
-	// /auth/me is excluded because 401 is expected when not authenticated
+	// Exclude /auth/refresh and /auth/logout from auto-refresh
+	// /auth/me IS included to handle expired access tokens with valid refresh tokens
 	const shouldAttemptRefresh =
 		response.status === 401 &&
 		!_isRetry &&
 		endpoint !== "/auth/refresh" &&
-		endpoint !== "/auth/logout" &&
-		endpoint !== "/auth/me";
+		endpoint !== "/auth/logout";
 
 	if (shouldAttemptRefresh) {
 		console.log("🔄 Access token expired, attempting refresh...");
@@ -212,10 +211,10 @@ export interface Platform {
 }
 
 export interface WatchlistItem {
-	tmdbId: string;
+	tmdbId: number;
 	title: string;
-	posterUrl: string;
-	type: "movie" | "tv";
+	posterPath: string | null;
+	mediaType: "movie" | "tv";
 	platformList: Platform[];
 	runtime?: number;
 	numberOfSeasons?: number;
@@ -224,7 +223,7 @@ export interface WatchlistItem {
 }
 
 export interface WatchlistOwner {
-	_id?: string;
+	id?: string;
 	email: string;
 	username?: string;
 	avatarUrl?: string;
@@ -232,14 +231,14 @@ export interface WatchlistOwner {
 }
 
 export interface Collaborator {
-	_id: string;
+	id: string;
 	email: string;
 	username: string;
 	avatarUrl?: string;
 }
 
 export interface UserProfilePublic {
-	_id: string;
+	id: string;
 	username: string;
 	avatarUrl?: string;
 }
@@ -251,20 +250,21 @@ export interface UserProfileResponse {
 }
 
 export interface Watchlist {
-	_id: string;
-	ownerId: string | WatchlistOwner;
+	id: string;
+	ownerId: string;
+	owner?: WatchlistOwner; // Preloaded relation
 	name: string;
 	description?: string;
 	imageUrl?: string;
 	thumbnailUrl?: string; // Auto-generated 2x2 poster grid (Cloudinary)
 	isPublic: boolean;
 	genres?: string[]; // Genre categories for discoverability
-	collaborators: string[] | Collaborator[]; // Can be IDs or populated collaborator objects
+	collaborators: Collaborator[];
 	items: WatchlistItem[];
 	createdAt: string;
 	updatedAt: string;
 	followersCount?: number; // Number of users who saved/follow this watchlist
-	likedBy: string[]; // Array of user IDs who liked/saved this watchlist
+	likedBy?: Collaborator[]; // Users who liked/saved this watchlist
 	isSaved?: boolean; // Indicates if this watchlist is followed/saved by the current user
 	isOwner?: boolean; // Indicates if the current user is the owner of this watchlist
 	isCollaborator?: boolean; // Indicates if the current user is a collaborator of this watchlist
@@ -340,7 +340,7 @@ export const watchlistAPI = {
 	addCollaborator: (
 		id: string,
 		username: string,
-	): Promise<{ message: string; collaborator: Collaborator }> =>
+	): Promise<{ collaborators: Collaborator[] }> =>
 		request(`/watchlists/${id}/collaborators`, {
 			method: "POST",
 			body: { username },
@@ -349,7 +349,7 @@ export const watchlistAPI = {
 	removeCollaborator: (
 		id: string,
 		collaboratorId: string,
-	): Promise<{ message: string }> =>
+	): Promise<{ collaborators: Collaborator[] }> =>
 		request(`/watchlists/${id}/collaborators/${collaboratorId}`, {
 			method: "DELETE",
 		}),
@@ -366,7 +366,7 @@ export const watchlistAPI = {
 		id: string,
 		data: {
 			tmdbId: string;
-			type: "movie" | "tv";
+			mediaType: "movie" | "tv";
 			language?: string;
 			region?: string;
 		},

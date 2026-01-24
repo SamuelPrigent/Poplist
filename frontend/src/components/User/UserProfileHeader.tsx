@@ -7,7 +7,7 @@ import { useLanguageStore } from "@/store/language";
 
 interface UserProfileHeaderProps {
 	user: {
-		_id: string;
+		id: string;
 		username: string;
 		avatarUrl?: string;
 	};

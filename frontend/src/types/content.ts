@@ -161,17 +161,24 @@ export interface Content {
 			cta: string;
 		};
 		features: {
+			sectionTitle: string;
+			sectionSubtitle: string;
 			organize: {
 				tagline: string;
 				title: string;
 				description: string;
 			};
-			discover: {
+			collaborate: {
 				tagline: string;
 				title: string;
 				description: string;
 			};
 			share: {
+				tagline: string;
+				title: string;
+				description: string;
+			};
+			discover: {
 				tagline: string;
 				title: string;
 				description: string;
@@ -199,14 +206,17 @@ export interface Content {
 			testimonial1: {
 				text: string;
 				author: string;
+				pseudo: string;
 			};
 			testimonial2: {
 				text: string;
 				author: string;
+				pseudo: string;
 			};
 			testimonial3: {
 				text: string;
 				author: string;
+				pseudo: string;
 			};
 		};
 		finalCta: {
@@ -330,6 +340,11 @@ export interface Content {
 			noImage: string;
 		};
 		recommendations: {
+			title: string;
+			subtitle: string;
+			seeMore: string;
+		};
+		creators: {
 			title: string;
 			subtitle: string;
 			seeMore: string;

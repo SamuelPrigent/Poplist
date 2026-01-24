@@ -1,21 +1,28 @@
 'use client';
 
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Film, Plus } from 'lucide-react';
+// import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import {
+  Film,
+  // Plus
+} from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MoviePoster } from '@/components/Home/MoviePoster';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { ListCardSmall } from '@/components/List/ListCardSmall';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
+import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
 import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
-import { deleteCachedThumbnail } from '@/lib/thumbnailGenerator';
-import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
+// import { MoviePoster } from '@/components/Home/MoviePoster';
+// import { deleteCachedThumbnail } from '@/lib/thumbnailGenerator';
+import {
+  getTMDBLanguage,
+  // getTMDBRegion
+} from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, getCategoryInfo } from '@/types/categories';
 
@@ -33,6 +40,13 @@ interface DiscoverItem {
   first_air_date?: string;
 }
 
+interface Creator {
+  id: string;
+  username: string;
+  avatarUrl?: string;
+  listCount: number;
+}
+
 interface FeaturedCategory {
   id: string;
   name: string;
@@ -45,15 +59,16 @@ interface FeaturedCategory {
 export function HomeContent() {
   const { content, language } = useLanguageStore();
   const { user } = useAuth();
-  const tmdbLanguage = getTMDBLanguage(language);
-  const tmdbRegion = getTMDBRegion(language);
+  //   const tmdbLanguage = getTMDBLanguage(language);
+  //   const tmdbRegion = getTMDBRegion(language);
 
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [publicWatchlists, setPublicWatchlists] = useState<Watchlist[]>([]);
   const [recommendations, setRecommendations] = useState<DiscoverItem[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [addingTo, setAddingTo] = useState<number | null>(null);
+  //   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     tmdbId: string;
@@ -67,6 +82,44 @@ export function HomeContent() {
       setPublicWatchlists(publicData.watchlists || []);
     } catch (error) {
       console.error('Failed to fetch public watchlists:', error);
+    }
+  }, []);
+
+  const fetchCreators = useCallback(async () => {
+    try {
+      // Get public watchlists with higher limit to aggregate creators
+      const publicData = await watchlistAPI.getPublicWatchlists(100);
+      const watchlists = publicData.watchlists || [];
+
+      // Aggregate by owner
+      const creatorsMap = new Map<string, Creator>();
+
+      for (const watchlist of watchlists) {
+        if (watchlist.owner) {
+          const ownerId = watchlist.owner.id || watchlist.ownerId;
+          const existing = creatorsMap.get(ownerId);
+
+          if (existing) {
+            existing.listCount += 1;
+          } else {
+            creatorsMap.set(ownerId, {
+              id: ownerId,
+              username: watchlist.owner.username || 'Utilisateur',
+              avatarUrl: watchlist.owner.avatarUrl,
+              listCount: 1,
+            });
+          }
+        }
+      }
+
+      // Sort by list count (descending) and take top 10
+      const sortedCreators = Array.from(creatorsMap.values())
+        .sort((a, b) => b.listCount - a.listCount)
+        .slice(0, 10);
+
+      setCreators(sortedCreators);
+    } catch (error) {
+      console.error('Failed to fetch creators:', error);
     }
   }, []);
 
@@ -86,7 +139,7 @@ export function HomeContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await fetchPublicWatchlists();
+        await Promise.all([fetchPublicWatchlists(), fetchCreators()]);
 
         let userWatchlistsData: Watchlist[] = [];
         if (user) {
@@ -178,67 +231,65 @@ export function HomeContent() {
     };
 
     fetchData();
-  }, [user, fetchPublicWatchlists, language]);
+  }, [user, fetchPublicWatchlists, fetchCreators, language]);
 
-  const handleAddToWatchlist = async (watchlistId: string, item: DiscoverItem) => {
-    try {
-      setAddingTo(item.id);
+  //   const handleAddToWatchlist = async (watchlistId: string, item: DiscoverItem) => {
+  //     try {
+  //       setAddingTo(item.id);
 
-      if (user) {
-        await watchlistAPI.addItem(watchlistId, {
-          tmdbId: item.id.toString(),
-          type: item.media_type || 'movie',
-          language: tmdbLanguage,
-          region: tmdbRegion,
-        });
-      } else {
-        const localWatchlists = localStorage.getItem('watchlists');
-        if (localWatchlists) {
-          const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-          const watchlistIndex = watchlists.findIndex(w => w._id === watchlistId);
+  //       if (user) {
+  //         await watchlistAPI.addItem(watchlistId, {
+  //           tmdbId: item.id.toString(),
+  //           mediaType: item.media_type || 'movie',
+  //           language: tmdbLanguage,
+  //           region: tmdbRegion,
+  //         });
+  //       } else {
+  //         const localWatchlists = localStorage.getItem('watchlists');
+  //         if (localWatchlists) {
+  //           const watchlists: Watchlist[] = JSON.parse(localWatchlists);
+  //           const watchlistIndex = watchlists.findIndex(w => w.id === watchlistId);
 
-          if (watchlistIndex !== -1) {
-            const itemExists = watchlists[watchlistIndex].items.some(
-              existingItem => existingItem.tmdbId === item.id.toString()
-            );
+  //           if (watchlistIndex !== -1) {
+  //             const itemExists = watchlists[watchlistIndex].items.some(
+  //               existingItem => existingItem.tmdbId === item.id
+  //             );
 
-            if (!itemExists) {
-              const type = item.media_type || 'movie';
+  //             if (!itemExists) {
+  //               const type = item.media_type || 'movie';
 
-              const [platformList, mediaDetails] = await Promise.all([
-                watchlistAPI.fetchTMDBProviders(item.id.toString(), type, tmdbRegion),
-                watchlistAPI.getItemDetails(item.id.toString(), type, tmdbLanguage),
-              ]);
+  //               const [platformList, mediaDetails] = await Promise.all([
+  //                 watchlistAPI.fetchTMDBProviders(item.id.toString(), type, tmdbRegion),
+  //                 watchlistAPI.getItemDetails(item.id.toString(), type, tmdbLanguage),
+  //               ]);
 
-              const newItem = {
-                tmdbId: item.id.toString(),
-                title: item.title || item.name || '',
-                posterUrl: item.poster_path
-                  ? `https://image.tmdb.org/t/p/w342${item.poster_path}`
-                  : '',
-                type: type as 'movie' | 'tv',
-                platformList,
-                runtime: mediaDetails.details.runtime,
-                addedAt: new Date().toISOString(),
-              };
+  //               const newItem = {
+  //                 tmdbId: item.id,
+  //                 title: item.title || item.name || '',
+  //                 posterPath: item.poster_path || null,
+  //                 mediaType: type as 'movie' | 'tv',
+  //                 platformList,
+  //                 runtime: mediaDetails.details.runtime,
+  //                 addedAt: new Date().toISOString(),
+  //               };
 
-              watchlists[watchlistIndex].items.push(newItem);
-              watchlists[watchlistIndex].updatedAt = new Date().toISOString();
-              localStorage.setItem('watchlists', JSON.stringify(watchlists));
-              deleteCachedThumbnail(watchlistId);
+  //               watchlists[watchlistIndex].items.push(newItem);
+  //               watchlists[watchlistIndex].updatedAt = new Date().toISOString();
+  //               localStorage.setItem('watchlists', JSON.stringify(watchlists));
+  //               deleteCachedThumbnail(watchlistId);
 
-              const updatedWatchlists = getLocalWatchlistsWithOwnership();
-              setUserWatchlists(updatedWatchlists);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to add to watchlist:', error);
-    } finally {
-      setAddingTo(null);
-    }
-  };
+  //               const updatedWatchlists = getLocalWatchlistsWithOwnership();
+  //               setUserWatchlists(updatedWatchlists);
+  //             }
+  //           }
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to add to watchlist:', error);
+  //     } finally {
+  //       setAddingTo(null);
+  //     }
+  //   };
 
   const handleOpenDetails = (item: DiscoverItem, index: number) => {
     setSelectedItem({
@@ -322,7 +373,7 @@ export function HomeContent() {
             <m.div
               key={userWatchlists
                 .slice(0, 4)
-                .map(w => w._id)
+                .map(w => w.id)
                 .join('-')}
               initial="hidden"
               animate="visible"
@@ -330,13 +381,13 @@ export function HomeContent() {
               className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4"
             >
               {userWatchlists.slice(0, 4).map(watchlist => (
-                <m.div key={watchlist._id} variants={itemVariants}>
+                <m.div key={watchlist.id} variants={itemVariants}>
                   <ListCardSmall
                     watchlist={watchlist}
                     onClick={() => {
                       window.location.href = user
-                        ? `/account/list/${watchlist._id}`
-                        : `/local/list/${watchlist._id}`;
+                        ? `/lists/${watchlist.id}`
+                        : `/local/list/${watchlist.id}`;
                     }}
                   />
                 </m.div>
@@ -373,18 +424,20 @@ export function HomeContent() {
               const placeholderItems: WatchlistItem[] = Array.from(
                 { length: category.itemCount },
                 (_, idx) => ({
-                  tmdbId: `${category.id}-item-${idx}`,
+                  tmdbId: idx,
                   title: category.name,
-                  posterUrl: '',
-                  type: 'movie',
+                  posterPath: null,
+                  mediaType: 'movie' as const,
                   platformList: [],
                   addedAt: placeholderTimestamp,
                 })
               );
 
               const mockWatchlist: Watchlist = {
-                _id: category.id,
-                ownerId: {
+                id: category.id,
+                ownerId: 'featured',
+                owner: {
+                  id: 'featured',
                   email: 'featured@poplist.app',
                   username: category.username,
                 },
@@ -404,7 +457,7 @@ export function HomeContent() {
                   <ListCardGenre
                     watchlist={mockWatchlist}
                     content={content}
-                    href={`/category/${category.id}`}
+                    href={`/categories/${category.id}`}
                     genreId={category.id}
                     showOwner={false}
                     index={index}
@@ -428,7 +481,7 @@ export function HomeContent() {
             </p>
           </div>
           <Link
-            href="/community-lists"
+            href="/lists"
             className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
           >
             {content.home.popularWatchlists.seeMore}
@@ -442,7 +495,7 @@ export function HomeContent() {
             <m.div
               key={publicWatchlists
                 .slice(0, 10)
-                .map(w => w._id)
+                .map(w => w.id)
                 .join('-')}
               initial="hidden"
               animate="visible"
@@ -450,7 +503,7 @@ export function HomeContent() {
               className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
             >
               {publicWatchlists.slice(0, 10).map((watchlist, index) => {
-                const userWatchlist = userWatchlists.find(uw => uw._id === watchlist._id);
+                const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
                 const isOwner = userWatchlist?.isOwner ?? false;
                 const isCollaborator = userWatchlist?.isCollaborator ?? false;
                 const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
@@ -459,11 +512,11 @@ export function HomeContent() {
                 const showCollaborativeBadge = isCollaborator;
 
                 return (
-                  <m.div key={watchlist._id} variants={itemVariants}>
+                  <m.div key={watchlist.id} variants={itemVariants}>
                     <ListCard
                       watchlist={watchlist}
                       content={content}
-                      href={`/account/list/${watchlist._id}`}
+                      href={`/lists/${watchlist.id}`}
                       showMenu={false}
                       showOwner={true}
                       showSavedBadge={showSavedBadge}
@@ -485,7 +538,43 @@ export function HomeContent() {
         )}
       </Section>
 
-      {/* Recommendations Section */}
+      {/* Creators Section */}
+      <Section>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-white">{content.home.creators.title}</h2>
+            <p className="text-muted-foreground mt-1 text-sm">{content.home.creators.subtitle}</p>
+          </div>
+          <Link
+            href="/users"
+            className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
+          >
+            {content.home.creators.seeMore}
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="text-muted-foreground">{content.watchlists.loading}</div>
+        ) : creators.length > 0 ? (
+          <LazyMotion features={domAnimation}>
+            <m.div
+              key={creators.map(c => c.id).join('-')}
+              initial="hidden"
+              animate="visible"
+              variants={containerVariants}
+              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
+            >
+              {creators.map(creator => (
+                <m.div key={creator.id} variants={itemVariants}>
+                  <UserCard user={creator} listCount={creator.listCount} content={content} />
+                </m.div>
+              ))}
+            </m.div>
+          </LazyMotion>
+        ) : null}
+      </Section>
+
+      {/* Recommendations Section - Commented out for community focus
       <Section>
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -525,7 +614,6 @@ export function HomeContent() {
                     onClick={() => handleOpenDetails(item, index)}
                   />
 
-                  {/* Add button */}
                   <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
@@ -553,9 +641,9 @@ export function HomeContent() {
                               .filter(w => w.isOwner || w.isCollaborator)
                               .map(watchlist => (
                                 <DropdownMenu.Item
-                                  key={watchlist._id}
+                                  key={watchlist.id}
                                   className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
-                                  onSelect={() => handleAddToWatchlist(watchlist._id, item)}
+                                  onSelect={() => handleAddToWatchlist(watchlist.id, item)}
                                 >
                                   {watchlist.name}
                                 </DropdownMenu.Item>
@@ -575,6 +663,7 @@ export function HomeContent() {
           </LazyMotion>
         ) : null}
       </Section>
+      */}
 
       {/* Item Details Modal */}
       {selectedItem && (

@@ -248,7 +248,7 @@ export function AuthDrawer({
 							<div className="relative mt-1">
 								<Input
 									id="password"
-									type={showPassword ? "text" : "password"}
+									type={password.length === 0 ? "text" : showPassword ? "text" : "password"}
 									placeholder={content.auth.passwordPlaceholder}
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
@@ -256,16 +256,18 @@ export function AuthDrawer({
 									minLength={8}
 									className="pr-10"
 								/>
-								<div
-									className="absolute inset-y-0 right-0 flex cursor-pointer items-center p-3"
+								<button
+									type="button"
 									onClick={() => setShowPassword(!showPassword)}
+									className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+									tabIndex={-1}
 								>
 									{showPassword ? (
-										<Eye className="text-muted-foreground h-4 w-4" />
+										<Eye className="h-4 w-4" />
 									) : (
-										<EyeOff className="text-muted-foreground h-4 w-4" />
+										<EyeOff className="h-4 w-4" />
 									)}
-								</div>
+								</button>
 							</div>
 						</div>
 

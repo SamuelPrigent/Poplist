@@ -5,12 +5,36 @@ export const WATCHLISTS_KEY = "watchlists";
 export const SAVED_WATCHLISTS_KEY = "savedWatchlists"; // Array of watchlist IDs that are followed
 
 /**
+ * Migrate localStorage data from _id to id (MongoDB to PostgreSQL migration)
+ */
+function migrateWatchlistIds(watchlists: any[]): Watchlist[] {
+	return watchlists.map((w) => {
+		// If watchlist has _id but no id, migrate it
+		if (w._id && !w.id) {
+			const { _id, ...rest } = w;
+			return { ...rest, id: _id };
+		}
+		return w;
+	});
+}
+
+/**
  * Get all watchlists from localStorage
  */
 export function getLocalWatchlists(): Watchlist[] {
 	try {
 		const data = localStorage.getItem(WATCHLISTS_KEY);
-		return data ? JSON.parse(data) : [];
+		if (!data) return [];
+
+		const parsed = JSON.parse(data);
+		const migrated = migrateWatchlistIds(parsed);
+
+		// Save migrated data back if migration occurred
+		if (JSON.stringify(parsed) !== JSON.stringify(migrated)) {
+			localStorage.setItem(WATCHLISTS_KEY, JSON.stringify(migrated));
+		}
+
+		return migrated;
 	} catch (error) {
 		console.error("Failed to parse watchlists from localStorage:", error);
 		return [];
@@ -94,6 +118,6 @@ export function getLocalWatchlistsWithOwnership(): Watchlist[] {
 	return watchlists.map((w) => ({
 		...w,
 		isOwner: w.ownerId === "offline",
-		isSaved: savedIds.includes(w._id),
+		isSaved: savedIds.includes(w.id),
 	}));
 }

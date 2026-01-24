@@ -56,7 +56,7 @@ import { watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
 import { generateAndCacheThumbnail } from "@/lib/thumbnailGenerator";
-import { getTMDBLanguage, getTMDBRegion } from "@/lib/utils";
+import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
 import { ItemDetailsModal } from "./modal/ItemDetailsModal";
@@ -123,7 +123,7 @@ function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 
 interface ListItemsTableProps {
 	watchlist: Watchlist;
-	onUpdate: () => void;
+	onUpdate: (updatedWatchlist?: Watchlist) => void;
 	isOwner?: boolean;
 	isCollaborator?: boolean;
 	offline?: boolean;
@@ -143,17 +143,17 @@ interface DraggableRowProps {
 	item: WatchlistItem;
 	index: number;
 	row: Row<WatchlistItem>;
-	loadingItem: string | null;
-	hoveredRow: string | null;
-	setHoveredRow: (id: string | null) => void;
+	loadingItem: number | null;
+	hoveredRow: number | null;
+	setHoveredRow: (id: number | null) => void;
 	onConfirmDelete: (item: WatchlistItem) => void;
-	handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
+	handleMoveItem: (tmdbId: number, position: "first" | "last") => void;
 	totalItems: number;
 	isDragDisabled: boolean;
 	canEdit: boolean;
 	content: Content;
 	watchlists: Watchlist[];
-	addingTo: string | null;
+	addingTo: number | null;
 	handleAddToWatchlist: (watchlistId: string, item: WatchlistItem) => void;
 	currentWatchlistId: string;
 }
@@ -195,7 +195,7 @@ function DraggableRow({
 
 	// Filter watchlists for the "add to" dropdown
 	const availableWatchlists = watchlists.filter(
-		(w) => w._id !== currentWatchlistId && (w.isOwner || w.isCollaborator),
+		(w) => w.id !== currentWatchlistId && (w.isOwner || w.isCollaborator),
 	);
 
 	return (
@@ -265,9 +265,9 @@ function DraggableRow({
 											{availableWatchlists.length > 0 ? (
 												availableWatchlists.map((wl) => (
 													<DropdownMenu.Item
-														key={wl._id}
+														key={wl.id}
 														className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none"
-														onSelect={() => handleAddToWatchlist(wl._id, item)}
+														onSelect={() => handleAddToWatchlist(wl.id, item)}
 														disabled={addingTo === item.tmdbId}
 													>
 														{wl.name}
@@ -374,6 +374,7 @@ function DraggableRow({
 
 export function ListItemsTable({
 	watchlist,
+	onUpdate,
 	isOwner = true,
 	isCollaborator = false,
 	currentPage = 1,
@@ -388,13 +389,13 @@ export function ListItemsTable({
 	const { isAuthenticated } = useAuth();
 	const [items, setItems] = useState<WatchlistItem[]>(watchlist.items);
 	const [sorting, setSorting] = useState<SortingState>([]);
-	const [hoveredRow, setHoveredRow] = useState<string | null>(null);
-	const [loadingItem, setLoadingItem] = useState<string | null>(null);
+	const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+	const [loadingItem, setLoadingItem] = useState<number | null>(null);
 	const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
 	const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 	const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-	const [addingTo, setAddingTo] = useState<string | null>(null);
+	const [addingTo, setAddingTo] = useState<number | null>(null);
 	const [itemToDelete, setItemToDelete] = useState<WatchlistItem | null>(null);
 
 	// Sync with parent when watchlist changes
@@ -414,11 +415,11 @@ export function ListItemsTable({
 		} else {
 			const localWatchlists = getLocalWatchlistsWithOwnership();
 			const ownedWatchlists = localWatchlists.filter(
-				(wl) => wl.isOwner && wl._id !== watchlist._id,
+				(wl) => wl.isOwner && wl.id !== watchlist.id,
 			);
 			setWatchlists(ownedWatchlists);
 		}
-	}, [isAuthenticated, watchlist._id]);
+	}, [isAuthenticated, watchlist.id]);
 
 	useEffect(() => {
 		loadWatchlists();
@@ -486,8 +487,8 @@ export function ListItemsTable({
 		try {
 			setAddingTo(item.tmdbId);
 			await watchlistAPI.addItem(watchlistId, {
-				tmdbId: item.tmdbId,
-				type: item.type,
+				tmdbId: item.tmdbId.toString(),
+				mediaType: item.mediaType,
 				language: tmdbLanguage,
 				region: tmdbRegion,
 			});
@@ -498,23 +499,26 @@ export function ListItemsTable({
 		}
 	};
 
-	const handleRemoveItem = async (tmdbId: string) => {
+	const handleRemoveItem = async (tmdbId: number) => {
 		try {
 			setLoadingItem(tmdbId);
 			const newItems = items.filter((item) => item.tmdbId !== tmdbId);
 			setItems(newItems);
 
-			await watchlistAPI.removeItem(watchlist._id, tmdbId);
+			await watchlistAPI.removeItem(watchlist.id, tmdbId.toString());
 
 			if (!watchlist.imageUrl && newItems.length > 0) {
 				const posterUrls = newItems
 					.slice(0, 4)
-					.map((item) => item.posterUrl)
-					.filter(Boolean);
+					.map((item) => getTMDBImageUrl(item.posterPath, "w342"))
+					.filter((url): url is string => url !== null);
 				if (posterUrls.length > 0) {
-					await generateAndCacheThumbnail(watchlist._id, posterUrls);
+					await generateAndCacheThumbnail(watchlist.id, posterUrls);
 				}
 			}
+
+			// Notify parent with updated watchlist (no loading flicker)
+			onUpdate({ ...watchlist, items: newItems });
 		} catch (error) {
 			console.error("Failed to remove item:", error);
 			alert("Failed to remove item");
@@ -524,7 +528,7 @@ export function ListItemsTable({
 		}
 	};
 
-	const handleMoveItem = async (tmdbId: string, position: "first" | "last") => {
+	const handleMoveItem = async (tmdbId: number, position: "first" | "last") => {
 		try {
 			setLoadingItem(tmdbId);
 			const itemIndex = items.findIndex((item) => item.tmdbId === tmdbId);
@@ -539,17 +543,20 @@ export function ListItemsTable({
 			}
 			setItems(newItems);
 
-			await watchlistAPI.moveItem(watchlist._id, tmdbId, position);
+			await watchlistAPI.moveItem(watchlist.id, tmdbId.toString(), position);
 
 			if (!watchlist.imageUrl && newItems.length > 0) {
 				const posterUrls = newItems
 					.slice(0, 4)
-					.map((item) => item.posterUrl)
-					.filter(Boolean);
+					.map((item) => getTMDBImageUrl(item.posterPath, "w342"))
+					.filter((url): url is string => url !== null);
 				if (posterUrls.length > 0) {
-					await generateAndCacheThumbnail(watchlist._id, posterUrls);
+					await generateAndCacheThumbnail(watchlist.id, posterUrls);
 				}
 			}
+
+			// Notify parent with updated watchlist (no loading flicker)
+			onUpdate({ ...watchlist, items: newItems });
 		} catch (error) {
 			console.error("Failed to move item:", error);
 			alert("Failed to move item");
@@ -570,18 +577,21 @@ export function ListItemsTable({
 			setItems(newItems);
 
 			try {
-				const orderedTmdbIds = newItems.map((item) => item.tmdbId);
-				await watchlistAPI.reorderItems(watchlist._id, orderedTmdbIds);
+				const orderedTmdbIds = newItems.map((item) => item.tmdbId.toString());
+				await watchlistAPI.reorderItems(watchlist.id, orderedTmdbIds);
 
 				if (!watchlist.imageUrl && newItems.length > 0) {
 					const posterUrls = newItems
 						.slice(0, 4)
-						.map((item) => item.posterUrl)
-						.filter(Boolean);
+						.map((item) => getTMDBImageUrl(item.posterPath, "w342"))
+						.filter((url): url is string => url !== null);
 					if (posterUrls.length > 0) {
-						await generateAndCacheThumbnail(watchlist._id, posterUrls);
+						await generateAndCacheThumbnail(watchlist.id, posterUrls);
 					}
 				}
+
+				// Notify parent with updated watchlist (no loading flicker)
+				onUpdate({ ...watchlist, items: newItems });
 			} catch (error) {
 				console.error("Failed to reorder items:", error);
 				setItems(items);
@@ -649,9 +659,9 @@ export function ListItemsTable({
 							className="group/cell flex cursor-pointer items-center gap-3 text-left"
 						>
 							<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
-								{item.posterUrl ? (
+								{item.posterPath ? (
 									<>
-										<PosterImage src={item.posterUrl} alt={item.title} />
+										<PosterImage src={getTMDBImageUrl(item.posterPath, "w185") || ""} alt={item.title} />
 										<div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
 											<Eye className="h-5 w-5 text-white" />
 										</div>
@@ -758,7 +768,7 @@ export function ListItemsTable({
 					);
 				},
 				accessorFn: (row) => {
-					if (row.type === "tv" && row.numberOfEpisodes) {
+					if (row.mediaType === "tv" && row.numberOfEpisodes) {
 						return row.numberOfEpisodes * 35;
 					}
 					return row.runtime || 0;
@@ -766,7 +776,7 @@ export function ListItemsTable({
 				cell: (info) => {
 					const item = info.row.original;
 
-					if (item.type === "tv") {
+					if (item.mediaType === "tv") {
 						const seasons = item.numberOfSeasons;
 						const episodes = item.numberOfEpisodes;
 						if (seasons || episodes) {
@@ -918,7 +928,7 @@ export function ListItemsTable({
 										watchlists={watchlists}
 										addingTo={addingTo}
 										handleAddToWatchlist={handleAddToWatchlist}
-										currentWatchlistId={watchlist._id}
+										currentWatchlistId={watchlist.id}
 									/>
 								))}
 							</SortableContext>
@@ -937,8 +947,8 @@ export function ListItemsTable({
 							setSelectedIndex(-1);
 						}
 					}}
-					tmdbId={selectedItem.tmdbId}
-					type={selectedItem.type}
+					tmdbId={selectedItem.tmdbId.toString()}
+					type={selectedItem.mediaType}
 					platforms={selectedItem.platformList}
 					onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
 					onNext={

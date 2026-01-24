@@ -40,12 +40,12 @@ export function DeleteListDialog({
 					localStorage.getItem("watchlists") || "[]",
 				);
 				const filtered = watchlists.filter(
-					(w: Watchlist) => w._id !== watchlist._id,
+					(w: Watchlist) => w.id !== watchlist.id,
 				);
 				localStorage.setItem("watchlists", JSON.stringify(filtered));
 
 				// Delete cached thumbnail
-				deleteCachedThumbnail(watchlist._id);
+				deleteCachedThumbnail(watchlist.id);
 
 				onOpenChange(false);
 				if (onSuccess) {
@@ -56,7 +56,7 @@ export function DeleteListDialog({
 				}
 			} else {
 				// Online mode: delete via API
-				await watchlistAPI.delete(watchlist._id);
+				await watchlistAPI.delete(watchlist.id);
 
 				onOpenChange(false);
 				if (onSuccess) {

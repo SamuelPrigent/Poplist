@@ -71,12 +71,12 @@ export function AddItemModal({
       try {
         if (offline) {
           const localWatchlists = getLocalWatchlists();
-          const freshWatchlist = localWatchlists.find(w => w._id === watchlist._id);
+          const freshWatchlist = localWatchlists.find(w => w.id === watchlist.id);
           if (freshWatchlist) {
             setFreshWatchlistItems(freshWatchlist.items);
           }
         } else {
-          const { watchlist: freshWatchlist } = await watchlistAPI.getById(watchlist._id);
+          const { watchlist: freshWatchlist } = await watchlistAPI.getById(watchlist.id);
           setFreshWatchlistItems(freshWatchlist.items);
         }
       } catch (error) {
@@ -86,7 +86,7 @@ export function AddItemModal({
     };
 
     fetchFreshItems();
-  }, [open, watchlist._id, offline, watchlist.items]);
+  }, [open, watchlist.id, offline, watchlist.items]);
 
   // Call onSuccess when modal closes if items were added/removed
   useEffect(() => {
@@ -154,7 +154,7 @@ export function AddItemModal({
   });
 
   const isItemInWatchlist = (tmdbId: number) => {
-    const existsInWatchlist = freshWatchlistItems.some(item => item.tmdbId === tmdbId.toString());
+    const existsInWatchlist = freshWatchlistItems.some(item => item.tmdbId === tmdbId);
     const wasAddedThisSession = addedItemIds.has(tmdbId);
     const wasRemovedThisSession = removedItemIds.has(tmdbId);
 
@@ -213,7 +213,7 @@ export function AddItemModal({
         if (!localWatchlists) return;
 
         const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-        const watchlistIndex = watchlists.findIndex(w => w._id === watchlist._id);
+        const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
 
         if (watchlistIndex === -1) return;
 
@@ -223,10 +223,10 @@ export function AddItemModal({
         ]);
 
         const newItem = {
-          tmdbId: item.id.toString(),
+          tmdbId: item.id,
           title: item.title || item.name || '',
-          posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : '',
-          type: item.media_type,
+          posterPath: item.poster_path,
+          mediaType: item.media_type,
           platformList,
           runtime: mediaDetails.details.runtime,
           addedAt: new Date().toISOString(),
@@ -234,11 +234,11 @@ export function AddItemModal({
 
         watchlists[watchlistIndex].items.push(newItem);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-        deleteCachedThumbnail(watchlist._id);
+        deleteCachedThumbnail(watchlist.id);
       } else {
-        await watchlistAPI.addItem(watchlist._id, {
+        await watchlistAPI.addItem(watchlist.id, {
           tmdbId: item.id.toString(),
-          type: item.media_type,
+          mediaType: item.media_type,
           language: languageCode,
           region,
         });
@@ -263,17 +263,17 @@ export function AddItemModal({
         if (!localWatchlists) return;
 
         const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-        const watchlistIndex = watchlists.findIndex(w => w._id === watchlist._id);
+        const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
 
         if (watchlistIndex === -1) return;
 
         watchlists[watchlistIndex].items = watchlists[watchlistIndex].items.filter(
-          i => i.tmdbId !== item.id.toString()
+          i => i.tmdbId !== item.id
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-        deleteCachedThumbnail(watchlist._id);
+        deleteCachedThumbnail(watchlist.id);
       } else {
-        await watchlistAPI.removeItem(watchlist._id, item.id.toString());
+        await watchlistAPI.removeItem(watchlist.id, item.id.toString());
       }
 
       setRemovedItemIds(prev => new Set(prev).add(item.id));

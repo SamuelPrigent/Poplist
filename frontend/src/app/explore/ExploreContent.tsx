@@ -357,7 +357,7 @@ export function ExploreContent() {
       if (isAuthenticated) {
         await watchlistAPI.addItem(watchlistId, {
           tmdbId: mediaItem.id.toString(),
-          type: itemType,
+          mediaType: itemType,
           language: tmdbLanguage,
           region: tmdbRegion,
         });
@@ -365,11 +365,11 @@ export function ExploreContent() {
         const localWatchlists = localStorage.getItem('watchlists');
         if (localWatchlists) {
           const watchlistsData: Watchlist[] = JSON.parse(localWatchlists);
-          const watchlistIndex = watchlistsData.findIndex(w => w._id === watchlistId);
+          const watchlistIndex = watchlistsData.findIndex(w => w.id === watchlistId);
 
           if (watchlistIndex !== -1) {
             const itemExists = watchlistsData[watchlistIndex].items.some(
-              item => item.tmdbId === mediaItem.id.toString()
+              item => item.tmdbId === mediaItem.id
             );
 
             if (!itemExists) {
@@ -379,12 +379,10 @@ export function ExploreContent() {
               ]);
 
               const newItem = {
-                tmdbId: mediaItem.id.toString(),
+                tmdbId: mediaItem.id,
                 title: mediaItem.title || mediaItem.name || '',
-                posterUrl: mediaItem.poster_path
-                  ? `https://image.tmdb.org/t/p/w342${mediaItem.poster_path}`
-                  : '',
-                type: itemType,
+                posterPath: mediaItem.poster_path || null,
+                mediaType: itemType,
                 platformList,
                 runtime: mediaDetails.details.runtime,
                 addedAt: new Date().toISOString(),
@@ -793,9 +791,9 @@ export function ExploreContent() {
                                     .filter(w => w.isOwner || w.isCollaborator)
                                     .map(watchlist => (
                                       <DropdownMenu.Item
-                                        key={watchlist._id}
+                                        key={watchlist.id}
                                         className="hover:bg-accent hover:text-accent-foreground relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none"
-                                        onSelect={() => handleAddToWatchlist(watchlist._id, item)}
+                                        onSelect={() => handleAddToWatchlist(watchlist.id, item)}
                                       >
                                         {watchlist.name}
                                       </DropdownMenu.Item>

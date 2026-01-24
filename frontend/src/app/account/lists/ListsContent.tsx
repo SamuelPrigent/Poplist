@@ -58,7 +58,7 @@ function SortableWatchlistCard({ watchlist, onEdit, onDelete, priority = false }
   const isDraggable = true;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: watchlist._id,
+    id: watchlist.id,
     disabled: !isDraggable,
   });
 
@@ -72,7 +72,7 @@ function SortableWatchlistCard({ watchlist, onEdit, onDelete, priority = false }
     <ListCard
       watchlist={watchlist}
       content={content}
-      href={`/account/list/${watchlist._id}`}
+      href={`/lists/${watchlist.id}`}
       onEdit={isOwner ? onEdit : undefined}
       onDelete={isOwner ? onDelete : undefined}
       showMenu={isOwner}
@@ -147,16 +147,16 @@ export function ListsContent() {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = watchlists.findIndex(w => w._id === active.id);
-      const newIndex = watchlists.findIndex(w => w._id === over.id);
+      const oldIndex = watchlists.findIndex(w => w.id === active.id);
+      const newIndex = watchlists.findIndex(w => w.id === over.id);
 
       const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
       setWatchlists(newWatchlists);
 
-      // Persist to backend
+      // Persist to backend - send all watchlist IDs (unified position system)
       try {
-        const orderedWatchlistIds = newWatchlists.map(w => w._id);
-        await watchlistAPI.reorderWatchlists(orderedWatchlistIds);
+        const allWatchlistIds = newWatchlists.map(w => w.id);
+        await watchlistAPI.reorderWatchlists(allWatchlistIds);
       } catch (error) {
         console.error('Failed to reorder watchlists:', error);
         // Revert on error
@@ -310,14 +310,14 @@ export function ListsContent() {
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={filteredWatchlists.map(w => w._id)}
+              items={filteredWatchlists.map(w => w.id)}
               strategy={rectSortingStrategy}
             >
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 <AnimatePresence initial={false} mode="popLayout">
                   {filteredWatchlists.map((watchlist, index) => (
                     <m.div
-                      key={watchlist._id}
+                      key={watchlist.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}

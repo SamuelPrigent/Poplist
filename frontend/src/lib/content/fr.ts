@@ -22,7 +22,7 @@ export const fr: Content = {
     email: 'Email',
     emailPlaceholder: 'votre@email.com',
     password: 'Mot de passe',
-    passwordPlaceholder: '••••••••',
+    passwordPlaceholder: 'Votre mot de passe',
     processing: 'Traitement...',
     dontHaveAccount: "Vous n'avez pas de compte ?",
     alreadyHaveAccount: 'Vous avez déjà un compte ?',
@@ -171,27 +171,33 @@ export const fr: Content = {
 
   landing: {
     hero: {
-      tagline: 'Planifiez, suivez et profitez de vos films ensemble',
-      title: 'Créez et partagez des listes de vos films et séries préférés',
-      subtitle: 'Organisez vos soirées TV et partagez vos découvertes avec vos amis.',
+      tagline: 'Partagez votre univers cinématographique',
+      title: 'Créez et partagez des listes de vos films et séries favorites',
+      subtitle: 'Organisez vos soirées TV et partagez vos découvertes',
       cta: 'Créer une liste',
     },
     features: {
+      sectionTitle: 'Découvrez toutes nos fonctionnalités',
+      sectionSubtitle: 'Partagez votre univers cinématographique',
       organize: {
         tagline: 'Organisation',
-        title: 'Création de listes collaboratives',
-        description: 'Créez des listes personnelles ou collaboratives de films et séries.',
+        title: 'Création de listes',
+        description: 'Créez des listes personnelles de films et séries à regarder.',
       },
-      discover: {
-        tagline: 'Découverte',
-        title: 'Découvrez des films et séries',
-        description:
-          'Utilisez la fonction explorer pour trouver du contenu à ajouter à vos listes.',
+      collaborate: {
+        tagline: 'Collaboration',
+        title: 'Ajoutez des collaborateurs',
+        description: 'Invitez vos amis à contribuer à vos listes en temps réel.',
       },
       share: {
         tagline: 'Partage',
+        title: 'Partagez vos listes',
+        description: 'Partagez vos listes avec un simple lien pour votre entourage.',
+      },
+      discover: {
+        tagline: 'Découverte',
         title: 'Suivez les listes de la communauté',
-        description: "Ajouter les listes d'autres utilisateurs à votre espace personnel.",
+        description: "Explorez et suivez les listes d'autres utilisateurs.",
       },
     },
     startInSeconds: {
@@ -199,17 +205,15 @@ export const fr: Content = {
       subtitle: "Pas de set-up compliqué, c'est vous et vos contenus préférés",
       step1: {
         title: 'Créez votre liste',
-        description:
-          'Commencez avec "Mes films favoris" ou soyez nostalgique avec "Films d\'enfance".',
+        description: 'Donnez un nom à votre liste et commencez à organiser.',
       },
       step2: {
         title: 'Ajoutez des films',
-        description:
-          "Recherchez un film ou une série à l'aide d'un mot clé et ajoutez le à votre liste du moment.",
+        description: 'Ajoutez des films et séries en quelques clics.',
       },
       step3: {
-        title: 'Partagez-la avec vos amis',
-        description: 'Mettez vos listes en mode "public" et partagez les facilement avec un lien.',
+        title: 'Partagez votre liste',
+        description: "Un lien, c'est tout ce qu'il faut pour partager.",
       },
     },
     testimonials: {
@@ -217,15 +221,18 @@ export const fr: Content = {
       subtitle: "Rejoignez une communauté d'utilisateurs satisfaits",
       testimonial1: {
         text: 'Application parfaite pour organiser mes listes. Interface claire et intuitive.',
-        author: '— Marie L.',
+        author: 'Marie C.',
+        pseudo: '@mariec',
       },
       testimonial2: {
         text: "Très pratique ! Permet de garder une trace de ce qu'on a vu et de ce qu'on souhaite recommander.",
-        author: '— Thomas D.',
+        author: 'Thomas D.',
+        pseudo: '@thomasdlt',
       },
       testimonial3: {
         text: 'Simple, efficace, exactement ce que je cherchais pour gérer mes films à voir.',
-        author: '— Julie M.',
+        author: 'Julie M.',
+        pseudo: '@juliem',
       },
     },
     finalCta: {
@@ -360,6 +367,11 @@ export const fr: Content = {
     recommendations: {
       title: 'Tendances du moment',
       subtitle: 'Les titres qui cartonnent cette semaine.',
+      seeMore: 'Voir tout',
+    },
+    creators: {
+      title: 'Nos créateurs',
+      subtitle: 'Les membres les plus actifs de la communauté',
       seeMore: 'Voir tout',
     },
     communityWatchlists: {

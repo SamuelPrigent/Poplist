@@ -51,7 +51,7 @@ export default function LocalListDetailPage() {
 			setLoading(true);
 			setNotFound(false);
 			const watchlists = getLocalWatchlists();
-			const found = watchlists.find((w) => w._id === id);
+			const found = watchlists.find((w) => w.id === id);
 
 			if (found && found.ownerId === "offline") {
 				setWatchlist(found);
@@ -65,6 +65,17 @@ export default function LocalListDetailPage() {
 			setLoading(false);
 		}
 	}, [id, router]);
+
+	// Handle watchlist updates - accepts optional updated watchlist for direct state updates
+	const handleWatchlistUpdate = useCallback((updatedWatchlist?: Watchlist) => {
+		if (updatedWatchlist) {
+			// Direct state update without refetching (no loading flicker)
+			setWatchlist(updatedWatchlist);
+		} else {
+			// Full refetch when no data provided
+			fetchWatchlist();
+		}
+	}, [fetchWatchlist]);
 
 	useEffect(() => {
 		fetchWatchlist();
@@ -238,7 +249,7 @@ export default function LocalListDetailPage() {
 			<div className="container mx-auto mt-4 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
 				<ListItemsTableOffline
 					watchlist={watchlist}
-					onUpdate={fetchWatchlist}
+					onUpdate={handleWatchlistUpdate}
 					currentPage={currentPage}
 					itemsPerPage={itemsPerPage}
 				/>

@@ -53,7 +53,8 @@ import {
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
-import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
+import { deleteCachedThumbnail, generateAndCacheThumbnail } from "@/lib/thumbnailGenerator";
+import { getTMDBImageUrl } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
 import { ItemDetailsModal } from "./modal/ItemDetailsModal";
@@ -117,7 +118,7 @@ function SortIcon({ sortState }: { sortState: false | "asc" | "desc" }) {
 
 interface ListItemsTableOfflineProps {
 	watchlist: Watchlist;
-	onUpdate?: () => void;
+	onUpdate?: (updatedWatchlist?: Watchlist) => void;
 	currentPage?: number;
 	itemsPerPage?: number;
 }
@@ -133,12 +134,12 @@ interface DraggableRowProps {
 	item: WatchlistItem;
 	index: number;
 	row: Row<WatchlistItem>;
-	loadingItem: string | null;
-	hoveredRow: string | null;
-	setHoveredRow: (id: string | null) => void;
+	loadingItem: number | null;
+	hoveredRow: number | null;
+	setHoveredRow: (id: number | null) => void;
 	onConfirmDelete: (item: WatchlistItem) => void;
-	handleMoveItem: (tmdbId: string, position: "first" | "last") => void;
-	handleAddToWatchlist: (tmdbId: string, targetWatchlistId: string) => void;
+	handleMoveItem: (tmdbId: number, position: "first" | "last") => void;
+	handleAddToWatchlist: (tmdbId: number, targetWatchlistId: string) => void;
 	otherWatchlists: Watchlist[];
 	totalItems: number;
 	isDragDisabled: boolean;
@@ -244,10 +245,10 @@ function DraggableRow({
 											{otherWatchlists.length > 0 ? (
 												otherWatchlists.map((wl) => (
 													<DropdownMenu.Item
-														key={wl._id}
+														key={wl.id}
 														className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none"
 														onSelect={() =>
-															handleAddToWatchlist(item.tmdbId, wl._id)
+															handleAddToWatchlist(item.tmdbId, wl.id)
 														}
 														disabled={loadingItem === item.tmdbId}
 													>
@@ -359,8 +360,8 @@ export function ListItemsTableOffline({
 	const { content } = useLanguageStore();
 	const [items, setItems] = useState<WatchlistItem[]>(watchlist.items);
 	const [sorting, setSorting] = useState<SortingState>([]);
-	const [hoveredRow, setHoveredRow] = useState<string | null>(null);
-	const [loadingItem, setLoadingItem] = useState<string | null>(null);
+	const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+	const [loadingItem, setLoadingItem] = useState<number | null>(null);
 	const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
 	const [selectedIndex, setSelectedIndex] = useState<number>(-1);
@@ -376,10 +377,10 @@ export function ListItemsTableOffline({
 	const loadOtherWatchlists = useCallback(() => {
 		const allWatchlists = getLocalWatchlists();
 		const filtered = allWatchlists.filter(
-			(wl) => wl._id !== watchlist._id && wl.ownerId === "offline",
+			(wl) => wl.id !== watchlist.id && wl.ownerId === "offline",
 		);
 		setOtherWatchlists(filtered);
-	}, [watchlist._id]);
+	}, [watchlist.id]);
 
 	useEffect(() => {
 		loadOtherWatchlists();
@@ -438,28 +439,42 @@ export function ListItemsTableOffline({
 
 	const STORAGE_KEY = "watchlists";
 
-	const updateLocalStorage = (updatedItems: WatchlistItem[]) => {
+	const updateLocalStorage = async (updatedItems: WatchlistItem[]) => {
 		const localWatchlists = localStorage.getItem(STORAGE_KEY);
 		if (!localWatchlists) return;
 
 		const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-		const watchlistIndex = watchlists.findIndex((w) => w._id === watchlist._id);
+		const watchlistIndex = watchlists.findIndex((w) => w.id === watchlist.id);
 		if (watchlistIndex === -1) return;
 
 		watchlists[watchlistIndex].items = updatedItems;
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
 
 		window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
-		deleteCachedThumbnail(watchlist._id);
-		onUpdate?.();
+
+		// Regenerate thumbnail with new items (if no custom image)
+		if (!watchlist.imageUrl && updatedItems.length > 0) {
+			const posterUrls = updatedItems
+				.slice(0, 4)
+				.map((item) => getTMDBImageUrl(item.posterPath, "w342"))
+				.filter((url): url is string => url !== null);
+			if (posterUrls.length > 0) {
+				await generateAndCacheThumbnail(watchlist.id, posterUrls);
+			}
+		} else {
+			deleteCachedThumbnail(watchlist.id);
+		}
+
+		// Notify parent with updated watchlist (no loading flicker)
+		onUpdate?.({ ...watchlist, items: updatedItems });
 	};
 
-	const handleRemoveItem = async (tmdbId: string) => {
+	const handleRemoveItem = async (tmdbId: number) => {
 		try {
 			setLoadingItem(tmdbId);
 			const newItems = items.filter((item) => item.tmdbId !== tmdbId);
 			setItems(newItems);
-			updateLocalStorage(newItems);
+			await updateLocalStorage(newItems);
 		} catch (error) {
 			console.error("Failed to remove item:", error);
 			alert("Failed to remove item");
@@ -469,7 +484,7 @@ export function ListItemsTableOffline({
 		}
 	};
 
-	const handleMoveItem = async (tmdbId: string, position: "first" | "last") => {
+	const handleMoveItem = async (tmdbId: number, position: "first" | "last") => {
 		try {
 			setLoadingItem(tmdbId);
 			const itemIndex = items.findIndex((item) => item.tmdbId === tmdbId);
@@ -483,7 +498,7 @@ export function ListItemsTableOffline({
 				newItems.push(movedItem);
 			}
 			setItems(newItems);
-			updateLocalStorage(newItems);
+			await updateLocalStorage(newItems);
 		} catch (error) {
 			console.error("Failed to move item:", error);
 			alert("Failed to move item");
@@ -494,7 +509,7 @@ export function ListItemsTableOffline({
 	};
 
 	const handleAddToWatchlist = async (
-		tmdbId: string,
+		tmdbId: number,
 		targetWatchlistId: string,
 	) => {
 		try {
@@ -508,7 +523,7 @@ export function ListItemsTableOffline({
 
 			const watchlists: Watchlist[] = JSON.parse(localWatchlists);
 			const targetIndex = watchlists.findIndex(
-				(w) => w._id === targetWatchlistId,
+				(w) => w.id === targetWatchlistId,
 			);
 			if (targetIndex === -1) return;
 
@@ -528,7 +543,21 @@ export function ListItemsTableOffline({
 
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
 			window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
-			deleteCachedThumbnail(targetWatchlistId);
+
+			// Regenerate thumbnail for target watchlist
+			const targetWatchlist = watchlists[targetIndex];
+			if (!targetWatchlist.imageUrl && targetWatchlist.items.length > 0) {
+				const posterUrls = targetWatchlist.items
+					.slice(0, 4)
+					.map((item) => getTMDBImageUrl(item.posterPath, "w342"))
+					.filter((url): url is string => url !== null);
+				if (posterUrls.length > 0) {
+					await generateAndCacheThumbnail(targetWatchlistId, posterUrls);
+				}
+			} else {
+				deleteCachedThumbnail(targetWatchlistId);
+			}
+
 			onUpdate?.();
 		} catch (error) {
 			console.error("Failed to add item to watchlist:", error);
@@ -537,7 +566,7 @@ export function ListItemsTableOffline({
 		}
 	};
 
-	const handleDragEnd = (event: DragEndEvent) => {
+	const handleDragEnd = async (event: DragEndEvent) => {
 		const { active, over } = event;
 
 		if (over && active.id !== over.id) {
@@ -546,7 +575,7 @@ export function ListItemsTableOffline({
 
 			const newItems = arrayMove(items, oldIndex, newIndex);
 			setItems(newItems);
-			updateLocalStorage(newItems);
+			await updateLocalStorage(newItems);
 		}
 	};
 
@@ -609,9 +638,9 @@ export function ListItemsTableOffline({
 							className="group/cell flex cursor-pointer items-center gap-3 text-left"
 						>
 							<div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
-								{item.posterUrl ? (
+								{item.posterPath ? (
 									<>
-										<PosterImage src={item.posterUrl} alt={item.title} />
+										<PosterImage src={getTMDBImageUrl(item.posterPath, "w185") || ""} alt={item.title} />
 										<div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
 											<Eye className="h-5 w-5 text-white" />
 										</div>
@@ -718,7 +747,7 @@ export function ListItemsTableOffline({
 					);
 				},
 				accessorFn: (row) => {
-					if (row.type === "tv" && row.numberOfEpisodes) {
+					if (row.mediaType === "tv" && row.numberOfEpisodes) {
 						return row.numberOfEpisodes * 35;
 					}
 					return row.runtime || 0;
@@ -726,7 +755,7 @@ export function ListItemsTableOffline({
 				cell: (info) => {
 					const item = info.row.original;
 
-					if (item.type === "tv") {
+					if (item.mediaType === "tv") {
 						const seasons = item.numberOfSeasons;
 						const episodes = item.numberOfEpisodes;
 						if (seasons || episodes) {
@@ -894,8 +923,8 @@ export function ListItemsTableOffline({
 							setSelectedIndex(-1);
 						}
 					}}
-					tmdbId={selectedItem.tmdbId}
-					type={selectedItem.type}
+					tmdbId={selectedItem.tmdbId.toString()}
+					type={selectedItem.mediaType}
 					platforms={selectedItem.platformList}
 					onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
 					onNext={

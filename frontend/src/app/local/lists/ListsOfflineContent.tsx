@@ -82,7 +82,7 @@ function WatchlistCardOffline({
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
-					router.push(`/local/list/${watchlist._id}`);
+					router.push(`/local/list/${watchlist.id}`);
 				}
 			}}
 			className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
@@ -90,7 +90,7 @@ function WatchlistCardOffline({
 			{/* Cover Image */}
 			<button
 				type="button"
-				onClick={() => router.push(`/local/list/${watchlist._id}`)}
+				onClick={() => router.push(`/local/list/${watchlist.id}`)}
 				tabIndex={-1}
 				className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md"
 			>
@@ -112,7 +112,7 @@ function WatchlistCardOffline({
 			{/* Text Info */}
 			<button
 				type="button"
-				onClick={() => router.push(`/local/list/${watchlist._id}`)}
+				onClick={() => router.push(`/local/list/${watchlist.id}`)}
 				tabIndex={-1}
 				className="line-clamp-2 w-full text-left text-sm font-semibold text-white"
 			>
@@ -122,7 +122,7 @@ function WatchlistCardOffline({
 			<div className="mt-2 text-xs">
 				<button
 					type="button"
-					onClick={() => router.push(`/local/list/${watchlist._id}`)}
+					onClick={() => router.push(`/local/list/${watchlist.id}`)}
 					tabIndex={-1}
 					className="text-muted-foreground"
 				>
@@ -135,7 +135,7 @@ function WatchlistCardOffline({
 			<div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
 				<button
 					type="button"
-					onClick={() => router.push(`/local/list/${watchlist._id}`)}
+					onClick={() => router.push(`/local/list/${watchlist.id}`)}
 					tabIndex={-1}
 				>
 					{watchlist.items.length}{" "}
@@ -203,7 +203,7 @@ function SortableWatchlistCardOffline({
 		transition,
 		isDragging,
 	} = useSortable({
-		id: watchlist._id,
+		id: watchlist.id,
 	});
 
 	const style = {
@@ -329,8 +329,8 @@ export function ListsOfflineContent() {
 		const { active, over } = event;
 
 		if (over && active.id !== over.id) {
-			const oldIndex = watchlists.findIndex((w) => w._id === active.id);
-			const newIndex = watchlists.findIndex((w) => w._id === over.id);
+			const oldIndex = watchlists.findIndex((w) => w.id === active.id);
+			const newIndex = watchlists.findIndex((w) => w.id === over.id);
 
 			const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
 			setWatchlists(newWatchlists);
@@ -343,7 +343,7 @@ export function ListsOfflineContent() {
 				}));
 
 				const updatedAllWatchlists = allWatchlists.map((w) => {
-					const reordered = watchlistsWithOrder.find((rw) => rw._id === w._id);
+					const reordered = watchlistsWithOrder.find((rw) => rw.id === w.id);
 					return reordered || w;
 				});
 
@@ -506,13 +506,13 @@ export function ListsOfflineContent() {
 					onDragEnd={handleDragEnd}
 				>
 					<SortableContext
-						items={watchlists.map((w) => w._id)}
+						items={watchlists.map((w) => w.id)}
 						strategy={rectSortingStrategy}
 					>
 						<div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 							{watchlists.map((watchlist) => (
 								<SortableWatchlistCardOffline
-									key={watchlist._id}
+									key={watchlist.id}
 									watchlist={watchlist}
 									onEdit={(wl) => {
 										setSelectedWatchlist(wl);

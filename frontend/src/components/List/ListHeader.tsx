@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useListThumbnail } from "@/hooks/useListThumbnail";
-import type { Collaborator, Watchlist, WatchlistOwner } from "@/lib/api-client";
+import type { Collaborator, Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
 interface ListHeaderProps {
@@ -23,15 +23,6 @@ interface ListHeaderProps {
 	collaboratorButton?: React.ReactNode;
 }
 
-function isWatchlistOwner(
-	value: Watchlist["ownerId"],
-): value is WatchlistOwner {
-	return (
-		typeof value === "object" &&
-		value !== null &&
-		("username" in value || "email" in value)
-	);
-}
 
 export const LIST_HEADER_BUTTON_CLASS =
 	"group relative flex h-[80%] items-center justify-center rounded-lg p-3 transition-all cursor-pointer  hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
@@ -62,12 +53,8 @@ export function ListHeader({
 	const coverImage = watchlist.imageUrl || generatedThumbnail;
 
 	const itemCount = watchlist.items.length;
-	const ownerUsername = isWatchlistOwner(watchlist.ownerId)
-		? watchlist.ownerId.username || watchlist.ownerId.email
-		: null;
-	const ownerAvatarUrl = isWatchlistOwner(watchlist.ownerId)
-		? (watchlist.ownerId as WatchlistOwner & { avatarUrl?: string }).avatarUrl
-		: null;
+	const ownerUsername = watchlist.owner?.username || watchlist.owner?.email || null;
+	const ownerAvatarUrl = watchlist.owner?.avatarUrl || null;
 
 	return (
 		<div className="relative w-full overflow-hidden">
@@ -211,7 +198,7 @@ export function ListHeader({
 														.slice(0, 3)
 														.map((collaborator) => (
 															<div
-																key={collaborator._id}
+																key={collaborator.id}
 																className="bg-muted ring-background flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ring-2"
 																title={collaborator.username}
 															>

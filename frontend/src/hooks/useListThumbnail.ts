@@ -6,6 +6,7 @@ import {
 	generateAndCacheThumbnail,
 	getCachedThumbnail,
 } from "@/lib/thumbnailGenerator";
+import { getTMDBImageUrl } from "@/lib/utils";
 
 /**
  * HYBRID THUMBNAIL APPROACH
@@ -25,7 +26,7 @@ import {
 function isOfflineWatchlist(watchlist: Watchlist): boolean {
 	// Offline watchlists have IDs that are not MongoDB ObjectIds
 	// They're typically UUIDs or custom strings like "quick-add"
-	const id = watchlist._id;
+	const id = watchlist.id;
 	// MongoDB ObjectIds are 24 hex characters
 	return !/^[0-9a-fA-F]{24}$/.test(id);
 }
@@ -50,8 +51,8 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 
 		const posterUrls = watchlist.items
 			.slice(0, 4)
-			.filter((item) => item.posterUrl)
-			.map((item) => item.posterUrl);
+			.map((item) => getTMDBImageUrl(item.posterPath, "w342"))
+			.filter((url): url is string => url !== null);
 
 		if (posterUrls.length === 0) {
 			setLocalThumbnail(null);
@@ -59,7 +60,7 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 		}
 
 		// Check cache first
-		const cached = getCachedThumbnail(watchlist._id);
+		const cached = getCachedThumbnail(watchlist.id);
 		if (cached) {
 			setLocalThumbnail(cached);
 			return;
@@ -68,7 +69,7 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 		// Generate new thumbnail
 		let cancelled = false;
 
-		generateAndCacheThumbnail(watchlist._id, posterUrls)
+		generateAndCacheThumbnail(watchlist.id, posterUrls)
 			.then((thumbnail) => {
 				if (!cancelled) {
 					setLocalThumbnail(thumbnail);
@@ -84,7 +85,7 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 		return () => {
 			cancelled = true;
 		};
-	}, [watchlist?._id, offline, watchlist?.items.length, watchlist]);
+	}, [watchlist?.id, offline, watchlist?.items.length, watchlist]);
 
 	// Return priorities (after hooks have been called)
 	// Handle null watchlist

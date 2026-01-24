@@ -24,7 +24,7 @@ export default function UserProfilePage() {
 	const username = params.username as string;
 
 	const [user, setUser] = useState<{
-		_id: string;
+		id: string;
 		username: string;
 		avatarUrl?: string;
 	} | null>(null);
@@ -142,10 +142,10 @@ export default function UserProfilePage() {
 				<div className="grid grid-cols-1 gap-6 sm:grid-cols-3 xl:grid-cols-5">
 					{watchlists.map((watchlist) => (
 						<ListCard
-							key={watchlist._id}
+							key={watchlist.id}
 							watchlist={watchlist}
 							content={content}
-							href={`/account/list/${watchlist._id}`}
+							href={`/lists/${watchlist.id}`}
 							showVisibility={false}
 							showSavedBadge={false}
 							showCollaborativeBadge={false}

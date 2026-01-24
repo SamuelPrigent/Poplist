@@ -62,3 +62,19 @@ export function resizeTMDBPoster(url: string, size: string): string {
 	if (!url) return url;
 	return url.replace(/\/w\d+\/|\/original\//, `/${size}/`);
 }
+
+/**
+ * Build a full TMDB image URL from a path
+ * @param path - The image path (e.g., "/abc123.jpg")
+ * @param size - The desired size (w92, w154, w185, w342, w500, w780, original)
+ * @returns The full TMDB image URL or null if path is null/undefined
+ */
+export function getTMDBImageUrl(
+	path: string | null | undefined,
+	size: "w92" | "w154" | "w185" | "w342" | "w500" | "w780" | "original" = "w342"
+): string | null {
+	if (!path) return null;
+	// If it's already a full URL, return as-is
+	if (path.startsWith("http")) return path;
+	return `https://image.tmdb.org/t/p/${size}${path}`;
+}
