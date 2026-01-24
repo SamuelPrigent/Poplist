@@ -20,6 +20,10 @@ router.get('/', async () => {
   return { status: 'ok', message: 'Poplist API is running' }
 })
 
+router.get('/health', async () => {
+  return { status: 'ok', message: 'Poplist API is running' }
+})
+
 // Image proxy for TMDB images (public, no auth required)
 router.get('/image-proxy', async ({ request, response }) => {
   try {
