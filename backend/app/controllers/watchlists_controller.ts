@@ -62,7 +62,6 @@ export default class WatchlistsController {
       .select('watchlist_id', 'position')
       .orderBy('position', 'asc')
     const positionMap = new Map(userPositions.map((r) => [r.watchlist_id, r.position]))
-    const userWatchlistIds = userPositions.map((r) => r.watchlist_id)
 
     // Get all watchlists the user has access to
     const ownedWatchlists = await Watchlist.query()
