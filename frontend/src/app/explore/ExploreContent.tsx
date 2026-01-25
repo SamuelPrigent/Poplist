@@ -743,8 +743,11 @@ export function ExploreContent() {
 
                       {/* Rating badge */}
                       {item.vote_average > 0 && (
-                        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 backdrop-blur-sm">
-                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 backdrop-blur-sm">
+                          <Star
+                            className="h-3.5 w-3.5 fill-yellow-500/70 stroke-yellow-500"
+                            strokeWidth={1.5}
+                          />
                           <span className="text-sm font-semibold text-white">
                             {item.vote_average.toFixed(1)}
                           </span>

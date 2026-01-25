@@ -3,11 +3,14 @@
 import { ArrowLeft } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Section } from '@/components/layout/Section';
+import { Pagination } from '@/components/ui/pagination';
 import { UserCard } from '@/components/User/UserCard';
 import { watchlistAPI, type Watchlist } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
+
+const ITEMS_PER_PAGE_DEFAULT = 40;
 
 interface Creator {
   id: string;
@@ -21,6 +24,10 @@ export function UsersContent() {
   const router = useRouter();
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE_DEFAULT);
 
   const fetchCreators = useCallback(async () => {
     try {
@@ -66,6 +73,22 @@ export function UsersContent() {
     fetchCreators();
   }, [fetchCreators]);
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
+
+  // Paginated creators
+  const paginatedCreators = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return creators.slice(startIndex, endIndex);
+  }, [creators, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(creators.length / itemsPerPage);
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -109,21 +132,39 @@ export function UsersContent() {
         {loading ? (
           <div className="text-muted-foreground">{content.watchlists.loading}</div>
         ) : creators.length > 0 ? (
-          <LazyMotion features={domAnimation}>
-            <m.div
-              key={creators.map(c => c.id).join('-')}
-              initial="hidden"
-              animate="visible"
-              variants={containerVariants}
-              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
-            >
-              {creators.map(creator => (
-                <m.div key={creator.id} variants={itemVariants}>
-                  <UserCard user={creator} listCount={creator.listCount} content={content} />
-                </m.div>
-              ))}
-            </m.div>
-          </LazyMotion>
+          <>
+            <LazyMotion features={domAnimation}>
+              <m.div
+                key={`page-${currentPage}`}
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+                className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
+              >
+                {paginatedCreators.map(creator => (
+                  <m.div key={creator.id} variants={itemVariants}>
+                    <UserCard user={creator} listCount={creator.listCount} content={content} />
+                  </m.div>
+                ))}
+              </m.div>
+            </LazyMotion>
+
+            {/* Pagination - only show if more than 40 items */}
+            {creators.length > ITEMS_PER_PAGE_DEFAULT && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={creators.length}
+                onItemsPerPageChange={newItemsPerPage => {
+                  setItemsPerPage(newItemsPerPage);
+                  setCurrentPage(1);
+                }}
+                itemsPerPageOptions={[40, 80]}
+              />
+            )}
+          </>
         ) : (
           <div className="text-muted-foreground py-12 text-center">
             Aucun créateur trouvé

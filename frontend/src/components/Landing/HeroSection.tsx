@@ -18,6 +18,8 @@ interface HeroSectionProps {
   trending: TrendingItem[];
   watchlistsUrl: string;
 }
+import saw from '../../../public/landing/movies/saw3.jpg';
+import pdc from '../../../public/landing/movies/pdc2.jpg';
 import jinx from '../../../public/landing/movies/jinx.png';
 import doa from '../../../public/landing/movies/DOA.jpg';
 import blade2 from '../../../public/landing/movies/blade2.jpg';
@@ -88,7 +90,7 @@ const FAMOUS_MOVIES = [
   {
     id: 11,
     title: 'Col3-Pos1',
-    image: 'https://image.tmdb.org/t/p/w500/zqkmTXzjkAgXmEWLRsY4UpTWCeo.jpg',
+    image: saw,
   }, // Star Wars
   {
     id: 12,
@@ -108,7 +110,7 @@ const FAMOUS_MOVIES = [
   {
     id: 15,
     title: 'Col3-Pos5',
-    image: kb,
+    image: pdc,
   }, // Inception
 ];
 
@@ -172,7 +174,6 @@ const renderSubtitleWithUnderline = (subtitle: string) => {
 
 export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
   const handleScrollToFeatures = () => {
-    // const featuresSection = document.querySelector('section:nth-of-type(3)');
     const featuresSection = document.querySelector('#ensavoirplus');
     featuresSection?.scrollIntoView({
       behavior: 'smooth',
@@ -187,118 +188,117 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
 
   return (
     <section className="relative min-h-[85vh] overflow-hidden bg-background">
-      {/* Blur glow shapes */}
-      <div className="pointer-events-none absolute left-0 top-1/4 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-violet-600/10 blur-[120px]" />
-      <div className="pointer-events-none absolute right-1/4 bottom-1/4 h-[350px] w-[350px] rounded-full bg-blue-600/10 blur-[120px]" />
+      {/* Gradient overlay from left - full width, smooth fade */}
+      <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background from-0% via-background/90 via-30% to-transparent to-70%" />
 
-      {/* Gradient overlay from left - covers part of the grid */}
-      <div
-        className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background via-background/80 to-transparent"
-        style={{ width: '50%' }}
-      />
+      {/* Additional gradient for text readability on small screens */}
+      <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background/80 from-0% to-transparent to-50% md:from-transparent" />
 
-      {/* Gradient overlay from bottom - more imposing */}
+      {/* Gradient overlay from bottom */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-60 bg-linear-to-t from-background via-background/90 to-transparent" />
 
-      {/* Right: Tilted Poster Grid - 3 columns with stagger */}
-      <div className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-[5%]">
-        <div className="-rotate-12 transform">
-          <div className="flex gap-7">
-            {/* Column 1 - no offset */}
-            <div className="flex flex-col gap-5">
-              {col1.map(movie => (
-                <div
-                  key={movie.id}
-                  className="relative w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10"
-                >
-                  <Image
-                    src={movie.image}
-                    alt={movie.title}
-                    fill
-                    sizes="220px"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+      {/* Max-width container for large screens */}
+      <div className="relative mx-auto max-w-[1800px] 2xl:max-w-[2000px]">
+        {/* Right: Tilted Poster Grid - responsive columns */}
+        <div className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-[15%] opacity-40 sm:translate-x-[10%] sm:opacity-50 md:translate-x-[5%] md:opacity-70 lg:opacity-100">
+          <div className="-rotate-12 transform">
+            <div className="flex gap-4 md:gap-7">
+              {/* Column 1 - hidden on very small screens */}
+              <div className="hidden sm:flex flex-col gap-3 md:gap-5">
+                {col1.map(movie => (
+                  <div
+                    key={movie.id}
+                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10"
+                  >
+                    <Image
+                      src={movie.image}
+                      alt={movie.title}
+                      fill
+                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 200px"
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
 
-            {/* Column 2 - offset up */}
-            <div className="flex flex-col gap-5 -mt-16">
-              {col2.map(movie => (
-                <div
-                  key={movie.id}
-                  className="relative w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
-                >
-                  <Image
-                    src={movie.image}
-                    alt={movie.title}
-                    fill
-                    sizes="220px"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+              {/* Column 2 - offset up, always visible */}
+              <div className="flex flex-col gap-3 md:gap-5 -mt-16">
+                {col2.map(movie => (
+                  <div
+                    key={movie.id}
+                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
+                  >
+                    <Image
+                      src={movie.image}
+                      alt={movie.title}
+                      fill
+                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 200px"
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
 
-            {/* Column 3 - offset down */}
-            <div className="flex flex-col gap-5 mt-8">
-              {col3.map(movie => (
-                <div
-                  key={movie.id}
-                  className="relative w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
-                >
-                  <Image
-                    src={movie.image}
-                    alt={movie.title}
-                    fill
-                    sizes="220px"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
+              {/* Column 3 - offset down, hidden on small screens */}
+              <div className="hidden md:flex flex-col gap-3 md:gap-5 mt-8">
+                {col3.map(movie => (
+                  <div
+                    key={movie.id}
+                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
+                  >
+                    <Image
+                      src={movie.image}
+                      alt={movie.title}
+                      fill
+                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 200px"
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Left: Text content */}
-      <div className="mt-3 relative z-30 mx-auto flex min-h-[85vh] max-w-7xl items-center px-6 py-20">
-        <div className="flex max-w-xl flex-col items-start text-left">
-          {/* Main Title */}
-          <h1 className="mb-6 text-4xl font-semibold tracking-tight text-white md:text-5xl lg:text-[61px] lg:leading-[1.1]">
-            {renderTitleWithGradient(content.landing.hero.title)}
-          </h1>
+        {/* Text content - centered on mobile, left on desktop */}
+        <div className="mt-3 relative z-30 mx-auto flex min-h-[85vh] max-w-7xl items-center justify-center px-6 py-20 md:justify-start lg:px-8">
+          <div className="flex w-full flex-col items-center text-center md:w-auto md:max-w-xl md:items-start md:text-left">
+            {/* Main Title */}
+            <h1 className="mb-6 text-[40px] leading-[1.15] font-semibold tracking-tight text-white sm:text-5xl lg:text-[61px] lg:leading-[1.1]">
+              {renderTitleWithGradient(content.landing.hero.title)}
+            </h1>
 
-          {/* Subtitle */}
-          <p className="mb-8 max-w-md text-lg text-gray-200">
-            {renderSubtitleWithUnderline(content.landing.hero.subtitle)}
-          </p>
+            {/* Subtitle */}
+            <p className="mb-8 max-w-md text-lg text-gray-200">
+              {renderSubtitleWithUnderline(content.landing.hero.subtitle)}
+            </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-wrap gap-4 mt-3">
-            <Link
-              href={watchlistsUrl}
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
-            >
-              {content.home.hero.cta}
-            </Link>
-            <button
-              type="button"
-              onClick={handleScrollToFeatures}
-              className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-medium text-gray-300 transition-all hover:bg-white/5 hover:text-white"
-            >
-              {content.home.hero.ctaSecondary}
-            </button>
-          </div>
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap justify-center gap-4 mt-3 md:justify-start">
+              <Link
+                href={watchlistsUrl}
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
+              >
+                {content.home.hero.cta}
+              </Link>
+              <button
+                type="button"
+                onClick={handleScrollToFeatures}
+                className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-medium text-gray-300 transition-all hover:bg-white/5 hover:text-white"
+              >
+                {content.home.hero.ctaSecondary}
+              </button>
+            </div>
 
-          {/* Trust badges */}
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-gray-400">
-            <span className="flex items-center gap-2">
-              <span className="text-violet-400">✓</span> Sans carte bancaire
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-violet-400">✓</span> Application 100% gratuite
-            </span>
+            {/* Trust badges */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 md:justify-start">
+              <span className="flex items-center gap-2">
+                <span className="text-violet-400">✓</span> Sans carte bancaire
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="text-violet-400">✓</span> Application 100% gratuite
+              </span>
+            </div>
           </div>
         </div>
       </div>

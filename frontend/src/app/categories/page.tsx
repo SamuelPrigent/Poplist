@@ -1,5 +1,6 @@
 'use client';
 
+import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
@@ -63,64 +64,86 @@ export default function CategoriesPage() {
 
         {/* Categories Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
-            {[...Array(10)].map((_, i) => (
-              <div
-                key={`skeleton-${i}`}
-                className="aspect-square] bg-muted animate-pulse rounded-lg"
-              />
-            ))}
+          <div className="flex items-center justify-center py-12">
+            <div className="text-muted-foreground">{content.watchlists.loading}</div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {GENRE_CATEGORIES.map((categoryId, index) => {
-              const category = getCategoryInfo(categoryId, content);
-              const itemCount = categoryCounts[categoryId] || 0;
-              const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
-              const placeholderItems: WatchlistItem[] = Array.from(
-                { length: itemCount },
-                (_, idx) => ({
-                  tmdbId: idx,
-                  title: category.name,
-                  posterPath: null,
-                  mediaType: 'movie' as const,
-                  platformList: [],
-                  addedAt: placeholderTimestamp,
-                })
-              );
-
-              const mockWatchlist: Watchlist = {
-                id: categoryId,
-                ownerId: 'featured',
-                owner: {
-                  id: 'featured',
-                  email: 'featured@poplist.app',
-                  username: 'Poplist',
+          <LazyMotion features={domAnimation}>
+            <m.div
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.03,
+                    delayChildren: 0.05,
+                  },
                 },
-                name: category.name,
-                description: category.description,
-                imageUrl: '',
-                isPublic: true,
-                collaborators: [],
-                items: placeholderItems,
-                createdAt: placeholderTimestamp,
-                updatedAt: placeholderTimestamp,
-                likedBy: [],
-              };
+              }}
+              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
+            >
+              {GENRE_CATEGORIES.map((categoryId, index) => {
+                const category = getCategoryInfo(categoryId, content);
+                const itemCount = categoryCounts[categoryId] || 0;
+                const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
+                const placeholderItems: WatchlistItem[] = Array.from(
+                  { length: itemCount },
+                  (_, idx) => ({
+                    tmdbId: idx,
+                    title: category.name,
+                    posterPath: null,
+                    mediaType: 'movie' as const,
+                    platformList: [],
+                    addedAt: placeholderTimestamp,
+                  })
+                );
 
-              return (
-                <ListCardGenre
-                  key={categoryId}
-                  watchlist={mockWatchlist}
-                  content={content}
-                  href={`/categories/${categoryId}`}
-                  genreId={categoryId}
-                  showOwner={false}
-                  index={index}
-                />
-              );
-            })}
-          </div>
+                const mockWatchlist: Watchlist = {
+                  id: categoryId,
+                  ownerId: 'featured',
+                  owner: {
+                    id: 'featured',
+                    email: 'featured@poplist.app',
+                    username: 'Poplist',
+                  },
+                  name: category.name,
+                  description: category.description,
+                  imageUrl: '',
+                  isPublic: true,
+                  collaborators: [],
+                  items: placeholderItems,
+                  createdAt: placeholderTimestamp,
+                  updatedAt: placeholderTimestamp,
+                  likedBy: [],
+                };
+
+                return (
+                  <m.div
+                    key={categoryId}
+                    variants={{
+                      hidden: { opacity: 0, scale: 0.95 },
+                      visible: {
+                        opacity: 1,
+                        scale: 1,
+                        transition: { duration: 0.2 },
+                      },
+                    }}
+                  >
+                    <ListCardGenre
+                      watchlist={mockWatchlist}
+                      content={content}
+                      href={`/categories/${categoryId}`}
+                      genreId={categoryId}
+                      showOwner={false}
+                      index={index}
+                    />
+                  </m.div>
+                );
+              })}
+            </m.div>
+          </LazyMotion>
         )}
       </div>
     </div>
