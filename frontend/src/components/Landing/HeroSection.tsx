@@ -123,7 +123,7 @@ const renderTitleWithGradient = (title: string) => {
     return (
       <span key={index}>
         {shouldHighlight ? (
-          <span className="bg-linear-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-violet-400 from-10% to-blue-400 bg-clip-text text-transparent">
             {word}
           </span>
         ) : (

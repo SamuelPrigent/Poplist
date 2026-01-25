@@ -185,10 +185,10 @@ export default function ListDetailPage() {
 
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Lien copié');
+      toast.success(content.watchlists.toasts?.linkCopied || 'Link copied');
     } catch (error) {
       console.error('Failed to copy link:', error);
-      toast.error('Impossible de copier le lien');
+      toast.error(content.watchlists.toasts?.linkCopyError || 'Failed to copy link');
     }
   };
 
@@ -217,14 +217,14 @@ export default function ListDetailPage() {
 
       if (previousIsSaved) {
         await watchlistAPI.unsaveWatchlist(id);
-        toast.success('Liste retirée');
+        toast.success(content.watchlists.toasts?.listUnsaved || 'List removed');
       } else {
         await watchlistAPI.saveWatchlist(id);
-        toast.success('Liste ajoutée');
+        toast.success(content.watchlists.toasts?.listSaved || 'List added');
       }
     } catch (error) {
       console.error('Failed to toggle save watchlist:', error);
-      toast.error('Impossible de modifier la watchlist');
+      toast.error(content.watchlists.toasts?.listSaveError || 'Failed to update list');
 
       setIsSaved(previousIsSaved);
       setWatchlist({
@@ -237,16 +237,16 @@ export default function ListDetailPage() {
   const handleDuplicate = async () => {
     if (!id || !isAuthenticated || isOwner) return;
 
-    const loadingToast = toast.loading('Duplication en cours...');
+    const loadingToast = toast.loading(content.watchlists.toasts?.duplicating || 'Duplicating...');
 
     try {
       const { watchlist: duplicatedWatchlist } = await watchlistAPI.duplicateWatchlist(id);
 
-      toast.success('Liste dupliquée', { id: loadingToast });
+      toast.success(content.watchlists.toasts?.listDuplicated || 'List duplicated', { id: loadingToast });
       router.push(`/lists/${duplicatedWatchlist.id}`);
     } catch (error) {
       console.error('Failed to duplicate watchlist:', error);
-      toast.error('Impossible de dupliquer la watchlist', { id: loadingToast });
+      toast.error(content.watchlists.toasts?.duplicateError || 'Failed to duplicate list', { id: loadingToast });
     }
   };
 

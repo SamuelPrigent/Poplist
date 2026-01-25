@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken'
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'default_access_secret'
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'default_refresh_secret'
 
+export const REFRESH_TOKEN_EXPIRY_DAYS = 30
+
 export interface AccessTokenPayload {
   sub: string
   email: string
@@ -25,7 +27,7 @@ export function signAccessToken(payload: AccessTokenPayload): string {
 export function signRefreshToken(payload: RefreshTokenPayload): string {
   return jwt.sign(payload, REFRESH_SECRET, {
     // expiresIn: '10s',
-    expiresIn: '30d',
+    expiresIn: `${REFRESH_TOKEN_EXPIRY_DAYS}d`,
   })
 }
 

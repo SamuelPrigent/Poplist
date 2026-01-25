@@ -331,6 +331,40 @@ export function HomeContent() {
 
   const listsUrl = user ? '/account/lists' : '/local/lists';
 
+  // Helper function to create mock watchlist for test sections
+  //   const createMockWatchlist = (category: FeaturedCategory): Watchlist => {
+  //     const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
+  //     const placeholderItems: WatchlistItem[] = Array.from(
+  //       { length: category.itemCount },
+  //       (_, idx) => ({
+  //         tmdbId: idx,
+  //         title: category.name,
+  //         posterPath: null,
+  //         mediaType: 'movie' as const,
+  //         platformList: [],
+  //         addedAt: placeholderTimestamp,
+  //       })
+  //     );
+  //     return {
+  //       id: category.id,
+  //       ownerId: 'featured',
+  //       owner: {
+  //         id: 'featured',
+  //         email: 'featured@poplist.app',
+  //         username: category.username,
+  //       },
+  //       name: category.name,
+  //       description: category.description,
+  //       imageUrl: '',
+  //       isPublic: true,
+  //       collaborators: [],
+  //       items: placeholderItems,
+  //       createdAt: placeholderTimestamp,
+  //       updatedAt: placeholderTimestamp,
+  //       likedBy: [],
+  //     };
+  //   };
+
   // Animation variants - ultra léger
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -459,7 +493,6 @@ export function HomeContent() {
                     content={content}
                     href={`/categories/${category.id}`}
                     genreId={category.id}
-                    showOwner={false}
                     index={index}
                   />
                 </m.div>
@@ -530,7 +563,7 @@ export function HomeContent() {
           </LazyMotion>
         ) : (
           <div className="border-border bg-card rounded-lg border p-12 text-center">
-            <Film className="text-muted-foreground mx-auto h-16 w-16" />
+            <Film strokeWidth={1.4} className="text-muted-foreground mx-auto h-16 w-16" />
             <p className="text-muted-foreground mt-4">
               {content.home.popularWatchlists.noWatchlists}
             </p>
@@ -573,97 +606,6 @@ export function HomeContent() {
           </LazyMotion>
         ) : null}
       </Section>
-
-      {/* Recommendations Section - Commented out for community focus
-      <Section>
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-white">{content.home.recommendations.title}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {content.home.recommendations.subtitle}
-            </p>
-          </div>
-          <Link
-            href="/explore"
-            className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-          >
-            {content.home.recommendations.seeMore}
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="text-muted-foreground">{content.watchlists.loading}</div>
-        ) : safeRecommendations.length > 0 ? (
-          <LazyMotion features={domAnimation}>
-            <m.div
-              key={safeRecommendations.map(r => r.id).join('-')}
-              initial="hidden"
-              animate="visible"
-              variants={containerVariants}
-              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
-            >
-              {safeRecommendations.map((item, index) => (
-                <m.div key={item.id} variants={itemVariants} className="group relative">
-                  <MoviePoster
-                    id={item.id}
-                    title={item.title}
-                    name={item.name}
-                    posterPath={item.poster_path}
-                    voteAverage={item.vote_average}
-                    overview={item.overview}
-                    onClick={() => handleOpenDetails(item, index)}
-                  />
-
-                  <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                    <DropdownMenu.Root>
-                      <DropdownMenu.Trigger asChild>
-                        <button
-                          type="button"
-                          className="cursor-pointer rounded-full bg-black/70 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black"
-                          disabled={addingTo === item.id}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </DropdownMenu.Trigger>
-
-                      <DropdownMenu.Portal>
-                        <DropdownMenu.Content
-                          className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-xl border p-1 shadow-md"
-                          sideOffset={5}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-semibold">
-                            {content.watchlists.addToWatchlist}
-                          </DropdownMenu.Label>
-                          {userWatchlists.filter(w => w.isOwner || w.isCollaborator).length > 0 ? (
-                            userWatchlists
-                              .filter(w => w.isOwner || w.isCollaborator)
-                              .map(watchlist => (
-                                <DropdownMenu.Item
-                                  key={watchlist.id}
-                                  className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
-                                  onSelect={() => handleAddToWatchlist(watchlist.id, item)}
-                                >
-                                  {watchlist.name}
-                                </DropdownMenu.Item>
-                              ))
-                          ) : (
-                            <div className="text-muted-foreground px-2 py-1.5 text-sm">
-                              {content.watchlists.noWatchlist}
-                            </div>
-                          )}
-                        </DropdownMenu.Content>
-                      </DropdownMenu.Portal>
-                    </DropdownMenu.Root>
-                  </div>
-                </m.div>
-              ))}
-            </m.div>
-          </LazyMotion>
-        ) : null}
-      </Section>
-      */}
 
       {/* Item Details Modal */}
       {selectedItem && (

@@ -34,7 +34,7 @@ export const de: Content = {
     createWatchlist: 'Neue Liste',
     createWatchlistDescription:
       'Erstellen Sie eine neue Liste, um Ihre Filme und Serien zu organisieren.',
-    notLoggedInWarning: 'Lokale Daten',
+    notLoggedInWarning: 'Offline-Modus',
     noWatchlists: 'Sie haben noch keine Listen erstellt.',
     myWatchlists: 'Meine Listen',
     followed: 'Gefolgt',
@@ -168,6 +168,16 @@ export const de: Content = {
       collaborativeLists: 'Erstellen Sie kollaborative Listen',
       shareWithFriends: 'Teilen Sie Ihre Listen mit Freunden',
       signup: 'Registrieren',
+    },
+    toasts: {
+      linkCopied: 'Link kopiert',
+      linkCopyError: 'Link konnte nicht kopiert werden',
+      listSaved: 'Liste hinzugefügt',
+      listUnsaved: 'Liste entfernt',
+      listSaveError: 'Liste konnte nicht aktualisiert werden',
+      duplicating: 'Wird dupliziert...',
+      listDuplicated: 'Liste dupliziert',
+      duplicateError: 'Liste konnte nicht dupliziert werden',
     },
   },
 

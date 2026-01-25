@@ -8,6 +8,7 @@ import {
   verifyRefreshToken,
   hashToken,
   generateTokenId,
+  REFRESH_TOKEN_EXPIRY_DAYS,
 } from '#services/jwt_service'
 import {
   setAccessTokenCookie,
@@ -57,10 +58,25 @@ export default class AuthController {
       tokenId,
     })
 
+    // Cleanup tokens expirés + limite à 5 sessions simultanées
+    await RefreshToken.query()
+      .where('userId', user.id)
+      .where('expiresAt', '<', DateTime.now())
+      .delete()
+
+    const existingTokens = await RefreshToken.query()
+      .where('userId', user.id)
+      .orderBy('issuedAt', 'asc')
+
+    if (existingTokens.length >= 5) {
+      await existingTokens[0].delete()
+    }
+
     await RefreshToken.create({
       userId: user.id,
       tokenHash: hashToken(refreshToken),
       issuedAt: DateTime.now(),
+      expiresAt: DateTime.now().plus({ days: REFRESH_TOKEN_EXPIRY_DAYS }),
       userAgent: request.header('user-agent') || null,
     })
 
@@ -109,10 +125,25 @@ export default class AuthController {
       tokenId,
     })
 
+    // Cleanup tokens expirés + limite à 5 sessions simultanées
+    await RefreshToken.query()
+      .where('userId', user.id)
+      .where('expiresAt', '<', DateTime.now())
+      .delete()
+
+    const existingTokens = await RefreshToken.query()
+      .where('userId', user.id)
+      .orderBy('issuedAt', 'asc')
+
+    if (existingTokens.length >= 5) {
+      await existingTokens[0].delete()
+    }
+
     await RefreshToken.create({
       userId: user.id,
       tokenHash: hashToken(refreshToken),
       issuedAt: DateTime.now(),
+      expiresAt: DateTime.now().plus({ days: REFRESH_TOKEN_EXPIRY_DAYS }),
       userAgent: request.header('user-agent') || null,
     })
 
@@ -193,10 +224,25 @@ export default class AuthController {
         tokenId,
       })
 
+      // Cleanup tokens expirés + limite à 5 sessions simultanées
+      await RefreshToken.query()
+        .where('userId', user.id)
+        .where('expiresAt', '<', DateTime.now())
+        .delete()
+
+      const existingTokens = await RefreshToken.query()
+        .where('userId', user.id)
+        .orderBy('issuedAt', 'asc')
+
+      if (existingTokens.length >= 5) {
+        await existingTokens[0].delete()
+      }
+
       await RefreshToken.create({
         userId: user.id,
         tokenHash: hashToken(refreshToken),
         issuedAt: DateTime.now(),
+        expiresAt: DateTime.now().plus({ days: REFRESH_TOKEN_EXPIRY_DAYS }),
         userAgent: request.header('user-agent') || null,
       })
 
@@ -292,6 +338,7 @@ export default class AuthController {
         userId: user.id,
         tokenHash: hashToken(newRefreshToken),
         issuedAt: DateTime.now(),
+        expiresAt: DateTime.now().plus({ days: REFRESH_TOKEN_EXPIRY_DAYS }),
         userAgent: request.header('user-agent') || null,
       })
 

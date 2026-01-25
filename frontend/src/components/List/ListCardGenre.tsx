@@ -16,9 +16,9 @@ interface ListCardGenreProps {
   index?: number;
 }
 
-// Mapping des catégories vers les images iconiques (chemins public/)
+// Mapping des catégories vers les images iconiques
 const categoryImages: Record<string, string> = {
-  anime: '/categories/demonslayer.png',
+  anime: '/categories/spider.png',
   enfant: '/categories/yeti.png',
   movies: '/categories/avatar.png',
   series: '/categories/friends.png',
@@ -27,20 +27,19 @@ const categoryImages: Record<string, string> = {
   action: '/categories/neo.png',
 };
 
-// Base colors for all categories
+// Base colors for border
 const baseColors = { from: '#4A90E2', to: '#667EEA', accent: '#7B68EE' };
 
 // Color variation function to create unique colors per card
 function varyColor(baseColor: string, index: number): string {
-  // Parse hex color
   const r = Number.parseInt(baseColor.slice(1, 3), 16);
   const g = Number.parseInt(baseColor.slice(3, 5), 16);
   const b = Number.parseInt(baseColor.slice(5, 7), 16);
 
-  // Apply hue rotation based on index
-  const variation = (index * 35) % 360; // Rotate hue by 35 degrees per index
+  const variation = (index * 35) % 360;
   const hsl = rgbToHsl(r, g, b);
   hsl[0] = (hsl[0] + variation) % 360;
+  hsl[1] = hsl[1] * 0.75; // Reduce saturation
 
   const rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
   return `#${rgb.map(x => Math.round(x).toString(16).padStart(2, '0')).join('')}`;
@@ -103,15 +102,7 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   return [r * 255, g * 255, b * 255];
 }
 
-export function ListCardGenre({
-  watchlist,
-  content,
-  href,
-  genreId,
-  showOwner = false,
-  index = 0,
-}: ListCardGenreProps) {
-  // Apply color variation based on card index
+export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardGenreProps) {
   const colors = {
     from: varyColor(baseColors.from, index),
     to: varyColor(baseColors.to, index),
@@ -119,9 +110,8 @@ export function ListCardGenre({
   };
 
   const [isHovered, setIsHovered] = useState(false);
-
-  // Get the category image
   const categoryImage = genreId ? categoryImages[genreId] : undefined;
+  const itemCount = watchlist.items.length;
 
   return (
     <Link
@@ -130,12 +120,11 @@ export function ListCardGenre({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Minimal Card with Border Animation */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="relative mb-3 aspect-32/29 w-full overflow-hidden rounded-xl bg-[hsl(227,6%,31%)]"
+        className="relative aspect-32/29 w-full overflow-hidden rounded-xl"
       >
         {/* Animated gradient border */}
         <motion.div
@@ -145,20 +134,32 @@ export function ListCardGenre({
             padding: '2px',
           }}
         >
-          <div className="h-full w-full rounded-xl bg-[hsl(225,13%,25%)]"></div>
+          {/* Body background color */}
+          <div className="h-full w-full rounded-xl bg-[hsl(222.2,84%,4.9%)]" />
         </motion.div>
 
         {/* Content */}
-        <div className="absolute inset-[2px] flex items-end justify-center overflow-hidden rounded-xl bg-[hsl(222.2,84%,4.9%)] p-6">
-          {/* Background image - 70% height, centered */}
+        <div className="absolute inset-[2px] overflow-hidden rounded-xl bg-[hsl(222.2,84%,6%)]">
+          {/* Glass overlay - lighter than V2 */}
+          <div className="absolute inset-0 z-0 bg-[#0a1222] opacity-40" />
+
+          {/* Color gradient from bottom - behind image */}
+          <div
+            className="absolute inset-0 z-1"
+            style={{
+              background: `linear-gradient(to top, ${colors.from}02 30%, transparent 70%)`,
+            }}
+          />
+
+          {/* Background image */}
           {categoryImage && (
-            <div className="absolute inset-0 flex items-end justify-center">
+            <div className="absolute inset-0 z-2 flex items-end justify-center">
               <Image
                 src={categoryImage}
                 alt=""
                 width={300}
                 height={400}
-                className="h-[85%] w-auto object-contain opacity-70"
+                className="h-[85%] w-auto object-contain opacity-75"
                 style={{ objectPosition: 'center bottom' }}
                 loading="eager"
                 priority
@@ -166,18 +167,26 @@ export function ListCardGenre({
             </div>
           )}
 
-          {/* Gradient overlay - from transparent to gray */}
+          {/* Dark gradient overlay - top */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 z-3"
             style={{
-              background: 'linear-gradient(to top, rgba(26, 27, 41, 0.15) 0%, transparent 60%)',
+              background: 'linear-gradient(to bottom, rgba(10, 18, 34, 0.4) 0%, transparent 35%)',
+            }}
+          />
+
+          {/* Dark gradient overlay - bottom for text readability */}
+          <div
+            className="absolute inset-0 z-3"
+            style={{
+              background: 'linear-gradient(to top, rgba(10, 18, 34, 0.85) 0%, transparent 40%)',
             }}
           />
 
           {/* Gradient accent line - only on hover */}
           {isHovered && (
             <motion.div
-              className="absolute top-0 right-0 left-0 h-0.5 opacity-40"
+              className="absolute top-0 right-0 left-0 z-4 h-0.5 opacity-40"
               style={{
                 background: `linear-gradient(90deg, transparent, ${colors.accent}, transparent)`,
               }}
@@ -192,52 +201,17 @@ export function ListCardGenre({
             />
           )}
 
-          {/* Genre name with modern typography */}
-          <div className="relative z-10 w-full text-center">
-            <motion.h3
-              className="text-[22px] font-bold tracking-tight"
-              style={{
-                color: 'transparent',
-                backgroundImage:
-                  'linear-gradient(99deg,rgba(255,255,255,0.717) 0%,rgba(255,255,255,1) 26%,rgba(255,255,255,1) 76%,rgba(255,255,255,0.706) 100%)',
-                backgroundClip: 'text',
-              }}
-              animate={{
-                scale: isHovered ? 1.02 : 1,
-              }}
-              transition={{
-                duration: 0.2,
-                ease: 'easeOut',
-              }}
-            >
+          {/* Genre name + count - inside card */}
+          <div className="absolute inset-0 z-4 flex flex-col justify-end p-5">
+            <h3 className="text-[20px] font-bold tracking-tight text-white drop-shadow-lg">
               {watchlist.name}
-            </motion.h3>
+            </h3>
+            <span className="text-muted-foreground mt-1 text-xs drop-shadow-lg">
+              {itemCount} {itemCount === 1 ? 'liste' : 'listes'}
+            </span>
           </div>
         </div>
       </motion.div>
-
-      {/* Text Info */}
-      <div className="flex items-center gap-1">
-        <h3 className="line-clamp-2 text-[14.5px] font-semibold text-white">{watchlist.name}</h3>
-      </div>
-
-      {showOwner && (
-        <p className="text-muted-foreground mt-1 text-xs">
-          par{' '}
-          {watchlist.owner?.username ? (
-            <span className="text-white capitalize">{watchlist.owner.username}</span>
-          ) : (
-            <span className="capitalize">Anonyme</span>
-          )}
-        </p>
-      )}
-
-      <div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">
-          {watchlist.items.length}{' '}
-          {watchlist.items.length === 1 ? content.watchlists.item : content.watchlists.items}
-        </span>
-      </div>
     </Link>
   );
 }

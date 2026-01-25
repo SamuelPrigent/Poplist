@@ -152,6 +152,16 @@ export interface Content {
 			shareWithFriends: string;
 			signup: string;
 		};
+		toasts?: {
+			linkCopied: string;
+			linkCopyError: string;
+			listSaved: string;
+			listUnsaved: string;
+			listSaveError: string;
+			duplicating: string;
+			listDuplicated: string;
+			duplicateError: string;
+		};
 	};
 	landing: {
 		hero: {
