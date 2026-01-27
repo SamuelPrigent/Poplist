@@ -1,22 +1,25 @@
 'use client';
 
 import { Film } from 'lucide-react';
-import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { PageReveal } from '@/components/ui/PageReveal';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
+import { useRegisterSection } from '@/hooks/usePageReady';
 import { type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 30; // 6 rows of 5 cards
 
-export default function CommunityListsPage() {
+function CommunityListsPageInner() {
   const { content } = useLanguageStore();
   const { user } = useAuth();
   const router = useRouter();
+  const { markReady } = useRegisterSection('community-lists');
+
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,8 +53,9 @@ export default function CommunityListsPage() {
       console.error('Failed to fetch community watchlists:', error);
     } finally {
       setLoading(false);
+      markReady();
     }
-  }, []);
+  }, [markReady]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,68 +96,36 @@ export default function CommunityListsPage() {
         />
 
         {/* Watchlists Grid */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">{content.watchlists.loading}</div>
-          </div>
-        ) : watchlists.length > 0 ? (
+        {loading ? null : watchlists.length > 0 ? (
           <>
-            <LazyMotion features={domAnimation}>
-              <m.div
-                key={`page-${currentPage}`}
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: {
-                      staggerChildren: 0.03,
-                      delayChildren: 0.05,
-                    },
-                  },
-                }}
-                className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
-              >
-                {paginatedWatchlists.map(watchlist => {
-                  // Calculate isOwner by comparing user email with watchlist owner email
-                  const ownerEmail = watchlist.owner?.email || null;
-                  const isOwner = user?.email === ownerEmail;
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {paginatedWatchlists.map(watchlist => {
+                // Calculate isOwner by comparing user email with watchlist owner email
+                const ownerEmail = watchlist.owner?.email || null;
+                const isOwner = user?.email === ownerEmail;
 
-                  // Find this watchlist in user's watchlists to check status
-                  const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
-                  const isCollaborator = userWatchlist?.isCollaborator === true;
-                  const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
+                // Find this watchlist in user's watchlists to check status
+                const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
+                const isCollaborator = userWatchlist?.isCollaborator === true;
+                const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
 
-                  const showSavedBadge = !isOwner && isSaved;
-                  const showCollaborativeBadge = isCollaborator;
+                const showSavedBadge = !isOwner && isSaved;
+                const showCollaborativeBadge = isCollaborator;
 
-                  return (
-                    <m.div
-                      key={watchlist.id}
-                      variants={{
-                        hidden: { opacity: 0, scale: 0.95 },
-                        visible: {
-                          opacity: 1,
-                          scale: 1,
-                          transition: { duration: 0.2 },
-                        },
-                      }}
-                    >
-                      <ListCard
-                        watchlist={watchlist}
-                        content={content}
-                        href={`/lists/${watchlist.id}`}
-                        showMenu={false}
-                        showOwner={true}
-                        showSavedBadge={showSavedBadge}
-                        showCollaborativeBadge={showCollaborativeBadge}
-                      />
-                    </m.div>
-                  );
-                })}
-              </m.div>
-            </LazyMotion>
+                return (
+                  <ListCard
+                    key={watchlist.id}
+                    watchlist={watchlist}
+                    content={content}
+                    href={`/lists/${watchlist.id}`}
+                    showMenu={false}
+                    showOwner={true}
+                    showSavedBadge={showSavedBadge}
+                    showCollaborativeBadge={showCollaborativeBadge}
+                  />
+                );
+              })}
+            </div>
 
             {/* Pagination - only show if more than 30 items */}
             {watchlists.length > ITEMS_PER_PAGE_DEFAULT && (
@@ -179,5 +151,13 @@ export default function CommunityListsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CommunityListsPage() {
+  return (
+    <PageReveal timeout={4000} minLoadingTime={200} revealDuration={0.5}>
+      <CommunityListsPageInner />
+    </PageReveal>
   );
 }

@@ -53,7 +53,7 @@ import {
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
-import { deleteCachedThumbnail, generateAndCacheThumbnail } from "@/lib/thumbnailGenerator";
+import { deleteCachedThumbnail, generateAndCacheThumbnail, getThumbnailCacheKey } from "@/lib/thumbnailGenerator";
 import { getTMDBImageUrl } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
@@ -433,7 +433,8 @@ export function ListItemsTableOffline({
             .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
             .filter((url): url is string => url !== null);
          if (posterUrls.length > 0) {
-            await generateAndCacheThumbnail(watchlist.id, posterUrls);
+            const cacheKey = getThumbnailCacheKey(watchlist.id, updatedItems.slice(0, 4).map((item) => item.posterPath));
+            await generateAndCacheThumbnail(cacheKey, posterUrls);
          }
       } else {
          deleteCachedThumbnail(watchlist.id);
@@ -519,7 +520,8 @@ export function ListItemsTableOffline({
                .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
                .filter((url): url is string => url !== null);
             if (posterUrls.length > 0) {
-               await generateAndCacheThumbnail(targetWatchlistId, posterUrls);
+               const cacheKey = getThumbnailCacheKey(targetWatchlistId, targetWatchlist.items.slice(0, 4).map((item) => item.posterPath));
+               await generateAndCacheThumbnail(cacheKey, posterUrls);
             }
          } else {
             deleteCachedThumbnail(targetWatchlistId);

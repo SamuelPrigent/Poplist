@@ -63,11 +63,7 @@ export default function CategoriesPage() {
         />
 
         {/* Categories Grid */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">{content.watchlists.loading}</div>
-          </div>
-        ) : (
+        {loading ? null : (
           <LazyMotion features={domAnimation}>
             <m.div
               initial="hidden"
@@ -77,8 +73,8 @@ export default function CategoriesPage() {
                 visible: {
                   opacity: 1,
                   transition: {
-                    staggerChildren: 0.03,
-                    delayChildren: 0.05,
+                    staggerChildren: 0,
+                    delayChildren: 0,
                   },
                 },
               }}

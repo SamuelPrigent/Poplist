@@ -55,7 +55,7 @@ import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
-import { generateAndCacheThumbnail } from "@/lib/thumbnailGenerator";
+import { generateAndCacheThumbnail, getThumbnailCacheKey } from "@/lib/thumbnailGenerator";
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
@@ -68,15 +68,15 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
 
    return (
       <>
-         {/* Skeleton - shown while loading */}
-         {!loaded && <div className="bg-muted absolute inset-0 animate-pulse" />}
-         {/* Actual image */}
+         {/* Static background - shown while loading (no pulse to avoid flash) */}
+         {!loaded && <div className="bg-muted absolute inset-0" />}
+         {/* Actual image with fade-in */}
          <Image
             src={src}
             alt={alt}
             fill
             sizes="48px"
-            className={`object-cover transition-opacity duration-200 ${
+            className={`object-cover transition-opacity duration-150 ${
                loaded ? "opacity-100" : "opacity-0"
             }`}
             onLoad={() => setLoaded(true)}
@@ -486,7 +486,8 @@ export function ListItemsTable({
                .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
                .filter((url): url is string => url !== null);
             if (posterUrls.length > 0) {
-               await generateAndCacheThumbnail(watchlist.id, posterUrls);
+               const cacheKey = getThumbnailCacheKey(watchlist.id, newItems.slice(0, 4).map((item) => item.posterPath));
+               await generateAndCacheThumbnail(cacheKey, posterUrls);
             }
          }
 
@@ -524,7 +525,8 @@ export function ListItemsTable({
                .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
                .filter((url): url is string => url !== null);
             if (posterUrls.length > 0) {
-               await generateAndCacheThumbnail(watchlist.id, posterUrls);
+               const cacheKey = getThumbnailCacheKey(watchlist.id, newItems.slice(0, 4).map((item) => item.posterPath));
+               await generateAndCacheThumbnail(cacheKey, posterUrls);
             }
          }
 
@@ -559,7 +561,8 @@ export function ListItemsTable({
                   .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
                   .filter((url): url is string => url !== null);
                if (posterUrls.length > 0) {
-                  await generateAndCacheThumbnail(watchlist.id, posterUrls);
+                  const cacheKey = getThumbnailCacheKey(watchlist.id, newItems.slice(0, 4).map((item) => item.posterPath));
+                  await generateAndCacheThumbnail(cacheKey, posterUrls);
                }
             }
 

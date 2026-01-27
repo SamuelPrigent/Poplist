@@ -4,7 +4,9 @@ import { ArrowLeft, Film } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
+import { PageReveal } from "@/components/ui/PageReveal";
 import { useAuth } from "@/context/auth-context";
+import { useRegisterSection } from "@/hooks/usePageReady";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { type GenreCategory, getCategoryInfo } from "@/types/categories";
@@ -12,12 +14,14 @@ import { type GenreCategory, getCategoryInfo } from "@/types/categories";
 // Unified header color - blue for all categories
 const CATEGORY_HEADER_COLOR = "#11314475";
 
-export default function CategoryDetailPage() {
+function CategoryDetailPageInner() {
    const params = useParams();
    const id = params.id as string;
    const { content } = useLanguageStore();
    const { user } = useAuth();
    const router = useRouter();
+   const { markReady } = useRegisterSection('category-watchlists');
+
    const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
    const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
    const [loading, setLoading] = useState(true);
@@ -50,11 +54,12 @@ export default function CategoryDetailPage() {
             console.error("Failed to fetch category watchlists:", error);
          } finally {
             setLoading(false);
+            markReady();
          }
       };
 
       fetchData();
-   }, [id, user]);
+   }, [id, user, markReady]);
 
    if (!categoryInfo) {
       return (
@@ -109,16 +114,7 @@ export default function CategoryDetailPage() {
          <div className="relative w-full">
             <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4">
                {/* Watchlists Grid */}
-               {loading ? (
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-                     {[...Array(10)].map((_, i) => (
-                        <div
-                           key={`skeleton-${i}`}
-                           className="bg-muted aspect-square animate-pulse rounded-lg"
-                        />
-                     ))}
-                  </div>
-               ) : watchlists.length > 0 ? (
+               {loading ? null : watchlists.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
                      {watchlists.map((watchlist) => {
                         // Calculate isOwner by comparing user email with watchlist owner email
@@ -157,5 +153,13 @@ export default function CategoryDetailPage() {
             </div>
          </div>
       </div>
+   );
+}
+
+export default function CategoryDetailPage() {
+   return (
+      <PageReveal timeout={4000} minLoadingTime={200} revealDuration={0.5}>
+         <CategoryDetailPageInner />
+      </PageReveal>
    );
 }

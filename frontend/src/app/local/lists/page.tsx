@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { ListsOfflineContent } from './ListsOfflineContent';
+import { PageReveal } from '@/components/ui/PageReveal';
 
 export const metadata: Metadata = {
   title: 'Mes Listes (Local)',
@@ -20,8 +21,10 @@ function ListsLoading() {
 
 export default function LocalListsPage() {
   return (
-    <Suspense fallback={<ListsLoading />}>
-      <ListsOfflineContent />
-    </Suspense>
+    <PageReveal timeout={4000} minLoadingTime={200} revealDuration={0.5}>
+      <Suspense fallback={<ListsLoading />}>
+        <ListsOfflineContent />
+      </Suspense>
+    </PageReveal>
   );
 }

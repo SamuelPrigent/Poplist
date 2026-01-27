@@ -7,7 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
-import { deleteCachedThumbnail, generateAndCacheThumbnail } from '@/lib/thumbnailGenerator';
+import { deleteCachedThumbnail, generateAndCacheThumbnail, getThumbnailCacheKey } from '@/lib/thumbnailGenerator';
 import { getTMDBImageUrl } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, type GenreCategory, getCategoryInfo } from '@/types/categories';
@@ -142,7 +142,8 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
                   .map((item: WatchlistItem) => getTMDBImageUrl(item.posterPath, 'w342'))
                   .filter((url: string | null): url is string => url !== null);
                 if (posterUrls.length > 0) {
-                  await generateAndCacheThumbnail(watchlist.id, posterUrls);
+                  const cacheKey = getThumbnailCacheKey(watchlist.id, updatedWatchlist.items.slice(0, 4).map((item: WatchlistItem) => item.posterPath));
+                  await generateAndCacheThumbnail(cacheKey, posterUrls);
                 }
               }
             } else if (imagePreview && imagePreview !== watchlist.imageUrl) {
@@ -192,7 +193,8 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
                 .map((item: WatchlistItem) => getTMDBImageUrl(item.posterPath, 'w342'))
                 .filter((url: string | null): url is string => url !== null);
               if (posterUrls.length > 0) {
-                await generateAndCacheThumbnail(watchlist.id, posterUrls);
+                const cacheKey = getThumbnailCacheKey(watchlist.id, updatedWatchlist.watchlist.items.slice(0, 4).map((item: WatchlistItem) => item.posterPath));
+                await generateAndCacheThumbnail(cacheKey, posterUrls);
               }
             }
           } else if (imageFile && imagePreview && imagePreview !== watchlist.imageUrl) {

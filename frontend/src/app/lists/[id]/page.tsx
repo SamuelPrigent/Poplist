@@ -28,6 +28,7 @@ export default function ListDetailPage() {
   const router = useRouter();
   const { content } = useLanguageStore();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+
   const [watchlist, setWatchlist] = useState<Watchlist | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -129,13 +130,7 @@ export default function ListDetailPage() {
   }, [authLoading, fetchWatchlist]);
 
   if (loading) {
-    return (
-      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-muted-foreground">{content.watchlists.loading}</div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (notFound || !watchlist) {

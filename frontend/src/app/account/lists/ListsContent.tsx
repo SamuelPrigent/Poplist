@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Film, Plus } from "lucide-react";
-import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
@@ -36,8 +36,10 @@ import {
    EmptyMedia,
    EmptyTitle,
 } from "@/components/ui/empty";
+import { PageReveal } from "@/components/ui/PageReveal";
 import type { Watchlist } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
+import { useRegisterSection } from "@/hooks/usePageReady";
 import { useLanguageStore } from "@/store/language";
 import { useListFiltersStore } from "@/store/listFilters";
 
@@ -95,13 +97,19 @@ function SortableWatchlistCard({
    );
 }
 
-export function ListsContent() {
+function ListsContentInner() {
    const { content } = useLanguageStore();
    const { user, isLoading: authLoading } = useAuth();
    const router = useRouter();
    const { showOwned, showSaved, toggleOwned, toggleSaved } = useListFiltersStore();
+
+   // Register section for coordinated loading
+   const { markReady } = useRegisterSection('user-watchlists');
+
    const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
    const [loading, setLoading] = useState(true);
+   // Track if initial load is done (for cascade vs pop animation)
+   const [initialLoadDone, setInitialLoadDone] = useState(false);
    const [dialogOpen, setDialogOpen] = useState(false);
    const [editDialogOpen, setEditDialogOpen] = useState(false);
    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -132,7 +140,7 @@ export function ListsContent() {
       })
    );
 
-   const fetchWatchlists = useCallback(async (showLoading = true) => {
+   const fetchWatchlists = useCallback(async (showLoading = true, shouldMarkReady = true) => {
       try {
          if (showLoading) {
             setLoading(true);
@@ -145,8 +153,13 @@ export function ListsContent() {
          if (showLoading) {
             setLoading(false);
          }
+         if (shouldMarkReady) {
+            markReady();
+            // Mark initial load as done after PageReveal animation completes
+            setTimeout(() => setInitialLoadDone(true), 100);
+         }
       }
-   }, []);
+   }, [markReady]);
 
    const handleDragEnd = async (event: DragEndEvent) => {
       const { active, over } = event;
@@ -179,26 +192,15 @@ export function ListsContent() {
          // Optimistic update: add new watchlist to the beginning immediately
          setWatchlists((prev) => [newWatchlist, ...prev]);
 
-         // Fetch in background to sync with server (don't show loading spinner)
-         fetchWatchlists(false).catch((error) => {
+         // Fetch in background to sync with server (don't show loading spinner, don't trigger markReady again)
+         fetchWatchlists(false, false).catch((error) => {
             console.error("Failed to sync watchlists:", error);
          });
       } else {
-         // Fallback: full refetch with loading spinner
-         await fetchWatchlists(true);
+         // Fallback: full refetch with loading spinner (don't trigger markReady again)
+         await fetchWatchlists(true, false);
       }
    };
-
-   if (loading) {
-      return (
-         <Section>
-            <h1 className="mb-10 text-3xl font-bold text-white">{content.watchlists.title}</h1>
-            <div className="flex items-center justify-center py-12">
-               <div className="text-muted-foreground">{content.watchlists.loading}</div>
-            </div>
-         </Section>
-      );
-   }
 
    // Filter watchlists based on selected filters
    const filteredWatchlists = watchlists.filter((watchlist) => {
@@ -223,9 +225,8 @@ export function ListsContent() {
    return (
       <Section className="mb-20">
          {/* Title */}
-         <div className="mt-0 mb-6">
-            <h1 className="mb-1 text-3xl font-bold text-white">{content.watchlists.title}</h1>
-            <div className="text-muted-foreground">{content.home.library.subtitle}</div>
+         <div className="mt-0 mb-3">
+            <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>
          </div>
 
          {/* Filters and Create Button */}
@@ -287,7 +288,7 @@ export function ListsContent() {
             </>
          )}
 
-         {filteredWatchlists.length === 0 ? (
+         {loading ? null : filteredWatchlists.length === 0 ? (
             <Empty>
                <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -318,14 +319,15 @@ export function ListsContent() {
                      items={filteredWatchlists.map((w) => w.id)}
                      strategy={rectSortingStrategy}
                   >
+                     {/* Initial load: no animation (PageReveal handles reveal) */}
+                     {/* After initial load: simple fade on each item for filter changes */}
                      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        <AnimatePresence initial={false} mode="popLayout">
-                           {filteredWatchlists.map((watchlist, index) => (
+                        {filteredWatchlists.map((watchlist, index) =>
+                           initialLoadDone ? (
                               <m.div
                                  key={watchlist.id}
-                                 initial={{ opacity: 0, scale: 0.9 }}
-                                 animate={{ opacity: 1, scale: 1 }}
-                                 exit={{ opacity: 0, scale: 0.9 }}
+                                 initial={{ opacity: 0 }}
+                                 animate={{ opacity: 1 }}
                                  transition={{ duration: 0.15 }}
                               >
                                  <SortableWatchlistCard
@@ -341,13 +343,36 @@ export function ListsContent() {
                                     priority={index < 4}
                                  />
                               </m.div>
-                           ))}
-                        </AnimatePresence>
+                           ) : (
+                              <div key={watchlist.id}>
+                                 <SortableWatchlistCard
+                                    watchlist={watchlist}
+                                    onEdit={(wl) => {
+                                       setSelectedWatchlist(wl);
+                                       setEditDialogOpen(true);
+                                    }}
+                                    onDelete={(wl) => {
+                                       setSelectedWatchlist(wl);
+                                       setDeleteDialogOpen(true);
+                                    }}
+                                    priority={index < 4}
+                                 />
+                              </div>
+                           )
+                        )}
                      </div>
                   </SortableContext>
                </DndContext>
             </LazyMotion>
          )}
       </Section>
+   );
+}
+
+export function ListsContent() {
+   return (
+      <PageReveal timeout={4000} minLoadingTime={200} revealDuration={0.5}>
+         <ListsContentInner />
+      </PageReveal>
    );
 }

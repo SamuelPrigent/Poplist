@@ -214,7 +214,8 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       src={movie.image}
                       alt={movie.title}
                       fill
-                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 200px"
+                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
+                      quality={90}
                       className="object-cover"
                     />
                   </div>
@@ -232,7 +233,8 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       src={movie.image}
                       alt={movie.title}
                       fill
-                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 200px"
+                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
+                      quality={90}
                       className="object-cover"
                     />
                   </div>
@@ -250,7 +252,8 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       src={movie.image}
                       alt={movie.title}
                       fill
-                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 200px"
+                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
+                      quality={90}
                       className="object-cover"
                     />
                   </div>

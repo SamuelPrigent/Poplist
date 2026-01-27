@@ -61,7 +61,7 @@ export default class AuthController {
     // Cleanup tokens expirés + limite à 5 sessions simultanées
     await RefreshToken.query()
       .where('userId', user.id)
-      .where('expiresAt', '<', DateTime.now())
+      .where('expiresAt', '<', DateTime.now().toJSDate())
       .delete()
 
     const existingTokens = await RefreshToken.query()
@@ -128,7 +128,7 @@ export default class AuthController {
     // Cleanup tokens expirés + limite à 5 sessions simultanées
     await RefreshToken.query()
       .where('userId', user.id)
-      .where('expiresAt', '<', DateTime.now())
+      .where('expiresAt', '<', DateTime.now().toJSDate())
       .delete()
 
     const existingTokens = await RefreshToken.query()
@@ -227,7 +227,7 @@ export default class AuthController {
       // Cleanup tokens expirés + limite à 5 sessions simultanées
       await RefreshToken.query()
         .where('userId', user.id)
-        .where('expiresAt', '<', DateTime.now())
+        .where('expiresAt', '<', DateTime.now().toJSDate())
         .delete()
 
       const existingTokens = await RefreshToken.query()

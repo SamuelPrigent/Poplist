@@ -12,9 +12,11 @@ import { ListCard } from '@/components/List/ListCard';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { ListCardSmall } from '@/components/List/ListCardSmall';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
+import { PageReveal } from '@/components/ui/PageReveal';
 import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
+import { useRegisterSection } from '@/hooks/usePageReady';
 import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 // import { MoviePoster } from '@/components/Home/MoviePoster';
@@ -56,11 +58,16 @@ interface FeaturedCategory {
   username: string;
 }
 
-export function HomeContent() {
+function HomeContentInner() {
   const { content, language } = useLanguageStore();
   const { user } = useAuth();
   //   const tmdbLanguage = getTMDBLanguage(language);
   //   const tmdbRegion = getTMDBRegion(language);
+
+  // Register sections for coordinated loading
+  const { markReady: markPublicReady } = useRegisterSection('public-watchlists');
+  const { markReady: markCreatorsReady } = useRegisterSection('creators');
+  const { markReady: markCategoriesReady } = useRegisterSection('categories');
 
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [publicWatchlists, setPublicWatchlists] = useState<Watchlist[]>([]);
@@ -139,7 +146,15 @@ export function HomeContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await Promise.all([fetchPublicWatchlists(), fetchCreators()]);
+        // Fetch public watchlists and creators in parallel
+        const [publicResult, creatorsResult] = await Promise.allSettled([
+          fetchPublicWatchlists(),
+          fetchCreators(),
+        ]);
+
+        // Mark sections ready as they complete
+        if (publicResult.status === 'fulfilled') markPublicReady();
+        if (creatorsResult.status === 'fulfilled') markCreatorsReady();
 
         let userWatchlistsData: Watchlist[] = [];
         if (user) {
@@ -223,15 +238,20 @@ export function HomeContent() {
           })
         );
         setCategoryCounts(counts);
+        markCategoriesReady();
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        // Mark all sections ready even on error to prevent infinite loading
+        markPublicReady();
+        markCreatorsReady();
+        markCategoriesReady();
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [user, fetchPublicWatchlists, fetchCreators, language]);
+  }, [user, fetchPublicWatchlists, fetchCreators, language, markPublicReady, markCreatorsReady, markCategoriesReady]);
 
   //   const handleAddToWatchlist = async (watchlistId: string, item: DiscoverItem) => {
   //     try {
@@ -365,6 +385,25 @@ export function HomeContent() {
   //     };
   //   };
 
+  // Skeleton components with dark background matching card styles
+  const ListCardSkeleton = () => (
+    <div className="bg-muted/30 animate-pulse rounded-lg p-2">
+      <div className="bg-muted/50 aspect-square w-full rounded-md" />
+      <div className="mt-3 space-y-2">
+        <div className="bg-muted/50 h-4 w-3/4 rounded" />
+        <div className="bg-muted/50 h-3 w-1/2 rounded" />
+      </div>
+    </div>
+  );
+
+  const UserCardSkeleton = () => (
+    <div className="bg-muted/30 flex animate-pulse flex-col items-center gap-3 rounded-lg p-5">
+      <div className="bg-muted/50 h-20 w-20 rounded-full" />
+      <div className="bg-muted/50 h-4 w-24 rounded" />
+      <div className="bg-muted/50 h-3 w-16 rounded" />
+    </div>
+  );
+
   // Animation variants - ultra léger
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -446,60 +485,52 @@ export function HomeContent() {
           </Link>
         </div>
 
-        <LazyMotion features={domAnimation}>
-          <m.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
-          >
-            {categories.map((category, index) => {
-              const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
-              const placeholderItems: WatchlistItem[] = Array.from(
-                { length: category.itemCount },
-                (_, idx) => ({
-                  tmdbId: idx,
-                  title: category.name,
-                  posterPath: null,
-                  mediaType: 'movie' as const,
-                  platformList: [],
-                  addedAt: placeholderTimestamp,
-                })
-              );
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {categories.map((category, index) => {
+            const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
+            const placeholderItems: WatchlistItem[] = Array.from(
+              { length: category.itemCount },
+              (_, idx) => ({
+                tmdbId: idx,
+                title: category.name,
+                posterPath: null,
+                mediaType: 'movie' as const,
+                platformList: [],
+                addedAt: placeholderTimestamp,
+              })
+            );
 
-              const mockWatchlist: Watchlist = {
-                id: category.id,
-                ownerId: 'featured',
-                owner: {
-                  id: 'featured',
-                  email: 'featured@poplist.app',
-                  username: category.username,
-                },
-                name: category.name,
-                description: category.description,
-                imageUrl: '',
-                isPublic: true,
-                collaborators: [],
-                items: placeholderItems,
-                createdAt: placeholderTimestamp,
-                updatedAt: placeholderTimestamp,
-                likedBy: [],
-              };
+            const mockWatchlist: Watchlist = {
+              id: category.id,
+              ownerId: 'featured',
+              owner: {
+                id: 'featured',
+                email: 'featured@poplist.app',
+                username: category.username,
+              },
+              name: category.name,
+              description: category.description,
+              imageUrl: '',
+              isPublic: true,
+              collaborators: [],
+              items: placeholderItems,
+              createdAt: placeholderTimestamp,
+              updatedAt: placeholderTimestamp,
+              likedBy: [],
+            };
 
-              return (
-                <m.div key={category.id} variants={itemVariants}>
-                  <ListCardGenre
-                    watchlist={mockWatchlist}
-                    content={content}
-                    href={`/categories/${category.id}`}
-                    genreId={category.id}
-                    index={index}
-                  />
-                </m.div>
-              );
-            })}
-          </m.div>
-        </LazyMotion>
+            return (
+              <ListCardGenre
+                key={category.id}
+                watchlist={mockWatchlist}
+                content={content}
+                href={`/categories/${category.id}`}
+                genreId={category.id}
+                index={index}
+              />
+            );
+          })}
+        </div>
       </Section>
 
       {/* Popular Watchlists Section */}
@@ -522,7 +553,11 @@ export function HomeContent() {
         </div>
 
         {loading ? (
-          <div className="text-muted-foreground">{content.watchlists.loading}</div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <ListCardSkeleton key={i} />
+            ))}
+          </div>
         ) : publicWatchlists.length > 0 ? (
           <LazyMotion features={domAnimation}>
             <m.div
@@ -587,7 +622,11 @@ export function HomeContent() {
         </div>
 
         {loading ? (
-          <div className="text-muted-foreground">{content.watchlists.loading}</div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <UserCardSkeleton key={i} />
+            ))}
+          </div>
         ) : creators.length > 0 ? (
           <LazyMotion features={domAnimation}>
             <m.div
@@ -625,5 +664,17 @@ export function HomeContent() {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * HomeContent with coordinated page reveal animation.
+ * All sections load in the background, then the page reveals with a smooth animation.
+ */
+export function HomeContent() {
+  return (
+    <PageReveal timeout={4000} minLoadingTime={200} revealDuration={0.5}>
+      <HomeContentInner />
+    </PageReveal>
   );
 }

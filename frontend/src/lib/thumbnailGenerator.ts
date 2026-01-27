@@ -7,6 +7,30 @@ const THUMBNAIL_SIZE = 500; // 500x500 total
 const POSTER_SIZE = 250; // Each poster is 250x250
 
 /**
+ * Generate a content-based cache key from poster paths
+ * This ensures the cache auto-invalidates when items change order
+ * @param watchlistId The watchlist ID
+ * @param posterPaths Array of poster paths (first 4)
+ * @returns Cache key in format "watchlistId_hash"
+ */
+export function getThumbnailCacheKey(watchlistId: string, posterPaths: (string | null | undefined)[]): string {
+  const paths = posterPaths
+    .slice(0, 4)
+    .map(p => p || '')
+    .join('|');
+  // Simple hash: use first 8 chars of base64 encoded string
+  if (typeof btoa !== 'undefined') {
+    try {
+      const hash = btoa(paths).slice(0, 8);
+      return `${watchlistId}_${hash}`;
+    } catch {
+      return `${watchlistId}_${paths.slice(0, 8)}`;
+    }
+  }
+  return `${watchlistId}_${paths.slice(0, 8)}`;
+}
+
+/**
  * Convert TMDB image URL to proxy URL to avoid CORS issues
  * @param tmdbUrl Original TMDB URL (e.g., https://image.tmdb.org/t/p/w342/abc.jpg)
  * @returns Proxied URL through our backend
@@ -114,12 +138,12 @@ export async function generateThumbnailClient(posterUrls: string[]): Promise<str
 
 /**
  * Generate thumbnail and cache it in localStorage
- * @param watchlistId Watchlist ID for caching
+ * @param cacheKey Cache key (e.g., "watchlistId_posterHash")
  * @param posterUrls Array of poster URLs
  * @returns Base64 data URL or null if failed
  */
 export async function generateAndCacheThumbnail(
-  watchlistId: string,
+  cacheKey: string,
   posterUrls: string[]
 ): Promise<string | null> {
   try {
@@ -129,10 +153,10 @@ export async function generateAndCacheThumbnail(
 
     const thumbnailDataUrl = await generateThumbnailClient(posterUrls);
 
-    // Cache in localStorage
-    const cacheKey = `thumbnail_${watchlistId}`;
+    // Cache in localStorage with full cache key
+    const fullCacheKey = `thumbnail_${cacheKey}`;
     try {
-      localStorage.setItem(cacheKey, thumbnailDataUrl);
+      localStorage.setItem(fullCacheKey, thumbnailDataUrl);
     } catch (e) {
       console.warn('Failed to cache thumbnail in localStorage:', e);
       // Continue even if caching fails
@@ -147,13 +171,13 @@ export async function generateAndCacheThumbnail(
 
 /**
  * Get cached thumbnail from localStorage
- * @param watchlistId Watchlist ID
+ * @param cacheKey Cache key (e.g., "watchlistId_posterHash")
  * @returns Cached thumbnail data URL or null
  */
-export function getCachedThumbnail(watchlistId: string): string | null {
+export function getCachedThumbnail(cacheKey: string): string | null {
   try {
-    const cacheKey = `thumbnail_${watchlistId}`;
-    return localStorage.getItem(cacheKey);
+    const fullCacheKey = `thumbnail_${cacheKey}`;
+    return localStorage.getItem(fullCacheKey);
   } catch (e) {
     console.warn('Failed to get cached thumbnail:', e);
     return null;
@@ -161,13 +185,24 @@ export function getCachedThumbnail(watchlistId: string): string | null {
 }
 
 /**
- * Delete cached thumbnail from localStorage
- * @param watchlistId Watchlist ID
+ * Delete cached thumbnail(s) from localStorage
+ * @param watchlistId Watchlist ID - deletes all cache entries for this watchlist
  */
 export function deleteCachedThumbnail(watchlistId: string): void {
   try {
-    const cacheKey = `thumbnail_${watchlistId}`;
-    localStorage.removeItem(cacheKey);
+    const prefix = `thumbnail_${watchlistId}`;
+    // Find and remove all entries that start with this prefix
+    // This handles both old format (thumbnail_id) and new format (thumbnail_id_hash)
+    const keysToDelete: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix)) {
+        keysToDelete.push(key);
+      }
+    }
+    for (const key of keysToDelete) {
+      localStorage.removeItem(key);
+    }
   } catch (e) {
     console.warn('Failed to delete cached thumbnail:', e);
   }

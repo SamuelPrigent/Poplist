@@ -7,26 +7,44 @@ import {
 import { getTMDBImageUrl } from "@/lib/utils";
 
 /**
- * ⚠️ HYBRID THUMBNAIL APPROACH
+ * HYBRID THUMBNAIL APPROACH
  *
- * For ONLINE watchlists (from backend):
- * - Returns Cloudinary-generated thumbnail URL from backend
- * - Benefits: CDN caching, server-side generation, 1 HTTP call
+ * For watchlists the user OWNS (online or offline):
+ * - Generates thumbnail client-side for immediate feedback after reorder
+ * - Uses content-based cache key (posterHash) so cache auto-invalidates
  *
- * For OFFLINE watchlists (localStorage):
- * - Generates thumbnail client-side using Canvas
- * - Caches in localStorage for performance
- * - Automatically regenerates when items change
+ * For watchlists the user does NOT own:
+ * - Uses Cloudinary thumbnail from backend only
+ * - NO local caching to avoid stale thumbnails
  *
- * Priority: custom imageUrl > generated thumbnail (Cloudinary or local) > null
+ * Priority: custom imageUrl > local cache (if owner) > Cloudinary thumbnail
  */
 
 function isOfflineWatchlist(watchlist: Watchlist): boolean {
 	// Offline watchlists have IDs that are not MongoDB ObjectIds
-	// They're typically UUIDs or custom strings like "quick-add"
-	const id = watchlist.id;
 	// MongoDB ObjectIds are 24 hex characters
+	const id = watchlist.id;
 	return !/^[0-9a-fA-F]{24}$/.test(id);
+}
+
+/**
+ * Generate a simple hash from poster paths for cache invalidation
+ */
+function getPosterPathsHash(watchlist: Watchlist): string {
+	const items = watchlist.items ?? [];
+	const paths = items
+		.slice(0, 4)
+		.map((item) => item.posterPath || "")
+		.join("|");
+	// Simple hash: use first 8 chars of base64 encoded string
+	if (typeof btoa !== "undefined") {
+		try {
+			return btoa(paths).slice(0, 8);
+		} catch {
+			return paths.slice(0, 8);
+		}
+	}
+	return paths.slice(0, 8);
 }
 
 export function useListThumbnail(watchlist: Watchlist | null): string | null {
@@ -35,15 +53,22 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 	// Determine if this is an offline watchlist
 	const offline = watchlist ? isOfflineWatchlist(watchlist) : false;
 
-	// For offline watchlists: generate thumbnail if not cached
+	// Determine if user can modify this watchlist (owner or collaborator)
+	// For offline lists, user is always the owner
+	const canModify = watchlist
+		? offline || watchlist.isOwner || watchlist.isCollaborator
+		: false;
+
+	// Generate content-based cache key
+	const posterHash = watchlist ? getPosterPathsHash(watchlist) : "";
+
+	// Generate thumbnail for watchlists the user can modify (for immediate feedback)
 	useEffect(() => {
-		// Early return if watchlist is null or online
-		if (!watchlist || !offline) {
-			setLocalThumbnail(null);
+		// Skip if watchlist is null or user can't modify (visitors use Cloudinary only)
+		if (!watchlist || !canModify) {
 			return;
 		}
 
-		// For offline watchlists: generate and cache thumbnail
 		const items = watchlist.items ?? [];
 		const posterUrls = items
 			.slice(0, 4)
@@ -51,13 +76,16 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 			.filter((url): url is string => url !== null);
 
 		if (posterUrls.length === 0) {
-			setLocalThumbnail(null);
 			return;
 		}
 
+		// Cache key includes poster hash for auto-invalidation when items change
+		const cacheKey = `${watchlist.id}_${posterHash}`;
+
 		// Check cache first
-		const cached = getCachedThumbnail(watchlist.id);
+		const cached = getCachedThumbnail(cacheKey);
 		if (cached) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setLocalThumbnail(cached);
 			return;
 		}
@@ -65,7 +93,7 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 		// Generate new thumbnail
 		let cancelled = false;
 
-		generateAndCacheThumbnail(watchlist.id, posterUrls)
+		generateAndCacheThumbnail(cacheKey, posterUrls)
 			.then((thumbnail) => {
 				if (!cancelled) {
 					setLocalThumbnail(thumbnail);
@@ -73,42 +101,40 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 			})
 			.catch((error) => {
 				console.error("Failed to generate thumbnail:", error);
-				if (!cancelled) {
-					setLocalThumbnail(null);
-				}
 			});
 
 		return () => {
 			cancelled = true;
 		};
-	}, [watchlist?.id, offline, watchlist?.items?.length, watchlist]);
+	}, [watchlist?.id, canModify, posterHash, watchlist]);
 
-	// Return priorities (after hooks have been called)
-	// Handle null watchlist
+	// Reset local thumbnail when user can no longer modify
+	useEffect(() => {
+		if (!canModify) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setLocalThumbnail(null);
+		}
+	}, [canModify]);
+
+	// Return priorities
 	if (!watchlist) {
 		return null;
 	}
 
-	// Priority 1: Custom image
+	// Priority 1: Custom image (user uploaded)
 	if (watchlist.imageUrl) {
 		return watchlist.imageUrl;
 	}
 
-	// Priority 2: Local cached thumbnail (for immediate updates after reorder/move/delete)
-	// Read cache synchronously for instant updates without flickering
-	const cached = getCachedThumbnail(watchlist.id);
-	if (cached) {
-		return cached;
+	// Priority 2: Local cached thumbnail (for owners - immediate feedback after reorder)
+	// Uses content-based key so stale cache is never returned
+	if (canModify && localThumbnail) {
+		return localThumbnail;
 	}
 
-	// Priority 3: Cloudinary thumbnail (online watchlists)
+	// Priority 3: Cloudinary thumbnail (for visitors or fallback)
 	if (watchlist.thumbnailUrl) {
 		return watchlist.thumbnailUrl;
-	}
-
-	// Priority 4: State-based local thumbnail (for offline async generation)
-	if (offline && localThumbnail) {
-		return localThumbnail;
 	}
 
 	return null;

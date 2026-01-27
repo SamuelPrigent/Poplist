@@ -89,13 +89,13 @@ export function UsersContent() {
 
   const totalPages = Math.ceil(creators.length / itemsPerPage);
 
-  // Animation variants
+  // Animation variants - no stagger for performance
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.02,
+        staggerChildren: 0,
         delayChildren: 0,
       },
     },
@@ -129,9 +129,7 @@ export function UsersContent() {
         </div>
 
         {/* Creators grid */}
-        {loading ? (
-          <div className="text-muted-foreground">{content.watchlists.loading}</div>
-        ) : creators.length > 0 ? (
+        {loading ? null : creators.length > 0 ? (
           <>
             <LazyMotion features={domAnimation}>
               <m.div

@@ -39,6 +39,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { useListThumbnail } from "@/hooks/useListThumbnail";
+import { useRegisterSection } from "@/hooks/usePageReady";
 import type { Watchlist } from "@/lib/api-client";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
@@ -217,6 +218,7 @@ export function ListsOfflineContent() {
    const { content } = useLanguageStore();
    const { user } = useAuth();
    const router = useRouter();
+   const { markReady } = useRegisterSection('local-lists');
    const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
    const [loading, setLoading] = useState(true);
    const [dialogOpen, setDialogOpen] = useState(false);
@@ -302,8 +304,9 @@ export function ListsOfflineContent() {
          setWatchlists([]);
       } finally {
          setLoading(false);
+         markReady();
       }
-   }, []);
+   }, [markReady]);
 
    const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
@@ -474,39 +477,20 @@ export function ListsOfflineContent() {
                </EmptyHeader>
             </Empty>
          ) : (
-            <DndContext
-               sensors={sensors}
-               collisionDetection={closestCenter}
-               onDragEnd={handleDragEnd}
-            >
-               <SortableContext items={watchlists.map((w) => w.id)} strategy={rectSortingStrategy}>
-                  <LazyMotion features={domAnimation}>
-                     <m.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={{
-                           hidden: { opacity: 0 },
-                           visible: {
-                              opacity: 1,
-                              transition: {
-                                 staggerChildren: 0.03,
-                                 delayChildren: 0.05,
-                              },
-                           },
-                        }}
-                        className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                     >
+            <LazyMotion features={domAnimation}>
+               <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+               >
+                  <SortableContext items={watchlists.map((w) => w.id)} strategy={rectSortingStrategy}>
+                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {watchlists.map((watchlist) => (
                            <m.div
                               key={watchlist.id}
-                              variants={{
-                                 hidden: { opacity: 0, scale: 0.95 },
-                                 visible: {
-                                    opacity: 1,
-                                    scale: 1,
-                                    transition: { duration: 0.2 },
-                                 },
-                              }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.15 }}
                            >
                               <SortableWatchlistCardOffline
                                  watchlist={watchlist}
@@ -521,10 +505,10 @@ export function ListsOfflineContent() {
                               />
                            </m.div>
                         ))}
-                     </m.div>
-                  </LazyMotion>
-               </SortableContext>
-            </DndContext>
+                     </div>
+                  </SortableContext>
+               </DndContext>
+            </LazyMotion>
          )}
       </div>
    );

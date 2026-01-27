@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { AuthProvider } from "@/context/AuthContext";
+import { runMigrations } from "@/lib/localStorageVersion";
 
 function AuthRedirectHandler({ children }: { children: React.ReactNode }) {
 	// Surveille les changements d'état auth et redirige si nécessaire
@@ -10,11 +12,21 @@ function AuthRedirectHandler({ children }: { children: React.ReactNode }) {
 	return <>{children}</>;
 }
 
+function StorageMigrationHandler({ children }: { children: React.ReactNode }) {
+	useEffect(() => {
+		// Run localStorage migrations on app startup
+		runMigrations();
+	}, []);
+	return <>{children}</>;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
 	return (
-		<AuthProvider>
-			<AuthRedirectHandler>{children}</AuthRedirectHandler>
-			<Toaster />
-		</AuthProvider>
+		<StorageMigrationHandler>
+			<AuthProvider>
+				<AuthRedirectHandler>{children}</AuthRedirectHandler>
+				<Toaster />
+			</AuthProvider>
+		</StorageMigrationHandler>
 	);
 }
