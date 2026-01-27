@@ -83,6 +83,7 @@ export function Navbar() {
 							<>
 								<Link
 									href={isAuthenticated ? "/account/lists" : "/local/lists"}
+									aria-label="Mes listes"
 									className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
 								>
 									<Bookmark
@@ -101,7 +102,7 @@ export function Navbar() {
 												{user?.avatarUrl ? (
 													<Image
 														src={user.avatarUrl}
-														alt={user.username}
+														alt=""
 														width={20}
 														height={20}
 														className="h-full w-full object-cover"
@@ -117,6 +118,7 @@ export function Navbar() {
 											variant="ghost"
 											size="icon"
 											onClick={handleLogout}
+											aria-label="Se déconnecter"
 										>
 											<LogOut className="h-4 w-4" />
 										</Button>

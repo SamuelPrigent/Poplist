@@ -30,7 +30,7 @@ export function UserCard({ user, listCount, content }: UserCardProps) {
         {user.avatarUrl ? (
           <Image
             src={user.avatarUrl}
-            alt={user.username}
+            alt=""
             fill
             sizes="80px"
             className="object-cover"

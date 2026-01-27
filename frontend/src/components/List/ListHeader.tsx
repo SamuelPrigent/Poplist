@@ -166,7 +166,7 @@ export function ListHeader({
                                        {ownerAvatarUrl ? (
                                           <Image
                                              src={ownerAvatarUrl}
-                                             alt={ownerUsername || "Owner"}
+                                             alt=""
                                              width={24}
                                              height={24}
                                              className="h-full w-full object-cover"
@@ -217,7 +217,7 @@ export function ListHeader({
                                                             }
                                                          ).avatarUrl || ""
                                                       }
-                                                      alt={collaborator.username}
+                                                      alt=""
                                                       width={24}
                                                       height={24}
                                                       className="h-full w-full object-cover"

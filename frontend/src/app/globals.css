@@ -262,6 +262,18 @@ img {
     @apply outline-2 outline-offset-2 outline-white transition-all duration-150;
   }
 
+  /* Text inputs get outline when focused via keyboard */
+  input[type='text']:focus-visible,
+  input[type='email']:focus-visible,
+  input[type='password']:focus-visible,
+  input[type='search']:focus-visible,
+  input[type='url']:focus-visible,
+  input[type='tel']:focus-visible,
+  input[type='number']:focus-visible,
+  textarea:focus-visible {
+    @apply outline-2 outline-offset-1 outline-white/70 transition-all duration-150;
+  }
+
   /* Remove focus styles from Command component inputs (year pickers) */
   [cmdk-input-wrapper] input:focus {
     @apply border-transparent shadow-none outline-none;

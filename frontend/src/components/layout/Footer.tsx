@@ -75,25 +75,34 @@ export function Footer() {
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
+            aria-label={`Langue: ${currentLanguage?.name}`}
             className="border-border bg-card text-foreground hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors"
           >
-            <span className={`fi fi-${currentLanguage?.flagCode} h-[15px] text-lg opacity-95`} />
+            <span className={`fi fi-${currentLanguage?.flagCode} h-[15px] text-lg opacity-95`} aria-hidden="true" />
             <span>{currentLanguage?.name}</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
 
           {isOpen && (
-            <div className="border-border bg-card absolute right-0 bottom-full mb-2 w-40 overflow-hidden rounded-md border shadow-lg">
+            <div
+              role="listbox"
+              aria-label="Sélectionner une langue"
+              className="border-border bg-card absolute right-0 bottom-full mb-2 w-40 overflow-hidden rounded-md border shadow-lg"
+            >
               {languages.map(lang => (
                 <button
                   type="button"
                   key={lang.code}
+                  role="option"
+                  aria-selected={lang.code === language}
                   onClick={() => handleLanguageChange(lang.code)}
                   className={`hover:bg-accent flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-sm transition-colors ${
                     lang.code === language ? 'bg-accent text-foreground' : 'text-muted-foreground'
                   }`}
                 >
-                  <span className={`fi fi-${lang.flagCode} h-[15px] opacity-95`} />
+                  <span className={`fi fi-${lang.flagCode} h-[15px] opacity-95`} aria-hidden="true" />
                   <span>{lang.name}</span>
                 </button>
               ))}

@@ -61,7 +61,7 @@ export function UserProfileHeader({
               {user.avatarUrl ? (
                 <Image
                   src={user.avatarUrl}
-                  alt={user.username}
+                  alt=""
                   fill
                   sizes="112px"
                   className="object-cover"

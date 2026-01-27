@@ -303,6 +303,7 @@ function DraggableRow({
                                     className="hover:bg-muted cursor-pointer rounded p-2 transition-colors"
                                     disabled={loadingItem === item.tmdbId}
                                     onClick={(e) => e.stopPropagation()}
+                                    aria-label="Plus d'options"
                                  >
                                     <MoreVertical className="text-muted-foreground h-[18px] w-[18px]" />
                                  </button>

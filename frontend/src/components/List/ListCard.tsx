@@ -273,6 +273,7 @@ export function ListCard({
                               e.stopPropagation();
                            }
                         }}
+                        aria-label="Plus d'options"
                         className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all group-hover:opacity-100 hover:brightness-125 hover:backdrop-brightness-150 focus-visible:opacity-100"
                      >
                         <MoreVertical className="h-4 w-4" />
