@@ -309,13 +309,13 @@ function LandingPageInner() {
                   </p>
                 </div>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="rounded-full bg-linear-to-br from-gray-400/40 to-gray-600/20 p-px aspect-square overflow-hidden">
+                  <div className="rounded-full bg-linear-to-br from-gray-400/40 to-gray-600/20 p-px overflow-hidden">
                     <Image
                       src="/landing/avatar/thomas.jpg"
                       alt={content.landing.testimonials.testimonial2.author}
                       width={40}
                       height={40}
-                      className="rounded-full object-cover"
+                      className="h-10 w-10 rounded-full object-cover"
                     />
                   </div>
                   <div>

@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
     ],
     // Formats modernes
     formats: ['image/avif', 'image/webp'],
+    // Quality levels used in the app
+    qualities: [75, 90],
   },
 
   // Experimental features
