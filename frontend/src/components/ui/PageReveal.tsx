@@ -111,20 +111,6 @@ function PageRevealContent({
               )}
             </AnimatePresence>
 
-            {/* Spinner loader - shows immediately */}
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, delay: 0.1 }}
-              className="absolute left-1/2 top-[250px] z-10 -translate-x-1/2"
-            >
-              <m.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                className="h-8 w-8 rounded-full border-[3px] border-white/20 border-t-white/80"
-              />
-            </m.div>
           </m.div>
         )}
       </AnimatePresence>
@@ -172,6 +158,23 @@ export function PageRevealSimple({
 
 function PageRevealSimpleContent({ children }: { children: ReactNode }) {
   const { isPageReady } = usePageReady();
+  // Only show glow after a delay to avoid flash on fast loads
+  const [showGlow, setShowGlow] = useState(false);
+
+  useEffect(() => {
+    if (isPageReady) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowGlow(true);
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      setShowGlow(false);
+    };
+  }, [isPageReady]);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -183,20 +186,30 @@ function PageRevealSimpleContent({ children }: { children: ReactNode }) {
             transition={{ duration: 0.4 }}
             className="fixed inset-0 z-40 bg-background"
           >
-            <div className="absolute inset-0 overflow-hidden">
-              <m.div
-                animate={{
-                  opacity: [0.03, 0.08, 0.03],
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-r from-violet-500/30 via-blue-500/20 to-violet-500/30 blur-[100px]"
-              />
-            </div>
+            <AnimatePresence>
+              {showGlow && (
+                <m.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0 overflow-hidden"
+                >
+                  <m.div
+                    animate={{
+                      opacity: [0.03, 0.08, 0.03],
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                    className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-r from-violet-500/30 via-blue-500/20 to-violet-500/30 blur-[100px]"
+                  />
+                </m.div>
+              )}
+            </AnimatePresence>
           </m.div>
         )}
       </AnimatePresence>

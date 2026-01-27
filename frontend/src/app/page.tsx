@@ -11,7 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { PageReveal } from '@/components/ui/PageReveal';
+import { PageRevealSimple } from '@/components/ui/PageReveal';
 import { useAuth } from '@/context/auth-context';
 import { useRegisterSection } from '@/hooks/usePageReady';
 import { tmdbAPI } from '@/lib/api-client';
@@ -467,8 +467,8 @@ function LandingPageInner() {
 
 export default function LandingPage() {
   return (
-    <PageReveal timeout={3000} minLoadingTime={150} revealDuration={0.5}>
+    <PageRevealSimple timeout={3000} minLoadingTime={150}>
       <LandingPageInner />
-    </PageReveal>
+    </PageRevealSimple>
   );
 }
