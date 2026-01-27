@@ -1,12 +1,11 @@
 "use client";
 
 import { ArrowLeft, Film } from "lucide-react";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
-import { PageReveal } from "@/components/ui/PageReveal";
 import { useAuth } from "@/context/auth-context";
-import { useRegisterSection } from "@/hooks/usePageReady";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { type GenreCategory, getCategoryInfo } from "@/types/categories";
@@ -14,13 +13,23 @@ import { type GenreCategory, getCategoryInfo } from "@/types/categories";
 // Unified header color - blue for all categories
 const CATEGORY_HEADER_COLOR = "#11314475";
 
+// Skeleton component
+const ListCardSkeleton = () => (
+   <div className="bg-muted/30 rounded-lg p-2">
+      <div className="bg-muted/50 aspect-square w-full rounded-md" />
+      <div className="mt-3 space-y-2">
+         <div className="bg-muted/50 h-4 w-3/4 rounded" />
+         <div className="bg-muted/50 h-3 w-1/2 rounded" />
+      </div>
+   </div>
+);
+
 function CategoryDetailPageInner() {
    const params = useParams();
    const id = params.id as string;
    const { content } = useLanguageStore();
    const { user } = useAuth();
    const router = useRouter();
-   const { markReady } = useRegisterSection('category-watchlists');
 
    const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
    const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
@@ -54,12 +63,11 @@ function CategoryDetailPageInner() {
             console.error("Failed to fetch category watchlists:", error);
          } finally {
             setLoading(false);
-            markReady();
          }
       };
 
       fetchData();
-   }, [id, user, markReady]);
+   }, [id, user]);
 
    if (!categoryInfo) {
       return (
@@ -114,7 +122,13 @@ function CategoryDetailPageInner() {
          <div className="relative w-full">
             <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4">
                {/* Watchlists Grid */}
-               {loading ? null : watchlists.length > 0 ? (
+               {loading ? (
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                     {Array.from({ length: 5 }).map((_, i) => (
+                        <ListCardSkeleton key={i} />
+                     ))}
+                  </div>
+               ) : watchlists.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
                      {watchlists.map((watchlist) => {
                         // Calculate isOwner by comparing user email with watchlist owner email
@@ -158,8 +172,14 @@ function CategoryDetailPageInner() {
 
 export default function CategoryDetailPage() {
    return (
-      <PageReveal timeout={3000} minLoadingTime={100} revealDuration={0.3}>
-         <CategoryDetailPageInner />
-      </PageReveal>
+      <LazyMotion features={domAnimation}>
+         <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+         >
+            <CategoryDetailPageInner />
+         </m.div>
+      </LazyMotion>
    );
 }

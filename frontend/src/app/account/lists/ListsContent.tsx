@@ -19,6 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Film, Plus } from "lucide-react";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
@@ -35,12 +36,21 @@ import {
    EmptyMedia,
    EmptyTitle,
 } from "@/components/ui/empty";
-import { PageReveal } from "@/components/ui/PageReveal";
 import type { Watchlist } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
-import { useRegisterSection } from "@/hooks/usePageReady";
 import { useLanguageStore } from "@/store/language";
 import { useListFiltersStore } from "@/store/listFilters";
+
+// Skeleton component
+const ListCardSkeleton = () => (
+   <div className="bg-muted/30 rounded-lg p-2">
+      <div className="bg-muted/50 aspect-square w-full rounded-md" />
+      <div className="mt-3 space-y-2">
+         <div className="bg-muted/50 h-4 w-3/4 rounded" />
+         <div className="bg-muted/50 h-3 w-1/2 rounded" />
+      </div>
+   </div>
+);
 
 interface SortableWatchlistCardProps {
    watchlist: Watchlist;
@@ -102,9 +112,6 @@ function ListsContentInner() {
    const router = useRouter();
    const { showOwned, showSaved, toggleOwned, toggleSaved } = useListFiltersStore();
 
-   // Register section for coordinated loading
-   const { markReady } = useRegisterSection('user-watchlists');
-
    const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
    const [loading, setLoading] = useState(true);
    const [dialogOpen, setDialogOpen] = useState(false);
@@ -137,7 +144,7 @@ function ListsContentInner() {
       })
    );
 
-   const fetchWatchlists = useCallback(async (showLoading = true, shouldMarkReady = true) => {
+   const fetchWatchlists = useCallback(async (showLoading = true) => {
       try {
          if (showLoading) {
             setLoading(true);
@@ -150,11 +157,8 @@ function ListsContentInner() {
          if (showLoading) {
             setLoading(false);
          }
-         if (shouldMarkReady) {
-            markReady();
-         }
       }
-   }, [markReady]);
+   }, []);
 
    const handleDragEnd = async (event: DragEndEvent) => {
       const { active, over } = event;
@@ -187,13 +191,13 @@ function ListsContentInner() {
          // Optimistic update: add new watchlist to the beginning immediately
          setWatchlists((prev) => [newWatchlist, ...prev]);
 
-         // Fetch in background to sync with server (don't show loading spinner, don't trigger markReady again)
-         fetchWatchlists(false, false).catch((error) => {
+         // Fetch in background to sync with server (don't show loading spinner)
+         fetchWatchlists(false).catch((error) => {
             console.error("Failed to sync watchlists:", error);
          });
       } else {
-         // Fallback: full refetch with loading spinner (don't trigger markReady again)
-         await fetchWatchlists(true, false);
+         // Fallback: full refetch with loading spinner
+         await fetchWatchlists(true);
       }
    };
 
@@ -283,7 +287,13 @@ function ListsContentInner() {
             </>
          )}
 
-         {loading ? null : filteredWatchlists.length === 0 ? (
+         {loading ? (
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+               {Array.from({ length: 10 }).map((_, i) => (
+                  <ListCardSkeleton key={i} />
+               ))}
+            </div>
+         ) : filteredWatchlists.length === 0 ? (
             <Empty>
                <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -313,7 +323,7 @@ function ListsContentInner() {
                items={filteredWatchlists.map((w) => w.id)}
                strategy={rectSortingStrategy}
             >
-               {/* Grid without individual item animations - PageReveal handles reveal */}
+               {/* Grid */}
                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {filteredWatchlists.map((watchlist, index) => (
                      <SortableWatchlistCard
@@ -340,8 +350,14 @@ function ListsContentInner() {
 
 export function ListsContent() {
    return (
-      <PageReveal timeout={3000} minLoadingTime={100} revealDuration={0.3}>
-         <ListsContentInner />
-      </PageReveal>
+      <LazyMotion features={domAnimation}>
+         <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+         >
+            <ListsContentInner />
+         </m.div>
+      </LazyMotion>
    );
 }

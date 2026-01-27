@@ -20,6 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronRight, Database, Edit, Film, MoreVertical, Plus, Trash2 } from "lucide-react";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -38,7 +39,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { useListThumbnail } from "@/hooks/useListThumbnail";
-import { useRegisterSection } from "@/hooks/usePageReady";
 import type { Watchlist } from "@/lib/api-client";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
@@ -213,11 +213,21 @@ function SortableWatchlistCardOffline({
    );
 }
 
-export function ListsOfflineContent() {
+// Skeleton component
+const ListCardSkeleton = () => (
+   <div className="bg-muted/30 rounded-lg p-2">
+      <div className="bg-muted/50 aspect-square w-full rounded-md" />
+      <div className="mt-3 space-y-2">
+         <div className="bg-muted/50 h-4 w-3/4 rounded" />
+         <div className="bg-muted/50 h-3 w-1/2 rounded" />
+      </div>
+   </div>
+);
+
+function ListsOfflineContentInner() {
    const { content } = useLanguageStore();
    const { user } = useAuth();
    const router = useRouter();
-   const { markReady } = useRegisterSection('local-lists');
    const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
    const [loading, setLoading] = useState(true);
    const [dialogOpen, setDialogOpen] = useState(false);
@@ -303,9 +313,8 @@ export function ListsOfflineContent() {
          setWatchlists([]);
       } finally {
          setLoading(false);
-         markReady();
       }
-   }, [markReady]);
+   }, []);
 
    const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
@@ -351,10 +360,15 @@ export function ListsOfflineContent() {
 
    if (loading) {
       return (
-         <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-            <h1 className="mb-8 text-3xl font-bold text-white">{content.watchlists.title}</h1>
-            <div className="flex items-center justify-center py-12">
-               <div className="text-muted-foreground">{content.watchlists.loading}</div>
+         <div className="container mx-auto mb-32 min-h-[80vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
+            <div className="mt-9 mb-3">
+               <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>
+            </div>
+            <div className="mb-7 h-8" /> {/* Placeholder for badge */}
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+               {Array.from({ length: 8 }).map((_, i) => (
+                  <ListCardSkeleton key={i} />
+               ))}
             </div>
          </div>
       );
@@ -502,5 +516,19 @@ export function ListsOfflineContent() {
             </DndContext>
          )}
       </div>
+   );
+}
+
+export function ListsOfflineContent() {
+   return (
+      <LazyMotion features={domAnimation}>
+         <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+         >
+            <ListsOfflineContentInner />
+         </m.div>
+      </LazyMotion>
    );
 }

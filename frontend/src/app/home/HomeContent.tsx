@@ -12,11 +12,9 @@ import { ListCard } from '@/components/List/ListCard';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { ListCardSmall } from '@/components/List/ListCardSmall';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
-import { PageReveal } from '@/components/ui/PageReveal';
 import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
-import { useRegisterSection } from '@/hooks/usePageReady';
 import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 // import { MoviePoster } from '@/components/Home/MoviePoster';
@@ -64,17 +62,17 @@ function HomeContentInner() {
   //   const tmdbLanguage = getTMDBLanguage(language);
   //   const tmdbRegion = getTMDBRegion(language);
 
-  // Register sections for coordinated loading
-  const { markReady: markPublicReady } = useRegisterSection('public-watchlists');
-  const { markReady: markCreatorsReady } = useRegisterSection('creators');
-  const { markReady: markCategoriesReady } = useRegisterSection('categories');
-
+  const [mounted, setMounted] = useState(false);
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [publicWatchlists, setPublicWatchlists] = useState<Watchlist[]>([]);
   const [recommendations, setRecommendations] = useState<DiscoverItem[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   //   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -147,14 +145,10 @@ function HomeContentInner() {
     const fetchData = async () => {
       try {
         // Fetch public watchlists and creators in parallel
-        const [publicResult, creatorsResult] = await Promise.allSettled([
+        await Promise.allSettled([
           fetchPublicWatchlists(),
           fetchCreators(),
         ]);
-
-        // Mark sections ready as they complete
-        if (publicResult.status === 'fulfilled') markPublicReady();
-        if (creatorsResult.status === 'fulfilled') markCreatorsReady();
 
         let userWatchlistsData: Watchlist[] = [];
         if (user) {
@@ -238,28 +232,15 @@ function HomeContentInner() {
           })
         );
         setCategoryCounts(counts);
-        markCategoriesReady();
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        // Mark all sections ready even on error to prevent infinite loading
-        markPublicReady();
-        markCreatorsReady();
-        markCategoriesReady();
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [
-    user,
-    fetchPublicWatchlists,
-    fetchCreators,
-    language,
-    markPublicReady,
-    markCreatorsReady,
-    markCategoriesReady,
-  ]);
+  }, [user, fetchPublicWatchlists, fetchCreators, language]);
 
   const handleOpenDetails = (item: DiscoverItem, index: number) => {
     setSelectedItem({
@@ -299,11 +280,12 @@ function HomeContentInner() {
 
   const safeRecommendations = useMemo(() => recommendations.slice(0, 5), [recommendations]);
 
-  const listsUrl = user ? '/account/lists' : '/local/lists';
+  // Use /local/lists by default for SSR to avoid hydration mismatch
+  const listsUrl = mounted && user ? '/account/lists' : '/local/lists';
 
   // Skeleton components with dark background matching card styles
   const ListCardSkeleton = () => (
-    <div className="bg-muted/30 animate-pulse rounded-lg p-2">
+    <div className="bg-muted/30 rounded-lg p-2">
       <div className="bg-muted/50 aspect-square w-full rounded-md" />
       <div className="mt-3 space-y-2">
         <div className="bg-muted/50 h-4 w-3/4 rounded" />
@@ -312,38 +294,28 @@ function HomeContentInner() {
     </div>
   );
 
+  const ListCardSmallSkeleton = () => (
+    <div className="bg-muted/30 flex w-full items-center gap-3 overflow-hidden rounded-lg p-3">
+      <div className="bg-muted/50 h-16 w-16 shrink-0 rounded-md" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="bg-muted/50 h-4 w-3/4 rounded" />
+        <div className="bg-muted/50 h-3 w-1/3 rounded" />
+      </div>
+    </div>
+  );
+
   const UserCardSkeleton = () => (
-    <div className="bg-muted/30 flex animate-pulse flex-col items-center gap-3 rounded-lg p-5">
+    <div className="bg-muted/30 flex flex-col items-center gap-3 rounded-lg p-5">
       <div className="bg-muted/50 h-20 w-20 rounded-full" />
       <div className="bg-muted/50 h-4 w-24 rounded" />
       <div className="bg-muted/50 h-3 w-16 rounded" />
     </div>
   );
 
-  // Animation variants - ultra léger
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.0005,
-        delayChildren: 0,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.15 },
-    },
-  };
-
   return (
     <div className="bg-background min-h-screen pb-20">
       {/* My Watchlists - Library Section */}
-      {userWatchlists.length > 0 && (
+      {(loading || userWatchlists.length > 0) && (
         <Section className="pb-5">
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -358,31 +330,27 @@ function HomeContentInner() {
             </Link>
           </div>
 
-          <LazyMotion features={domAnimation}>
-            <m.div
-              key={userWatchlists
-                .slice(0, 4)
-                .map(w => w.id)
-                .join('-')}
-              initial="hidden"
-              animate="visible"
-              variants={containerVariants}
-              className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4"
-            >
-              {userWatchlists.slice(0, 4).map(watchlist => (
-                <m.div key={watchlist.id} variants={itemVariants}>
-                  <ListCardSmall
-                    watchlist={watchlist}
-                    onClick={() => {
-                      window.location.href = user
-                        ? `/lists/${watchlist.id}`
-                        : `/local/list/${watchlist.id}`;
-                    }}
-                  />
-                </m.div>
+          {loading ? (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <ListCardSmallSkeleton key={i} />
               ))}
-            </m.div>
-          </LazyMotion>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+              {userWatchlists.slice(0, 4).map(watchlist => (
+                <ListCardSmall
+                  key={watchlist.id}
+                  watchlist={watchlist}
+                  onClick={() => {
+                    window.location.href = user
+                      ? `/lists/${watchlist.id}`
+                      : `/local/list/${watchlist.id}`;
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </Section>
       )}
 
@@ -475,43 +443,31 @@ function HomeContentInner() {
             ))}
           </div>
         ) : publicWatchlists.length > 0 ? (
-          <LazyMotion features={domAnimation}>
-            <m.div
-              key={publicWatchlists
-                .slice(0, 10)
-                .map(w => w.id)
-                .join('-')}
-              initial="hidden"
-              animate="visible"
-              variants={containerVariants}
-              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
-            >
-              {publicWatchlists.slice(0, 10).map((watchlist, index) => {
-                const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
-                const isOwner = userWatchlist?.isOwner ?? false;
-                const isCollaborator = userWatchlist?.isCollaborator ?? false;
-                const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {publicWatchlists.slice(0, 10).map((watchlist, index) => {
+              const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
+              const isOwner = userWatchlist?.isOwner ?? false;
+              const isCollaborator = userWatchlist?.isCollaborator ?? false;
+              const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
 
-                const showSavedBadge = !isOwner && !isCollaborator && isSaved;
-                const showCollaborativeBadge = isCollaborator;
+              const showSavedBadge = !isOwner && !isCollaborator && isSaved;
+              const showCollaborativeBadge = isCollaborator;
 
-                return (
-                  <m.div key={watchlist.id} variants={itemVariants}>
-                    <ListCard
-                      watchlist={watchlist}
-                      content={content}
-                      href={`/lists/${watchlist.id}`}
-                      showMenu={false}
-                      showOwner={true}
-                      showSavedBadge={showSavedBadge}
-                      showCollaborativeBadge={showCollaborativeBadge}
-                      priority={index < 5}
-                    />
-                  </m.div>
-                );
-              })}
-            </m.div>
-          </LazyMotion>
+              return (
+                <ListCard
+                  key={watchlist.id}
+                  watchlist={watchlist}
+                  content={content}
+                  href={`/lists/${watchlist.id}`}
+                  showMenu={false}
+                  showOwner={true}
+                  showSavedBadge={showSavedBadge}
+                  showCollaborativeBadge={showCollaborativeBadge}
+                  priority={index < 5}
+                />
+              );
+            })}
+          </div>
         ) : (
           <div className="border-border bg-card rounded-lg border p-12 text-center">
             <Film strokeWidth={1.4} className="text-muted-foreground mx-auto h-16 w-16" />
@@ -544,21 +500,11 @@ function HomeContentInner() {
             ))}
           </div>
         ) : creators.length > 0 ? (
-          <LazyMotion features={domAnimation}>
-            <m.div
-              key={creators.map(c => c.id).join('-')}
-              initial="hidden"
-              animate="visible"
-              variants={containerVariants}
-              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
-            >
-              {creators.map(creator => (
-                <m.div key={creator.id} variants={itemVariants}>
-                  <UserCard user={creator} listCount={creator.listCount} content={content} />
-                </m.div>
-              ))}
-            </m.div>
-          </LazyMotion>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {creators.map(creator => (
+              <UserCard key={creator.id} user={creator} listCount={creator.listCount} content={content} />
+            ))}
+          </div>
         ) : null}
       </Section>
 
@@ -584,13 +530,19 @@ function HomeContentInner() {
 }
 
 /**
- * HomeContent with coordinated page reveal animation.
- * All sections load in the background, then the page reveals with a smooth animation.
+ * HomeContent with instant page reveal animation.
+ * Skeletons show during loading, then content fades in smoothly.
  */
 export function HomeContent() {
   return (
-    <PageReveal timeout={4000} minLoadingTime={200} revealDuration={0.5}>
-      <HomeContentInner />
-    </PageReveal>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
+        <HomeContentInner />
+      </m.div>
+    </LazyMotion>
   );
 }

@@ -12,6 +12,15 @@ import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 40;
 
+// Skeleton component
+const UserCardSkeleton = () => (
+  <div className="bg-muted/30 flex flex-col items-center gap-3 rounded-lg p-5">
+    <div className="bg-muted/50 h-20 w-20 rounded-full" />
+    <div className="bg-muted/50 h-4 w-24 rounded" />
+    <div className="bg-muted/50 h-3 w-16 rounded" />
+  </div>
+);
+
 interface Creator {
   id: string;
   username: string;
@@ -19,7 +28,7 @@ interface Creator {
   listCount: number;
 }
 
-export function UsersContent() {
+function UsersContentInner() {
   const { content } = useLanguageStore();
   const router = useRouter();
   const [creators, setCreators] = useState<Creator[]>([]);
@@ -89,26 +98,6 @@ export function UsersContent() {
 
   const totalPages = Math.ceil(creators.length / itemsPerPage);
 
-  // Animation variants - no stagger for performance
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0,
-        delayChildren: 0,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.15 },
-    },
-  };
-
   return (
     <div className="bg-background min-h-screen pb-20">
       <Section className="pt-6">
@@ -129,23 +118,19 @@ export function UsersContent() {
         </div>
 
         {/* Creators grid */}
-        {loading ? null : creators.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <UserCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : creators.length > 0 ? (
           <>
-            <LazyMotion features={domAnimation}>
-              <m.div
-                key={`page-${currentPage}`}
-                initial="hidden"
-                animate="visible"
-                variants={containerVariants}
-                className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
-              >
-                {paginatedCreators.map(creator => (
-                  <m.div key={creator.id} variants={itemVariants}>
-                    <UserCard user={creator} listCount={creator.listCount} content={content} />
-                  </m.div>
-                ))}
-              </m.div>
-            </LazyMotion>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {paginatedCreators.map(creator => (
+                <UserCard key={creator.id} user={creator} listCount={creator.listCount} content={content} />
+              ))}
+            </div>
 
             {/* Pagination - only show if more than 40 items */}
             {creators.length > ITEMS_PER_PAGE_DEFAULT && (
@@ -170,5 +155,19 @@ export function UsersContent() {
         )}
       </Section>
     </div>
+  );
+}
+
+export function UsersContent() {
+  return (
+    <LazyMotion features={domAnimation}>
+      <m.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
+        <UsersContentInner />
+      </m.div>
+    </LazyMotion>
   );
 }

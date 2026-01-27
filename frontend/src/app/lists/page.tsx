@@ -1,24 +1,33 @@
 'use client';
 
 import { Film } from 'lucide-react';
+import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { PageReveal } from '@/components/ui/PageReveal';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
-import { useRegisterSection } from '@/hooks/usePageReady';
 import { type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 30; // 6 rows of 5 cards
 
+// Skeleton component
+const ListCardSkeleton = () => (
+  <div className="bg-muted/30 rounded-lg p-2">
+    <div className="bg-muted/50 aspect-square w-full rounded-md" />
+    <div className="mt-3 space-y-2">
+      <div className="bg-muted/50 h-4 w-3/4 rounded" />
+      <div className="bg-muted/50 h-3 w-1/2 rounded" />
+    </div>
+  </div>
+);
+
 function CommunityListsPageInner() {
   const { content } = useLanguageStore();
   const { user } = useAuth();
   const router = useRouter();
-  const { markReady } = useRegisterSection('community-lists');
 
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
@@ -53,9 +62,8 @@ function CommunityListsPageInner() {
       console.error('Failed to fetch community watchlists:', error);
     } finally {
       setLoading(false);
-      markReady();
     }
-  }, [markReady]);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,7 +104,13 @@ function CommunityListsPageInner() {
         />
 
         {/* Watchlists Grid */}
-        {loading ? null : watchlists.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <ListCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : watchlists.length > 0 ? (
           <>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {paginatedWatchlists.map(watchlist => {
@@ -156,8 +170,14 @@ function CommunityListsPageInner() {
 
 export default function CommunityListsPage() {
   return (
-    <PageReveal timeout={3000} minLoadingTime={100} revealDuration={0.3}>
-      <CommunityListsPageInner />
-    </PageReveal>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
+        <CommunityListsPageInner />
+      </m.div>
+    </LazyMotion>
   );
 }

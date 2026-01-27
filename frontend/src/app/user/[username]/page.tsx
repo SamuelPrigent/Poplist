@@ -1,5 +1,6 @@
 "use client";
 
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
@@ -12,17 +13,39 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { PageReveal } from "@/components/ui/PageReveal";
-import { useRegisterSection } from "@/hooks/usePageReady";
 import type { Watchlist } from "@/lib/api-client";
 import { userAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
+
+// Skeleton components
+const ListCardSkeleton = () => (
+	<div className="bg-muted/30 rounded-lg p-2">
+		<div className="bg-muted/50 aspect-square w-full rounded-md" />
+		<div className="mt-3 space-y-2">
+			<div className="bg-muted/50 h-4 w-3/4 rounded" />
+			<div className="bg-muted/50 h-3 w-1/2 rounded" />
+		</div>
+	</div>
+);
+
+const ProfileHeaderSkeleton = () => (
+	<div className="relative h-[200px] w-full overflow-hidden bg-muted/20">
+		<div className="container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) items-end px-4 pb-6">
+			<div className="flex items-center gap-4">
+				<div className="bg-muted/50 h-20 w-20 rounded-full" />
+				<div className="space-y-2">
+					<div className="bg-muted/50 h-6 w-32 rounded" />
+					<div className="bg-muted/50 h-4 w-24 rounded" />
+				</div>
+			</div>
+		</div>
+	</div>
+);
 
 function UserProfilePageInner() {
 	const params = useParams();
 	const router = useRouter();
 	const { content } = useLanguageStore();
-	const { markReady } = useRegisterSection('user-profile');
 
 	const username = params.username as string;
 
@@ -55,16 +78,27 @@ function UserProfilePageInner() {
 			setNotFound(true);
 		} finally {
 			setLoading(false);
-			markReady();
 		}
-	}, [username, router, markReady]);
+	}, [username, router]);
 
 	useEffect(() => {
 		fetchUserProfile();
 	}, [fetchUserProfile]);
 
 	if (loading) {
-		return null;
+		return (
+			<div className="bg-background min-h-screen pb-24">
+				<ProfileHeaderSkeleton />
+				<div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8 pt-10 pb-16">
+					<div className="bg-muted/50 mb-7 h-7 w-40 rounded" />
+					<div className="grid grid-cols-1 gap-6 sm:grid-cols-3 xl:grid-cols-5">
+						{Array.from({ length: 5 }).map((_, i) => (
+							<ListCardSkeleton key={i} />
+						))}
+					</div>
+				</div>
+			</div>
+		);
 	}
 
 	if (notFound || !user) {
@@ -156,8 +190,14 @@ function UserProfilePageInner() {
 
 export default function UserProfilePage() {
 	return (
-		<PageReveal timeout={3000} minLoadingTime={100} revealDuration={0.3}>
-			<UserProfilePageInner />
-		</PageReveal>
+		<LazyMotion features={domAnimation}>
+			<m.div
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				transition={{ duration: 0.4, ease: "easeOut" }}
+			>
+				<UserProfilePageInner />
+			</m.div>
+		</LazyMotion>
 	);
 }

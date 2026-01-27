@@ -137,6 +137,30 @@ export async function generateThumbnailClient(posterUrls: string[]): Promise<str
 }
 
 /**
+ * Clean up old thumbnails from localStorage to free space
+ * Removes half of the oldest thumbnails
+ */
+function cleanupOldThumbnails(): void {
+  try {
+    const thumbnailKeys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('thumbnail_')) {
+        thumbnailKeys.push(key);
+      }
+    }
+
+    // Remove half of the thumbnails (oldest first based on key order)
+    const toRemove = Math.max(1, Math.floor(thumbnailKeys.length / 2));
+    for (let i = 0; i < toRemove; i++) {
+      localStorage.removeItem(thumbnailKeys[i]);
+    }
+  } catch (e) {
+    // Silently fail
+  }
+}
+
+/**
  * Generate thumbnail and cache it in localStorage
  * @param cacheKey Cache key (e.g., "watchlistId_posterHash")
  * @param posterUrls Array of poster URLs
@@ -158,8 +182,16 @@ export async function generateAndCacheThumbnail(
     try {
       localStorage.setItem(fullCacheKey, thumbnailDataUrl);
     } catch (e) {
-      console.warn('Failed to cache thumbnail in localStorage:', e);
-      // Continue even if caching fails
+      // If quota exceeded, cleanup old thumbnails and retry once
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        cleanupOldThumbnails();
+        try {
+          localStorage.setItem(fullCacheKey, thumbnailDataUrl);
+        } catch {
+          // Still failed, skip caching silently
+        }
+      }
+      // Don't log warning for quota errors as we handle them
     }
 
     return thumbnailDataUrl;

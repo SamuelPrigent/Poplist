@@ -11,9 +11,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { PageRevealSimple } from '@/components/ui/PageReveal';
+import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useAuth } from '@/context/auth-context';
-import { useRegisterSection } from '@/hooks/usePageReady';
 import { tmdbAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 
@@ -36,9 +35,6 @@ function LandingPageInner() {
   const [trending, setTrending] = useState<TrendingItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
-  // Register section for coordinated loading
-  const { markReady } = useRegisterSection('landing-content');
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -47,6 +43,7 @@ function LandingPageInner() {
   // Utilise /local/lists par défaut côté SSR pour éviter hydration mismatch
   const watchlistsUrl = mounted && isAuthenticated ? '/account/lists' : '/local/lists';
 
+  // Fetch trending in background - doesn't block page reveal
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -54,14 +51,11 @@ function LandingPageInner() {
         setTrending(trendingData.results || []);
       } catch (error) {
         console.error('Failed to fetch trending:', error);
-      } finally {
-        // Mark ready whether fetch succeeded or not
-        markReady();
       }
     };
 
     fetchData();
-  }, [markReady]);
+  }, []);
 
   return (
     <div className="bg-background min-h-screen overflow-hidden">
@@ -467,8 +461,14 @@ function LandingPageInner() {
 
 export default function LandingPage() {
   return (
-    <PageRevealSimple timeout={3000} minLoadingTime={150}>
-      <LandingPageInner />
-    </PageRevealSimple>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
+        <LandingPageInner />
+      </m.div>
+    </LazyMotion>
   );
 }
