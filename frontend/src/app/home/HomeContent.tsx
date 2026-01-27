@@ -251,65 +251,15 @@ function HomeContentInner() {
     };
 
     fetchData();
-  }, [user, fetchPublicWatchlists, fetchCreators, language, markPublicReady, markCreatorsReady, markCategoriesReady]);
-
-  //   const handleAddToWatchlist = async (watchlistId: string, item: DiscoverItem) => {
-  //     try {
-  //       setAddingTo(item.id);
-
-  //       if (user) {
-  //         await watchlistAPI.addItem(watchlistId, {
-  //           tmdbId: item.id.toString(),
-  //           mediaType: item.media_type || 'movie',
-  //           language: tmdbLanguage,
-  //           region: tmdbRegion,
-  //         });
-  //       } else {
-  //         const localWatchlists = localStorage.getItem('watchlists');
-  //         if (localWatchlists) {
-  //           const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-  //           const watchlistIndex = watchlists.findIndex(w => w.id === watchlistId);
-
-  //           if (watchlistIndex !== -1) {
-  //             const itemExists = watchlists[watchlistIndex].items.some(
-  //               existingItem => existingItem.tmdbId === item.id
-  //             );
-
-  //             if (!itemExists) {
-  //               const type = item.media_type || 'movie';
-
-  //               const [platformList, mediaDetails] = await Promise.all([
-  //                 watchlistAPI.fetchTMDBProviders(item.id.toString(), type, tmdbRegion),
-  //                 watchlistAPI.getItemDetails(item.id.toString(), type, tmdbLanguage),
-  //               ]);
-
-  //               const newItem = {
-  //                 tmdbId: item.id,
-  //                 title: item.title || item.name || '',
-  //                 posterPath: item.poster_path || null,
-  //                 mediaType: type as 'movie' | 'tv',
-  //                 platformList,
-  //                 runtime: mediaDetails.details.runtime,
-  //                 addedAt: new Date().toISOString(),
-  //               };
-
-  //               watchlists[watchlistIndex].items.push(newItem);
-  //               watchlists[watchlistIndex].updatedAt = new Date().toISOString();
-  //               localStorage.setItem('watchlists', JSON.stringify(watchlists));
-  //               deleteCachedThumbnail(watchlistId);
-
-  //               const updatedWatchlists = getLocalWatchlistsWithOwnership();
-  //               setUserWatchlists(updatedWatchlists);
-  //             }
-  //           }
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error('Failed to add to watchlist:', error);
-  //     } finally {
-  //       setAddingTo(null);
-  //     }
-  //   };
+  }, [
+    user,
+    fetchPublicWatchlists,
+    fetchCreators,
+    language,
+    markPublicReady,
+    markCreatorsReady,
+    markCategoriesReady,
+  ]);
 
   const handleOpenDetails = (item: DiscoverItem, index: number) => {
     setSelectedItem({
@@ -350,40 +300,6 @@ function HomeContentInner() {
   const safeRecommendations = useMemo(() => recommendations.slice(0, 5), [recommendations]);
 
   const listsUrl = user ? '/account/lists' : '/local/lists';
-
-  // Helper function to create mock watchlist for test sections
-  //   const createMockWatchlist = (category: FeaturedCategory): Watchlist => {
-  //     const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
-  //     const placeholderItems: WatchlistItem[] = Array.from(
-  //       { length: category.itemCount },
-  //       (_, idx) => ({
-  //         tmdbId: idx,
-  //         title: category.name,
-  //         posterPath: null,
-  //         mediaType: 'movie' as const,
-  //         platformList: [],
-  //         addedAt: placeholderTimestamp,
-  //       })
-  //     );
-  //     return {
-  //       id: category.id,
-  //       ownerId: 'featured',
-  //       owner: {
-  //         id: 'featured',
-  //         email: 'featured@poplist.app',
-  //         username: category.username,
-  //       },
-  //       name: category.name,
-  //       description: category.description,
-  //       imageUrl: '',
-  //       isPublic: true,
-  //       collaborators: [],
-  //       items: placeholderItems,
-  //       createdAt: placeholderTimestamp,
-  //       updatedAt: placeholderTimestamp,
-  //       likedBy: [],
-  //     };
-  //   };
 
   // Skeleton components with dark background matching card styles
   const ListCardSkeleton = () => (

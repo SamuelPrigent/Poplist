@@ -20,7 +20,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronRight, Database, Edit, Film, MoreVertical, Plus, Trash2 } from "lucide-react";
-import { domAnimation, LazyMotion, m } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -477,38 +476,30 @@ export function ListsOfflineContent() {
                </EmptyHeader>
             </Empty>
          ) : (
-            <LazyMotion features={domAnimation}>
-               <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-               >
-                  <SortableContext items={watchlists.map((w) => w.id)} strategy={rectSortingStrategy}>
-                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {watchlists.map((watchlist) => (
-                           <m.div
-                              key={watchlist.id}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.15 }}
-                           >
-                              <SortableWatchlistCardOffline
-                                 watchlist={watchlist}
-                                 onEdit={(wl) => {
-                                    setSelectedWatchlist(wl);
-                                    setEditDialogOpen(true);
-                                 }}
-                                 onDelete={(wl) => {
-                                    setSelectedWatchlist(wl);
-                                    setDeleteDialogOpen(true);
-                                 }}
-                              />
-                           </m.div>
-                        ))}
-                     </div>
-                  </SortableContext>
-               </DndContext>
-            </LazyMotion>
+            <DndContext
+               sensors={sensors}
+               collisionDetection={closestCenter}
+               onDragEnd={handleDragEnd}
+            >
+               <SortableContext items={watchlists.map((w) => w.id)} strategy={rectSortingStrategy}>
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                     {watchlists.map((watchlist) => (
+                        <SortableWatchlistCardOffline
+                           key={watchlist.id}
+                           watchlist={watchlist}
+                           onEdit={(wl) => {
+                              setSelectedWatchlist(wl);
+                              setEditDialogOpen(true);
+                           }}
+                           onDelete={(wl) => {
+                              setSelectedWatchlist(wl);
+                              setDeleteDialogOpen(true);
+                           }}
+                        />
+                     ))}
+                  </div>
+               </SortableContext>
+            </DndContext>
          )}
       </div>
    );

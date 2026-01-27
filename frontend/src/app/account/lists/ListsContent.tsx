@@ -19,7 +19,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Film, Plus } from "lucide-react";
-import { domAnimation, LazyMotion, m } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
@@ -108,8 +107,6 @@ function ListsContentInner() {
 
    const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
    const [loading, setLoading] = useState(true);
-   // Track if initial load is done (for cascade vs pop animation)
-   const [initialLoadDone, setInitialLoadDone] = useState(false);
    const [dialogOpen, setDialogOpen] = useState(false);
    const [editDialogOpen, setEditDialogOpen] = useState(false);
    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -155,8 +152,6 @@ function ListsContentInner() {
          }
          if (shouldMarkReady) {
             markReady();
-            // Mark initial load as done after PageReveal animation completes
-            setTimeout(() => setInitialLoadDone(true), 100);
          }
       }
    }, [markReady]);
@@ -309,61 +304,35 @@ function ListsContentInner() {
                </EmptyHeader>
             </Empty>
          ) : (
-            <LazyMotion features={domAnimation}>
-               <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-               >
-                  <SortableContext
-                     items={filteredWatchlists.map((w) => w.id)}
-                     strategy={rectSortingStrategy}
-                  >
-                     {/* Initial load: no animation (PageReveal handles reveal) */}
-                     {/* After initial load: simple fade on each item for filter changes */}
-                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {filteredWatchlists.map((watchlist, index) =>
-                           initialLoadDone ? (
-                              <m.div
-                                 key={watchlist.id}
-                                 initial={{ opacity: 0 }}
-                                 animate={{ opacity: 1 }}
-                                 transition={{ duration: 0.15 }}
-                              >
-                                 <SortableWatchlistCard
-                                    watchlist={watchlist}
-                                    onEdit={(wl) => {
-                                       setSelectedWatchlist(wl);
-                                       setEditDialogOpen(true);
-                                    }}
-                                    onDelete={(wl) => {
-                                       setSelectedWatchlist(wl);
-                                       setDeleteDialogOpen(true);
-                                    }}
-                                    priority={index < 4}
-                                 />
-                              </m.div>
-                           ) : (
-                              <div key={watchlist.id}>
-                                 <SortableWatchlistCard
-                                    watchlist={watchlist}
-                                    onEdit={(wl) => {
-                                       setSelectedWatchlist(wl);
-                                       setEditDialogOpen(true);
-                                    }}
-                                    onDelete={(wl) => {
-                                       setSelectedWatchlist(wl);
-                                       setDeleteDialogOpen(true);
-                                    }}
-                                    priority={index < 4}
-                                 />
-                              </div>
-                           )
-                        )}
-                     </div>
-                  </SortableContext>
-               </DndContext>
-            </LazyMotion>
+            <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+         >
+            <SortableContext
+               items={filteredWatchlists.map((w) => w.id)}
+               strategy={rectSortingStrategy}
+            >
+               {/* Grid without individual item animations - PageReveal handles reveal */}
+               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {filteredWatchlists.map((watchlist, index) => (
+                     <SortableWatchlistCard
+                        key={watchlist.id}
+                        watchlist={watchlist}
+                        onEdit={(wl) => {
+                           setSelectedWatchlist(wl);
+                           setEditDialogOpen(true);
+                        }}
+                        onDelete={(wl) => {
+                           setSelectedWatchlist(wl);
+                           setDeleteDialogOpen(true);
+                        }}
+                        priority={index < 4}
+                     />
+                  ))}
+               </div>
+            </SortableContext>
+         </DndContext>
          )}
       </Section>
    );

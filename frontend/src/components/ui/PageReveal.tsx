@@ -111,24 +111,20 @@ function PageRevealContent({
               )}
             </AnimatePresence>
 
-            {/* Minimal loading indicator - also delayed */}
-            <AnimatePresence>
-              {showGlow && (
-                <m.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative z-10"
-                >
-                  <m.div
-                    animate={{ opacity: [0.2, 0.5, 0.2] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="h-1 w-12 rounded-full bg-white/15"
-                  />
-                </m.div>
-              )}
-            </AnimatePresence>
+            {/* Spinner loader - shows immediately */}
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
+              className="absolute left-1/2 top-[250px] z-10 -translate-x-1/2"
+            >
+              <m.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                className="h-8 w-8 rounded-full border-[3px] border-white/20 border-t-white/80"
+              />
+            </m.div>
           </m.div>
         )}
       </AnimatePresence>

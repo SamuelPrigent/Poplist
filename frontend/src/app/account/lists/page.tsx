@@ -8,11 +8,7 @@ export const metadata: Metadata = {
 };
 
 function ListsLoading() {
-	return (
-		<div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-			<div className="text-muted-foreground">Chargement...</div>
-		</div>
-	);
+	return null;
 }
 
 export default function AccountListsPage() {
