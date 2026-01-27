@@ -156,7 +156,7 @@ function UserProfilePageInner() {
 
 export default function UserProfilePage() {
 	return (
-		<PageReveal timeout={4000} minLoadingTime={200} revealDuration={0.5}>
+		<PageReveal timeout={3000} minLoadingTime={100} revealDuration={0.3}>
 			<UserProfilePageInner />
 		</PageReveal>
 	);

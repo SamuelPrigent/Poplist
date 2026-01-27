@@ -43,21 +43,21 @@ function PageRevealContent({
   const [showGlow, setShowGlow] = useState(false);
 
   useEffect(() => {
-    // Don't show glow if page loads quickly (< 400ms)
+    // Don't show glow if page is already ready
+    if (isPageReady) {
+      return;
+    }
+
+    // Show glow after delay if page is still loading
     const timer = setTimeout(() => {
-      if (!isPageReady) {
-        setShowGlow(true);
-      }
+      setShowGlow(true);
     }, 400);
 
-    return () => clearTimeout(timer);
-  }, [isPageReady]);
-
-  // Reset glow when page becomes ready
-  useEffect(() => {
-    if (isPageReady) {
+    return () => {
+      clearTimeout(timer);
+      // Reset glow when effect cleans up (including when isPageReady changes to true)
       setShowGlow(false);
-    }
+    };
   }, [isPageReady]);
 
   // Block scroll during loading
@@ -105,7 +105,7 @@ function PageRevealContent({
                       repeat: Infinity,
                       ease: 'easeInOut',
                     }}
-                    className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-violet-500/20 via-blue-500/15 to-violet-500/20 blur-[120px]"
+                    className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-r from-violet-500/20 via-blue-500/15 to-violet-500/20 blur-[120px]"
                   />
                 </m.div>
               )}
@@ -198,7 +198,7 @@ function PageRevealSimpleContent({ children }: { children: ReactNode }) {
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-violet-500/30 via-blue-500/20 to-violet-500/30 blur-[100px]"
+                className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-r from-violet-500/30 via-blue-500/20 to-violet-500/30 blur-[100px]"
               />
             </div>
           </m.div>
