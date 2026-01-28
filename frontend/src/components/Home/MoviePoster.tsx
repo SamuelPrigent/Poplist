@@ -31,6 +31,7 @@ export function MoviePoster({ title, name, posterPath, voteAverage, onClick }: M
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                   onError={() => setImageError(true)}
+                  unoptimized
                />
             ) : (
                <div className="flex h-full items-center justify-center">

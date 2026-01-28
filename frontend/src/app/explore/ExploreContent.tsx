@@ -723,6 +723,7 @@ export function ExploreContent() {
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            unoptimized
                           />
                         ) : (
                           <div className="text-muted-foreground flex h-full items-center justify-center">

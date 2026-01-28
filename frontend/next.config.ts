@@ -19,22 +19,7 @@ const nextConfig: NextConfig = {
 
   // Optimisation des images
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'image.tmdb.org',
-        pathname: '/t/p/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        pathname: '/**',
-      },
-    ],
-    // Formats modernes
-    formats: ['image/avif', 'image/webp'],
-    // Quality levels used in the app
-    qualities: [75, 90],
+    unoptimized: true,
   },
 
   // Experimental features

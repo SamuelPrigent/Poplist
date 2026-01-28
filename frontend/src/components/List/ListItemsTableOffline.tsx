@@ -76,6 +76,7 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
                loaded ? "opacity-100" : "opacity-0"
             }`}
             onLoad={() => setLoaded(true)}
+            unoptimized
          />
       </>
    );
@@ -633,7 +634,7 @@ export function ListItemsTableOffline({
             size: 400,
          },
          {
-            accessorKey: "type",
+            accessorKey: "mediaType",
             header: content.watchlists.tableHeaders.type,
             cell: (info) => {
                const type = info.getValue() as "movie" | "tv";

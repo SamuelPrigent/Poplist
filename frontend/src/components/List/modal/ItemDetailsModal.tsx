@@ -197,6 +197,7 @@ export function ItemDetailsModal({
                         fill
                         sizes="(max-width: 896px) 100vw, 896px"
                         className="object-cover object-top"
+                        unoptimized
                       />
                     </div>
                     <div className="to-background absolute inset-x-0 top-0 z-1 h-[calc(17rem+2px)] bg-linear-to-b from-black/90 via-black/80 via-80%" />
@@ -231,6 +232,7 @@ export function ItemDetailsModal({
                                 posterLoaded ? 'opacity-100' : 'opacity-0'
                               }`}
                               onLoad={() => setPosterLoaded(true)}
+                              unoptimized
                             />
                           </>
                         ) : (
@@ -378,6 +380,7 @@ export function ItemDetailsModal({
                                         return newSet;
                                       });
                                     }}
+                                    unoptimized
                                   />
                                 </>
                               ) : (

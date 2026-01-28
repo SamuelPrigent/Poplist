@@ -111,6 +111,7 @@ export function ListCard({
                      sizes="(max-width: 768px) 50vw, 25vw"
                      className="object-cover"
                      priority={priority}
+                     unoptimized
                   />
                ) : (
                   <div className="flex h-full w-full items-center justify-center">
@@ -138,6 +139,7 @@ export function ListCard({
                      sizes="(max-width: 768px) 50vw, 25vw"
                      className="object-cover"
                      priority={priority}
+                     unoptimized
                   />
                ) : (
                   <div className="flex h-full w-full items-center justify-center">

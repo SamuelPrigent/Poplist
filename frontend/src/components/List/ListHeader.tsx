@@ -95,6 +95,7 @@ export function ListHeader({
                                  sizes="224px"
                                  className="object-cover"
                                  priority
+                                 unoptimized
                               />
                               {/* Hover Overlay */}
                               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
@@ -120,6 +121,7 @@ export function ListHeader({
                               sizes="224px"
                               className="object-cover"
                               priority
+                              unoptimized
                            />
                         ) : (
                            <div className="bg-muted/50 flex h-full w-full items-center justify-center">
@@ -170,6 +172,7 @@ export function ListHeader({
                                              width={24}
                                              height={24}
                                              className="h-full w-full object-cover"
+                                             unoptimized
                                           />
                                        ) : (
                                           <User className="text-muted-foreground h-3.5 w-3.5" />
@@ -221,6 +224,7 @@ export function ListHeader({
                                                       width={24}
                                                       height={24}
                                                       className="h-full w-full object-cover"
+                                                      unoptimized
                                                    />
                                                 ) : (
                                                    <User className="text-muted-foreground h-3.5 w-3.5" />

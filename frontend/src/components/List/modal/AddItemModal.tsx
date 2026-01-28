@@ -389,6 +389,7 @@ export function AddItemModal({
                               fill
                               sizes="128px"
                               className="object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="bg-muted text-muted-foreground flex h-full w-full items-center justify-center">
@@ -574,6 +575,7 @@ export function AddItemModal({
                                       fill
                                       sizes="64px"
                                       className="object-cover"
+                                      unoptimized
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
                                       <Eye className="h-5 w-5 text-white" />

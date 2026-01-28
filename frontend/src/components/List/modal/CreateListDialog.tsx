@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, type GenreCategory, getCategoryInfo } from '@/types/categories';
@@ -200,7 +201,7 @@ export function CreateListDialog({
               <label htmlFor="description" className="text-sm font-medium">
                 {content.watchlists.description}
               </label>
-              <textarea
+              <Textarea
                 id="description"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
@@ -208,7 +209,6 @@ export function CreateListDialog({
                 maxLength={500}
                 disabled={loading}
                 rows={3}
-                className="border-input bg-background placeholder:text-muted-foreground flex w-full rounded-md border px-3 py-2 text-sm focus:outline-2 focus:outline-gray-300/30 focus:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 

@@ -31,6 +31,7 @@ export function ListCardSmall({ watchlist, onClick }: ListCardSmallProps) {
                   sizes="64px"
                   className="object-cover"
                   loading="eager"
+                  unoptimized
                />
             ) : (
                <div className="flex h-full w-full items-center justify-center">

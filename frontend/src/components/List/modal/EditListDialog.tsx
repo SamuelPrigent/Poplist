@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { deleteCachedThumbnail, generateAndCacheThumbnail, getThumbnailCacheKey } from '@/lib/thumbnailGenerator';
 import { getTMDBImageUrl } from '@/lib/utils';
@@ -315,14 +316,14 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
                     <label htmlFor="description" className="text-sm font-medium">
                       {content.watchlists.description}
                     </label>
-                    <textarea
+                    <Textarea
                       id="description"
                       value={description}
                       onChange={e => setDescription(e.target.value)}
                       placeholder={content.watchlists.descriptionPlaceholder}
                       maxLength={500}
                       disabled={loading}
-                      className="border-input bg-background placeholder:text-muted-foreground w-full resize-none rounded-md border px-3 py-2 text-sm focus:outline-2 focus:outline-gray-300/30 focus:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 md:flex-1"
+                      className="resize-none md:flex-1"
                     />
                   </div>
                 </div>

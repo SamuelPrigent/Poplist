@@ -83,8 +83,11 @@ function HomeContentInner() {
 
   const fetchPublicWatchlists = useCallback(async () => {
     try {
-      const publicData = await watchlistAPI.getPublicWatchlists(10);
-      setPublicWatchlists(publicData.watchlists || []);
+      const publicData = await watchlistAPI.getPublicWatchlists(50);
+      const sorted = (publicData.watchlists || []).sort(
+        (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
+      );
+      setPublicWatchlists(sorted.slice(0, 10));
     } catch (error) {
       console.error('Failed to fetch public watchlists:', error);
     }

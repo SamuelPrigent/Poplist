@@ -48,7 +48,10 @@ function CategoryDetailPageInner() {
          try {
             // Fetch genre watchlists
             const data = await watchlistAPI.getWatchlistsByGenre(id);
-            setWatchlists(data.watchlists || []);
+            const sorted = (data.watchlists || []).sort(
+               (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
+            );
+            setWatchlists(sorted);
 
             // Fetch user's watchlists if authenticated
             if (user) {
