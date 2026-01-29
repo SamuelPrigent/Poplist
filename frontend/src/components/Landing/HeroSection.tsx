@@ -18,18 +18,18 @@ interface HeroSectionProps {
   trending: TrendingItem[];
   watchlistsUrl: string;
 }
-import saw from '../../../public/landing/movies/saw3.jpg';
-import pdc from '../../../public/landing/movies/pdc2.jpg';
-import jinx from '../../../public/landing/movies/jinx.png';
-import doa from '../../../public/landing/movies/DOA.jpg';
-import blade2 from '../../../public/landing/movies/blade2.jpg';
-import kb from '../../../public/landing/movies/kb.jpg';
-import oceans from '../../../public/landing/movies/oceans.jpg';
-import jake from '../../../public/landing/movies/jake.jpg';
-import passion from '../../../public/landing/movies/passion.jpg';
-import theFifth2 from '../../../public/landing/movies/theFifth2.jpg';
-import joker from '../../../public/landing/movies/joker.jpg';
-import fenetre from '../../../public/landing/movies/fenetre.jpg';
+import saw from '../../../public/landing/movies/saw3.webp';
+import pdc from '../../../public/landing/movies/pdc2.webp';
+import jinx from '../../../public/landing/movies/jinx.webp';
+import doa from '../../../public/landing/movies/DOA.webp';
+import blade2 from '../../../public/landing/movies/blade2.webp';
+import kb from '../../../public/landing/movies/kb.webp';
+import oceans from '../../../public/landing/movies/oceans.webp';
+import jake from '../../../public/landing/movies/jake.webp';
+import passion from '../../../public/landing/movies/passion.webp';
+import theFifth2 from '../../../public/landing/movies/theFifth2.webp';
+import joker from '../../../public/landing/movies/joker.webp';
+import fenetre from '../../../public/landing/movies/fenetre.webp';
 
 const FAMOUS_MOVIES = [
   // === COLONNE 1 (gauche) ===

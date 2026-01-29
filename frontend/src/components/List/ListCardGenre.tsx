@@ -18,13 +18,13 @@ interface ListCardGenreProps {
 
 // Mapping des catégories vers les images iconiques
 const categoryImages: Record<string, string> = {
-  anime: '/categories/spider.png',
-  enfant: '/categories/yeti.png',
-  movies: '/categories/avatar.png',
-  series: '/categories/friends.png',
-  documentaries: '/categories/perroquet.png',
-  jeunesse: '/categories/brian.png',
-  action: '/categories/neo.png',
+  anime: '/categories/spider.webp',
+  enfant: '/categories/yeti.webp',
+  movies: '/categories/avatar.webp',
+  series: '/categories/friends.webp',
+  documentaries: '/categories/perroquet.webp',
+  jeunesse: '/categories/brian.webp',
+  action: '/categories/neo.webp',
 };
 
 // Base colors for border

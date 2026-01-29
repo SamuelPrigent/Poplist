@@ -338,7 +338,7 @@ export function RightSectionPreview() {
       <div className="border-border relative overflow-hidden rounded-[30px] border-4">
         <div className="relative aspect-9/6">
           <Image
-            src="/preview/watchlists1.png"
+            src="/preview/watchlists1.webp"
             alt="Apercu de l'application Poplist"
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1920px) 45vw, 900px"

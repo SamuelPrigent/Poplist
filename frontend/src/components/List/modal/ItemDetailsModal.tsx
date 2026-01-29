@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
 import { type FullMediaDetails, watchlistAPI } from '@/lib/api-client';
-import { getTMDBLanguage } from '@/lib/utils';
+import { getTMDBLanguage, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import { WatchProviderList } from '../WatchProviderBubble';
 
@@ -192,7 +192,7 @@ export function ItemDetailsModal({
                   <>
                     <div className="absolute inset-x-0 top-0 z-0 h-68">
                       <Image
-                        src={details.backdropUrl}
+                        src={resizeTMDBPoster(details.backdropUrl, 'w1280')}
                         alt={details.title}
                         fill
                         sizes="(max-width: 896px) 100vw, 896px"
@@ -224,7 +224,7 @@ export function ItemDetailsModal({
                               <div className="bg-muted absolute inset-0 animate-pulse" />
                             )}
                             <Image
-                              src={details.posterUrl}
+                              src={resizeTMDBPoster(details.posterUrl, 'w185')}
                               alt={details.title}
                               fill
                               sizes="128px"
@@ -364,7 +364,7 @@ export function ItemDetailsModal({
                                     <div className="bg-muted absolute inset-0 animate-pulse" />
                                   )}
                                   <Image
-                                    src={actor.profileUrl}
+                                    src={resizeTMDBPoster(actor.profileUrl, 'w185')}
                                     alt={actor.name}
                                     fill
                                     sizes="64px"

@@ -640,7 +640,7 @@ export function ListItemsTable({
                         {item.posterPath ? (
                            <>
                               <PosterImage
-                                 src={getTMDBImageUrl(item.posterPath, "w185") || ""}
+                                 src={getTMDBImageUrl(item.posterPath, "w92") || ""}
                                  alt={item.title}
                               />
                               <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">

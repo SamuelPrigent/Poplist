@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
     // Optimized package imports
     optimizePackageImports: [
       'lucide-react',
+      'motion/react',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-select',

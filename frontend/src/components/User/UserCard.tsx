@@ -13,8 +13,8 @@ interface UserCardProps {
   listCount: number;
   content: {
     userProfile: {
-      publicWatchlist: string;
-      publicWatchlists: string;
+      watchlist: string;
+      watchlists: string;
     };
   };
 }
@@ -49,8 +49,8 @@ export function UserCard({ user, listCount, content }: UserCardProps) {
       <span className="text-muted-foreground text-sm">
         {listCount}{' '}
         {listCount === 1
-          ? content.userProfile.publicWatchlist
-          : content.userProfile.publicWatchlists}
+          ? content.userProfile.watchlist
+          : content.userProfile.watchlists}
       </span>
     </Link>
   );

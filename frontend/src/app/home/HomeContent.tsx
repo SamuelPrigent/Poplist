@@ -454,7 +454,7 @@ function HomeContentInner() {
               const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
 
               const showSavedBadge = !isOwner && !isCollaborator && isSaved;
-              const showCollaborativeBadge = isCollaborator;
+              const showCollaborativeBadge = (watchlist.collaborators?.length ?? 0) > 0;
 
               return (
                 <ListCard

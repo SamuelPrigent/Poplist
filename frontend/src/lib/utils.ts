@@ -71,7 +71,7 @@ export function resizeTMDBPoster(url: string, size: string): string {
  */
 export function getTMDBImageUrl(
 	path: string | null | undefined,
-	size: "w92" | "w154" | "w185" | "w342" | "w500" | "w780" | "original" = "w342"
+	size: "w45" | "w92" | "w154" | "w185" | "w300" | "w342" | "w500" | "w780" | "w1280" | "h632" | "original" = "w342"
 ): string | null {
 	if (!path) return null;
 	// If it's already a full URL, return as-is
