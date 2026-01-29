@@ -198,9 +198,9 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-60 bg-linear-to-t from-background via-background/90 to-transparent" />
 
       {/* Max-width container for large screens */}
-      <div className="relative mx-auto max-w-[1800px] 2xl:max-w-[2000px]">
+      <div className="relative mx-auto max-w-[1600px]">
         {/* Right: Tilted Poster Grid - responsive columns */}
-        <div className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-[15%] opacity-40 sm:translate-x-[10%] sm:opacity-50 md:translate-x-[5%] md:opacity-70 lg:opacity-100">
+        <div className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-[15%] opacity-40 sm:translate-x-[10%] sm:opacity-50 md:translate-x-[5%] md:opacity-70 lg:translate-x-0 lg:opacity-100">
           <div className="-rotate-12 transform">
             <div className="flex gap-4 md:gap-7">
               {/* Column 1 - hidden on very small screens */}
