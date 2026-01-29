@@ -3,8 +3,8 @@
 import { Film, Plus } from 'lucide-react';
 import Image from 'next/image';
 
-// URLs TMDB pour films connus (w342 = 342px width)
-const TMDB_BASE = 'https://image.tmdb.org/t/p/w342';
+// URLs TMDB pour films connus (w154 = suffisant pour l'affichage ~80px)
+const TMDB_BASE = 'https://image.tmdb.org/t/p/w154';
 
 // Posters de films célèbres - URLs vérifiées sur TMDB
 const POSTERS = {
@@ -234,7 +234,7 @@ export function RightSectionPreviewV2() {
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white">
               Mes listes
             </span>
-            <span className="rounded-full px-3 py-1 text-xs text-gray-500">Suivies</span>
+            <span className="rounded-full px-3 py-1 text-xs text-gray-400">Suivies</span>
           </div>
         </div>
 
@@ -278,7 +278,7 @@ export function RightSectionPreviewV3() {
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white">
               Mes listes
             </span>
-            <span className="rounded-full px-3 py-1 text-xs text-gray-500">Suivies</span>
+            <span className="rounded-full px-3 py-1 text-xs text-gray-400">Suivies</span>
           </div>
         </div>
 

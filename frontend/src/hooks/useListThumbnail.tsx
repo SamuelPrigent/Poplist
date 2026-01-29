@@ -72,7 +72,7 @@ export function useListThumbnail(watchlist: Watchlist | null): string | null {
 		const items = watchlist.items ?? [];
 		const posterUrls = items
 			.slice(0, 4)
-			.map((item) => getTMDBImageUrl(item.posterPath, "w342"))
+			.map((item) => getTMDBImageUrl(item.posterPath, "w185"))
 			.filter((url): url is string => url !== null);
 
 		if (posterUrls.length === 0) {

@@ -64,6 +64,7 @@ export function Footer() {
             href="https://buymeacoffee.com/samuelprigl"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Buy me a coffee"
             className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors"
           >
             <Coffee className="h-4 w-4" />

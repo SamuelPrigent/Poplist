@@ -7,7 +7,8 @@
     "dev:https": "next dev -p 3001 --experimental-https",
     "build": "next build",
     "start": "next start -p 3001",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lighthouse": "lighthouse http://localhost:3001 --output json --output-path ./lighthouse-report.json --chrome-flags='--headless=new --no-sandbox' --only-categories=performance,accessibility,best-practices,seo"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -48,6 +49,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "lighthouse": "^13.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
