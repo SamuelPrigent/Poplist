@@ -215,7 +215,6 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       alt={movie.title}
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
-
                       className="object-cover"
                     />
                   </div>
@@ -234,7 +233,6 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       alt={movie.title}
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
-
                       className="object-cover"
                     />
                   </div>
@@ -253,7 +251,6 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       alt={movie.title}
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
-
                       className="object-cover"
                     />
                   </div>

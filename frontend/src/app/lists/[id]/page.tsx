@@ -237,11 +237,15 @@ export default function ListDetailPage() {
     try {
       const { watchlist: duplicatedWatchlist } = await watchlistAPI.duplicateWatchlist(id);
 
-      toast.success(content.watchlists.toasts?.listDuplicated || 'List duplicated', { id: loadingToast });
+      toast.success(content.watchlists.toasts?.listDuplicated || 'List duplicated', {
+        id: loadingToast,
+      });
       router.push(`/lists/${duplicatedWatchlist.id}`);
     } catch (error) {
       console.error('Failed to duplicate watchlist:', error);
-      toast.error(content.watchlists.toasts?.duplicateError || 'Failed to duplicate list', { id: loadingToast });
+      toast.error(content.watchlists.toasts?.duplicateError || 'Failed to duplicate list', {
+        id: loadingToast,
+      });
     }
   };
 
