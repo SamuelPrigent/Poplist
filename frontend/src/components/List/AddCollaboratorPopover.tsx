@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { type Collaborator, watchlistAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
+import Image from 'next/image';
 
 interface AddCollaboratorPopoverProps {
   watchlistId: string;
@@ -141,7 +142,7 @@ export function AddCollaboratorPopover({
             </h3>
             <p className="text-muted-foreground mb-3 text-xs">
               {content.watchlists.collaborators?.addDescription ||
-                "Entrez le nom utilisateur du collaborateur"}
+                'Entrez le nom utilisateur du collaborateur'}
             </p>
 
             <div className="flex items-center gap-2">
@@ -160,13 +161,15 @@ export function AddCollaboratorPopover({
                   className="pr-10"
                   disabled={isAdding}
                 />
-                <div className="absolute top-1/2 right-3 -translate-y-1/2">{getValidationIcon()}</div>
+                <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                  {getValidationIcon()}
+                </div>
               </div>
 
               <Button
                 onClick={handleAddCollaborator}
                 disabled={isAddButtonDisabled}
-                className="aspect-square cursor-pointer !p-0"
+                className="aspect-square cursor-pointer p-0!"
                 size="icon"
               >
                 <Plus className="h-4 w-4" />
@@ -187,10 +190,13 @@ export function AddCollaboratorPopover({
                   >
                     <div className="flex items-center gap-2">
                       {collaborator.avatarUrl ? (
-                        <img
+                        <Image
                           src={collaborator.avatarUrl}
                           alt={collaborator.username}
                           className="h-7 w-7 rounded-full object-cover"
+                          width={28}
+                          height={28}
+                          unoptimized
                         />
                       ) : (
                         <div className="bg-muted flex h-7 w-7 items-center justify-center rounded-full">
