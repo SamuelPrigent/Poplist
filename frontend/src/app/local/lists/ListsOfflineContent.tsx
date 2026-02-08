@@ -38,7 +38,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
-import { useListThumbnail } from "@/hooks/useListThumbnail";
+import { PosterGrid } from "@/components/List/PosterGrid";
 import type { Watchlist } from "@/lib/api-client";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
@@ -67,7 +67,6 @@ function WatchlistCardOffline({
 }: WatchlistCardOfflineProps) {
    const { content } = useLanguageStore();
    const router = useRouter();
-   const thumbnailUrl = useListThumbnail(watchlist);
 
    return (
       <div
@@ -91,15 +90,17 @@ function WatchlistCardOffline({
             tabIndex={-1}
             className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md"
          >
-            {thumbnailUrl ? (
+            {watchlist.imageUrl ? (
                <Image
-                  src={thumbnailUrl}
+                  src={watchlist.imageUrl}
                   alt={watchlist.name}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   className="object-cover"
                   unoptimized
                />
+            ) : watchlist.items?.length > 0 ? (
+               <PosterGrid items={watchlist.items} alt={watchlist.name} />
             ) : (
                <div className="flex h-full w-full items-center justify-center">
                   <Film strokeWidth={1.4} className="text-muted-foreground h-12 w-12" />

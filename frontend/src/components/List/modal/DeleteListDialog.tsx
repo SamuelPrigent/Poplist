@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
-import { deleteCachedThumbnail } from "@/lib/thumbnailGenerator";
 import { useLanguageStore } from "@/store/language";
 
 interface DeleteListDialogProps {
@@ -43,9 +42,6 @@ export function DeleteListDialog({
 					(w: Watchlist) => w.id !== watchlist.id,
 				);
 				localStorage.setItem("watchlists", JSON.stringify(filtered));
-
-				// Delete cached thumbnail
-				deleteCachedThumbnail(watchlist.id);
 
 				onOpenChange(false);
 				if (onSuccess) {

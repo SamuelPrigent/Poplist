@@ -21,7 +21,6 @@ import { useAuth } from '@/context/auth-context';
 import { type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
-import { deleteCachedThumbnail } from '@/lib/thumbnailGenerator';
 import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
@@ -391,9 +390,6 @@ export function ExploreContent() {
               watchlistsData[watchlistIndex].items.push(newItem);
               watchlistsData[watchlistIndex].updatedAt = new Date().toISOString();
               localStorage.setItem('watchlists', JSON.stringify(watchlistsData));
-
-              // Invalidate thumbnail cache so it regenerates with new item
-              deleteCachedThumbnail(watchlistId);
 
               const updatedWatchlists = getLocalWatchlistsWithOwnership();
               setWatchlists(updatedWatchlists);

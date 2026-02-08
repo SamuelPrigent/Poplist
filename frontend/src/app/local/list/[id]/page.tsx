@@ -13,7 +13,7 @@ import {
 } from "@/components/List/modal/EditListDialogOffline";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
-import { useListThumbnail } from "@/hooks/useListThumbnail";
+import { PosterGrid } from "@/components/List/PosterGrid";
 import type { Watchlist } from "@/lib/api-client";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
@@ -92,10 +92,6 @@ export default function LocalListDetailPage() {
       }, 300);
    };
 
-   // Get cover image (custom or auto-generated thumbnail)
-   // Always call hooks at the top level, before any early returns
-   const generatedThumbnail = useListThumbnail(watchlist);
-   const coverImage = watchlist?.imageUrl || generatedThumbnail;
    const itemCount = watchlist?.items.length || 0;
 
    if (loading) {
@@ -174,16 +170,27 @@ export default function LocalListDetailPage() {
                         className="group relative h-56 w-56 overflow-hidden rounded-lg shadow-2xl"
                         onClick={handleImageClick}
                      >
-                        {coverImage ? (
+                        {watchlist.imageUrl ? (
                            <>
                               <Image
-                                 src={coverImage}
+                                 src={watchlist.imageUrl}
                                  alt={watchlist.name}
                                  fill
                                  sizes="224px"
                                  className="object-cover"
                                  priority
                               />
+                              {/* Hover Overlay */}
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                                 <Pencil className="h-10 w-10 text-white" />
+                                 <span className="mt-2 text-sm font-medium text-white">
+                                    Sélectionner une photo
+                                 </span>
+                              </div>
+                           </>
+                        ) : watchlist.items?.length > 0 ? (
+                           <>
+                              <PosterGrid items={watchlist.items} alt={watchlist.name} priority />
                               {/* Hover Overlay */}
                               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
                                  <Pencil className="h-10 w-10 text-white" />

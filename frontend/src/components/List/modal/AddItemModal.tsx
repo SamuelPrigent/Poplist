@@ -11,7 +11,6 @@ import { NavigationArrows } from '@/components/ui/navigation-arrows';
 import type { FullMediaDetails, Watchlist, WatchlistItem } from '@/lib/api-client';
 import { watchlistAPI } from '@/lib/api-client';
 import { getLocalWatchlists } from '@/lib/localStorageHelpers';
-import { deleteCachedThumbnail } from '@/lib/thumbnailGenerator';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 
@@ -234,7 +233,6 @@ export function AddItemModal({
 
         watchlists[watchlistIndex].items.push(newItem);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-        deleteCachedThumbnail(watchlist.id);
       } else {
         await watchlistAPI.addItem(watchlist.id, {
           tmdbId: item.id.toString(),
@@ -271,7 +269,6 @@ export function AddItemModal({
           i => i.tmdbId !== item.id
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-        deleteCachedThumbnail(watchlist.id);
       } else {
         await watchlistAPI.removeItem(watchlist.id, item.id.toString());
       }

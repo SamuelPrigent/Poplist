@@ -7,9 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Watchlist, WatchlistItem } from '@/lib/api-client';
-import { deleteCachedThumbnail, generateAndCacheThumbnail, getThumbnailCacheKey } from '@/lib/thumbnailGenerator';
-import { getTMDBImageUrl } from '@/lib/utils';
+import type { Watchlist } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 
 interface EditListDialogOfflineProps {
@@ -105,24 +103,6 @@ export const EditListDialogOffline = forwardRef<
         };
         watchlists[index] = updatedWatchlist;
         localStorage.setItem('watchlists', JSON.stringify(watchlists));
-
-        // Handle thumbnail changes
-        if (imagePreview === null && watchlist.imageUrl) {
-          // User removed custom image - regenerate automatic thumbnail
-          if (updatedWatchlist.items && updatedWatchlist.items.length > 0) {
-            const posterUrls = updatedWatchlist.items
-              .slice(0, 4)
-              .map((item: WatchlistItem) => getTMDBImageUrl(item.posterPath, 'w342'))
-              .filter((url: string | null): url is string => url !== null);
-            if (posterUrls.length > 0) {
-              const cacheKey = getThumbnailCacheKey(watchlist.id, updatedWatchlist.items.slice(0, 4).map((item: WatchlistItem) => item.posterPath));
-              await generateAndCacheThumbnail(cacheKey, posterUrls);
-            }
-          }
-        } else if (imagePreview && imagePreview !== watchlist.imageUrl) {
-          // User uploaded a new image - delete cached thumbnail
-          deleteCachedThumbnail(watchlist.id);
-        }
       }
 
       onSuccess();

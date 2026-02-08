@@ -53,7 +53,6 @@ import {
 import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
-import { deleteCachedThumbnail, generateAndCacheThumbnail, getThumbnailCacheKey } from "@/lib/thumbnailGenerator";
 import { getTMDBImageUrl } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
@@ -428,20 +427,6 @@ export function ListItemsTableOffline({
 
       window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
 
-      // Regenerate thumbnail with new items (if no custom image)
-      if (!watchlist.imageUrl && updatedItems.length > 0) {
-         const posterUrls = updatedItems
-            .slice(0, 4)
-            .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
-            .filter((url): url is string => url !== null);
-         if (posterUrls.length > 0) {
-            const cacheKey = getThumbnailCacheKey(watchlist.id, updatedItems.slice(0, 4).map((item) => item.posterPath));
-            await generateAndCacheThumbnail(cacheKey, posterUrls);
-         }
-      } else {
-         deleteCachedThumbnail(watchlist.id);
-      }
-
       // Notify parent with updated watchlist (no loading flicker)
       onUpdate?.({ ...watchlist, items: updatedItems });
    };
@@ -513,21 +498,6 @@ export function ListItemsTableOffline({
 
          localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
          window.dispatchEvent(new Event("localStorageWatchlistsChanged"));
-
-         // Regenerate thumbnail for target watchlist
-         const targetWatchlist = watchlists[targetIndex];
-         if (!targetWatchlist.imageUrl && targetWatchlist.items.length > 0) {
-            const posterUrls = targetWatchlist.items
-               .slice(0, 4)
-               .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
-               .filter((url): url is string => url !== null);
-            if (posterUrls.length > 0) {
-               const cacheKey = getThumbnailCacheKey(targetWatchlistId, targetWatchlist.items.slice(0, 4).map((item) => item.posterPath));
-               await generateAndCacheThumbnail(cacheKey, posterUrls);
-            }
-         } else {
-            deleteCachedThumbnail(targetWatchlistId);
-         }
 
          onUpdate?.();
       } catch (error) {

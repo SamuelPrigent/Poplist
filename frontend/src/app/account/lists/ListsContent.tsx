@@ -21,7 +21,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Film, Plus } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { useAuth } from '@/context/auth-context';
 import { CreateListDialog } from '@/components/List/modal/CreateListDialog';
@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/empty';
 import type { Watchlist } from '@/lib/api-client';
 import { watchlistAPI } from '@/lib/api-client';
+import { useMyWatchlists } from '@/hooks/swr';
 import { useLanguageStore } from '@/store/language';
 import { useListFiltersStore } from '@/store/listFilters';
 
@@ -112,8 +113,9 @@ function ListsContentInner() {
   const router = useRouter();
   const { showOwned, showSaved, toggleOwned, toggleSaved } = useListFiltersStore();
 
-  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading, mutate } = useMyWatchlists();
+  const watchlists = data?.watchlists ?? [];
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -144,22 +146,6 @@ function ListsContentInner() {
     })
   );
 
-  const fetchWatchlists = useCallback(async (showLoading = true) => {
-    try {
-      if (showLoading) {
-        setLoading(true);
-      }
-      const data = await watchlistAPI.getMine();
-      setWatchlists(data.watchlists);
-    } catch (error) {
-      console.error('Failed to fetch watchlists:', error);
-    } finally {
-      if (showLoading) {
-        setLoading(false);
-      }
-    }
-  }, []);
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -168,36 +154,28 @@ function ListsContentInner() {
       const newIndex = watchlists.findIndex(w => w.id === over.id);
 
       const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
-      setWatchlists(newWatchlists);
 
-      // Persist to backend - send all watchlist IDs (unified position system)
+      // Optimistic update
+      mutate({ watchlists: newWatchlists }, { revalidate: false });
+
+      // Persist to backend
       try {
         const allWatchlistIds = newWatchlists.map(w => w.id);
         await watchlistAPI.reorderWatchlists(allWatchlistIds);
       } catch (error) {
         console.error('Failed to reorder watchlists:', error);
         // Revert on error
-        setWatchlists(watchlists);
+        mutate();
       }
     }
   };
 
-  useEffect(() => {
-    fetchWatchlists();
-  }, [fetchWatchlists]);
-
   const handleCreateSuccess = async (newWatchlist?: Watchlist) => {
     if (newWatchlist) {
-      // Optimistic update: add new watchlist to the beginning immediately
-      setWatchlists(prev => [newWatchlist, ...prev]);
-
-      // Fetch in background to sync with server (don't show loading spinner)
-      fetchWatchlists(false).catch(error => {
-        console.error('Failed to sync watchlists:', error);
-      });
+      // Optimistic update + revalidate in background
+      mutate({ watchlists: [newWatchlist, ...watchlists] }, { revalidate: true });
     } else {
-      // Fallback: full refetch with loading spinner
-      await fetchWatchlists(true);
+      mutate();
     }
   };
 
@@ -275,13 +253,13 @@ function ListsContentInner() {
           <EditListDialog
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
-            onSuccess={fetchWatchlists}
+            onSuccess={() => mutate()}
             watchlist={selectedWatchlist}
           />
           <DeleteListDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
-            onSuccess={fetchWatchlists}
+            onSuccess={() => mutate()}
             watchlist={selectedWatchlist}
           />
         </>

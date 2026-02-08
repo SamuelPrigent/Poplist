@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { mutate } from 'swr';
+import dynamic from 'next/dynamic';
 import { AddCollaboratorPopover } from '@/components/List/AddCollaboratorPopover';
 import {
   LIST_HEADER_BUTTON_CLASS,
@@ -13,10 +15,12 @@ import {
   ListHeader,
 } from '@/components/List/ListHeader';
 import { ListItemsTable } from '@/components/List/ListItemsTable';
-import { AddItemModal } from '@/components/List/modal/AddItemModal';
-import { DeleteListDialog } from '@/components/List/modal/DeleteListDialog';
-import { EditListDialog, type EditListDialogRef } from '@/components/List/modal/EditListDialog';
-import { LeaveListDialog } from '@/components/List/modal/LeaveListDialog';
+import type { EditListDialogRef } from '@/components/List/modal/EditListDialog';
+
+const AddItemModal = dynamic(() => import('@/components/List/modal/AddItemModal').then(m => m.AddItemModal), { ssr: false });
+const DeleteListDialog = dynamic(() => import('@/components/List/modal/DeleteListDialog').then(m => m.DeleteListDialog), { ssr: false });
+const EditListDialog = dynamic(() => import('@/components/List/modal/EditListDialog').then(m => m.EditListDialog), { ssr: false });
+const LeaveListDialog = dynamic(() => import('@/components/List/modal/LeaveListDialog').then(m => m.LeaveListDialog), { ssr: false });
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
@@ -52,7 +56,7 @@ export default function ListDetailPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  const fetchWatchlist = useCallback(async () => {
+  const fetchWatchlist = useCallback(async (authenticated: boolean) => {
     if (!id) {
       router.replace('/account/lists');
       return;
@@ -63,7 +67,7 @@ export default function ListDetailPage() {
       setNotFound(false);
 
       let data: Watchlist;
-      if (isAuthenticated) {
+      if (authenticated) {
         const response = await watchlistAPI.getById(id);
         data = response.watchlist;
 
@@ -73,7 +77,6 @@ export default function ListDetailPage() {
         setIsCollaborator(response.isCollaborator || false);
         setIsSaved(response.isSaved || false);
       } else {
-        // Non authentifié : essayer d'accéder à la version publique
         const response = await watchlistAPI.getPublic(id);
         data = response.watchlist;
         setIsOwner(false);
@@ -86,13 +89,11 @@ export default function ListDetailPage() {
       console.error('Failed to fetch watchlist:', err);
       const errorMessage = err instanceof Error ? err.message : '';
 
-      // Si non authentifié et accès refusé → watchlist privée, rediriger vers /home
-      if (!isAuthenticated) {
+      if (!authenticated) {
         router.replace('/home');
         return;
       }
 
-      // Si authentifié mais accès refusé (pas owner/collaborateur d'une liste privée)
       if (
         errorMessage.includes('not found') ||
         errorMessage.includes('Forbidden') ||
@@ -106,31 +107,40 @@ export default function ListDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, router, isAuthenticated, user]);
+  }, [id, router, user]);
 
   // Handle watchlist updates - accepts optional updated watchlist for direct state updates
   const handleWatchlistUpdate = useCallback(
     (updatedWatchlist?: Watchlist) => {
       if (updatedWatchlist) {
-        // Direct state update without refetching (no loading flicker)
         setWatchlist(updatedWatchlist);
       } else {
-        // Full refetch when no data provided
-        fetchWatchlist();
+        fetchWatchlist(isAuthenticated);
       }
+      mutate('/watchlists/mine');
     },
-    [fetchWatchlist]
+    [fetchWatchlist, isAuthenticated]
   );
 
   useEffect(() => {
-    // Wait for auth to be resolved before fetching
     if (!authLoading) {
-      fetchWatchlist();
+      fetchWatchlist(isAuthenticated);
     }
-  }, [authLoading, fetchWatchlist]);
+  }, [authLoading, isAuthenticated, fetchWatchlist]);
 
   if (loading) {
-    return null;
+    return (
+      <div className="from-background via-background/95 to-background mb-16 min-h-screen bg-linear-to-b">
+        <div className="bg-muted/20 h-[340px] w-full animate-pulse" />
+        <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="bg-muted/30 h-16 w-full animate-pulse rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (notFound || !watchlist) {
@@ -217,6 +227,7 @@ export default function ListDetailPage() {
         await watchlistAPI.saveWatchlist(id);
         toast.success(content.watchlists.toasts?.listSaved || 'List added');
       }
+      mutate('/watchlists/mine');
     } catch (error) {
       console.error('Failed to toggle save watchlist:', error);
       toast.error(content.watchlists.toasts?.listSaveError || 'Failed to update list');
@@ -240,6 +251,7 @@ export default function ListDetailPage() {
       toast.success(content.watchlists.toasts?.listDuplicated || 'List duplicated', {
         id: loadingToast,
       });
+      mutate('/watchlists/mine');
       router.push(`/lists/${duplicatedWatchlist.id}`);
     } catch (error) {
       console.error('Failed to duplicate watchlist:', error);
@@ -327,6 +339,7 @@ export default function ListDetailPage() {
               collaborators={getCollaborators()}
               onCollaboratorsChange={collaborators => {
                 setWatchlist(prev => (prev ? { ...prev, collaborators } : null));
+                mutate('/watchlists/mine');
               }}
             >
               <button
@@ -390,7 +403,7 @@ export default function ListDetailPage() {
           open={addModalOpen}
           onOpenChange={setAddModalOpen}
           watchlist={watchlist}
-          onSuccess={fetchWatchlist}
+          onSuccess={() => { fetchWatchlist(isAuthenticated); mutate('/watchlists/mine'); }}
           offline={false}
         />
       )}
@@ -400,7 +413,7 @@ export default function ListDetailPage() {
           ref={editDialogRef}
           open={editModalOpen}
           onOpenChange={setEditModalOpen}
-          onSuccess={fetchWatchlist}
+          onSuccess={() => { fetchWatchlist(isAuthenticated); mutate('/watchlists/mine'); }}
           watchlist={watchlist}
           offline={false}
         />
@@ -411,7 +424,7 @@ export default function ListDetailPage() {
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           watchlist={watchlist}
-          onSuccess={() => router.push('/account/lists')}
+          onSuccess={() => { mutate('/watchlists/mine'); router.push('/account/lists'); }}
           offline={false}
         />
       )}

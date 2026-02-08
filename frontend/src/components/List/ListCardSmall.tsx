@@ -2,7 +2,7 @@
 
 import { Film } from "lucide-react";
 import Image from "next/image";
-import { useListThumbnail } from "@/hooks/useListThumbnail";
+import { PosterGrid } from "@/components/List/PosterGrid";
 import type { Watchlist } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 
@@ -12,7 +12,6 @@ interface ListCardSmallProps {
 }
 
 export function ListCardSmall({ watchlist, onClick }: ListCardSmallProps) {
-   const thumbnailUrl = useListThumbnail(watchlist);
    const { content } = useLanguageStore();
 
    return (
@@ -23,9 +22,9 @@ export function ListCardSmall({ watchlist, onClick }: ListCardSmallProps) {
       >
          {/* Thumbnail - Square */}
          <div className="bg-muted relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
-            {thumbnailUrl ? (
+            {watchlist.imageUrl ? (
                <Image
-                  src={thumbnailUrl}
+                  src={watchlist.imageUrl}
                   alt={watchlist.name}
                   fill
                   sizes="64px"
@@ -33,6 +32,8 @@ export function ListCardSmall({ watchlist, onClick }: ListCardSmallProps) {
                   loading="eager"
                   unoptimized
                />
+            ) : watchlist.items?.length > 0 ? (
+               <PosterGrid items={watchlist.items} alt={watchlist.name} imageSize="w92" />
             ) : (
                <div className="flex h-full w-full items-center justify-center">
                   <Film strokeWidth={1} className="text-muted-foreground h-8 w-8" />

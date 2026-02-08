@@ -7,9 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
-import { deleteCachedThumbnail, generateAndCacheThumbnail, getThumbnailCacheKey } from '@/lib/thumbnailGenerator';
-import { getTMDBImageUrl } from '@/lib/utils';
+import { type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, type GenreCategory, getCategoryInfo } from '@/types/categories';
 
@@ -133,24 +131,6 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
             };
             watchlists[index] = updatedWatchlist;
             localStorage.setItem('watchlists', JSON.stringify(watchlists));
-
-            // Handle thumbnail changes
-            if (imagePreview === null && watchlist.imageUrl) {
-              // User removed custom image - regenerate automatic thumbnail
-              if (updatedWatchlist.items && updatedWatchlist.items.length > 0) {
-                const posterUrls = updatedWatchlist.items
-                  .slice(0, 4)
-                  .map((item: WatchlistItem) => getTMDBImageUrl(item.posterPath, 'w342'))
-                  .filter((url: string | null): url is string => url !== null);
-                if (posterUrls.length > 0) {
-                  const cacheKey = getThumbnailCacheKey(watchlist.id, updatedWatchlist.items.slice(0, 4).map((item: WatchlistItem) => item.posterPath));
-                  await generateAndCacheThumbnail(cacheKey, posterUrls);
-                }
-              }
-            } else if (imagePreview && imagePreview !== watchlist.imageUrl) {
-              // User uploaded a new image - delete cached thumbnail
-              deleteCachedThumbnail(watchlist.id);
-            }
           }
 
           onSuccess();
@@ -183,27 +163,11 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
 
           // Handle image changes
           if (imagePreview === null && watchlist.imageUrl) {
-            // User removed the image - delete from Cloudinary and regenerate thumbnail
+            // User removed the image - delete from Cloudinary
             await watchlistAPI.deleteCover(watchlist.id);
-
-            // Regenerate automatic thumbnail
-            const updatedWatchlist = await watchlistAPI.getById(watchlist.id);
-            if (updatedWatchlist.watchlist.items.length > 0) {
-              const posterUrls = updatedWatchlist.watchlist.items
-                .slice(0, 4)
-                .map((item: WatchlistItem) => getTMDBImageUrl(item.posterPath, 'w342'))
-                .filter((url: string | null): url is string => url !== null);
-              if (posterUrls.length > 0) {
-                const cacheKey = getThumbnailCacheKey(watchlist.id, updatedWatchlist.watchlist.items.slice(0, 4).map((item: WatchlistItem) => item.posterPath));
-                await generateAndCacheThumbnail(cacheKey, posterUrls);
-              }
-            }
           } else if (imageFile && imagePreview && imagePreview !== watchlist.imageUrl) {
             // User uploaded a new image (old one will be auto-deleted by backend)
             await watchlistAPI.uploadCover(watchlist.id, imagePreview);
-
-            // Delete cached thumbnail since we now have a custom image
-            deleteCachedThumbnail(watchlist.id);
           }
 
           onSuccess();

@@ -205,7 +205,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
             <div className="flex gap-4 md:gap-7">
               {/* Column 1 - hidden on very small screens */}
               <div className="hidden sm:flex flex-col gap-3 md:gap-5">
-                {col1.map(movie => (
+                {col1.map((movie, index) => (
                   <div
                     key={movie.id}
                     className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10"
@@ -216,6 +216,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
                       className="object-cover"
+                      priority
                     />
                   </div>
                 ))}
@@ -223,7 +224,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
 
               {/* Column 2 - offset up, always visible */}
               <div className="flex flex-col gap-3 md:gap-5 -mt-16">
-                {col2.map(movie => (
+                {col2.map((movie, index) => (
                   <div
                     key={movie.id}
                     className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
@@ -234,6 +235,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
                       className="object-cover"
+                      priority
                     />
                   </div>
                 ))}
@@ -241,7 +243,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
 
               {/* Column 3 - offset down, hidden on small screens */}
               <div className="hidden md:flex flex-col gap-3 md:gap-5 mt-8">
-                {col3.map(movie => (
+                {col3.map((movie, index) => (
                   <div
                     key={movie.id}
                     className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
@@ -252,6 +254,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
                       className="object-cover"
+                      priority
                     />
                   </div>
                 ))}

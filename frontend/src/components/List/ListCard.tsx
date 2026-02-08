@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
-import { useListThumbnail } from '@/hooks/useListThumbnail';
+import { PosterGrid } from '@/components/List/PosterGrid';
 import type { Watchlist } from '@/lib/api-client';
 import type { Content } from '@/types/content';
 
@@ -49,7 +49,6 @@ export function ListCard({
   draggableProps,
 }: ListCardProps) {
   const router = useRouter();
-  const thumbnailUrl = useListThumbnail(watchlist);
   const editButtonRef = useRef<HTMLDivElement>(null);
   const deleteButtonRef = useRef<HTMLDivElement>(null);
 
@@ -103,9 +102,9 @@ export function ListCard({
                 {watchlist.name}
               </span>
             </div>
-          ) : thumbnailUrl ? (
+          ) : watchlist.imageUrl ? (
             <Image
-              src={thumbnailUrl}
+              src={watchlist.imageUrl}
               alt={watchlist.name}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
@@ -113,6 +112,8 @@ export function ListCard({
               priority={priority}
               unoptimized
             />
+          ) : watchlist.items?.length > 0 ? (
+            <PosterGrid items={watchlist.items} alt={watchlist.name} priority={priority} />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Film strokeWidth={1.4} className="text-muted-foreground h-12 w-12" />
@@ -131,9 +132,9 @@ export function ListCard({
                 {watchlist.name}
               </span>
             </div>
-          ) : thumbnailUrl ? (
+          ) : watchlist.imageUrl ? (
             <Image
-              src={thumbnailUrl}
+              src={watchlist.imageUrl}
               alt={watchlist.name}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
@@ -141,6 +142,8 @@ export function ListCard({
               priority={priority}
               unoptimized
             />
+          ) : watchlist.items?.length > 0 ? (
+            <PosterGrid items={watchlist.items} alt={watchlist.name} priority={priority} />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Film strokeWidth={1} className="text-muted-foreground h-12 w-12" />
@@ -158,13 +161,13 @@ export function ListCard({
             alt="Suivi"
             width={16}
             height={16}
-            className="h-4 w-4 shrink-0"
+            className="h-3.5 w-3.5 shrink-0"
           />
         )}
 
         {/* Collaborative Badge */}
-        {showCollaborativeBadge && (
-          <UsersRound strokeWidth={2.1} className="text-gray-300 h-3.5 w-3.5 shrink-0" />
+        {showCollaborativeBadge && !showSavedBadge && (
+          <UsersRound strokeWidth={2} className="text-gray-300 h-[13px] w-[13px] shrink-0" />
         )}
 
         <h3 className="line-clamp-2 text-[14.5px] font-semibold text-white">

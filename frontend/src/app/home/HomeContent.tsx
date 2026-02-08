@@ -18,7 +18,6 @@ import { useAuth } from '@/context/auth-context';
 import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 // import { MoviePoster } from '@/components/Home/MoviePoster';
-// import { deleteCachedThumbnail } from '@/lib/thumbnailGenerator';
 import {
   getTMDBLanguage,
   // getTMDBRegion

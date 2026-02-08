@@ -55,7 +55,6 @@ import type { Watchlist, WatchlistItem } from "@/lib/api-client";
 import { watchlistAPI } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { getLocalWatchlistsWithOwnership } from "@/lib/localStorageHelpers";
-import { generateAndCacheThumbnail, getThumbnailCacheKey } from "@/lib/thumbnailGenerator";
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language";
 import type { Content } from "@/types/content";
@@ -482,17 +481,6 @@ export function ListItemsTable({
 
          await watchlistAPI.removeItem(watchlist.id, tmdbId.toString());
 
-         if (!watchlist.imageUrl && newItems.length > 0) {
-            const posterUrls = newItems
-               .slice(0, 4)
-               .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
-               .filter((url): url is string => url !== null);
-            if (posterUrls.length > 0) {
-               const cacheKey = getThumbnailCacheKey(watchlist.id, newItems.slice(0, 4).map((item) => item.posterPath));
-               await generateAndCacheThumbnail(cacheKey, posterUrls);
-            }
-         }
-
          // Notify parent with updated watchlist (no loading flicker)
          onUpdate({ ...watchlist, items: newItems });
       } catch (error) {
@@ -521,17 +509,6 @@ export function ListItemsTable({
 
          await watchlistAPI.moveItem(watchlist.id, tmdbId.toString(), position);
 
-         if (!watchlist.imageUrl && newItems.length > 0) {
-            const posterUrls = newItems
-               .slice(0, 4)
-               .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
-               .filter((url): url is string => url !== null);
-            if (posterUrls.length > 0) {
-               const cacheKey = getThumbnailCacheKey(watchlist.id, newItems.slice(0, 4).map((item) => item.posterPath));
-               await generateAndCacheThumbnail(cacheKey, posterUrls);
-            }
-         }
-
          // Notify parent with updated watchlist (no loading flicker)
          onUpdate({ ...watchlist, items: newItems });
       } catch (error) {
@@ -556,17 +533,6 @@ export function ListItemsTable({
          try {
             const orderedTmdbIds = newItems.map((item) => item.tmdbId.toString());
             await watchlistAPI.reorderItems(watchlist.id, orderedTmdbIds);
-
-            if (!watchlist.imageUrl && newItems.length > 0) {
-               const posterUrls = newItems
-                  .slice(0, 4)
-                  .map((item) => getTMDBImageUrl(item.posterPath, "w342"))
-                  .filter((url): url is string => url !== null);
-               if (posterUrls.length > 0) {
-                  const cacheKey = getThumbnailCacheKey(watchlist.id, newItems.slice(0, 4).map((item) => item.posterPath));
-                  await generateAndCacheThumbnail(cacheKey, posterUrls);
-               }
-            }
 
             // Notify parent with updated watchlist (no loading flicker)
             onUpdate({ ...watchlist, items: newItems });

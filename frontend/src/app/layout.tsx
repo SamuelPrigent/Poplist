@@ -6,19 +6,40 @@ import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://samuelprigent.com'),
   title: {
     default: 'Poplist',
     template: '%s | Poplist',
   },
   description: 'Créez et partagez vos listes de films et séries',
   icons: {
-    icon: '/play.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/play.png', sizes: '512x512', type: 'image/png' },
+    ],
     apple: '/play.png',
   },
   openGraph: {
     title: 'Poplist',
     description: 'Créez et partagez vos listes de films et séries',
+    url: 'https://samuelprigent.com',
+    siteName: 'Poplist',
+    images: [
+      {
+        url: '/preview/watchlists1.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Poplist — Créez et partagez vos listes de films et séries',
+      },
+    ],
     type: 'website',
+    locale: 'fr_FR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Poplist',
+    description: 'Créez et partagez vos listes de films et séries',
+    images: ['/preview/watchlists1.webp'],
   },
 };
 
