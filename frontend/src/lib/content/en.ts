@@ -139,7 +139,7 @@ export const en: Content = {
     },
     collaborators: {
       addTitle: 'Add Collaborator',
-      addDescription: 'Enter username to invite a collaborator',
+      addDescription: 'Enter the collaborator\'s username',
       usernamePlaceholder: 'Username',
       add: 'Add',
       adding: 'Adding...',

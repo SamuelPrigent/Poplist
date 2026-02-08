@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, User, X } from 'lucide-react';
+import { Check, Plus, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -133,7 +133,7 @@ export function AddCollaboratorPopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className="w-80 p-4" align="start">
+      <PopoverContent className="w-80 p-4" side="right" align="start">
         <div className="space-y-4">
           <div>
             <h3 className="mb-2 text-sm font-semibold">
@@ -141,37 +141,37 @@ export function AddCollaboratorPopover({
             </h3>
             <p className="text-muted-foreground mb-3 text-xs">
               {content.watchlists.collaborators?.addDescription ||
-                "Entrez le nom d'utilisateur de la personne à ajouter"}
+                "Entrez le nom utilisateur du collaborateur"}
             </p>
 
-            <div className="relative">
-              <Input
-                placeholder={
-                  content.watchlists.collaborators?.usernamePlaceholder || "Nom d'utilisateur"
-                }
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !isAddButtonDisabled) {
-                    handleAddCollaborator();
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  placeholder={
+                    content.watchlists.collaborators?.usernamePlaceholder || "Nom d'utilisateur"
                   }
-                }}
-                className="pr-10"
-                disabled={isAdding}
-              />
-              <div className="absolute top-1/2 right-3 -translate-y-1/2">{getValidationIcon()}</div>
-            </div>
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !isAddButtonDisabled) {
+                      handleAddCollaborator();
+                    }
+                  }}
+                  className="pr-10"
+                  disabled={isAdding}
+                />
+                <div className="absolute top-1/2 right-3 -translate-y-1/2">{getValidationIcon()}</div>
+              </div>
 
-            <Button
-              onClick={handleAddCollaborator}
-              disabled={isAddButtonDisabled}
-              className="mt-2 w-full cursor-pointer"
-              size="sm"
-            >
-              {isAdding
-                ? content.watchlists.collaborators?.adding || 'Ajout...'
-                : content.watchlists.collaborators?.add || 'Ajouter'}
-            </Button>
+              <Button
+                onClick={handleAddCollaborator}
+                disabled={isAddButtonDisabled}
+                className="aspect-square cursor-pointer !p-0"
+                size="icon"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {collaborators.length > 0 && (

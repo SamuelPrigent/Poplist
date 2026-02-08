@@ -140,7 +140,7 @@ export const es: Content = {
     },
     collaborators: {
       addTitle: 'Añadir Colaborador',
-      addDescription: 'Introduce el nombre de usuario para invitar a un colaborador',
+      addDescription: 'Introduce el nombre de usuario del colaborador',
       usernamePlaceholder: 'Nombre de usuario',
       add: 'Añadir',
       adding: 'Añadiendo...',

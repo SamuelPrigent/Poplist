@@ -142,7 +142,7 @@ export const de: Content = {
     },
     collaborators: {
       addTitle: 'Mitarbeiter hinzufügen',
-      addDescription: 'Benutzername eingeben, um einen Mitarbeiter einzuladen',
+      addDescription: 'Benutzername des Mitarbeiters eingeben',
       usernamePlaceholder: 'Benutzername',
       add: 'Hinzufügen',
       adding: 'Wird hinzugefügt...',
