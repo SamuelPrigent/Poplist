@@ -435,12 +435,12 @@ export function ExploreContent() {
   }, [mediaType, content]);
 
   return (
-    <div className="bg-background mb-24 min-h-screen p-12">
+    <div className="bg-background mb-24 min-h-screen p-12 py-8">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="mb-12 text-left">
-          <h1 className="mb-4 text-5xl font-bold text-white">{content.explore.title}</h1>
-          <p className="text-muted-foreground text-lg">{content.explore.subtitle}</p>
+        <div className="mb-7 text-left">
+          <h1 className="mb-2 text-4xl font-bold text-white">{content.explore.title}</h1>
+          <p className="text-muted-foreground text-normal">{content.explore.subtitle}</p>
         </div>
 
         {/* Filters */}
@@ -614,11 +614,7 @@ export function ExploreContent() {
 
           {/* Genre Filter Row */}
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => clearGenres()}
-              className="cursor-pointer"
-            >
+            <button type="button" onClick={() => clearGenres()} className="cursor-pointer">
               {selectedGenres.length === 0 ? (
                 <span className="flex animate-fade-in items-center rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black">
                   {content.explore.filters.all}
