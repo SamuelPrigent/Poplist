@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { HTTPException } from 'hono/http-exception';
 import { env } from './env.js';
 import authRoutes from './routes/auth.js';
+import authMobileRoutes from './routes/auth-mobile.js';
 import userRoutes from './routes/users.js';
 import tmdbRoutes from './routes/tmdb.js';
 import watchlistRoutes from './routes/watchlists.js';
@@ -72,6 +73,7 @@ app.get('/image-proxy', async c => {
 
 // Routes
 app.route('/auth', authRoutes);
+app.route('/auth/mobile', authMobileRoutes);
 app.route('/user', userRoutes);
 app.route('/tmdb', tmdbRoutes);
 app.route('/watchlists', watchlistRoutes);

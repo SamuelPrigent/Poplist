@@ -35,3 +35,13 @@ export const setTokensSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
 });
+
+// Mobile
+export const googleMobileSchema = z.object({
+  code: z.string(),
+  redirectUri: z.string(),
+});
+
+export const refreshMobileSchema = z.object({
+  refreshToken: z.string(),
+});

@@ -3,8 +3,17 @@ import { createMiddleware } from 'hono/factory';
 import { verifyAccessToken } from '../services/jwt.js';
 import type { AppEnv } from '../app.js';
 
+function extractToken(c: any): string | undefined {
+  // Cookie first (web), then Bearer header (mobile)
+  const cookie = getCookie(c, 'accessToken');
+  if (cookie) return cookie;
+  const authHeader = c.req.header('Authorization');
+  if (authHeader?.startsWith('Bearer ')) return authHeader.slice(7);
+  return undefined;
+}
+
 export const auth = createMiddleware<AppEnv>(async (c, next) => {
-  const accessToken = getCookie(c, 'accessToken');
+  const accessToken = extractToken(c);
 
   if (!accessToken) {
     return c.json({ error: 'Authentication required' }, 401);
@@ -20,7 +29,7 @@ export const auth = createMiddleware<AppEnv>(async (c, next) => {
 });
 
 export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const accessToken = getCookie(c, 'accessToken');
+  const accessToken = extractToken(c);
 
   if (accessToken) {
     try {

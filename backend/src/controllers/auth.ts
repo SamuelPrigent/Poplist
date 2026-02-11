@@ -151,7 +151,13 @@ export const login = async (c: C) => {
 }
 
 export const googleAuth = (c: C) => {
-  const authUrl = getGoogleAuthURL()
+  const mobile = c.req.query('mobile')
+  const returnUrl = c.req.query('returnUrl')
+  let state: string | undefined
+  if (mobile === 'true') {
+    state = returnUrl ? `mobile:${returnUrl}` : 'mobile'
+  }
+  const authUrl = getGoogleAuthURL(state)
   return c.redirect(authUrl)
 }
 
@@ -195,6 +201,18 @@ export const googleCallback = async (c: C) => {
 
     await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
 
+    // Mobile: redirect to app with tokens
+    const state = c.req.query('state')
+    if (state?.startsWith('mobile')) {
+      const params = new URLSearchParams({ accessToken, refreshToken })
+      let redirectBase = 'poplist://auth'
+      if (state.startsWith('mobile:')) {
+        redirectBase = state.slice('mobile:'.length)
+      }
+      return c.redirect(`${redirectBase}?${params.toString()}`)
+    }
+
+    // Web: postMessage to opener
     const clientURL = getClientURL()
     return c.html(`
       <!DOCTYPE html>
