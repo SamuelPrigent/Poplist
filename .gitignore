@@ -6,7 +6,4 @@ dist
 node_modules
 archives
 private
-backendexpress
-backend2
 .agents
-mobile

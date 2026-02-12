@@ -1,0 +1,29 @@
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+interface WatchlistFiltersState {
+  showOwned: boolean
+  showSaved: boolean
+  setShowOwned: (show: boolean) => void
+  setShowSaved: (show: boolean) => void
+  toggleOwned: () => void
+  toggleSaved: () => void
+}
+
+export const useListFiltersStore = create<WatchlistFiltersState>()(
+  persist(
+    (set) => ({
+      showOwned: true,
+      showSaved: false,
+      setShowOwned: (show: boolean) => set({ showOwned: show }),
+      setShowSaved: (show: boolean) => set({ showSaved: show }),
+      toggleOwned: () => set((state) => ({ showOwned: !state.showOwned })),
+      toggleSaved: () => set((state) => ({ showSaved: !state.showSaved })),
+    }),
+    {
+      name: 'watchlist-filters-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
+)

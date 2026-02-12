@@ -1,0 +1,6 @@
+# Exclude everything outside mobile during EAS build upload
+../frontend
+../backend
+../archives
+../private
+../.agents

@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Poplist",
+    "slug": "poplist",
+    "owner": "samuelprigent",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "poplist",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#020817"
+    },
+    "ios": {
+      "bundleIdentifier": "com.poplist.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#020817"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.poplist.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a476ab80-67fc-4af9-9019-0ab511bba185"
+      }
+    }
+  }
+}
