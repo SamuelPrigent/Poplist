@@ -578,6 +578,14 @@ export const pt: Content = {
       deleting: 'A eliminar...',
       cancel: 'Cancelar',
     },
+    themeSection: {
+      title: 'Tema',
+      description: 'Escolha o tema visual da interface',
+      ocean: 'Oceano',
+      oceanDescription: 'Tons de azul profundo',
+      midnight: 'Meia-noite',
+      midnightDescription: 'Cinza escuro neutro',
+    },
     toasts: {
       usernameUpdated: 'Nome de utilizador atualizado',
       usernameUpdatedDesc: 'O seu nome de utilizador foi atualizado com sucesso.',

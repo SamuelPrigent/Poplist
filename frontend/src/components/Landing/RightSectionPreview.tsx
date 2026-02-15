@@ -197,7 +197,7 @@ export function RightSectionPreviewV1() {
   return (
     <div className="relative">
       {/* Container avec effet glass */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0a1628]/80 p-4 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-card/80 p-4 backdrop-blur-sm">
         {/* Header */}
         <div className="mb-4 px-2">
           <h3 className="text-base font-semibold text-white">Bibliothèque</h3>
@@ -213,7 +213,7 @@ export function RightSectionPreviewV1() {
         </div>
 
         {/* Gradient fade en bas */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-[#0a1628] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-background to-transparent" />
       </div>
     </div>
   );
@@ -226,7 +226,7 @@ export function RightSectionPreviewV2() {
   return (
     <div className="relative">
       {/* Parent avec taille fixe - les enfants débordent et sont coupés */}
-      <div className="relative h-[450px] w-full max-w-[550px] overflow-hidden rounded-2xl border border-white/10 bg-[#0a1628]/80 p-4 backdrop-blur-sm">
+      <div className="relative h-[450px] w-full max-w-[550px] overflow-hidden rounded-2xl border border-white/10 bg-card/80 p-4 backdrop-blur-sm">
         {/* Header avec tabs */}
         <div className="mb-3 px-2">
           <h3 className="text-base font-semibold text-white">Bibliothèque</h3>
@@ -256,9 +256,9 @@ export function RightSectionPreviewV2() {
         </div>
 
         {/* Gradient fade right - coupe la 3ème colonne */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-[25%] bg-linear-to-l from-[#0b1120] via-[#0b1120]/90 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-[25%] bg-linear-to-l from-background via-background/90 to-transparent" />
         {/* Gradient fade bottom - coupe la 2ème rangée */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-[#0b1120] via-[#0b1120]/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-background via-background/80 to-transparent" />
       </div>
     </div>
   );
@@ -270,7 +270,7 @@ export function RightSectionPreviewV2() {
 export function RightSectionPreviewV3() {
   return (
     <div className="relative">
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0a1628]/80 p-4 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-card/80 p-4 backdrop-blur-sm">
         {/* Header avec tabs */}
         <div className="mb-3 px-2">
           <h3 className="text-base font-semibold text-white">Bibliothèque</h3>
@@ -311,9 +311,9 @@ export function RightSectionPreviewV3() {
         </div>
 
         {/* Gradient fade right */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-[10%] bg-linear-to-l from-[#0a1628] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-[10%] bg-linear-to-l from-background to-transparent" />
         {/* Gradient fade bottom */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-[#0a1628] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-background to-transparent" />
       </div>
     </div>
   );

@@ -1,36 +1,36 @@
 import { useState, useRef, useCallback } from 'react'
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Dimensions } from 'react-native'
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Dimensions, Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { useAuth } from '../../context/auth-context'
 import { useLanguageStore } from '../../store/language'
-import { usePreferencesStore, type ColumnCount, type Handedness } from '../../store/preferences'
+import { usePreferencesStore, type ColumnCount, type Handedness, type BgTheme, type ExploreColumnCount } from '../../store/preferences'
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
-import { LogOut, User as UserIcon, Check } from 'lucide-react-native'
+import { useTheme } from '../../hooks/useTheme'
+import { LogOut, User as UserIcon, Check, ChevronDown } from 'lucide-react-native'
 import type { Language } from '../../store/language'
 
 const LANGUAGES = [
-  { code: 'fr', label: 'Français' },
-  { code: 'en', label: 'English' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'es', label: 'Español' },
-  { code: 'it', label: 'Italiano' },
-  { code: 'pt', label: 'Português' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', label: 'Português', flag: '🇵🇹' },
 ] as const
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
-type TabKey = 'preferences' | 'account'
-const TABS: TabKey[] = ['preferences', 'account']
+type TabKey = 'display' | 'preferences' | 'account'
+const TABS: TabKey[] = ['display', 'preferences', 'account']
 
 /** Mini phone mockup showing a grid layout */
-function PhoneMockup({ cols, isActive }: { cols: 2 | 3; isActive: boolean }) {
+function PhoneMockup({ cols, isActive, theme }: { cols: number; isActive: boolean; theme: import('../../hooks/useTheme').ThemeColors }) {
   const phoneW = 64
   const phoneH = 104
   const borderW = 2
   const innerPad = 5
-  const notchH = 8 // notch height + marginTop
   const contentW = phoneW - borderW * 2 - innerPad * 2
   const gap = 3
   const cellW = Math.floor((contentW - gap * (cols - 1)) / cols)
@@ -41,12 +41,12 @@ function PhoneMockup({ cols, isActive }: { cols: 2 | 3; isActive: boolean }) {
     <View
       style={[
         mockupStyles.phone,
-        { width: phoneW, height: phoneH },
+        { width: phoneW, height: phoneH, borderColor: theme.border, backgroundColor: theme.panel },
         isActive && mockupStyles.phoneActive,
       ]}
     >
       {/* Notch */}
-      <View style={mockupStyles.notch} />
+      <View style={[mockupStyles.notch, { backgroundColor: theme.border }]} />
       {/* Grid */}
       <View style={{ paddingHorizontal: innerPad, paddingTop: 7, alignItems: 'center', gap }}>
         {Array.from({ length: rows }, (_, row) => (
@@ -58,7 +58,7 @@ function PhoneMockup({ cols, isActive }: { cols: 2 | 3; isActive: boolean }) {
                   width: cellW,
                   height: cellH,
                   borderRadius: 3,
-                  backgroundColor: isActive ? 'rgba(99,102,241,0.35)' : colors.secondary,
+                  backgroundColor: isActive ? 'rgba(99,102,241,0.35)' : theme.secondary,
                 }}
               />
             ))}
@@ -73,8 +73,6 @@ const mockupStyles = StyleSheet.create({
   phone: {
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: '#0a1122',
     overflow: 'hidden',
   },
   phoneActive: {
@@ -85,7 +83,6 @@ const mockupStyles = StyleSheet.create({
     width: 20,
     height: 3,
     borderRadius: 2,
-    backgroundColor: colors.border,
     marginTop: 5,
   },
 })
@@ -93,11 +90,15 @@ const mockupStyles = StyleSheet.create({
 export default function AccountScreen() {
   const { user, logout } = useAuth()
   const { content, language, setLanguage } = useLanguageStore()
-  const { columns, setColumns, handedness, setHandedness } = usePreferencesStore()
+  const { columns, setColumns, handedness, setHandedness, bgTheme, setBgTheme, exploreColumns, setExploreColumns } = usePreferencesStore()
+  const theme = useTheme()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<TabKey>('preferences')
+  const [activeTab, setActiveTab] = useState<TabKey>('display')
   const [usernameInput, setUsernameInput] = useState(user?.username || '')
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
+
+  const currentLang = LANGUAGES.find((l) => l.code === language) || LANGUAGES[0]
 
   const handleTabPress = (tab: TabKey) => {
     setActiveTab(tab)
@@ -115,11 +116,11 @@ export default function AccountScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Fixed header + tabs */}
       <View style={styles.headerSection}>
         <View style={styles.headerRow}>
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, { backgroundColor: theme.secondary }]}>
             {user?.avatarUrl ? (
               <Image
                 source={{ uri: user.avatarUrl }}
@@ -134,28 +135,30 @@ export default function AccountScreen() {
             <Text style={styles.username} numberOfLines={1}>{user?.username || 'User'}</Text>
             <Text style={styles.email} numberOfLines={1}>{user?.email}</Text>
           </View>
-          <Pressable style={styles.logoutBtn} onPress={handleLogout}>
+          <Pressable style={[styles.logoutBtn, { backgroundColor: theme.container }]} onPress={handleLogout}>
             <LogOut size={20} color={colors.mutedForeground} />
           </Pressable>
         </View>
 
-        <View style={styles.tabsRow}>
-          <Pressable
-            style={[styles.tab, activeTab === 'preferences' && styles.tabActive]}
-            onPress={() => handleTabPress('preferences')}
-          >
-            <Text style={[styles.tabText, activeTab === 'preferences' && styles.tabTextActive]}>
-              Préférences
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tab, activeTab === 'account' && styles.tabActive]}
-            onPress={() => handleTabPress('account')}
-          >
-            <Text style={[styles.tabText, activeTab === 'account' && styles.tabTextActive]}>
-              Compte
-            </Text>
-          </Pressable>
+        <View style={[styles.tabsRow, { borderBottomColor: theme.border }]}>
+          {TABS.map((tab) => {
+            const labels: Record<TabKey, string> = {
+              display: (content as any).settings?.tabs?.display ?? 'Affichage',
+              preferences: (content as any).settings?.tabs?.preferences ?? 'Pr\u00e9f\u00e9rences',
+              account: (content as any).settings?.tabs?.account ?? 'Compte',
+            }
+            return (
+              <Pressable
+                key={tab}
+                style={[styles.tab, activeTab === tab && styles.tabActive]}
+                onPress={() => handleTabPress(tab)}
+              >
+                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                  {labels[tab]}
+                </Text>
+              </Pressable>
+            )
+          })}
         </View>
       </View>
 
@@ -168,67 +171,128 @@ export default function AccountScreen() {
         onMomentumScrollEnd={handleScrollEnd}
         scrollEventThrottle={16}
       >
-        {/* Page: Préférences */}
+        {/* Page: Affichage (display) */}
         <ScrollView
           style={{ width: SCREEN_WIDTH }}
           contentContainerStyle={styles.pageContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectionTitle}>{content.footer.language}</Text>
-          <View style={styles.languageGrid}>
-            {LANGUAGES.map((lang) => {
-              const isActive = language === lang.code
+          <Text style={styles.sectionTitle}>{(content as any).settings?.display?.backgroundColor ?? 'Couleur de fond'}</Text>
+          <Text style={styles.sectionHint}>{(content as any).settings?.display?.backgroundColorHint ?? "Th\u00e8me de l'application"}</Text>
+          <View style={styles.columnsRow}>
+            {([
+              { key: 'midnight' as BgTheme, color: '#080808', label: (content as any).settings?.display?.midnight ?? 'Minuit' },
+              { key: 'ocean' as BgTheme, color: '#020817', label: (content as any).settings?.display?.ocean ?? 'Oc\u00e9an' },
+            ]).map(({ key, color, label }) => {
+              const isActive = bgTheme === key
               return (
                 <Pressable
-                  key={lang.code}
-                  style={[styles.languageChip, isActive && styles.languageChipActive]}
-                  onPress={() => setLanguage(lang.code as Language)}
+                  key={key}
+                  style={styles.columnOption}
+                  onPress={() => setBgTheme(key)}
                 >
-                  <Text style={[styles.languageText, isActive && styles.languageTextActive]}>
-                    {lang.label}
-                  </Text>
+                  <View style={[
+                    styles.themePreview,
+                    { backgroundColor: color, borderColor: theme.border },
+                    isActive && { borderColor: colors.primary, borderWidth: 2 },
+                  ]}>
+                    <View style={[styles.themePreviewInner, { backgroundColor: key === 'ocean' ? '#0a1122' : '#141414' }]} />
+                  </View>
+                  <Text style={[styles.columnLabel, isActive && styles.columnLabelActive]}>{label}</Text>
                 </Pressable>
               )
             })}
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: spacing['2xl'] }]}>Affichage</Text>
-          <Text style={styles.sectionHint}>Colonnes sur la page d'accueil</Text>
+          <Text style={[styles.sectionTitle, { marginTop: spacing['2xl'] }]}>{(content as any).settings?.display?.listColumns ?? 'Colonnes des listes'}</Text>
+          <Text style={styles.sectionHint}>{(content as any).settings?.display?.listColumnsHint ?? 'Nombre de colonnes'}</Text>
           <View style={styles.columnsRow}>
             {([2, 3] as const).map((col) => {
               const isActive = columns === col
               return (
-                <Pressable
-                  key={col}
-                  style={styles.columnOption}
-                  onPress={() => setColumns(col as ColumnCount)}
-                >
-                  <PhoneMockup cols={col} isActive={isActive} />
-                  <Text
-                    style={[
-                      styles.columnLabel,
-                      isActive && styles.columnLabelActive,
-                    ]}
-                  >
-                    x{col}
-                  </Text>
+                <Pressable key={col} style={styles.columnOption} onPress={() => setColumns(col as ColumnCount)}>
+                  <PhoneMockup cols={col} isActive={isActive} theme={theme} />
+                  <Text style={[styles.columnLabel, isActive && styles.columnLabelActive]}>x{col}</Text>
                 </Pressable>
               )
             })}
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: spacing['2xl'] }]}>Main dominante</Text>
-          <Text style={styles.sectionHint}>Position des boutons d'action</Text>
+          <Text style={[styles.sectionTitle, { marginTop: spacing['2xl'] }]}>{(content as any).settings?.display?.exploreColumns ?? 'Colonnes Explorer'}</Text>
+          <Text style={styles.sectionHint}>{(content as any).settings?.display?.exploreColumnsHint ?? 'Nombre de colonnes'}</Text>
+          <View style={styles.columnsRow}>
+            {([2, 3, 4] as const).map((col) => {
+              const isActive = exploreColumns === col
+              return (
+                <Pressable key={col} style={styles.columnOption} onPress={() => setExploreColumns(col as ExploreColumnCount)}>
+                  <PhoneMockup cols={col} isActive={isActive} theme={theme} />
+                  <Text style={[styles.columnLabel, isActive && styles.columnLabelActive]}>x{col}</Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        </ScrollView>
+
+        {/* Page: Preferences */}
+        <ScrollView
+          style={{ width: SCREEN_WIDTH }}
+          contentContainerStyle={styles.pageContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.sectionTitle}>{(content as any).settings?.preferences?.language ?? content.footer.language}</Text>
+          <View style={{ zIndex: 10 }}>
+            <Pressable
+              style={[styles.dropdownTrigger, { backgroundColor: theme.container, borderColor: theme.border }]}
+              onPress={() => setLangDropdownOpen(true)}
+            >
+              <Text style={styles.dropdownFlag}>{currentLang.flag}</Text>
+              <Text style={styles.dropdownLabel}>{currentLang.label}</Text>
+              <ChevronDown size={16} color={colors.mutedForeground} />
+            </Pressable>
+
+            <Modal
+              visible={langDropdownOpen}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setLangDropdownOpen(false)}
+            >
+              <Pressable style={styles.dropdownOverlay} onPress={() => setLangDropdownOpen(false)}>
+                <View style={[styles.dropdownMenu, { backgroundColor: theme.panel, borderColor: theme.border }]}>
+                  {LANGUAGES.map((lang) => {
+                    const isActive = language === lang.code
+                    return (
+                      <Pressable
+                        key={lang.code}
+                        style={[styles.dropdownItem, isActive && { backgroundColor: theme.accent }]}
+                        onPress={() => {
+                          setLanguage(lang.code as Language)
+                          setLangDropdownOpen(false)
+                        }}
+                      >
+                        <Text style={styles.dropdownFlag}>{lang.flag}</Text>
+                        <Text style={[styles.dropdownItemText, isActive && styles.dropdownItemTextActive]}>
+                          {lang.label}
+                        </Text>
+                      </Pressable>
+                    )
+                  })}
+                </View>
+              </Pressable>
+            </Modal>
+          </View>
+
+          <Text style={[styles.sectionTitle, { marginTop: spacing['2xl'] }]}>{(content as any).settings?.preferences?.handedness ?? 'Main dominante'}</Text>
+          <Text style={styles.sectionHint}>{(content as any).settings?.preferences?.handednessHint ?? "Position des boutons d'action"}</Text>
           <View style={styles.handednessRow}>
             {([
-              { key: 'left', label: 'Gaucher' },
-              { key: 'right', label: 'Droitier' },
+              { key: 'left', label: (content as any).settings?.preferences?.leftHanded ?? 'Gaucher' },
+              { key: 'right', label: (content as any).settings?.preferences?.rightHanded ?? 'Droitier' },
             ] as const).map(({ key, label }) => {
               const isActive = handedness === key
               return (
                 <Pressable
                   key={key}
-                  style={[styles.handednessChip, isActive && styles.handednessChipActive]}
+                  style={[styles.handednessChip, { borderColor: theme.border }, isActive && styles.handednessChipActive]}
                   onPress={() => setHandedness(key as Handedness)}
                 >
                   <Text style={[styles.handednessText, isActive && styles.handednessTextActive]}>
@@ -240,7 +304,7 @@ export default function AccountScreen() {
           </View>
         </ScrollView>
 
-        {/* Page: Compte */}
+        {/* Page: Compte (account) */}
         <ScrollView
           style={{ width: SCREEN_WIDTH }}
           contentContainerStyle={styles.pageContent}
@@ -249,7 +313,7 @@ export default function AccountScreen() {
           <Text style={styles.sectionTitle}>{content.profile.usernameSection.title}</Text>
           <View style={styles.usernameRow}>
             <TextInput
-              style={styles.usernameInput}
+              style={[styles.usernameInput, { backgroundColor: theme.secondary, borderColor: theme.border }]}
               value={usernameInput}
               onChangeText={setUsernameInput}
               placeholder={content.profile.usernameSection.placeholder}
@@ -262,7 +326,7 @@ export default function AccountScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.dangerSection}>
+          <View style={[styles.dangerSection, { borderTopColor: theme.border }]}>
             <Text style={styles.dangerTitle}>{content.profile.deleteSection.title}</Text>
             <Text style={styles.dangerDesc}>{content.profile.deleteSection.description}</Text>
             <Pressable style={styles.dangerBtn} onPress={() => {/* Phase 1: non-functional */}}>
@@ -326,7 +390,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: borderRadius.md,
-    backgroundColor: '#0f1729',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -355,6 +418,20 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     fontWeight: '600',
   },
+  // Theme preview
+  themePreview: {
+    width: 64,
+    height: 104,
+    borderRadius: 12,
+    borderWidth: 2,
+    overflow: 'hidden',
+    padding: 8,
+    justifyContent: 'flex-end',
+  },
+  themePreviewInner: {
+    height: '40%',
+    borderRadius: 6,
+  },
   // Language
   sectionTitle: {
     fontSize: fontSize.base,
@@ -367,28 +444,55 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     marginBottom: spacing.lg,
   },
-  languageGrid: {
+  dropdownTrigger: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: spacing.sm,
-  },
-  languageChip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
+    alignSelf: 'flex-start',
   },
-  languageChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  dropdownFlag: {
+    fontSize: 18,
   },
-  languageText: {
+  dropdownLabel: {
     fontSize: fontSize.sm,
     color: colors.foreground,
+    fontWeight: '500',
   },
-  languageTextActive: {
-    color: colors.primaryForeground,
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownMenu: {
+    width: 220,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  dropdownItemActive: {
+    backgroundColor: colors.accent,
+  },
+  dropdownItemText: {
+    fontSize: fontSize.sm,
+    color: colors.mutedForeground,
+  },
+  dropdownItemTextActive: {
+    color: colors.foreground,
+    fontWeight: '600',
   },
   // Columns
   columnsRow: {

@@ -8,6 +8,7 @@ import { useLanguageStore } from '../../store/language'
 import { usePreferencesStore } from '../../store/preferences'
 import { useAuth } from '../../context/auth-context'
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import WatchlistCard from '../../components/WatchlistCard'
 import EmptyState from '../../components/EmptyState'
 import FloatingActionButton from '../../components/FloatingActionButton'
@@ -25,6 +26,7 @@ export default function ListsScreen() {
   const { content } = useLanguageStore()
   const { columns, handedness } = usePreferencesStore()
   const { user } = useAuth()
+  const theme = useTheme()
   const cardWidth = getCardWidth(columns)
   const router = useRouter()
   const { data, isLoading } = useMyWatchlists()
@@ -65,7 +67,7 @@ export default function ListsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -74,7 +76,7 @@ export default function ListsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{content.watchlists.myWatchlists}</Text>
@@ -144,33 +146,35 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: 2,
   },
   title: {
-    fontSize: fontSize.xl,
+    fontSize: fontSize['2xl'],
     fontWeight: '700',
     color: colors.foreground,
   },
   filters: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.lg,
     gap: spacing.sm,
   },
   filterChip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    height: 31,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: borderRadius.md,
+    borderWidth: 0,
+    backgroundColor: colors.muted,
   },
   filterChipActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   filterText: {
     fontSize: fontSize.sm,
-    color: colors.foreground,
+    color: colors.mutedForeground,
   },
   filterTextActive: {
     color: colors.primaryForeground,

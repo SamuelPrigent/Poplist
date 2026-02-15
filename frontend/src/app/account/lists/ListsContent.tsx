@@ -202,17 +202,17 @@ function ListsContentInner() {
   return (
     <Section className="mb-20">
       {/* Title */}
-      <div className="mt-0 mb-3">
+      <div className="mt-0 mb-1">
         <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>
       </div>
 
       {/* Filters and Create Button */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mb-8 flex items-end justify-between">
+        <div className="flex items-end gap-2">
           <button
             type="button"
             onClick={toggleOwned}
-            className={`focus-visible:ring-offset-background cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
+            className={`focus-visible:ring-offset-background h-[31px] cursor-pointer rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
               showOwned
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -223,7 +223,7 @@ function ListsContentInner() {
           <button
             type="button"
             onClick={toggleSaved}
-            className={`focus-visible:ring-offset-background cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
+            className={`focus-visible:ring-offset-background h-[31px] cursor-pointer rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
               showSaved
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'

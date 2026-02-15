@@ -8,6 +8,7 @@ import { userAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
 import { usePreferencesStore } from '../../store/preferences'
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import WatchlistCard from '../../components/WatchlistCard'
 import EmptyState from '../../components/EmptyState'
 import type { Watchlist, UserProfilePublic } from '../../types'
@@ -18,6 +19,7 @@ function getCardWidth(cols: number) {
 }
 
 export default function UserProfileScreen() {
+  const theme = useTheme()
   const { username } = useLocalSearchParams<{ username: string }>()
   const navigation = useNavigation()
   const insets = useSafeAreaInsets()
@@ -50,7 +52,7 @@ export default function UserProfileScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
@@ -58,7 +60,7 @@ export default function UserProfileScreen() {
 
   if (!profile) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
         <EmptyState title={content.userProfile.notFound} />
       </View>
     )
@@ -70,7 +72,7 @@ export default function UserProfileScreen() {
 
   return (
     <FlatList
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 32 }]}
       data={watchlists}
       keyExtractor={(item) => item.id}

@@ -6,10 +6,12 @@ import * as Linking from 'expo-linking'
 import { useAuth } from '../context/auth-context'
 import { API_BASE_URL } from '../constants/api'
 import { colors, fontSize, spacing, borderRadius } from '../constants/theme'
+import { useTheme } from '../hooks/useTheme'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLanguageStore } from '../store/language'
 
 export default function LoginScreen() {
+  const theme = useTheme()
   const { isAuthenticated, isLoading, loginWithTokens } = useAuth()
   const { content } = useLanguageStore()
   const router = useRouter()
@@ -52,20 +54,20 @@ export default function LoginScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
         {/* Logo / Title */}
         <View style={styles.brandSection}>
           <Text style={styles.title}>{content.header.appName}</Text>
           <Text style={styles.subtitle}>
-            {content.landing.hero.title}
+            {content.auth.loginDescription}
           </Text>
         </View>
 

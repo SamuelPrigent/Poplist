@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
 import { spacing } from '../constants/theme'
+import { useTheme } from '../hooks/useTheme'
 
 interface FloatingActionButtonProps {
   icon: React.ReactNode
@@ -19,6 +20,7 @@ export default function FloatingActionButton({
   showSecondary = false,
   onSecondaryPress,
 }: FloatingActionButtonProps) {
+  const theme = useTheme()
   return (
     <View
       style={[
@@ -29,11 +31,11 @@ export default function FloatingActionButton({
       ]}
     >
       {showSecondary && secondaryIcon && onSecondaryPress && (
-        <Pressable style={styles.fab} onPress={onSecondaryPress}>
+        <Pressable style={[styles.fab, { backgroundColor: theme.fab }]} onPress={onSecondaryPress}>
           {secondaryIcon}
         </Pressable>
       )}
-      <Pressable style={styles.fab} onPress={onPress}>
+      <Pressable style={[styles.fab, { backgroundColor: theme.fab }]} onPress={onPress}>
         {icon}
       </Pressable>
     </View>

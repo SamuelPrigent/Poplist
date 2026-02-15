@@ -4,6 +4,7 @@ export const es: Content = {
   // Header
   header: {
     appName: 'Poplist',
+    tagline: 'Crea y comparte listas de tus películas y series favoritas',
     home: 'Inicio',
     explore: 'Explorar',
     login: 'Iniciar sesión',
@@ -31,73 +32,18 @@ export const es: Content = {
   // Watchlists Page
   watchlists: {
     title: 'Biblioteca',
-    createWatchlist: 'Nueva lista',
-    createWatchlistDescription: 'Crea una nueva lista para organizar tus películas y series.',
-    notLoggedInWarning: 'Modo sin conexión',
     noWatchlists: 'Aún no has creado ninguna lista.',
+    noWatchlistsInCategory: 'No hay listas en esta categoría',
+    noItemsYet: 'Aún sin elementos',
+    noItemsDescription: 'Comienza a añadir películas y series a tu lista.',
+    addToWatchlist: 'Añadir a una lista',
     myWatchlists: 'Mis listas',
     followed: 'Seguidas',
-    noWatchlistsInCategory: 'No hay listas en esta categoría',
-    adjustFilters: 'Ajusta los filtros para ver más listas',
     items: 'elementos',
     item: 'elemento',
-    headerPublic: 'Lista pública',
-    headerPrivate: 'Lista privada',
-    public: 'Público',
-    private: 'Privado',
-    loading: 'Cargando...',
-    accountDataBadge: 'Datos de la cuenta de usuario',
-    preview: 'Vista previa',
-    categories: 'Categorías / Etiquetas',
-    categoriesDescription:
-      'Selecciona una o más categorías para facilitar el descubrimiento de tu lista',
-    genreCategories: 'Categorías por género',
-    platformCategories: 'Plataformas de streaming',
-    platformsDescription: 'Selecciona las plataformas donde tu lista está disponible',
-    name: 'Nombre',
-    namePlaceholder: 'Mi lista',
-    description: 'Descripción',
-    descriptionPlaceholder: 'Descripción de tu lista',
-    coverImage: 'Imagen de portada',
-    uploadImage: 'Subir imagen',
-    changeImage: 'Cambiar imagen',
-    imageUploadHint: 'PNG, JPG o WEBP (máx. 5MB)',
-    makePublic: 'Hacer pública',
-    cancel: 'Cancelar',
-    create: 'Crear',
-    creating: 'Creando...',
-    back: 'Volver',
-    noItemsYet: 'Aún no hay elementos',
-    noItemsDescription:
-      'Comienza a añadir películas y series a tu lista para organizar tu cola de visualización.',
-    edit: 'Editar',
-    editWatchlist: 'Editar lista',
-    editWatchlistDescription: 'Edita la información de tu lista.',
-    deleteWatchlist: 'Eliminar lista',
-    deleteWatchlistConfirm:
-      '¿Estás seguro de que deseas eliminar "{name}"? Esta acción es irreversible.',
-    deleteWatchlistWarning: 'Esta lista contiene {count} elemento(s) que también se eliminarán.',
-    saving: 'Guardando...',
-    save: 'Guardar',
-    deleting: 'Eliminando...',
-    delete: 'Eliminar',
-    addItem: 'Añadir',
-    searchMoviesAndSeries: 'Busca y añade películas o series a tu lista',
     searchPlaceholder: 'Buscar una película o serie...',
-    searching: 'Buscando...',
     noResults: 'No se encontraron resultados',
     startSearching: 'Buscar películas y series',
-    add: 'Añadir',
-    added: 'Añadido',
-    inWatchlist: 'En la lista',
-    // Table headers
-    tableHeaders: {
-      number: '#',
-      title: 'Título',
-      type: 'Tipo',
-      platforms: 'Plataformas',
-      duration: 'Duración',
-    },
     // Content types
     contentTypes: {
       movie: 'Película',
@@ -124,153 +70,14 @@ export const es: Content = {
       availableOn: 'Disponible en',
       mainCast: 'Reparto principal',
       seeMore: 'Ver más',
-    },
-    tooltips: {
-      share: 'Compartir',
-      save: 'Añadir a la biblioteca',
-      unsave: 'Eliminar de la biblioteca',
-      duplicate: 'Duplicar en mi espacio',
-      inviteCollaborator: 'Invitar a un colaborador',
-    },
-    contextMenu: {
-      addToWatchlist: 'Añadir a una lista',
-      removeFromWatchlist: 'Eliminar de la lista',
-      moveToFirst: 'Mover a la primera posición',
-      moveToLast: 'Mover a la última posición',
-    },
-    collaborators: {
-      addTitle: 'Añadir Colaborador',
-      addDescription: 'Introduce el nombre de usuario del colaborador',
-      usernamePlaceholder: 'Nombre de usuario',
+      showMore: 'Ver más',
+      showLess: 'Ver menos',
       add: 'Añadir',
-      adding: 'Añadiendo...',
-      addSuccess: 'Colaborador añadido correctamente',
-      addError: 'Error al añadir colaborador',
-      currentTitle: 'Colaboradores Actuales',
-      remove: 'Eliminar',
-      removeSuccess: 'Colaborador eliminado',
-      removeError: 'Error al eliminar colaborador',
-      leaveTitle: '¿Salir de la lista?',
-      leaveDescription:
-        '¿Estás seguro de que quieres salir de esta lista? Perderás tus derechos de colaborador.',
-      leave: 'Salir',
-      leaving: 'Saliendo...',
-      leaveSuccess: 'Has salido de la lista',
-      leaveError: 'Error al salir de la lista',
-    },
-    addToWatchlist: 'Añadir a una lista',
-    noWatchlist: 'Ninguna lista',
-    offlinePopover: {
-      title: '¿Por qué registrarse?',
-      accessEverywhere: 'Accede a tus listas en todas partes',
-      collaborativeLists: 'Crea listas colaborativas',
-      shareWithFriends: 'Comparte tus listas con amigos',
-      signup: 'Registrarse',
-    },
-    toasts: {
-      linkCopied: 'Enlace copiado',
-      linkCopyError: 'No se pudo copiar el enlace',
-      listSaved: 'Lista añadida',
-      listUnsaved: 'Lista eliminada',
-      listSaveError: 'No se pudo actualizar la lista',
-      duplicating: 'Duplicando...',
-      listDuplicated: 'Lista duplicada',
-      duplicateError: 'No se pudo duplicar la lista',
-    },
-  },
-
-  landing: {
-    hero: {
-      tagline: 'Planifica, sigue y disfruta de tus películas juntos',
-      title: 'Crea y comparte listas de tus películas y series favoritas',
-      subtitle: 'Organiza tus noches de TV y comparte tus descubrimientos con tus amigos',
-      cta: 'Crear una lista',
-    },
-    features: {
-      sectionTitle: 'Comparte tu universo cinematográfico',
-      sectionSubtitle: 'Descubre todas nuestras funcionalidades',
-      organize: {
-        tagline: 'Organización',
-        title: 'Crea listas',
-        description: 'Crea listas personales de películas y series para ver.',
-      },
-      collaborate: {
-        tagline: 'Colaboración',
-        title: 'Añade colaboradores',
-        description: 'Invita a amigos a contribuir a tus listas en tiempo real.',
-      },
-      share: {
-        tagline: 'Compartir',
-        title: 'Comparte tus listas',
-        description: 'Comparte tus listas con un simple enlace a tus amigos.',
-      },
-      discover: {
-        tagline: 'Descubrimiento',
-        title: 'Sigue las listas de la comunidad',
-        description: 'Explora y sigue las listas de otros usuarios.',
-      },
-    },
-    startInSeconds: {
-      title: 'Comienza en segundos',
-      subtitle: 'Sin configuración complicada, solo tú y tu contenido favorito',
-      step1: {
-        title: 'Crea tu lista',
-        description: 'Da un nombre a tu lista y empieza a organizar.',
-      },
-      step2: {
-        title: 'Añade películas',
-        description: 'Añade películas y series en pocos clics.',
-      },
-      step3: {
-        title: 'Compártela con tus amigos',
-        description: 'Un enlace es todo lo que necesitas para compartir.',
-      },
-    },
-    testimonials: {
-      title: 'Amado por los entusiastas',
-      subtitle: 'Únete a una comunidad de usuarios satisfechos',
-      testimonial1: {
-        text: 'Aplicación perfecta para organizar mis listas. Interfaz clara e intuitiva.',
-        author: 'Marie L.',
-        pseudo: '@maried',
-      },
-      testimonial2: {
-        text: '¡Muy práctico! Ayuda a mantener un registro de lo que hemos visto y lo que queremos recomendar.',
-        author: 'Thomas D.',
-        pseudo: '@thomasdlm',
-      },
-      testimonial3: {
-        text: 'Simple, efectivo, exactamente lo que buscaba para gestionar mis películas por ver.',
-        author: 'Julie M.',
-        pseudo: '@juliem',
-      },
-    },
-    finalCta: {
-      title: 'Comienza a crear tus listas fácilmente',
-      subtitle: 'Únete a Poplist y organiza tu contenido favorito en unos pocos clics.',
-      button: 'Crear mi lista',
-      disclaimer: 'Aplicación gratuita • No se requiere tarjeta',
     },
   },
 
   // Home Page
   home: {
-    hero: {
-      title: 'Tus listas perfectamente organizadas',
-      subtitle: 'Tu universo del cine, organizado y compartido con amigos.',
-      cta: 'Crear una lista',
-      ctaSecondary: 'Saber más',
-      pills: {
-        organize: 'Organiza tus películas',
-        share: 'Comparte con tus amigos',
-        discover: 'Descubre joyas',
-      },
-    },
-    library: {
-      title: 'Biblioteca',
-      subtitle: 'Tus listas personales',
-      seeAll: 'Ver todo',
-    },
     categories: {
       title: 'Listas por categoría',
       subtitle: 'Selección Poplist',
@@ -328,65 +135,16 @@ export const es: Content = {
         },
       },
     },
-    platformsSection: {
-      title: 'Listas por plataforma',
-      subtitle: 'Tus plataformas favoritas',
-      seeAll: 'Ver todo',
-    },
     popularWatchlists: {
       title: 'Listas populares',
       subtitle: 'Compartidas por la comunidad',
       seeMore: 'Ver más',
       noWatchlists: 'No hay listas públicas por el momento',
     },
-    faq: {
-      title: 'Preguntas frecuentes',
-      subtitle: 'Todo lo que necesitas saber para empezar',
-      questions: {
-        privateWatchlists: {
-          question: '¿Cómo funcionan las listas privadas?',
-          answer:
-            'Las listas privadas te permiten mantener tus selecciones para ti solo. Solo son visibles para ti y no pueden ser compartidas con otros usuarios. Puedes cambiar entre privado y público en cualquier momento desde la configuración de tu lista.',
-        },
-        pricing: {
-          question: '¿Es gratis usar la aplicación?',
-          answer:
-            '¡Sí, la aplicación es completamente gratuita! Puedes crear tantas listas como quieras, compartirlas con tus amigos y explorar miles de películas y series sin ningún costo.',
-        },
-        exploreSection: {
-          question: '¿Para qué sirve la sección Explorar?',
-          answer:
-            'La sección Explorar te permite descubrir nuevo contenido navegando por las tendencias actuales, las películas y series más populares o mejor valoradas. Puedes filtrar por género para encontrar exactamente lo que buscas y agregar elementos directamente a tus listas.',
-        },
-        whatMakesDifferent: {
-          question: '¿Qué hace que esta aplicación sea diferente?',
-          answer:
-            'Esta aplicación tiene como objetivo mantenerse simple con pocas funciones y páginas para ser clara y fácil de usar. La experiencia pretende ser natural e intuitiva, sin complejidad innecesaria. Nos centramos en lo esencial: organizar y compartir tus películas y series favoritas.',
-        },
-        streaming: {
-          question: '¿Puedo ver series o películas?',
-          answer:
-            'No, el propósito de esta aplicación no es el streaming sino compartir fácilmente contenido que te gustó en tus plataformas favoritas. Te ayudamos a organizar lo que quieres ver y compartirlo con tu comunidad, pero para ver el contenido, deberás ir a las plataformas de streaming apropiadas.',
-        },
-      },
-    },
-    trending: {
-      title: 'Tendencias de hoy',
-      noImage: 'Sin imagen',
-    },
-    recommendations: {
-      title: 'Tendencias del momento',
-      subtitle: 'Los títulos que están de moda esta semana.',
-      seeMore: 'Ver todo',
-    },
     creators: {
       title: 'Nuestros creadores',
       subtitle: 'Los miembros más activos de la comunidad',
       seeMore: 'Ver todo',
-    },
-    communityWatchlists: {
-      title: 'Listas de la comunidad',
-      subtitle: 'Descubre colecciones compartidas por nuestros usuarios',
     },
   },
 
@@ -523,32 +281,6 @@ export const es: Content = {
 
   // Profile Page
   profile: {
-    title: 'Configuración del perfil',
-    subtitle: 'Administra la configuración y preferencias de tu cuenta',
-    userInformation: 'Información del usuario',
-    avatarSection: {
-      title: 'Foto de perfil',
-      description: 'Sube una foto de perfil para personalizar tu cuenta',
-      uploadButton: 'Subir',
-      changeButton: 'Cambiar',
-      deleteButton: 'Eliminar',
-      uploading: 'Subiendo...',
-      deleting: 'Eliminando...',
-      hint: 'Recomendado: Imagen cuadrada, máx. 5MB',
-      validation: {
-        invalidFileType: 'Por favor, selecciona un archivo de imagen válido',
-        fileTooLarge: 'El tamaño de la imagen debe ser inferior a 5MB',
-        uploadFailed: 'Error al subir el avatar',
-        deleteFailed: 'Error al eliminar el avatar',
-        readFailed: 'Error al leer el archivo de imagen',
-      },
-      toasts: {
-        updated: 'Avatar actualizado',
-        updatedDesc: 'Tu avatar se ha actualizado correctamente',
-        deleted: 'Avatar eliminado',
-        deletedDesc: 'Tu avatar se ha eliminado correctamente',
-      },
-    },
     usernameSection: {
       title: 'Nombre de usuario',
       description: 'Actualiza tu nombre de usuario. Así es como te verán los demás.',
@@ -562,17 +294,6 @@ export const es: Content = {
         alreadyTaken: 'El nombre de usuario ya está en uso',
       },
     },
-    passwordSection: {
-      title: 'Contraseña',
-      description: 'Cambia tu contraseña. Asegúrate de que tenga al menos 8 caracteres.',
-      currentPasswordLabel: 'Contraseña',
-      currentPasswordPlaceholder: 'Introduce tu contraseña actual',
-      newPasswordLabel: 'Nueva contraseña',
-      newPasswordPlaceholder: 'Nueva contraseña',
-      confirmPasswordLabel: 'Confirmación',
-      confirmPasswordPlaceholder: 'Nueva contraseña',
-      changeButton: 'Cambiar contraseña',
-    },
     deleteSection: {
       title: 'Eliminar cuenta',
       description: 'Acción irreversible. Todos tus datos serán eliminados.',
@@ -583,19 +304,6 @@ export const es: Content = {
       deleteButton: 'Eliminar cuenta',
       deleting: 'Eliminando...',
       cancel: 'Cancelar',
-    },
-    toasts: {
-      usernameUpdated: 'Nombre de usuario actualizado',
-      usernameUpdatedDesc: 'Tu nombre de usuario se ha actualizado correctamente.',
-      passwordChanged: 'Contraseña cambiada',
-      passwordChangedDesc: 'Tu contraseña se ha cambiado correctamente.',
-      error: 'Error',
-      passwordMismatch: 'Las nuevas contraseñas no coinciden',
-      updateFailed: 'Error al actualizar el nombre de usuario',
-      passwordChangeFailed: 'Error al cambiar la contraseña',
-      accountDeleted: 'Cuenta eliminada',
-      accountDeletedDesc: 'Tu cuenta ha sido eliminada correctamente.',
-      accountDeleteFailed: 'Error al eliminar la cuenta',
     },
   },
   userProfile: {
@@ -610,5 +318,29 @@ export const es: Content = {
     notFound: 'Usuario no encontrado',
     notFoundDescription: 'El usuario que buscas no existe o ha sido eliminado.',
     backToHome: 'Volver al inicio',
+  },
+  settings: {
+    tabs: {
+      display: 'Pantalla',
+      preferences: 'Preferencias',
+      account: 'Cuenta',
+    },
+    display: {
+      backgroundColor: 'Color de fondo',
+      backgroundColorHint: 'Tema de la aplicación',
+      ocean: 'Océano',
+      midnight: 'Medianoche',
+      listColumns: 'Columnas de listas',
+      listColumnsHint: 'Número de columnas en las páginas de inicio y mis listas',
+      exploreColumns: 'Columnas Explorar',
+      exploreColumnsHint: 'Número de columnas en la página Explorar',
+    },
+    preferences: {
+      language: 'Idioma',
+      handedness: 'Mano dominante',
+      handednessHint: 'Posición de los botones de acción',
+      leftHanded: 'Zurdo',
+      rightHanded: 'Diestro',
+    },
   },
 };

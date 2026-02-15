@@ -505,6 +505,14 @@ export interface Content {
 			deleting: string;
 			cancel: string;
 		};
+		themeSection: {
+			title: string;
+			description: string;
+			ocean: string;
+			oceanDescription: string;
+			midnight: string;
+			midnightDescription: string;
+		};
 		toasts: {
 			usernameUpdated: string;
 			usernameUpdatedDesc: string;

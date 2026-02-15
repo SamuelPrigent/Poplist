@@ -4,6 +4,7 @@ export const en: Content = {
   // Header
   header: {
     appName: 'Poplist',
+    tagline: 'Create and share lists of your favorite movies and series',
     home: 'Home',
     explore: 'Explore',
     login: 'Login',
@@ -31,72 +32,18 @@ export const en: Content = {
   // Watchlists Page
   watchlists: {
     title: 'Library',
-    createWatchlist: 'New list',
-    createWatchlistDescription: 'Create a new list to organize your movies and series.',
-    notLoggedInWarning: 'Offline mode',
     noWatchlists: "You haven't created any lists yet.",
+    noWatchlistsInCategory: 'No lists in this category',
+    noItemsYet: 'No items yet',
+    noItemsDescription: 'Start adding movies and series to your list.',
+    addToWatchlist: 'Add to a list',
     myWatchlists: 'My lists',
     followed: 'Followed',
-    noWatchlistsInCategory: 'No lists in this category',
-    adjustFilters: 'Adjust the filters to see more lists',
     items: 'items',
     item: 'item',
-    headerPublic: 'Public list',
-    headerPrivate: 'Private list',
-    public: 'Public',
-    private: 'Private',
-    loading: 'Loading...',
-    accountDataBadge: 'User account data',
-    preview: 'Preview',
-    categories: 'Categories / Tags',
-    categoriesDescription: 'Select one or more categories to make your list easier to discover',
-    genreCategories: 'Genre Categories',
-    platformCategories: 'Streaming Platforms',
-    platformsDescription: 'Select the platforms where your list is available',
-    name: 'Name',
-    namePlaceholder: 'My list',
-    description: 'Description',
-    descriptionPlaceholder: 'Description of your list',
-    coverImage: 'Cover image',
-    uploadImage: 'Upload image',
-    changeImage: 'Change image',
-    imageUploadHint: 'PNG, JPG or WEBP (max. 5MB)',
-    makePublic: 'Make public',
-    cancel: 'Cancel',
-    create: 'Create',
-    creating: 'Creating...',
-    back: 'Back',
-    noItemsYet: 'No items yet',
-    noItemsDescription:
-      'Start adding movies and series to your list to organize your viewing queue.',
-    edit: 'Edit',
-    editWatchlist: 'Edit list',
-    editWatchlistDescription: 'Edit your list information.',
-    deleteWatchlist: 'Delete list',
-    deleteWatchlistConfirm:
-      'Are you sure you want to delete "{name}"? This action cannot be undone.',
-    deleteWatchlistWarning: 'This list contains {count} item(s) that will also be deleted.',
-    saving: 'Saving...',
-    save: 'Save',
-    deleting: 'Deleting...',
-    delete: 'Delete',
-    addItem: 'Add',
-    searchMoviesAndSeries: 'Search and add movies or series to your list',
     searchPlaceholder: 'Search for a movie or series...',
-    searching: 'Searching...',
     noResults: 'No results found',
     startSearching: 'Search movies and series',
-    add: 'Add',
-    added: 'Added',
-    inWatchlist: 'In list',
-    // Table headers
-    tableHeaders: {
-      number: '#',
-      title: 'Title',
-      type: 'Type',
-      platforms: 'Platforms',
-      duration: 'Duration',
-    },
     // Content types
     contentTypes: {
       movie: 'Movie',
@@ -123,153 +70,14 @@ export const en: Content = {
       availableOn: 'Available on',
       mainCast: 'Main Cast',
       seeMore: 'See more',
-    },
-    tooltips: {
-      share: 'Share',
-      save: 'Add to library',
-      unsave: 'Remove from library',
-      duplicate: 'Duplicate to my space',
-      inviteCollaborator: 'Invite a collaborator',
-    },
-    contextMenu: {
-      addToWatchlist: 'Add to list',
-      removeFromWatchlist: 'Remove from list',
-      moveToFirst: 'Move to First Position',
-      moveToLast: 'Move to Last Position',
-    },
-    collaborators: {
-      addTitle: 'Add Collaborator',
-      addDescription: 'Enter the collaborator\'s username',
-      usernamePlaceholder: 'Username',
+      showMore: 'Show more',
+      showLess: 'Show less',
       add: 'Add',
-      adding: 'Adding...',
-      addSuccess: 'Collaborator added successfully',
-      addError: 'Failed to add collaborator',
-      currentTitle: 'Current Collaborators',
-      remove: 'Remove',
-      removeSuccess: 'Collaborator removed',
-      removeError: 'Failed to remove collaborator',
-      leaveTitle: 'Leave list?',
-      leaveDescription:
-        'Are you sure you want to leave this list? You will lose your collaborator rights.',
-      leave: 'Leave',
-      leaving: 'Leaving...',
-      leaveSuccess: 'You left the list',
-      leaveError: 'Failed to leave list',
-    },
-    addToWatchlist: 'Add to a list',
-    noWatchlist: 'No list',
-    offlinePopover: {
-      title: 'Why sign up?',
-      accessEverywhere: 'Access your lists everywhere',
-      collaborativeLists: 'Create collaborative lists',
-      shareWithFriends: 'Share your lists with friends',
-      signup: 'Sign Up',
-    },
-    toasts: {
-      linkCopied: 'Link copied',
-      linkCopyError: 'Failed to copy link',
-      listSaved: 'List added',
-      listUnsaved: 'List removed',
-      listSaveError: 'Failed to update list',
-      duplicating: 'Duplicating...',
-      listDuplicated: 'List duplicated',
-      duplicateError: 'Failed to duplicate list',
-    },
-  },
-
-  landing: {
-    hero: {
-      tagline: 'Plan, track and enjoy your movies together',
-      title: 'Create and share lists of your favorite movies and series',
-      subtitle: 'Organize your TV nights and share your discoveries with your friends',
-      cta: 'Create a list',
-    },
-    features: {
-      sectionTitle: 'Share your cinematic universe',
-      sectionSubtitle: 'Discover all our features',
-      organize: {
-        tagline: 'Organization',
-        title: 'Create lists',
-        description: 'Create personal lists of movies and series to watch.',
-      },
-      collaborate: {
-        tagline: 'Collaboration',
-        title: 'Add collaborators',
-        description: 'Invite friends to contribute to your lists in real-time.',
-      },
-      share: {
-        tagline: 'Sharing',
-        title: 'Share your lists',
-        description: 'Share your lists with a simple link to your friends.',
-      },
-      discover: {
-        tagline: 'Discovery',
-        title: 'Follow community lists',
-        description: 'Explore and follow lists from other users.',
-      },
-    },
-    startInSeconds: {
-      title: 'Start in Seconds',
-      subtitle: 'No complicated setup, just you and your favorite content',
-      step1: {
-        title: 'Create your list',
-        description: 'Name your list and start organizing.',
-      },
-      step2: {
-        title: 'Add movies',
-        description: 'Add movies and series in just a few clicks.',
-      },
-      step3: {
-        title: 'Share with your friends',
-        description: 'A link is all it takes to share.',
-      },
-    },
-    testimonials: {
-      title: 'Loved by enthusiasts',
-      subtitle: 'Join a community of satisfied users',
-      testimonial1: {
-        text: 'Perfect app for organizing my lists. Clear and intuitive interface.',
-        author: 'Marie L.',
-        pseudo: '@maried',
-      },
-      testimonial2: {
-        text: "Very practical! Helps keep track of what we've watched and what we want to recommend.",
-        author: 'Thomas D.',
-        pseudo: '@thomasdlm',
-      },
-      testimonial3: {
-        text: 'Simple, effective, exactly what I was looking for to manage my movies to watch.',
-        author: 'Julie M.',
-        pseudo: '@juliem',
-      },
-    },
-    finalCta: {
-      title: 'Start creating your lists easily',
-      subtitle: 'Join Poplist and organize your favorite content in just a few clicks.',
-      button: 'Create my list',
-      disclaimer: 'Free application • No card required',
     },
   },
 
   // Home Page
   home: {
-    hero: {
-      title: 'Your lists perfectly organized',
-      subtitle: 'Your movie universe, organized and shared with friends.',
-      cta: 'Create a list',
-      ctaSecondary: 'Learn more',
-      pills: {
-        organize: 'Organize your movies',
-        share: 'Share with your friends',
-        discover: 'Discover gems',
-      },
-    },
-    library: {
-      title: 'Library',
-      subtitle: 'Your personal lists',
-      seeAll: 'See all',
-    },
     categories: {
       title: 'Lists by category',
       subtitle: 'Poplist selection',
@@ -327,65 +135,16 @@ export const en: Content = {
         },
       },
     },
-    platformsSection: {
-      title: 'Lists by platform',
-      subtitle: 'Your favorite platforms',
-      seeAll: 'See all',
-    },
     popularWatchlists: {
       title: 'Popular lists',
       subtitle: 'Shared by the community',
       seeMore: 'See more',
       noWatchlists: 'No public lists at the moment',
     },
-    faq: {
-      title: 'Frequently Asked Questions',
-      subtitle: 'Everything you need to know to get started',
-      questions: {
-        privateWatchlists: {
-          question: 'How do private lists work?',
-          answer:
-            'Private lists allow you to keep your selections to yourself. They are only visible to you and cannot be shared with other users. You can switch between private and public at any time from your list settings.',
-        },
-        pricing: {
-          question: 'Is it free to use?',
-          answer:
-            'Yes, the app is completely free! You can create as many lists as you want, share them with your friends, and explore thousands of movies and series without any fees.',
-        },
-        exploreSection: {
-          question: 'What is the Explore section for?',
-          answer:
-            "The Explore section allows you to discover new content by browsing current trends, the most popular or best-rated movies and series. You can filter by genre to find exactly what you're looking for and add items directly to your lists.",
-        },
-        whatMakesDifferent: {
-          question: 'What makes this app different?',
-          answer:
-            'This application aims to remain simple with few features and pages to be clear and easy to use. The experience is intended to be natural and intuitive, without unnecessary complexity. We focus on the essentials: organizing and sharing your favorite movies and series.',
-        },
-        streaming: {
-          question: 'Can I watch series or movies?',
-          answer:
-            "No, the purpose of this application is not streaming but easy sharing of content you enjoyed on your favorite platforms. We help you organize what you want to watch and share it with your community, but to view the content, you'll need to go to the appropriate streaming platforms.",
-        },
-      },
-    },
-    trending: {
-      title: 'Trending Today',
-      noImage: 'No Image',
-    },
-    recommendations: {
-      title: 'Trending Now',
-      subtitle: 'Titles trending this week.',
-      seeMore: 'See all',
-    },
     creators: {
       title: 'Our Creators',
       subtitle: 'The most active members of the community',
       seeMore: 'See all',
-    },
-    communityWatchlists: {
-      title: 'Community Lists',
-      subtitle: 'Discover collections shared by our users',
     },
   },
 
@@ -513,32 +272,6 @@ export const en: Content = {
 
   // Profile Page
   profile: {
-    title: 'Profile Settings',
-    subtitle: 'Manage your account settings and preferences',
-    userInformation: 'User Information',
-    avatarSection: {
-      title: 'Profile Avatar',
-      description: 'Upload a profile picture to personalize your account',
-      uploadButton: 'Upload',
-      changeButton: 'Change',
-      deleteButton: 'Delete',
-      uploading: 'Uploading...',
-      deleting: 'Deleting...',
-      hint: 'Recommended: Square image, max 5MB',
-      validation: {
-        invalidFileType: 'Please select a valid image file',
-        fileTooLarge: 'Image size must be less than 5MB',
-        uploadFailed: 'Failed to upload avatar',
-        deleteFailed: 'Failed to delete avatar',
-        readFailed: 'Failed to read image file',
-      },
-      toasts: {
-        updated: 'Avatar updated',
-        updatedDesc: 'Your avatar has been successfully updated',
-        deleted: 'Avatar deleted',
-        deletedDesc: 'Your avatar has been successfully deleted',
-      },
-    },
     usernameSection: {
       title: 'Username',
       description: 'Update your username. This is how others will see you.',
@@ -552,17 +285,6 @@ export const en: Content = {
         alreadyTaken: 'Username already taken',
       },
     },
-    passwordSection: {
-      title: 'Password',
-      description: "Change your password. Make sure it's at least 8 characters.",
-      currentPasswordLabel: 'Password',
-      currentPasswordPlaceholder: 'Enter your current password',
-      newPasswordLabel: 'New Password',
-      newPasswordPlaceholder: 'New password',
-      confirmPasswordLabel: 'Confirmation',
-      confirmPasswordPlaceholder: 'New password',
-      changeButton: 'Change Password',
-    },
     deleteSection: {
       title: 'Delete Account',
       description: 'Irreversible action. All your data will be deleted.',
@@ -573,19 +295,6 @@ export const en: Content = {
       deleteButton: 'Delete Account',
       deleting: 'Deleting...',
       cancel: 'Cancel',
-    },
-    toasts: {
-      usernameUpdated: 'Username updated',
-      usernameUpdatedDesc: 'Your username has been updated successfully.',
-      passwordChanged: 'Password changed',
-      passwordChangedDesc: 'Your password has been changed successfully.',
-      accountDeleted: 'Account deleted',
-      accountDeletedDesc: 'Your account has been deleted successfully.',
-      error: 'Error',
-      passwordMismatch: 'New passwords do not match',
-      updateFailed: 'Failed to update username',
-      passwordChangeFailed: 'Failed to change password',
-      accountDeleteFailed: 'Failed to delete account',
     },
   },
   userProfile: {
@@ -600,5 +309,29 @@ export const en: Content = {
     notFound: 'User not found',
     notFoundDescription: "The user you're looking for doesn't exist or has been deleted.",
     backToHome: 'Back to home',
+  },
+  settings: {
+    tabs: {
+      display: 'Display',
+      preferences: 'Preferences',
+      account: 'Account',
+    },
+    display: {
+      backgroundColor: 'Background color',
+      backgroundColorHint: 'App theme',
+      ocean: 'Ocean',
+      midnight: 'Midnight',
+      listColumns: 'List columns',
+      listColumnsHint: 'Number of columns on home and my lists pages',
+      exploreColumns: 'Explore columns',
+      exploreColumnsHint: 'Number of columns on the Explore page',
+    },
+    preferences: {
+      language: 'Language',
+      handedness: 'Dominant hand',
+      handednessHint: 'Action button position',
+      leftHanded: 'Left-handed',
+      rightHanded: 'Right-handed',
+    },
   },
 };

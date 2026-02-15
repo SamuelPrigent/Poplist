@@ -23,6 +23,57 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { userAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
+import { type Theme, useThemeStore } from "@/store/theme";
+import type { Content } from "@/types/content";
+
+function ThemeSelector({ content }: { content: Content }) {
+	const { theme, setTheme } = useThemeStore();
+	const themes: { id: Theme; label: string; description: string }[] = [
+		{ id: "ocean", label: content.profile.themeSection.ocean, description: content.profile.themeSection.oceanDescription },
+		{ id: "midnight", label: content.profile.themeSection.midnight, description: content.profile.themeSection.midnightDescription },
+	];
+
+	return (
+		<Card>
+			<CardContent className="pt-6">
+				<div className="space-y-4">
+					<div>
+						<h3 className="font-semibold">{content.profile.themeSection.title}</h3>
+						<p className="text-muted-foreground mt-1 text-sm">
+							{content.profile.themeSection.description}
+						</p>
+					</div>
+					<div className="flex gap-3">
+						{themes.map((t) => (
+							<button
+								key={t.id}
+								type="button"
+								onClick={() => setTheme(t.id)}
+								className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border px-5 py-3 transition-all ${
+									theme === t.id
+										? "border-gray-400 bg-muted outline-2 outline-white/30"
+										: "border-border hover:border-muted-foreground"
+								}`}
+							>
+								<div
+									className="h-8 w-8 rounded-full border border-border"
+									style={{
+										background:
+											t.id === "ocean"
+												? "linear-gradient(135deg, hsl(222.2 84% 4.9%), hsl(217.2 32.6% 17.5%))"
+												: "linear-gradient(135deg, hsl(224 15% 4%), hsl(218 25% 16%))",
+									}}
+								/>
+								<span className="text-sm font-medium">{t.label}</span>
+								<span className="text-muted-foreground text-xs">{t.description}</span>
+							</button>
+						))}
+					</div>
+				</div>
+			</CardContent>
+		</Card>
+	);
+}
 
 export default function AccountPage() {
 	const { user, isLoading, updateUsername, changePassword, deleteAccount, refetch } =
@@ -585,6 +636,9 @@ export default function AccountPage() {
 						</CardContent>
 					</Card>
 				)}
+
+				{/* Theme Section */}
+				<ThemeSelector content={content} />
 
 				{/* Delete Account Section */}
 				<Card className="border-red-500/50">

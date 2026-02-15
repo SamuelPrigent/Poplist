@@ -5,7 +5,7 @@ import { Plus, Share2, Users } from 'lucide-react';
 // Schéma collaborateurs - popover compact (largeur réduite)
 function CollaboratorsSchema() {
   return (
-    <div className="relative max-w-[260px] overflow-hidden rounded-xl border border-white/10 bg-[#0a1628]/60 p-3">
+    <div className="relative max-w-[260px] overflow-hidden rounded-xl border border-white/10 bg-card/60 p-3">
       <div className="space-y-2.5">
         {/* Titre du popover */}
         <div>
@@ -46,7 +46,7 @@ function CollaboratorsSchema() {
 // Schéma partage - représente le ListHeader schématique avec bouton partage
 function ShareSchema() {
   return (
-    <div className="relative max-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-[#0a1628]/60 p-3">
+    <div className="relative max-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-card/60 p-3">
       {/* Schéma du ListHeader */}
       <div className="space-y-3">
         {/* Header: Cover + Info */}

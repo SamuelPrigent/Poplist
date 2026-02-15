@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { watchlistAPI } from '../../lib/api-client';
 import { useLanguageStore } from '../../store/language';
 import { colors, spacing } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import UserBubble from '../../components/UserBubble';
 import EmptyState from '../../components/EmptyState';
 import type { Watchlist } from '../../types';
@@ -18,6 +19,7 @@ interface Creator {
 }
 
 export default function AllCreatorsScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const { content } = useLanguageStore();
   const [creators, setCreators] = useState<Creator[]>([]);
@@ -58,7 +60,7 @@ export default function AllCreatorsScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -66,7 +68,7 @@ export default function AllCreatorsScreen() {
 
   return (
     <FlatList
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
       data={creators}
       keyExtractor={item => item.username}

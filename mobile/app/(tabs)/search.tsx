@@ -2,12 +2,13 @@ import { View, Text, TextInput, FlatList, StyleSheet, ActivityIndicator, Pressab
 import { useState, useCallback, useRef, useMemo } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
-import { Search, Plus, Film } from 'lucide-react-native'
+import { Search, Plus, Film, X } from 'lucide-react-native'
 import { watchlistAPI } from '../../lib/api-client'
 import { getTMDBImageUrl } from '../../lib/utils'
 import { useLanguageStore } from '../../store/language'
 import { usePreferencesStore } from '../../store/preferences'
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import EmptyState from '../../components/EmptyState'
 import FloatingActionButton from '../../components/FloatingActionButton'
 import ItemDetailSheet from '../../components/ItemDetailSheet'
@@ -26,6 +27,7 @@ interface TMDBResult {
 export default function SearchScreen() {
   const { content, language } = useLanguageStore()
   const { handedness } = usePreferencesStore()
+  const theme = useTheme()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<TMDBResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -101,11 +103,11 @@ export default function SearchScreen() {
         {posterUrl ? (
           <Image
             source={{ uri: posterUrl }}
-            style={styles.poster}
+            style={[styles.poster, { backgroundColor: theme.secondary }]}
             contentFit="cover"
           />
         ) : (
-          <View style={[styles.poster, styles.noPoster]}>
+          <View style={[styles.poster, styles.noPoster, { backgroundColor: theme.secondary }]}>
             <Film size={20} color={colors.mutedForeground} strokeWidth={1.5} />
           </View>
         )}
@@ -118,7 +120,7 @@ export default function SearchScreen() {
           </Text>
         </View>
         <Pressable
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: theme.secondary }]}
           onPress={() => handleAddPress(item)}
           hitSlop={8}
         >
@@ -129,10 +131,10 @@ export default function SearchScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Top bar — search input */}
       <View style={styles.topBar}>
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, { backgroundColor: theme.secondary }]}>
           <Search size={18} color={colors.mutedForeground} />
           <TextInput
             ref={inputRef}
@@ -145,6 +147,18 @@ export default function SearchScreen() {
             autoCorrect={false}
             returnKeyType="search"
           />
+          {query.length > 0 && (
+            <Pressable
+              onPress={() => {
+                setQuery('')
+                setResults([])
+                inputRef.current?.focus()
+              }}
+              hitSlop={8}
+            >
+              <X size={18} color={theme.mutedForeground} />
+            </Pressable>
+          )}
         </View>
       </View>
 

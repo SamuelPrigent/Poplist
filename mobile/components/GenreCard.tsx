@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Svg, { Circle, Rect, Polygon, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 interface GenreCardProps {
   categoryId: string;
@@ -87,7 +88,8 @@ export default function GenreCard({
   name,
   onPress,
 }: GenreCardProps) {
-  const palette = CATEGORY_COLORS[categoryId] || { bg: '#1e293b', accent: '#64748b' };
+  const theme = useTheme();
+  const palette = CATEGORY_COLORS[categoryId] || { bg: theme.secondary, accent: '#64748b' };
   const shape = CATEGORY_SHAPES[categoryId] || 'circle';
 
   return (

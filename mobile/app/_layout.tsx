@@ -5,18 +5,21 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from '../context/auth-context';
 import { colors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 export default function RootLayout() {
+  const theme = useTheme()
+
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.background }}>
       <SafeAreaProvider>
         <AuthProvider>
           <StatusBar style="light" />
           <Stack
             screenOptions={{
               headerShown: false,
-              contentStyle: { backgroundColor: colors.background },
-              headerStyle: { backgroundColor: colors.background },
+              contentStyle: { backgroundColor: theme.background },
+              headerStyle: { backgroundColor: theme.background },
               headerTintColor: colors.foreground,
               animation: 'fade',
             }}

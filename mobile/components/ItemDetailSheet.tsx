@@ -12,45 +12,48 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Star, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
 import { getTMDBImageUrl, getTMDBRegion } from '../lib/utils';
-import Svg, { Defs, LinearGradient as SvgGradient, Stop, Rect } from 'react-native-svg'
+import { LinearGradient } from 'expo-linear-gradient';
 import { watchlistAPI } from '../lib/api-client';
 import { useLanguageStore } from '../store/language';
 import { usePreferencesStore } from '../store/preferences';
+import { useTheme } from '../hooks/useTheme';
+import ProviderIcon, { type ProviderKey } from './ProviderIcon';
 import type { WatchlistItem, FullMediaDetails, Platform } from '../types';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const ALLOWED_PROVIDERS: Record<string, string> = {
-  'Netflix': 'Netflix',
-  'Amazon Prime Video': 'Prime Video',
-  'Prime Video': 'Prime Video',
-  'Apple TV Plus': 'Apple TV',
-  'Apple TV+': 'Apple TV',
-  'Crunchyroll': 'Crunchyroll',
-  'YouTube': 'YouTube',
-  'YouTube Premium': 'YouTube',
-  'Max': 'HBO Max',
-  'HBO Max': 'HBO Max',
-  'Max Amazon Channel': 'HBO Max',
-  'Disney Plus': 'Disney+',
-  'Disney+': 'Disney+',
+const PROVIDER_MAP: Record<string, ProviderKey> = {
+  Netflix: 'netflix',
+  'Amazon Prime Video': 'primevideo',
+  'Prime Video': 'primevideo',
+  YouTube: 'youtube',
+  'YouTube Premium': 'youtube',
+  'Disney Plus': 'disneyplus',
+  'Disney+': 'disneyplus',
+  Crunchyroll: 'crunchyroll',
+  Max: 'hbomax',
+  'HBO Max': 'hbomax',
+  'Max Amazon Channel': 'hbomax',
 };
 
-function filterProviders(platforms: Platform[]): Platform[] {
-  const matched = new Map<string, Platform>();
+function getMatchedProviders(platforms: Platform[]): ProviderKey[] {
+  const seen = new Set<ProviderKey>();
+  const result: ProviderKey[] = [];
   for (const p of platforms) {
-    const displayName = ALLOWED_PROVIDERS[p.name];
-    if (displayName && !matched.has(displayName)) {
-      matched.set(displayName, { name: displayName, logoPath: p.logoPath });
+    const key = PROVIDER_MAP[p.name];
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      result.push(key);
     }
   }
-  return Array.from(matched.values());
+  return result.slice(0, 3);
 }
-const IMAGE_WIDTH = Math.round(SCREEN_WIDTH * 0.9);
-const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH * 9 / 16);
 
+const IMAGE_WIDTH = Math.round(SCREEN_WIDTH * 0.93);
+const IMAGE_HEIGHT = Math.round((IMAGE_WIDTH * 3) / 4);
 
 interface ItemDetailSheetProps {
   item: WatchlistItem | null;
@@ -71,6 +74,7 @@ function formatRuntime(minutes: number): string {
 
 /** Pulsing skeleton placeholder for the image */
 function SkeletonPulse() {
+  const theme = useTheme();
   const pulse = useRef(new Animated.Value(0.15)).current;
 
   useEffect(() => {
@@ -78,7 +82,7 @@ function SkeletonPulse() {
       Animated.sequence([
         Animated.timing(pulse, { toValue: 0.4, duration: 900, useNativeDriver: true }),
         Animated.timing(pulse, { toValue: 0.15, duration: 900, useNativeDriver: true }),
-      ]),
+      ])
     );
     loop.start();
     return () => loop.stop();
@@ -86,13 +90,14 @@ function SkeletonPulse() {
 
   return (
     <Animated.View
-      style={[StyleSheet.absoluteFill, { backgroundColor: colors.mutedForeground, opacity: pulse }]}
+      style={[StyleSheet.absoluteFill, { backgroundColor: theme.mutedForeground, opacity: pulse }]}
     />
   );
 }
 
-/** Pulsing skeleton lines for text content + platform logos */
-function SkeletonLines() {
+/** Skeleton matching the exact real content structure */
+function SkeletonContent() {
+  const theme = useTheme();
   const pulse = useRef(new Animated.Value(0.12)).current;
 
   useEffect(() => {
@@ -100,34 +105,77 @@ function SkeletonLines() {
       Animated.sequence([
         Animated.timing(pulse, { toValue: 0.3, duration: 900, useNativeDriver: true }),
         Animated.timing(pulse, { toValue: 0.12, duration: 900, useNativeDriver: true }),
-      ]),
+      ])
     );
     loop.start();
     return () => loop.stop();
   }, []);
 
+  const block = (width: number | string, height: number, extra?: object) => (
+    <Animated.View
+      style={[
+        {
+          width,
+          height,
+          borderRadius: 4,
+          backgroundColor: theme.mutedForeground,
+          opacity: pulse,
+        },
+        extra,
+      ]}
+    />
+  );
+
   return (
-    <View>
-      {/* Meta skeleton */}
-      <Animated.View style={{ width: '40%', height: 14, borderRadius: 4, backgroundColor: colors.mutedForeground, opacity: pulse, marginBottom: spacing.md }} />
-      {/* Overview line 1 */}
-      <Animated.View style={{ width: '100%', height: 14, borderRadius: 4, backgroundColor: colors.mutedForeground, opacity: pulse, marginBottom: spacing.sm }} />
-      {/* Overview line 2 */}
-      <Animated.View style={{ width: '90%', height: 14, borderRadius: 4, backgroundColor: colors.mutedForeground, opacity: pulse, marginBottom: spacing.sm }} />
-      {/* Overview line 3 */}
-      <Animated.View style={{ width: '80%', height: 14, borderRadius: 4, backgroundColor: colors.mutedForeground, opacity: pulse, marginBottom: spacing.lg }} />
-      {/* Section label skeleton */}
-      <Animated.View style={{ width: '30%', height: 14, borderRadius: 4, backgroundColor: colors.mutedForeground, opacity: pulse, marginBottom: spacing.sm }} />
-      {/* Platform logos skeleton */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-        {[0, 1, 2, 3].map((i) => (
-          <View key={i} style={{ width: 56, alignItems: 'center' }}>
-            <Animated.View style={{ width: 44, height: 44, borderRadius: borderRadius.md, backgroundColor: colors.mutedForeground, opacity: pulse }} />
-            <Animated.View style={{ width: 36, height: 8, borderRadius: 3, backgroundColor: colors.mutedForeground, opacity: pulse, marginTop: spacing.xs }} />
+    <>
+      {/* Hero section — same structure as real content */}
+      <View style={styles.heroSection}>
+        <View style={[styles.imageContainer, { backgroundColor: theme.container }]}>
+          <View style={styles.overlaidContent}>
+            {/* Top info: title + rating + meta */}
+            <View>
+              {block('70%', 22, { marginBottom: spacing.sm })}
+              <View style={[styles.ratingRow, { marginBottom: spacing.xs }]}>{block(50, 16)}</View>
+              {block('45%', 16)}
+            </View>
+            {/* Bottom info: overview lines */}
+            <View>
+              {block('100%', 14, { marginBottom: spacing.sm })}
+              {block('90%', 14, { marginBottom: spacing.sm })}
+              {block('75%', 14)}
+            </View>
           </View>
-        ))}
+        </View>
       </View>
-    </View>
+
+      {/* Details section — same structure */}
+      <View style={styles.detailsSection}>
+        {/* Platform section: left (label + icons) / right (button) */}
+        <View style={styles.platformSection}>
+          <View style={styles.platformLeft}>
+            {block('35%', 14, { marginBottom: spacing.xs })}
+            <View style={styles.platformRow}>
+              {[0, 1, 2].map(i => (
+                <View key={i}>{block(37, 37, { borderRadius: borderRadius.md })}</View>
+              ))}
+            </View>
+          </View>
+          {block(90, 28, { borderRadius: borderRadius.full, marginLeft: spacing.md })}
+        </View>
+        {/* Cast label */}
+        {block('40%', 14, { marginBottom: spacing.sm + 3 })}
+        {/* Cast items */}
+        <View style={styles.castRow}>
+          {[0, 1, 2].map(i => (
+            <View key={i} style={styles.castItem}>
+              {block(38, 38, { borderRadius: borderRadius.md })}
+              {block(50, 10, { marginTop: spacing.xs })}
+              {block(40, 9, { marginTop: 2 })}
+            </View>
+          ))}
+        </View>
+      </View>
+    </>
   );
 }
 
@@ -141,6 +189,8 @@ export default function ItemDetailSheet({
 }: ItemDetailSheetProps) {
   const { content, language } = useLanguageStore();
   const { handedness } = usePreferencesStore();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const [details, setDetails] = useState<FullMediaDetails | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [providers, setProviders] = useState<Platform[]>([]);
@@ -177,27 +227,31 @@ export default function ItemDetailSheet({
     });
   };
 
-  const panResponder = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (_evt, gs) => {
-      if (gs.dy > 25 && Math.abs(gs.dx) < 20) return true;
-      if (hasNavigation && Math.abs(gs.dx) > 30 && Math.abs(gs.dy) < 15) return true;
-      return false;
-    },
-    onPanResponderRelease: (_evt, gs) => {
-      if (gs.dy > 80 && Math.abs(gs.dx) < 40) {
-        onCloseRef.current();
-        return;
-      }
-      const curIdx = idxRef.current;
-      const curItems = itemsRef.current;
-      if (!curItems || !onNavigateRef.current) return;
-      if (gs.dx < -50 && curIdx < curItems.length - 1) {
-        navigateWithFade(curIdx + 1);
-      } else if (gs.dx > 50 && curIdx > 0) {
-        navigateWithFade(curIdx - 1);
-      }
-    },
-  }), [hasNavigation]);
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_evt, gs) => {
+          if (gs.dy > 25 && Math.abs(gs.dx) < 20) return true;
+          if (hasNavigation && Math.abs(gs.dx) > 30 && Math.abs(gs.dy) < 15) return true;
+          return false;
+        },
+        onPanResponderRelease: (_evt, gs) => {
+          if (gs.dy > 80 && Math.abs(gs.dx) < 40) {
+            onCloseRef.current();
+            return;
+          }
+          const curIdx = idxRef.current;
+          const curItems = itemsRef.current;
+          if (!curItems || !onNavigateRef.current) return;
+          if (gs.dx < -50 && curIdx < curItems.length - 1) {
+            navigateWithFade(curIdx + 1);
+          } else if (gs.dx > 50 && curIdx > 0) {
+            navigateWithFade(curIdx - 1);
+          }
+        },
+      }),
+    [hasNavigation]
+  );
 
   useEffect(() => {
     setImageLoaded(false);
@@ -228,21 +282,26 @@ export default function ItemDetailSheet({
     setDetails(null);
     try {
       const langMap: Record<string, string> = {
-        fr: 'fr-FR', en: 'en-US', es: 'es-ES',
-        de: 'de-DE', it: 'it-IT', pt: 'pt-BR',
+        fr: 'fr-FR',
+        en: 'en-US',
+        es: 'es-ES',
+        de: 'de-DE',
+        it: 'it-IT',
+        pt: 'pt-BR',
       };
       const detailsPromise = watchlistAPI.getItemDetails(
         item.tmdbId.toString(),
         item.mediaType,
-        langMap[language] || 'fr-FR',
+        langMap[language] || 'fr-FR'
       );
-      const providersPromise = item.platformList.length === 0
-        ? watchlistAPI.fetchTMDBProviders(
-            item.tmdbId.toString(),
-            item.mediaType,
-            getTMDBRegion(language),
-          )
-        : Promise.resolve([]);
+      const providersPromise =
+        item.platformList.length === 0
+          ? watchlistAPI.fetchTMDBProviders(
+              item.tmdbId.toString(),
+              item.mediaType,
+              getTMDBRegion(language)
+            )
+          : Promise.resolve([]);
       const [detailsRes, providersRes] = await Promise.all([detailsPromise, providersPromise]);
       setDetails(detailsRes.details);
       if (providersRes.length > 0) setProviders(providersRes);
@@ -265,18 +324,20 @@ export default function ItemDetailSheet({
     if (isMovie && details.runtime) {
       durationText = formatRuntime(details.runtime);
     } else if (!isMovie && details.numberOfSeasons) {
-      const seasonWord = details.numberOfSeasons > 1
-        ? content.watchlists.seriesInfo.seasons
-        : content.watchlists.seriesInfo.season;
+      const seasonWord =
+        details.numberOfSeasons > 1
+          ? content.watchlists.seriesInfo.seasons
+          : content.watchlists.seriesInfo.season;
       durationText = `${details.numberOfSeasons} ${seasonWord}`;
     }
   } else {
     if (isMovie && item.runtime) {
       durationText = formatRuntime(item.runtime);
     } else if (!isMovie && item.numberOfSeasons) {
-      const seasonWord = item.numberOfSeasons > 1
-        ? content.watchlists.seriesInfo.seasons
-        : content.watchlists.seriesInfo.season;
+      const seasonWord =
+        item.numberOfSeasons > 1
+          ? content.watchlists.seriesInfo.seasons
+          : content.watchlists.seriesInfo.season;
       durationText = `${item.numberOfSeasons} ${seasonWord}`;
     }
   }
@@ -284,157 +345,192 @@ export default function ItemDetailSheet({
   const backdropUrl = details?.backdropUrl ?? null;
   const rating = details?.rating;
   const overview = details?.overview;
+  const releaseYear = details?.releaseDate ? new Date(details.releaseDate).getFullYear() : null;
+
+  const metaParts = [typeLabel, durationText, releaseYear].filter(Boolean);
+  const metaText = metaParts.join(' \u00B7 ');
+
+  const matchedProviders = getMatchedProviders(
+    providers.length > 0 ? providers : item.platformList
+  );
+  const cast = details?.cast?.slice(0, 3) ?? [];
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <View
-          style={styles.contentPanel}
+          style={[styles.contentPanel, { backgroundColor: theme.panel }]}
           {...panResponder.panHandlers}
         >
-          <Pressable onPress={() => {}}>
+          <Pressable onPress={() => {}} style={{ flex: 1 }}>
             {/* Drag handle */}
             <View style={styles.handleRow}>
               <View style={styles.handle} />
             </View>
 
-            <Animated.View style={{ opacity: fadeAnim }}>
-            {/* Image with skeleton + gradient overlay */}
-            <View style={styles.imageSection}>
-              <View style={styles.imageContainer}>
-                {/* Skeleton pulse — visible while image loads */}
-                {!imageLoaded && <SkeletonPulse />}
-
-                {backdropUrl ? (
-                  <Image
-                    source={{ uri: backdropUrl }}
-                    style={styles.backdropImage}
-                    contentFit="cover"
-                    transition={350}
-                    onLoad={() => setImageLoaded(true)}
-                  />
-                ) : (
-                  <View style={[styles.backdropImage, { backgroundColor: colors.muted }]} />
-                )}
-
-                {/* Smooth gradient overlay */}
-                <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%">
-                  <Defs>
-                    <SvgGradient id="backdrop-grad" x1="0" y1="0" x2="0" y2="0.5">
-                      <Stop offset="0" stopColor="#000" stopOpacity="0.7" />
-                      <Stop offset="1" stopColor="#000" stopOpacity="0" />
-                    </SvgGradient>
-                  </Defs>
-                  <Rect x="0" y="0" width="100%" height="100%" fill="url(#backdrop-grad)" />
-                </Svg>
-
-                {/* Add-to-list button */}
-                <Pressable
-                  style={[
-                    styles.addToListBtn,
-                    handedness === 'left'
-                      ? { left: spacing.sm, right: undefined }
-                      : { right: spacing.sm, left: undefined },
-                  ]}
-                  onPress={() => {/* Phase 1: non-functional */}}
-                >
-                  <Plus size={18} color={colors.foreground} strokeWidth={2.5} />
-                </Pressable>
-
-                {/* Title + rating at bottom */}
-                <View style={styles.titleArea}>
-                  <Text style={styles.titleText} numberOfLines={2}>
-                    {details?.title || item.title}
-                  </Text>
-                  {rating != null && rating > 0 && (
-                    <View style={styles.ratingRow}>
-                      <Star size={14} color="#fbbf24" fill="#fbbf24" />
-                      <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-
-            {/* Info section */}
-            <View style={styles.infoSection}>
+            <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
               <ScrollView
-                contentContainerStyle={styles.infoContent}
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
                 {isLoadingDetails ? (
-                  <SkeletonLines />
+                  <SkeletonContent />
                 ) : (
                   <>
-                    {/* Type + Duration */}
-                    <Text style={styles.meta}>
-                      {typeLabel}
-                      {durationText ? ` \u00B7 ${durationText}` : ''}
-                    </Text>
+                    {/* Hero section: image + overlaid content */}
+                    <View style={styles.heroSection}>
+                      <View style={[styles.imageContainer, { backgroundColor: theme.container }]}>
+                        {/* Backdrop image — fills entire container */}
+                        {!imageLoaded && <SkeletonPulse />}
+                        {backdropUrl ? (
+                          <Image
+                            source={{ uri: backdropUrl }}
+                            style={StyleSheet.absoluteFill}
+                            contentFit="cover"
+                            transition={350}
+                            onLoad={() => setImageLoaded(true)}
+                          />
+                        ) : (
+                          <View
+                            style={[StyleSheet.absoluteFill, { backgroundColor: theme.muted }]}
+                          />
+                        )}
 
-                    {/* Synopsis */}
-                    {overview ? (
-                      <Text style={styles.overview} numberOfLines={3}>
-                        {overview}
-                      </Text>
-                    ) : null}
+                        {/* Very dark cinematic overlay */}
+                        <LinearGradient
+                          colors={[
+                            'rgba(0,0,0,0.88)',
+                            'rgba(0,0,0,0.6)',
+                            'rgba(0,0,0,0.65)',
+                            'rgba(0,0,0,0.88)',
+                          ]}
+                          locations={[0, 0.3, 0.6, 1]}
+                          style={StyleSheet.absoluteFill}
+                        />
 
-                    {/* Watch providers */}
-                    <Text style={styles.sectionLabel}>
-                      {content.watchlists.itemDetails.availableOn}
-                    </Text>
-                    {filterProviders(providers.length > 0 ? providers : item.platformList).length > 0 ? (
-                      <View style={styles.platformRow}>
-                        {filterProviders(providers.length > 0 ? providers : item.platformList).map((platform) => {
-                          const logoUrl = getTMDBImageUrl(platform.logoPath, 'w92');
-                          return logoUrl ? (
-                            <View key={platform.name} style={styles.platformItem}>
-                              <Image
-                                source={{ uri: logoUrl }}
-                                style={styles.platformLogo}
-                                contentFit="cover"
-                              />
-                              <Text style={styles.platformName} numberOfLines={1}>
-                                {platform.name}
-                              </Text>
+                        {/* Content overlaid on darkened image */}
+                        <View style={styles.overlaidContent}>
+                          {/* Top: title + rating + metadata */}
+                          <View>
+                            <Text style={styles.titleText} numberOfLines={2}>
+                              {details?.title || item.title}
+                            </Text>
+                            {rating != null && rating > 0 && (
+                              <View style={styles.ratingRow}>
+                                <Star size={14} color="#fbbf24" fill="#fbbf24" />
+                                <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+                              </View>
+                            )}
+                            <Text style={styles.metaText}>{metaText}</Text>
+                          </View>
+
+                          {/* Bottom: overview (3 lines max) */}
+                          {overview ? (
+                            <Text style={styles.overview} numberOfLines={3}>
+                              {overview}
+                            </Text>
+                          ) : null}
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Details section below hero */}
+                    <View style={styles.detailsSection}>
+                      {/* Platform section: left (label + icons) / right (Ajouter) */}
+                      <View style={styles.platformSection}>
+                        <View style={styles.platformLeft}>
+                          <Text style={[styles.sectionLabel, { marginBottom: spacing.xs }]}>
+                            {content.watchlists.itemDetails.availableOn}
+                          </Text>
+                          {matchedProviders.length > 0 ? (
+                            <View style={styles.platformRow}>
+                              {matchedProviders.map(key => (
+                                <ProviderIcon key={key} provider={key} />
+                              ))}
                             </View>
                           ) : (
-                            <View key={platform.name} style={styles.platformFallback}>
-                              <Text style={styles.platformFallbackText}>
-                                {platform.name}
-                              </Text>
-                            </View>
-                          );
-                        })}
+                            <Text style={styles.unavailable}>
+                              {content.watchlists.itemDetails.notAvailable}
+                            </Text>
+                          )}
+                        </View>
+                        <Pressable
+                          style={styles.addToListBtn}
+                          onPress={() => {
+                            /* Phase 1: non-functional */
+                          }}
+                        >
+                          <Plus size={14} color={colors.foreground} strokeWidth={2.5} />
+                          <Text style={styles.addToListText}>
+                            {content.watchlists.itemDetails.add}
+                          </Text>
+                        </Pressable>
                       </View>
-                    ) : (
-                      <Text style={styles.unavailable}>
-                        {content.watchlists.itemDetails.notAvailable}
-                      </Text>
-                    )}
+
+                      {/* Cast — 3 actors on one line */}
+                      {cast.length > 0 && (
+                        <>
+                          <Text style={[styles.sectionLabel, { marginBottom: spacing.sm + 3 }]}>
+                            {content.watchlists.itemDetails.mainCast}
+                          </Text>
+                          <View style={styles.castRow}>
+                            {cast.map(actor => {
+                              const photoUrl = getTMDBImageUrl(actor.profileUrl, 'w185');
+                              return (
+                                <View
+                                  key={`${actor.name}-${actor.character}`}
+                                  style={styles.castItem}
+                                >
+                                  {photoUrl ? (
+                                    <Image
+                                      source={{ uri: photoUrl }}
+                                      style={styles.castPhoto}
+                                      contentFit="cover"
+                                    />
+                                  ) : (
+                                    <View
+                                      style={[styles.castPhoto, { backgroundColor: theme.muted }]}
+                                    />
+                                  )}
+                                  <Text style={styles.castName} numberOfLines={1}>
+                                    {actor.name}
+                                  </Text>
+                                  <Text style={styles.castCharacter} numberOfLines={1}>
+                                    {actor.character}
+                                  </Text>
+                                </View>
+                              );
+                            })}
+                            {cast.length === 2 && <View style={styles.castItem} />}
+                          </View>
+                        </>
+                      )}
+                    </View>
                   </>
                 )}
               </ScrollView>
-            </View>
             </Animated.View>
+
+            {/* Bottom spacer when there is no navigation */}
+            {!hasNavigation && (
+              <View style={{ height: Math.max(spacing.lg, insets.bottom + spacing.md) }} />
+            )}
 
             {/* Navigation bar (only when navigating a list) */}
             {hasNavigation && (
-              <View style={styles.navBar}>
+              <View
+                style={[
+                  styles.navBar,
+                  { paddingBottom: Math.max(spacing.lg, insets.bottom + spacing.md) },
+                ]}
+              >
                 <Pressable
                   style={styles.navBtn}
                   onPress={() => idx > 0 && navigateWithFade(idx - 1)}
                   disabled={idx === 0}
                 >
-                  <ChevronLeft
-                    size={24}
-                    color={idx === 0 ? colors.border : colors.foreground}
-                  />
+                  <ChevronLeft size={24} color={idx === 0 ? colors.border : colors.foreground} />
                 </Pressable>
                 <Text style={styles.navCounter}>
                   {idx + 1} / {items!.length}
@@ -465,11 +561,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   contentPanel: {
-    backgroundColor: '#0a1122',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
-    maxHeight: '85%',
+    height: Math.round(SCREEN_HEIGHT * 0.76),
   },
   handleRow: {
     alignItems: 'center',
@@ -482,8 +577,11 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: 'rgba(255,255,255,0.25)',
   },
-  // Image
-  imageSection: {
+  scrollContent: {
+    paddingBottom: spacing.md,
+  },
+  // Hero section — image with overlaid content
+  heroSection: {
     alignItems: 'center',
     paddingTop: spacing.xs,
   },
@@ -493,31 +591,15 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: '#0f1729',
   },
-  backdropImage: {
-    width: '100%',
-    height: '100%',
-  },
-  // Add-to-list button
-  addToListBtn: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  // Title area at bottom of image
-  titleArea: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  overlaidContent: {
+    position: 'relative',
+    zIndex: 2,
+    height: IMAGE_HEIGHT,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    justifyContent: 'space-between',
   },
   titleText: {
     fontSize: fontSize.xl,
@@ -535,25 +617,47 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fbbf24',
   },
-  // Info section
-  infoSection: {
-    paddingHorizontal: spacing.lg,
-    height: 220,
-  },
-  infoContent: {
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  meta: {
+  metaText: {
     fontSize: fontSize.sm,
-    color: colors.mutedForeground,
-    marginBottom: spacing.md,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: spacing.sm,
   },
+  // Overview
   overview: {
     fontSize: fontSize.sm,
-    color: colors.foreground,
+    color: 'rgba(255,255,255,0.85)',
     lineHeight: 20,
+  },
+  // Platform section: left column (label + logos) / right column (button)
+  platformSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: spacing.lg,
+  },
+  platformLeft: {
+    flex: 1,
+  },
+  // Add-to-list pill button
+  addToListBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    marginLeft: spacing.md,
+  },
+  addToListText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.foreground,
+  },
+  // Details section below hero
+  detailsSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
   },
   sectionLabel: {
     fontSize: fontSize.sm,
@@ -561,48 +665,48 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     marginBottom: spacing.sm,
   },
+  // Provider icons row
   platformRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  platformItem: {
-    alignItems: 'center',
-    width: 56,
-  },
-  platformLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.md,
-  },
-  platformName: {
-    fontSize: 10,
-    color: colors.mutedForeground,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-  platformFallback: {
-    backgroundColor: colors.muted,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    justifyContent: 'center',
-  },
-  platformFallbackText: {
-    fontSize: fontSize.xs,
-    color: colors.mutedForeground,
+    gap: spacing.sm,
   },
   unavailable: {
     fontSize: fontSize.sm,
     color: colors.mutedForeground,
+  },
+  // Cast — 3 actors in a row, square photos
+  castRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  castItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  castPhoto: {
+    width: 38,
+    height: 38,
+    borderRadius: borderRadius.md,
+  },
+  castName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
+  castCharacter: {
+    fontSize: 10,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+    marginTop: 2,
   },
   // Navigation bar
   navBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingVertical: spacing.xs,
     gap: spacing.xl,
   },
   navBtn: {

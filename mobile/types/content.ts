@@ -1,6 +1,7 @@
 export interface Content {
 	header: {
 		appName: string;
+		tagline: string;
 		home: string;
 		explore: string;
 		login: string;
@@ -24,69 +25,18 @@ export interface Content {
 	};
 	watchlists: {
 		title: string;
-		createWatchlist: string;
-		createWatchlistDescription: string;
-		notLoggedInWarning: string;
 		noWatchlists: string;
-		myWatchlists: string;
-		followed: string;
 		noWatchlistsInCategory: string;
-		adjustFilters: string;
-		items: string;
-		item: string;
-		headerPublic: string;
-		headerPrivate: string;
-		public: string;
-		private: string;
-		loading: string;
-		accountDataBadge: string;
-		preview: string;
-		categories: string;
-		categoriesDescription: string;
-		genreCategories: string;
-		platformCategories: string;
-		platformsDescription: string;
-		name: string;
-		namePlaceholder: string;
-		description: string;
-		descriptionPlaceholder: string;
-		coverImage: string;
-		uploadImage: string;
-		changeImage: string;
-		imageUploadHint: string;
-		makePublic: string;
-		cancel: string;
-		create: string;
-		creating: string;
-		back: string;
 		noItemsYet: string;
 		noItemsDescription: string;
-		edit: string;
-		editWatchlist: string;
-		editWatchlistDescription: string;
-		deleteWatchlist: string;
-		deleteWatchlistConfirm: string;
-		deleteWatchlistWarning: string;
-		saving: string;
-		save: string;
-		deleting: string;
-		delete: string;
-		addItem: string;
-		searchMoviesAndSeries: string;
+		addToWatchlist: string;
+		myWatchlists: string;
+		followed: string;
+		items: string;
+		item: string;
 		searchPlaceholder: string;
-		searching: string;
 		noResults: string;
 		startSearching: string;
-		add: string;
-		added: string;
-		inWatchlist: string;
-		tableHeaders: {
-			number: string;
-			title: string;
-			type: string;
-			platforms: string;
-			duration: string;
-		};
 		contentTypes: {
 			movie: string;
 			series: string;
@@ -110,149 +60,12 @@ export interface Content {
 			availableOn: string;
 			mainCast: string;
 			seeMore: string;
-		};
-		tooltips: {
-			share: string;
-			save: string;
-			unsave: string;
-			duplicate: string;
-			inviteCollaborator: string;
-		};
-		contextMenu: {
-			addToWatchlist: string;
-			removeFromWatchlist: string;
-			moveToFirst: string;
-			moveToLast: string;
-		};
-		collaborators: {
-			addTitle: string;
-			addDescription: string;
-			usernamePlaceholder: string;
+			showMore: string;
+			showLess: string;
 			add: string;
-			adding: string;
-			addSuccess: string;
-			addError: string;
-			currentTitle: string;
-			remove: string;
-			removeSuccess: string;
-			removeError: string;
-			leaveTitle: string;
-			leaveDescription: string;
-			leave: string;
-			leaving: string;
-			leaveSuccess: string;
-			leaveError: string;
-		};
-		addToWatchlist: string;
-		noWatchlist: string;
-		offlinePopover: {
-			title: string;
-			accessEverywhere: string;
-			collaborativeLists: string;
-			shareWithFriends: string;
-			signup: string;
-		};
-		toasts?: {
-			linkCopied: string;
-			linkCopyError: string;
-			listSaved: string;
-			listUnsaved: string;
-			listSaveError: string;
-			duplicating: string;
-			listDuplicated: string;
-			duplicateError: string;
-		};
-	};
-	landing: {
-		hero: {
-			tagline: string;
-			title: string;
-			subtitle: string;
-			cta: string;
-		};
-		features: {
-			sectionTitle: string;
-			sectionSubtitle: string;
-			organize: {
-				tagline: string;
-				title: string;
-				description: string;
-			};
-			collaborate: {
-				tagline: string;
-				title: string;
-				description: string;
-			};
-			share: {
-				tagline: string;
-				title: string;
-				description: string;
-			};
-			discover: {
-				tagline: string;
-				title: string;
-				description: string;
-			};
-		};
-		startInSeconds: {
-			title: string;
-			subtitle: string;
-			step1: {
-				title: string;
-				description: string;
-			};
-			step2: {
-				title: string;
-				description: string;
-			};
-			step3: {
-				title: string;
-				description: string;
-			};
-		};
-		testimonials: {
-			title: string;
-			subtitle: string;
-			testimonial1: {
-				text: string;
-				author: string;
-				pseudo: string;
-			};
-			testimonial2: {
-				text: string;
-				author: string;
-				pseudo: string;
-			};
-			testimonial3: {
-				text: string;
-				author: string;
-				pseudo: string;
-			};
-		};
-		finalCta: {
-			title: string;
-			subtitle: string;
-			button: string;
-			disclaimer: string;
 		};
 	};
 	home: {
-		hero: {
-			title: string;
-			subtitle: string;
-			cta: string;
-			ctaSecondary: string;
-			pills: {
-				organize: string;
-				share: string;
-				discover: string;
-			};
-		};
-		library: {
-			title: string;
-			subtitle: string;
-			seeAll: string;
-		};
 		categories: {
 			title: string;
 			subtitle: string;
@@ -308,60 +121,16 @@ export interface Content {
 				};
 			};
 		};
-		platformsSection: {
-			title: string;
-			subtitle: string;
-			seeAll: string;
-		};
 		popularWatchlists: {
 			title: string;
 			subtitle: string;
 			seeMore: string;
 			noWatchlists: string;
 		};
-		faq: {
-			title: string;
-			subtitle: string;
-			questions: {
-				privateWatchlists: {
-					question: string;
-					answer: string;
-				};
-				pricing: {
-					question: string;
-					answer: string;
-				};
-				exploreSection: {
-					question: string;
-					answer: string;
-				};
-				whatMakesDifferent: {
-					question: string;
-					answer: string;
-				};
-				streaming: {
-					question: string;
-					answer: string;
-				};
-			};
-		};
-		trending: {
-			title: string;
-			noImage: string;
-		};
-		recommendations: {
-			title: string;
-			subtitle: string;
-			seeMore: string;
-		};
 		creators: {
 			title: string;
 			subtitle: string;
 			seeMore: string;
-		};
-		communityWatchlists: {
-			title: string;
-			subtitle: string;
 		};
 	};
 	explore: {
@@ -444,32 +213,6 @@ export interface Content {
 		language: string;
 	};
 	profile: {
-		title: string;
-		subtitle: string;
-		userInformation: string;
-		avatarSection: {
-			title: string;
-			description: string;
-			uploadButton: string;
-			changeButton: string;
-			deleteButton: string;
-			uploading: string;
-			deleting: string;
-			hint: string;
-			validation: {
-				invalidFileType: string;
-				fileTooLarge: string;
-				uploadFailed: string;
-				deleteFailed: string;
-				readFailed: string;
-			};
-			toasts: {
-				updated: string;
-				updatedDesc: string;
-				deleted: string;
-				deletedDesc: string;
-			};
-		};
 		usernameSection: {
 			title: string;
 			description: string;
@@ -483,17 +226,6 @@ export interface Content {
 				alreadyTaken: string;
 			};
 		};
-		passwordSection: {
-			title: string;
-			description: string;
-			currentPasswordLabel: string;
-			currentPasswordPlaceholder: string;
-			newPasswordLabel: string;
-			newPasswordPlaceholder: string;
-			confirmPasswordLabel: string;
-			confirmPasswordPlaceholder: string;
-			changeButton: string;
-		};
 		deleteSection: {
 			title: string;
 			description: string;
@@ -504,19 +236,6 @@ export interface Content {
 			deleteButton: string;
 			deleting: string;
 			cancel: string;
-		};
-		toasts: {
-			usernameUpdated: string;
-			usernameUpdatedDesc: string;
-			passwordChanged: string;
-			passwordChangedDesc: string;
-			accountDeleted: string;
-			accountDeletedDesc: string;
-			error: string;
-			passwordMismatch: string;
-			updateFailed: string;
-			passwordChangeFailed: string;
-			accountDeleteFailed: string;
 		};
 	};
 	userProfile: {
@@ -531,5 +250,29 @@ export interface Content {
 		notFound: string;
 		notFoundDescription: string;
 		backToHome: string;
+	};
+	settings: {
+		tabs: {
+			display: string;
+			preferences: string;
+			account: string;
+		};
+		display: {
+			backgroundColor: string;
+			backgroundColorHint: string;
+			ocean: string;
+			midnight: string;
+			listColumns: string;
+			listColumnsHint: string;
+			exploreColumns: string;
+			exploreColumnsHint: string;
+		};
+		preferences: {
+			language: string;
+			handedness: string;
+			handednessHint: string;
+			leftHanded: string;
+			rightHanded: string;
+		};
 	};
 }

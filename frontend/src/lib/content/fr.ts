@@ -591,6 +591,14 @@ export const fr: Content = {
       deleting: 'Suppression...',
       cancel: 'Annuler',
     },
+    themeSection: {
+      title: 'Thème',
+      description: 'Choisissez le thème visuel de l\'interface',
+      ocean: 'Océan',
+      oceanDescription: 'Teintes bleues profondes',
+      midnight: 'Minuit',
+      midnightDescription: 'Gris neutre sombre',
+    },
     toasts: {
       usernameUpdated: "Nom d'utilisateur mis à jour",
       usernameUpdatedDesc: "Votre nom d'utilisateur a été mis à jour avec succès.",

@@ -16,6 +16,7 @@ import { useLanguageStore } from '../../store/language';
 import { usePreferencesStore } from '../../store/preferences';
 import { useAuth } from '../../context/auth-context';
 import { colors, fontSize, spacing } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { GENRE_CATEGORIES, getCategoryInfo } from '../../types/categories';
 import type { Watchlist } from '../../types';
 import WatchlistCard from '../../components/WatchlistCard';
@@ -36,6 +37,7 @@ export default function HomeScreen() {
   const { content } = useLanguageStore();
   const { columns } = usePreferencesStore();
   const { user } = useAuth();
+  const theme = useTheme();
   const router = useRouter();
   const cardWidth = getCardWidth(columns);
   const [popularWatchlists, setPopularWatchlists] = useState<Watchlist[]>([]);
@@ -90,7 +92,7 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -99,7 +101,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -108,7 +110,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.appTitle}>{content.header.appName}</Text>
-          <View style={styles.avatarButton}>
+          <View style={[styles.avatarButton, { backgroundColor: theme.secondary }]}>
             {user?.avatarUrl ? (
               <Image
                 source={{ uri: user.avatarUrl }}

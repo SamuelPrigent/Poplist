@@ -4,6 +4,7 @@ import { watchlistAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
 import { usePreferencesStore } from '../../store/preferences'
 import { colors, spacing } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import WatchlistCard from '../../components/WatchlistCard'
 import EmptyState from '../../components/EmptyState'
 import type { Watchlist } from '../../types'
@@ -15,6 +16,7 @@ function getCardWidth(cols: number) {
 }
 
 export default function AllPopularScreen() {
+  const theme = useTheme()
   const { content } = useLanguageStore()
   const { columns } = usePreferencesStore()
   const cardWidth = getCardWidth(columns)
@@ -38,7 +40,7 @@ export default function AllPopularScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
@@ -47,7 +49,7 @@ export default function AllPopularScreen() {
   return (
     <FlatList
       key={columns}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
       data={watchlists}
       keyExtractor={(item) => item.id}

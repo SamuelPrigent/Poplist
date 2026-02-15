@@ -12,8 +12,10 @@ import ItemDetailSheet from '../../components/ItemDetailSheet'
 import EmptyState from '../../components/EmptyState'
 import type { Watchlist, WatchlistItem } from '../../types'
 import { useLanguageStore } from '../../store/language'
+import { useTheme } from '../../hooks/useTheme'
 
 export default function ListDetailScreen() {
+  const theme = useTheme()
   const { id } = useLocalSearchParams<{ id: string }>()
   const navigation = useNavigation()
   const insets = useSafeAreaInsets()
@@ -48,7 +50,7 @@ export default function ListDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
@@ -56,7 +58,7 @@ export default function ListDetailScreen() {
 
   if (!watchlist) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
         <Text style={styles.error}>Liste introuvable</Text>
       </View>
     )
@@ -79,25 +81,27 @@ export default function ListDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <LinearGradient
-        colors={['rgba(12, 39, 55, 0.45)', 'transparent']}
-        style={styles.topGradient}
-        pointerEvents="none"
-      />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom']}>
       <FlatList
         style={styles.list}
         contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 32 }]}
         data={watchlist.items}
         keyExtractor={(item) => item.tmdbId.toString()}
         ListHeaderComponent={
-          <ListHeader
-            watchlist={watchlist}
-            isOwner={isOwner}
-            isSaved={isSaved}
-            isCollaborator={isCollaborator}
-            onShare={handleShare}
-          />
+          <View>
+            <LinearGradient
+              colors={['rgba(12, 39, 55, 0.45)', 'transparent']}
+              style={[styles.headerGradient, { top: -(insets.top + 32), left: -spacing.lg, right: -spacing.lg }]}
+              pointerEvents="none"
+            />
+            <ListHeader
+              watchlist={watchlist}
+              isOwner={isOwner}
+              isSaved={isSaved}
+              isCollaborator={isCollaborator}
+              onShare={handleShare}
+            />
+          </View>
         }
         renderItem={({ item, index }) => (
           <WatchlistItemRow
@@ -137,11 +141,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
   },
-  topGradient: {
+  headerGradient: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
     height: 260,
     zIndex: 0,
   },

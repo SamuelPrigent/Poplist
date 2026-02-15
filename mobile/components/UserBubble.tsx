@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { User } from 'lucide-react-native';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 interface UserBubbleProps {
   user: {
@@ -14,8 +15,9 @@ interface UserBubbleProps {
 }
 
 export default function UserBubble({ user, listCount, onPress }: UserBubbleProps) {
+  const theme = useTheme();
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable style={[styles.card, { backgroundColor: theme.muted + '4D' }]} onPress={onPress}>
       {user.avatarUrl ? (
         <Image
           source={{ uri: user.avatarUrl }}
@@ -23,7 +25,7 @@ export default function UserBubble({ user, listCount, onPress }: UserBubbleProps
           contentFit="cover"
         />
       ) : (
-        <View style={styles.avatarPlaceholder}>
+        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.muted }]}>
           <User size={18} color={colors.mutedForeground} />
         </View>
       )}

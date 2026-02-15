@@ -105,29 +105,29 @@ export default function ListHeader({
         {isOwner ? (
           <>
             <Pressable style={styles.actionBtn} onPress={onAddCollaborator}>
-              <UserPlus size={20} color={colors.foreground} strokeWidth={1.5} />
+              <UserPlus size={22} color={colors.foreground} strokeWidth={1.5} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Send size={20} color={colors.foreground} strokeWidth={1.5} />
+              <Send size={22} color={colors.foreground} strokeWidth={1.5} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onEdit}>
-              <Pencil size={20} color={colors.foreground} strokeWidth={1.5} />
+              <Pencil size={22} color={colors.foreground} strokeWidth={1.5} />
             </Pressable>
           </>
         ) : (
           <>
             <Pressable style={styles.actionBtn} onPress={onSave}>
               <CirclePlus
-                size={20}
+                size={22}
                 color={colors.foreground}
                 strokeWidth={isSaved ? 2.5 : 1.5}
               />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onDuplicate}>
-              <Copy size={20} color={colors.foreground} strokeWidth={1.5} />
+              <Copy size={22} color={colors.foreground} strokeWidth={1.5} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Send size={20} color={colors.foreground} strokeWidth={1.5} />
+              <Send size={22} color={colors.foreground} strokeWidth={1.5} />
             </Pressable>
           </>
         )}
@@ -202,8 +202,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   actionBtn: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',

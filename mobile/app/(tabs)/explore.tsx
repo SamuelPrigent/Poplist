@@ -16,15 +16,14 @@ import { Image } from 'expo-image'
 import { ChevronDown, X, Check } from 'lucide-react-native'
 import { tmdbAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
+import { usePreferencesStore } from '../../store/preferences'
 import { getTMDBImageUrl, getTMDBLanguage } from '../../lib/utils'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import ItemDetailSheet from '../../components/ItemDetailSheet'
 import type { WatchlistItem } from '../../types'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
-const POSTER_GAP = spacing.sm
-const POSTER_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - POSTER_GAP * 2) / 3
-const POSTER_HEIGHT = POSTER_WIDTH * 1.5
 
 type MediaType = 'movie' | 'tv'
 type SortType = 'popularity.desc' | 'vote_average.desc'
@@ -79,6 +78,12 @@ interface DiscoverResult {
 
 export default function ExploreScreen() {
   const { content, language } = useLanguageStore()
+  const { exploreColumns } = usePreferencesStore()
+  const theme = useTheme()
+
+  const posterGap = spacing.sm
+  const posterWidth = (SCREEN_WIDTH - spacing.lg * 2 - posterGap * (exploreColumns - 1)) / exploreColumns
+  const posterHeight = posterWidth * 1.5
 
   // Filters
   const [mediaType, setMediaType] = useState<MediaType>('movie')
@@ -194,15 +199,15 @@ export default function ExploreScreen() {
   const renderPoster = useCallback(({ item, index }: { item: DiscoverResult; index: number }) => {
     const posterUrl = getTMDBImageUrl(item.poster_path, 'w342')
     return (
-      <Pressable style={styles.posterWrapper} onPress={() => setSelectedIndex(index)}>
+      <Pressable style={{ width: posterWidth }} onPress={() => setSelectedIndex(index)}>
         {posterUrl ? (
           <Image
             source={{ uri: posterUrl }}
-            style={styles.posterImage}
+            style={{ width: posterWidth, height: posterHeight, borderRadius: borderRadius.md }}
             contentFit="cover"
           />
         ) : (
-          <View style={[styles.posterImage, styles.posterPlaceholder]}>
+          <View style={{ width: posterWidth, height: posterHeight, borderRadius: borderRadius.md, backgroundColor: theme.secondary, justifyContent: 'center', alignItems: 'center', padding: spacing.sm }}>
             <Text style={styles.posterPlaceholderText}>
               {item.title || item.name}
             </Text>
@@ -210,7 +215,7 @@ export default function ExploreScreen() {
         )}
       </Pressable>
     )
-  }, [mediaType])
+  }, [mediaType, posterWidth, posterHeight, theme.secondary])
 
   const renderFooter = () => {
     if (!isLoadingMore) return <View style={{ height: spacing['3xl'] }} />
@@ -222,9 +227,9 @@ export default function ExploreScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Filters header */}
-      <View style={styles.filtersContainer}>
+      <View style={[styles.filtersContainer, { borderBottomColor: theme.border }]}>
         {/* Title */}
         <View style={styles.titleRow}>
           <Text style={styles.pageTitle}>{content.explore.title}</Text>
@@ -233,7 +238,7 @@ export default function ExploreScreen() {
         {/* Row 1: Media type + Sort — all on one line */}
         <View style={styles.filterRow}>
           <Pressable
-            style={[styles.filterBtn, mediaType === 'movie' && styles.filterBtnActive]}
+            style={[styles.filterBtn, { borderColor: theme.border }, mediaType === 'movie' && styles.filterBtnActive]}
             onPress={() => setMediaType('movie')}
           >
             <Text style={[styles.filterBtnText, mediaType === 'movie' && styles.filterBtnTextActive]}>
@@ -241,7 +246,7 @@ export default function ExploreScreen() {
             </Text>
           </Pressable>
           <Pressable
-            style={[styles.filterBtn, mediaType === 'tv' && styles.filterBtnActive]}
+            style={[styles.filterBtn, { borderColor: theme.border }, mediaType === 'tv' && styles.filterBtnActive]}
             onPress={() => setMediaType('tv')}
           >
             <Text style={[styles.filterBtnText, mediaType === 'tv' && styles.filterBtnTextActive]}>
@@ -252,7 +257,7 @@ export default function ExploreScreen() {
           <View style={styles.filterSpacer} />
 
           <Pressable
-            style={[styles.filterBtn, sortBy === 'popularity.desc' && styles.filterBtnActive]}
+            style={[styles.filterBtn, { borderColor: theme.border }, sortBy === 'popularity.desc' && styles.filterBtnActive]}
             onPress={() => setSortBy('popularity.desc')}
           >
             <Text style={[styles.filterBtnText, sortBy === 'popularity.desc' && styles.filterBtnTextActive]}>
@@ -260,7 +265,7 @@ export default function ExploreScreen() {
             </Text>
           </Pressable>
           <Pressable
-            style={[styles.filterBtn, sortBy === 'vote_average.desc' && styles.filterBtnActive]}
+            style={[styles.filterBtn, { borderColor: theme.border }, sortBy === 'vote_average.desc' && styles.filterBtnActive]}
             onPress={() => setSortBy('vote_average.desc')}
           >
             <Text style={[styles.filterBtnText, sortBy === 'vote_average.desc' && styles.filterBtnTextActive]}>
@@ -273,7 +278,7 @@ export default function ExploreScreen() {
         <View style={styles.filterRow}>
           {/* Genre select button */}
           <Pressable
-            style={[styles.selectBtn, selectedGenres.size > 0 && styles.selectBtnActive]}
+            style={[styles.selectBtn, { borderColor: theme.border }, selectedGenres.size > 0 && styles.selectBtnActive]}
             onPress={() => setGenreModalVisible(true)}
           >
             <Text
@@ -288,9 +293,9 @@ export default function ExploreScreen() {
           {/* Year min */}
           <View style={styles.yearInput}>
             <TextInput
-              style={styles.yearInputText}
+              style={[styles.yearInputText, { backgroundColor: theme.secondary, borderColor: theme.border }]}
               placeholder={content.explore.filters.yearMin}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={theme.mutedForeground}
               value={yearMin}
               onChangeText={(text) => setYearMin(text.replace(/[^0-9]/g, '').slice(0, 4))}
               keyboardType="number-pad"
@@ -301,9 +306,9 @@ export default function ExploreScreen() {
           {/* Year max */}
           <View style={styles.yearInput}>
             <TextInput
-              style={styles.yearInputText}
+              style={[styles.yearInputText, { backgroundColor: theme.secondary, borderColor: theme.border }]}
               placeholder={content.explore.filters.yearMax}
-              placeholderTextColor={colors.mutedForeground}
+              placeholderTextColor={theme.mutedForeground}
               value={yearMax}
               onChangeText={(text) => setYearMax(text.replace(/[^0-9]/g, '').slice(0, 4))}
               keyboardType="number-pad"
@@ -335,10 +340,11 @@ export default function ExploreScreen() {
         </View>
       ) : (
         <FlatList
+          key={exploreColumns}
           data={results}
           keyExtractor={(item, index) => `${item.id}-${index}`}
-          numColumns={3}
-          columnWrapperStyle={styles.posterRow}
+          numColumns={exploreColumns}
+          columnWrapperStyle={{ gap: posterGap, marginBottom: posterGap }}
           contentContainerStyle={styles.gridContent}
           showsVerticalScrollIndicator={false}
           renderItem={renderPoster}
@@ -356,7 +362,7 @@ export default function ExploreScreen() {
         onRequestClose={() => setGenreModalVisible(false)}
       >
         <Pressable style={styles.modalBackdrop} onPress={() => setGenreModalVisible(false)}>
-          <Pressable style={styles.modalContent} onPress={() => {}}>
+          <Pressable style={[styles.modalContent, { backgroundColor: theme.panel }]} onPress={() => {}}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Genres</Text>
               {selectedGenres.size > 0 && (
@@ -372,7 +378,7 @@ export default function ExploreScreen() {
                 return (
                   <Pressable
                     key={genre.id}
-                    style={styles.modalItem}
+                    style={[styles.modalItem, { borderBottomColor: theme.border }]}
                     onPress={() => toggleGenre(genre.id)}
                   >
                     <Text style={[styles.modalItemText, isActive && styles.modalItemTextActive]}>
@@ -579,20 +585,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
   },
-  posterRow: {
-    gap: POSTER_GAP,
-    marginBottom: POSTER_GAP,
-  },
-  posterWrapper: {
-    width: POSTER_WIDTH,
-  },
-  posterImage: {
-    width: POSTER_WIDTH,
-    height: POSTER_HEIGHT,
-    borderRadius: borderRadius.md,
-  },
   posterPlaceholder: {
-    backgroundColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.sm,

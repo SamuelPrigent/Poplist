@@ -3,18 +3,20 @@ import { useRouter } from 'expo-router'
 import { useLanguageStore } from '../../store/language'
 import { GENRE_CATEGORIES } from '../../types/categories'
 import { colors, spacing } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import GenreCard from '../../components/GenreCard'
 
 const screenWidth = Dimensions.get('window').width
 const cardWidth = (screenWidth - spacing.lg * 2 - spacing.md) / 2
 
 export default function CategoriesScreen() {
+  const theme = useTheme()
   const { content } = useLanguageStore()
   const router = useRouter()
 
   return (
     <FlatList
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
       data={[...GENRE_CATEGORIES]}
       keyExtractor={(item) => item}

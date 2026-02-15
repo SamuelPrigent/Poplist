@@ -4,10 +4,12 @@ import { useAuth } from '../../context/auth-context'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
 import { colors } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 
 export default function TabLayout() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
+  const theme = useTheme()
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -21,11 +23,11 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
+          backgroundColor: theme.background,
+          borderTopColor: theme.border,
         },
         headerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: theme.background,
         },
         headerTintColor: colors.foreground,
         headerShown: false,
