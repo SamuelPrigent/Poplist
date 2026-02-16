@@ -40,7 +40,7 @@ export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardG
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="relative aspect-32/29 w-full overflow-hidden rounded-xl bg-[hsl(218,41.33%,15.51%)]/30"
+        className="relative aspect-32/29 w-full overflow-hidden rounded-xl bg-muted/30"
       >
         {/* Background image */}
         {categoryImage && (
@@ -62,7 +62,8 @@ export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardG
         <div className="absolute inset-0 bg-linear-to-b from-background/40 to-transparent to-35%" />
 
         {/* Dark gradient overlay - bottom for text readability */}
-        <div className="absolute inset-0 bg-linear-to-t from-[var(--genre-card-gradient)] to-transparent to-45%" />
+        <div className="absolute inset-0 bg-linear-to-t from-(--genre-card-gradient) to-transparent to-45%" />
+        {/* <div className="absolute inset-0 bg-linear-to-t from-(--genre-card-gradient) to-transparent to-45%" /> */}
 
         {/* Genre name + count */}
         <div className="absolute inset-0 flex flex-col justify-end p-5">

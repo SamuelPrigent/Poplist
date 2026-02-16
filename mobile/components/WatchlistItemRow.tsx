@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
 import { getTMDBImageUrl } from '../lib/utils';
 import { useLanguageStore } from '../store/language';
+import { useTheme } from '../hooks/useTheme';
 import type { WatchlistItem } from '../types';
 
 interface WatchlistItemRowProps {
@@ -13,6 +14,7 @@ interface WatchlistItemRowProps {
 }
 
 export default function WatchlistItemRow({ item, index, onPress }: WatchlistItemRowProps) {
+  const theme = useTheme();
   const { content } = useLanguageStore();
   const typeLabel =
     item.mediaType === 'movie'
@@ -21,7 +23,7 @@ export default function WatchlistItemRow({ item, index, onPress }: WatchlistItem
   const posterUrl = getTMDBImageUrl(item.posterPath, 'w92');
 
   return (
-    <Pressable style={styles.container} onPress={onPress}>
+    <Pressable style={[styles.container, { borderBottomColor: theme.border }]} onPress={onPress}>
       <Text style={styles.index}>{index + 1}</Text>
       {posterUrl ? (
         <Image

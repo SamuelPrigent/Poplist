@@ -105,29 +105,29 @@ export default function ListHeader({
         {isOwner ? (
           <>
             <Pressable style={styles.actionBtn} onPress={onAddCollaborator}>
-              <UserPlus size={22} color={colors.foreground} strokeWidth={1.5} />
+              <UserPlus size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Send size={22} color={colors.foreground} strokeWidth={1.5} />
+              <Send size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onEdit}>
-              <Pencil size={22} color={colors.foreground} strokeWidth={1.5} />
+              <Pencil size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
           </>
         ) : (
           <>
             <Pressable style={styles.actionBtn} onPress={onSave}>
               <CirclePlus
-                size={22}
+                size={26}
                 color={colors.foreground}
                 strokeWidth={isSaved ? 2.5 : 1.5}
               />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onDuplicate}>
-              <Copy size={22} color={colors.foreground} strokeWidth={1.5} />
+              <Copy size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Send size={22} color={colors.foreground} strokeWidth={1.5} />
+              <Send size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
           </>
         )}
