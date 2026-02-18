@@ -128,6 +128,17 @@ function ListsContentInner() {
     }
   }, [user, authLoading, router]);
 
+  // Revalidate SWR cache when page is restored from bfcache (browser back)
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        mutate();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, [mutate]);
+
   // Setup drag sensors
   const sensors = useSensors(
     useSensor(MouseSensor, {

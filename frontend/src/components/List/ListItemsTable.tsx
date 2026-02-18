@@ -56,6 +56,7 @@ import { watchlistAPI } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
+import { mutate } from 'swr';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
 import { ItemDetailsModal } from './modal/ItemDetailsModal';
@@ -459,6 +460,7 @@ export function ListItemsTable({
         language: tmdbLanguage,
         region: tmdbRegion,
       });
+      mutate('/watchlists/mine');
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
     } finally {
