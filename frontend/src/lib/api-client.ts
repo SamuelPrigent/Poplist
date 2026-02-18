@@ -9,25 +9,40 @@ export function getTMDBImageUrl(logoPath: string): string {
 }
 
 // Helper to get local watch provider logo based on provider name
-export function getWatchProviderLogo(providerName: string): string | null {
-	const nameMap: Record<string, string | null> = {
-		netflix: "/watchProvider/netflix.svg",
-		"amazon prime video": "/watchProvider/primeVideo.svg",
-		"amazon prime video with ads": "/watchProvider/primeVideo.svg",
-		"prime video": "/watchProvider/primeVideo.svg",
-		"prime-video": "/watchProvider/primeVideo.svg",
-		youtube: "/watchProvider/youtube.svg",
-		"apple tv": "/watchProvider/appleTv.svg",
-		"apple tv+": "/watchProvider/appleTv.svg",
-		"apple tv plus": "/watchProvider/appleTv.svg",
-		"apple-tv": "/watchProvider/appleTv.svg",
-		"disney plus": "/watchProvider/disneyplus.svg",
-		"disney+": "/watchProvider/disneyplus.svg",
-		"disney-plus": "/watchProvider/disneyplus.svg",
-		crunchyroll: "/watchProvider/Crunchyroll.svg",
-		"hbo max": "/watchProvider/hbo.svg",
-		"hbo-max": "/watchProvider/hbo.svg",
-		hbo: "/watchProvider/hbo.svg",
+export interface ProviderLogo {
+	path: string;
+	className?: string;
+}
+
+export function getWatchProviderLogo(providerName: string): ProviderLogo | null {
+	const nameMap: Record<string, ProviderLogo | null> = {
+		netflix: { path: "/watchProvider/netflix.svg" },
+		"netflix standard with ads": { path: "/watchProvider/netflix.svg" },
+		"amazon prime video": { path: "/watchProvider/primeVideo.svg" },
+		"amazon prime video with ads": { path: "/watchProvider/primeVideo.svg" },
+		"amazon video": { path: "/watchProvider/primeVideo.svg" },
+		"prime video": { path: "/watchProvider/primeVideo.svg" },
+		"prime-video": { path: "/watchProvider/primeVideo.svg" },
+		youtube: { path: "/watchProvider/youtube.svg" },
+		"youtube premium": { path: "/watchProvider/youtube.svg" },
+		"apple tv": { path: "/watchProvider/appleTv.svg" },
+		"apple tv+": { path: "/watchProvider/appleTv.svg" },
+		"apple tv plus": { path: "/watchProvider/appleTv.svg" },
+		"apple tv store": { path: "/watchProvider/appleTv.svg" },
+		"apple-tv": { path: "/watchProvider/appleTv.svg" },
+		"disney plus": { path: "/watchProvider/disneyplus.svg" },
+		"disney+": { path: "/watchProvider/disneyplus.svg" },
+		"disney-plus": { path: "/watchProvider/disneyplus.svg" },
+		crunchyroll: { path: "/watchProvider/Crunchyroll.svg" },
+		"hbo max": { path: "/watchProvider/hbo.svg" },
+		"hbo max  amazon channel": { path: "/watchProvider/hbo.svg" },
+		"hbo-max": { path: "/watchProvider/hbo.svg" },
+		hbo: { path: "/watchProvider/hbo.svg" },
+		max: { path: "/watchProvider/hbo.svg" },
+		"google play movies": { path: "/watchProvider/googleplay.svg", className: "p-2" },
+		"google play": { path: "/watchProvider/googleplay.svg", className: "p-2" },
+		"orange vod": { path: "/watchProvider/orange.svg" },
+		orange: { path: "/watchProvider/orange.svg" },
 	};
 
 	const normalized = providerName.toLowerCase().trim();
@@ -39,7 +54,7 @@ export function getWatchProviderLogo(providerName: string): string | null {
 
 	// Fallback: check if provider name contains any known provider name
 	for (const [key, logo] of Object.entries(nameMap)) {
-		if (normalized.includes(key) || key.includes(normalized)) {
+		if (logo && (normalized.includes(key) || key.includes(normalized))) {
 			return logo;
 		}
 	}

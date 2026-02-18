@@ -15,6 +15,7 @@ import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useAuth } from '@/context/auth-context';
 import { tmdbAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
+import { useThemeStore } from '@/store/theme';
 
 interface TrendingItem {
   id: number;
@@ -31,6 +32,7 @@ const STAR_KEYS = ['star-1', 'star-2', 'star-3', 'star-4', 'star-5'];
 
 function LandingPageInner() {
   const { content } = useLanguageStore();
+  const { theme } = useThemeStore();
   const { isAuthenticated } = useAuth();
   const [trending, setTrending] = useState<TrendingItem[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -161,7 +163,7 @@ function LandingPageInner() {
 
         <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6">
           {/* Step 1 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-violet-500/20 via-transparent to-blue-500/10 p-px">
+          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-violet-500/20 to-transparent p-px">
             <div className="flex h-full flex-col items-center rounded-2xl bg-background/80 backdrop-blur-sm px-6 py-8 text-center">
               {/* Step number badge */}
               <span className="mb-4 text-xs font-medium text-violet-400/80 uppercase tracking-wider">
@@ -188,7 +190,7 @@ function LandingPageInner() {
           </div>
 
           {/* Step 2 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 via-transparent to-violet-500/10 p-px">
+          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px">
             <div className="flex h-full flex-col items-center rounded-2xl bg-background/80 backdrop-blur-sm px-6 py-8 text-center">
               {/* Step number badge */}
               <span className="mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
@@ -215,7 +217,7 @@ function LandingPageInner() {
           </div>
 
           {/* Step 3 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-amber-500/20 via-transparent to-blue-500/10 p-px">
+          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-amber-500/20 to-transparent p-px">
             <div className="flex h-full flex-col items-center rounded-2xl bg-background/80 backdrop-blur-sm px-6 py-8 text-center">
               {/* Step number badge */}
               <span className="mb-4 text-xs font-medium text-amber-400/80 uppercase tracking-wider">
@@ -239,9 +241,9 @@ function LandingPageInner() {
       {/* Testimonials Section */}
       <section className="relative py-10 pb-30">
         {/* Blur glow shapes */}
-        <div className="pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
-        <div className="pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-blue-600/10 blur-[120px]" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-500/10 blur-[100px]" />
+        <div className={`pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-violet-600/10'}`} />
+        <div className={`pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-blue-600/10'}`} />
+        <div className={`pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] ${theme === 'midnight' ? 'bg-slate-800/5' : 'bg-slate-500/10'}`} />
 
         <div className="relative z-10 container mx-auto max-w-[1150px] px-4">
           <div className="mb-12 text-center">
@@ -253,8 +255,8 @@ function LandingPageInner() {
 
           <div className="grid gap-6 md:grid-cols-3">
             {/* Testimonial 1 */}
-            <div className="group rounded-xl bg-linear-to-br from-gray-500/20 via-transparent to-gray-600/10 p-px transition-all duration-300 hover:from-gray-400/30 hover:to-gray-500/20">
-              <div className="flex h-full flex-col justify-between rounded-xl bg-background/80 backdrop-blur-sm p-6">
+            <div className="group rounded-xl transition-all duration-300">
+              <div className={`flex h-full flex-col justify-between rounded-xl p-6 ${theme === 'midnight' ? 'bg-[linear-gradient(135deg,#181c24a6,transparent)]' : 'bg-background/80 backdrop-blur-sm'}`}>
                 <div>
                   <div className="mb-4 flex gap-1">
                     {STAR_KEYS.map(starKey => (
@@ -292,8 +294,8 @@ function LandingPageInner() {
             </div>
 
             {/* Testimonial 2 */}
-            <div className="group rounded-xl bg-linear-to-br from-gray-500/20 via-transparent to-gray-600/10 p-px transition-all duration-300 hover:from-gray-400/30 hover:to-gray-500/20">
-              <div className="flex h-full flex-col justify-between rounded-xl bg-background/80 backdrop-blur-sm p-6">
+            <div className="group rounded-xl transition-all duration-300">
+              <div className={`flex h-full flex-col justify-between rounded-xl p-6 ${theme === 'midnight' ? 'bg-[linear-gradient(135deg,#181c24a6,transparent)]' : 'bg-background/80 backdrop-blur-sm'}`}>
                 <div>
                   <div className="mb-4 flex gap-1">
                     {STAR_KEYS.map(starKey => (
@@ -331,8 +333,8 @@ function LandingPageInner() {
             </div>
 
             {/* Testimonial 3 */}
-            <div className="group rounded-xl bg-linear-to-br from-gray-500/20 via-transparent to-gray-600/10 p-px transition-all duration-300 hover:from-gray-400/30 hover:to-gray-500/20">
-              <div className="flex h-full flex-col justify-between rounded-xl bg-background/80 backdrop-blur-sm p-6">
+            <div className="group rounded-xl transition-all duration-300">
+              <div className={`flex h-full flex-col justify-between rounded-xl p-6 ${theme === 'midnight' ? 'bg-[linear-gradient(135deg,#181c24a6,transparent)]' : 'bg-background/80 backdrop-blur-sm'}`}>
                 <div>
                   <div className="mb-4 flex gap-1">
                     {STAR_KEYS.map(starKey => (
@@ -433,16 +435,12 @@ function LandingPageInner() {
 
       {/* Final CTA */}
       <section className="relative py-24 pb-32">
-        {/* Blur glow shapes - subtle blue sides only */}
-        <div className="pointer-events-none absolute -left-32 top-1/2 h-[450px] w-[450px] -translate-y-1/2 rounded-full bg-blue-600/5 blur-[120px]" />
-        <div className="pointer-events-none absolute -right-32 top-1/2 h-[450px] w-[450px] -translate-y-1/2 rounded-full bg-blue-600/5 blur-[120px]" />
-
         <div className="relative z-10 container mx-auto px-4 text-center">
           <h2 className="mb-6 text-4xl font-bold text-white">
             {content.landing.finalCta.title.split(' ').slice(0, -1).join(' ')}{' '}
             <span className="relative inline-block">
               {content.landing.finalCta.title.split(' ').slice(-1)}
-              <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-linear-to-r from-violet-400/90 to-blue-400/90 from-20%" />
+              <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
             </span>
           </h2>
           <p className="mb-10 text-xl text-gray-400">{content.landing.finalCta.subtitle}</p>

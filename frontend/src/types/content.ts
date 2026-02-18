@@ -110,6 +110,7 @@ export interface Content {
 			availableOn: string;
 			mainCast: string;
 			seeMore: string;
+			seeLess: string;
 		};
 		tooltips: {
 			share: string;

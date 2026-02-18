@@ -124,6 +124,7 @@ export const it: Content = {
       availableOn: 'Disponibile su',
       mainCast: 'Cast principale',
       seeMore: 'Vedi altro',
+      seeLess: 'Vedi meno',
     },
     tooltips: {
       share: 'Condividi',

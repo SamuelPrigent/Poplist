@@ -123,6 +123,7 @@ export const en: Content = {
       availableOn: 'Available on',
       mainCast: 'Main Cast',
       seeMore: 'See more',
+      seeLess: 'See less',
     },
     tooltips: {
       share: 'Share',

@@ -124,6 +124,7 @@ export const es: Content = {
       availableOn: 'Disponible en',
       mainCast: 'Reparto principal',
       seeMore: 'Ver más',
+      seeLess: 'Ver menos',
     },
     tooltips: {
       share: 'Compartir',

@@ -3,10 +3,11 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Calendar, Clock, Star, X } from 'lucide-react';
 import Image from 'next/image';
+import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
 import { type FullMediaDetails, watchlistAPI } from '@/lib/api-client';
-import { getTMDBLanguage, resizeTMDBPoster } from '@/lib/utils';
+import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import { WatchProviderList } from '../WatchProviderBubble';
 
@@ -37,39 +38,64 @@ export function ItemDetailsModal({
   const [showSeeMore, setShowSeeMore] = useState(false);
   const [posterLoaded, setPosterLoaded] = useState(false);
   const [loadedActorImages, setLoadedActorImages] = useState<Set<string>>(new Set());
+  const [fetchedPlatforms, setFetchedPlatforms] = useState<Array<{ name: string; logoPath: string }>>([]);
+  const [isNavigating, setIsNavigating] = useState(false);
   const overviewRef = useRef<HTMLParagraphElement>(null);
+  const prevTmdbIdRef = useRef<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const languageCode = getTMDBLanguage(language);
+  const region = getTMDBRegion(language);
   const voiceTranslation = language === 'fr' ? 'voix' : language === 'es' ? 'voz' : 'voice';
 
   useEffect(() => {
     if (!open) {
+      prevTmdbIdRef.current = null;
+      hasLoadedRef.current = false;
       return;
     }
 
-    // Reset expanded state when modal opens
+    const isNavigation = prevTmdbIdRef.current !== null && prevTmdbIdRef.current !== tmdbId && hasLoadedRef.current;
+    prevTmdbIdRef.current = tmdbId;
+
+    // Reset expanded state
     setIsOverviewExpanded(false);
     setShowSeeMore(false);
     setPosterLoaded(false);
     setLoadedActorImages(new Set());
+    setFetchedPlatforms([]);
+
+    if (isNavigation) {
+      setIsNavigating(true);
+    } else {
+      setLoading(true);
+    }
 
     const fetchDetails = async () => {
-      setLoading(true);
       setError(null);
       try {
-        const { details: data } = await watchlistAPI.getItemDetails(tmdbId, type, languageCode);
+        const detailsPromise = watchlistAPI.getItemDetails(tmdbId, type, languageCode);
+        const providersPromise = platforms.length === 0
+          ? watchlistAPI.fetchTMDBProviders(tmdbId, type, region)
+          : Promise.resolve([]);
+
+        const [{ details: data }, providersRes] = await Promise.all([detailsPromise, providersPromise]);
         setDetails(data);
+        if (providersRes.length > 0) setFetchedPlatforms(providersRes);
+        hasLoadedRef.current = true;
       } catch (err) {
         console.error('Failed to fetch item details:', err);
         setError(null);
         setDetails(null);
+        hasLoadedRef.current = false;
       } finally {
         setLoading(false);
+        setIsNavigating(false);
       }
     };
 
     void fetchDetails();
-  }, [open, tmdbId, type, languageCode]);
+  }, [open, tmdbId, type, languageCode, platforms.length, region]);
 
   // Check if overview is truncated and needs "see more" button
   useEffect(() => {
@@ -161,7 +187,7 @@ export function ItemDetailsModal({
               e.preventDefault();
             }
           }}
-          className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 max-h-[90vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none"
+          className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 h-[85vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none"
         >
           {/* Hidden Title and Description for accessibility */}
           <DialogPrimitive.Title className="sr-only">
@@ -173,8 +199,8 @@ export function ItemDetailsModal({
               : content.watchlists.itemDetails.loadingDetails}
           </DialogPrimitive.Description>
 
-          {loading ? (
-            <div className="flex min-h-[400px] items-center justify-center">
+          {loading || isNavigating ? (
+            <div className="flex h-full items-center justify-center">
               <div className="text-muted-foreground">{content.watchlists.itemDetails.loading}</div>
             </div>
           ) : !details ? (
@@ -184,7 +210,13 @@ export function ItemDetailsModal({
               </div>
             </div>
           ) : (
-            <>
+            <LazyMotion features={domAnimation}>
+              <m.div
+                key={details.tmdbId}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
               {/* Backdrop Background */}
               <div className="relative overflow-hidden">
                 {/* Backdrop Image as background */}
@@ -213,7 +245,7 @@ export function ItemDetailsModal({
                 </DialogPrimitive.Close>
 
                 {/* Content over backdrop */}
-                <div className="relative z-10 min-h-[70vh] px-6 pt-6 pb-6">
+                <div className="relative z-10 px-6 pt-6 pb-6">
                   <div className="flex gap-5">
                     {/* Poster */}
                     <div className="shrink-0">
@@ -307,17 +339,19 @@ export function ItemDetailsModal({
                           </h3>
                           <p
                             ref={overviewRef}
-                            className={`text-muted-foreground text-sm leading-relaxed ${!isOverviewExpanded ? 'line-clamp-5' : ''}`}
+                            className={`text-muted-foreground min-h-[4.5rem] text-sm leading-relaxed ${!isOverviewExpanded ? 'line-clamp-3' : ''}`}
                           >
                             {details.overview}
                           </p>
-                          {showSeeMore && (
+                          {(showSeeMore || isOverviewExpanded) && (
                             <button
                               type="button"
-                              onClick={() => setIsOverviewExpanded(true)}
+                              onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
                               className="text-muted-foreground hover:text-foreground mt-2 text-sm font-bold underline transition-colors"
                             >
-                              {content.watchlists.itemDetails.seeMore}
+                              {isOverviewExpanded
+                                ? content.watchlists.itemDetails.seeLess
+                                : content.watchlists.itemDetails.seeMore}
                             </button>
                           )}
                         </div>
@@ -337,12 +371,12 @@ export function ItemDetailsModal({
                       )}
 
                       {/* Platforms */}
-                      {platforms.length > 0 && (
+                      {(platforms.length > 0 || fetchedPlatforms.length > 0) && (
                         <div className="pt-1">
                           <h3 className="mb-2 text-sm font-semibold">
                             {content.watchlists.itemDetails.availableOn}
                           </h3>
-                          <WatchProviderList providers={platforms} maxVisible={6} />
+                          <WatchProviderList providers={platforms.length > 0 ? platforms : fetchedPlatforms} maxVisible={6} />
                         </div>
                       )}
                     </div>
@@ -402,7 +436,8 @@ export function ItemDetailsModal({
                   )}
                 </div>
               </div>
-            </>
+              </m.div>
+            </LazyMotion>
           )}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

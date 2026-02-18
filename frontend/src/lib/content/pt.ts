@@ -124,6 +124,7 @@ export const pt: Content = {
       availableOn: 'Disponível em',
       mainCast: 'Elenco principal',
       seeMore: 'Ver mais',
+      seeLess: 'Ver menos',
     },
     tooltips: {
       share: 'Partilhar',

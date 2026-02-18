@@ -125,7 +125,7 @@ const renderTitleWithGradient = (title: string) => {
     return (
       <span key={index}>
         {shouldHighlight ? (
-          <span className="bg-linear-to-r from-violet-400 from-10% to-blue-400 bg-clip-text text-transparent">
+          <span className="bg-[linear-gradient(48deg,lab(100_0_0),#38c7ff_70%)] bg-clip-text text-transparent">
             {word}
           </span>
         ) : (
@@ -152,7 +152,7 @@ const renderSubtitleWithUnderline = (subtitle: string) => {
         <span key={index}>
           <span className="relative inline-block">
             {underlinedWords}
-            <span className="absolute -bottom-1 left-0 h-[3px] w-full rounded-full bg-linear-to-r from-violet-500/80 to-blue-500" />
+            <span className="absolute -bottom-1 left-0 h-[3px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
           </span>
           {underlineEnd < words.length - 1 ? ' ' : ''}
         </span>
@@ -216,7 +216,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
                       className="object-cover"
-                      priority
+                      loading="eager"
                     />
                   </div>
                 ))}
@@ -254,7 +254,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
                       className="object-cover"
-                      priority
+                      loading="eager"
                     />
                   </div>
                 ))}
@@ -296,10 +296,10 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
             {/* Trust badges */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 md:justify-start">
               <span className="flex items-center gap-2">
-                <span className="text-violet-400">✓</span> Sans carte bancaire
+                <span className="text-cyan-400">✓</span> Sans carte bancaire
               </span>
               <span className="flex items-center gap-2">
-                <span className="text-violet-400">✓</span> Application 100% gratuite
+                <span className="text-cyan-400">✓</span> Application 100% gratuite
               </span>
             </div>
           </div>

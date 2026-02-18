@@ -123,7 +123,8 @@ export const fr: Content = {
       creator: 'Créateur',
       availableOn: 'Disponible sur',
       mainCast: 'Acteurs principaux',
-      seeMore: 'Voir tout',
+      seeMore: 'Voir plus',
+      seeLess: 'Voir moins',
     },
     tooltips: {
       share: 'Partager',

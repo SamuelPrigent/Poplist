@@ -126,6 +126,7 @@ export const de: Content = {
       availableOn: 'Verfügbar auf',
       mainCast: 'Hauptbesetzung',
       seeMore: 'Mehr sehen',
+      seeLess: 'Weniger anzeigen',
     },
     tooltips: {
       share: 'Teilen',
