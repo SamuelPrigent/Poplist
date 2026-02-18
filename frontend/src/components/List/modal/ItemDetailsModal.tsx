@@ -38,7 +38,9 @@ export function ItemDetailsModal({
   const [showSeeMore, setShowSeeMore] = useState(false);
   const [posterLoaded, setPosterLoaded] = useState(false);
   const [loadedActorImages, setLoadedActorImages] = useState<Set<string>>(new Set());
-  const [fetchedPlatforms, setFetchedPlatforms] = useState<Array<{ name: string; logoPath: string }>>([]);
+  const [fetchedPlatforms, setFetchedPlatforms] = useState<
+    Array<{ name: string; logoPath: string }>
+  >([]);
   const [isNavigating, setIsNavigating] = useState(false);
   const overviewRef = useRef<HTMLParagraphElement>(null);
   const prevTmdbIdRef = useRef<string | null>(null);
@@ -55,7 +57,8 @@ export function ItemDetailsModal({
       return;
     }
 
-    const isNavigation = prevTmdbIdRef.current !== null && prevTmdbIdRef.current !== tmdbId && hasLoadedRef.current;
+    const isNavigation =
+      prevTmdbIdRef.current !== null && prevTmdbIdRef.current !== tmdbId && hasLoadedRef.current;
     prevTmdbIdRef.current = tmdbId;
 
     // Reset expanded state
@@ -75,11 +78,15 @@ export function ItemDetailsModal({
       setError(null);
       try {
         const detailsPromise = watchlistAPI.getItemDetails(tmdbId, type, languageCode);
-        const providersPromise = platforms.length === 0
-          ? watchlistAPI.fetchTMDBProviders(tmdbId, type, region)
-          : Promise.resolve([]);
+        const providersPromise =
+          platforms.length === 0
+            ? watchlistAPI.fetchTMDBProviders(tmdbId, type, region)
+            : Promise.resolve([]);
 
-        const [{ details: data }, providersRes] = await Promise.all([detailsPromise, providersPromise]);
+        const [{ details: data }, providersRes] = await Promise.all([
+          detailsPromise,
+          providersPromise,
+        ]);
         setDetails(data);
         if (providersRes.length > 0) setFetchedPlatforms(providersRes);
         hasLoadedRef.current = true;
@@ -187,7 +194,7 @@ export function ItemDetailsModal({
               e.preventDefault();
             }
           }}
-          className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 h-[85vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none"
+          className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 h-[620px] max-h-[85vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none"
         >
           {/* Hidden Title and Description for accessibility */}
           <DialogPrimitive.Title className="sr-only">
@@ -216,226 +223,234 @@ export function ItemDetailsModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="flex min-h-full flex-col"
               >
-              {/* Backdrop Background */}
-              <div className="relative overflow-hidden">
-                {/* Backdrop Image as background */}
-                {details.backdropUrl ? (
-                  <>
-                    <div className="absolute inset-x-0 top-0 z-0 h-68">
-                      <Image
-                        src={resizeTMDBPoster(details.backdropUrl, 'w1280')}
-                        alt={details.title}
-                        fill
-                        sizes="(max-width: 896px) 100vw, 896px"
-                        className="object-cover object-top"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="to-background absolute inset-x-0 top-0 z-1 h-[calc(17rem+2px)] bg-linear-to-b from-black/90 via-black/80 via-80%" />
-                  </>
-                ) : (
-                  <div className="bg-muted absolute inset-0 z-0" />
-                )}
+                {/* Backdrop Background */}
+                <div className="relative flex flex-1 flex-col overflow-hidden">
+                  {/* Backdrop Image as background */}
+                  {details.backdropUrl ? (
+                    <>
+                      <div className="absolute inset-x-0 top-0 z-0 h-68">
+                        <Image
+                          src={resizeTMDBPoster(details.backdropUrl, 'w1280')}
+                          alt={details.title}
+                          fill
+                          sizes="(max-width: 896px) 100vw, 896px"
+                          className="object-cover object-top"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="to-background absolute inset-x-0 top-0 z-1 h-[calc(17rem+2px)] bg-linear-to-b from-black/90 via-black/80 via-80%" />
+                    </>
+                  ) : (
+                    <div className="bg-muted absolute inset-0 z-0" />
+                  )}
 
-                {/* Close Button */}
-                <DialogPrimitive.Close className="absolute top-4 right-4 z-20 cursor-pointer rounded-full bg-black/60 p-2 text-white opacity-70 transition-opacity hover:opacity-100">
-                  <X className="h-5 w-5" />
-                  <span className="sr-only">Close</span>
-                </DialogPrimitive.Close>
+                  {/* Close Button */}
+                  <DialogPrimitive.Close className="absolute top-4 right-4 z-20 cursor-pointer rounded-full bg-black/60 p-2 text-white opacity-70 transition-opacity hover:opacity-100">
+                    <X className="h-5 w-5" />
+                    <span className="sr-only">Close</span>
+                  </DialogPrimitive.Close>
 
-                {/* Content over backdrop */}
-                <div className="relative z-10 px-6 pt-6 pb-6">
-                  <div className="flex gap-5">
-                    {/* Poster */}
-                    <div className="shrink-0">
-                      <div className="relative h-48 w-32 overflow-hidden rounded-lg">
-                        {details.posterUrl ? (
-                          <>
-                            {!posterLoaded && (
-                              <div className="bg-muted absolute inset-0 animate-pulse" />
+                  {/* Content over backdrop */}
+                  <div className="relative z-10 flex flex-1 flex-col justify-between px-6 pt-6 pb-6">
+                    <div>
+                      <div className="flex gap-5">
+                        {/* Poster */}
+                        <div className="shrink-0">
+                          <div className="relative h-48 w-32 overflow-hidden rounded-lg">
+                            {details.posterUrl ? (
+                              <>
+                                {!posterLoaded && (
+                                  <div className="bg-muted absolute inset-0 animate-pulse" />
+                                )}
+                                <Image
+                                  src={resizeTMDBPoster(details.posterUrl, 'w185')}
+                                  alt={details.title}
+                                  fill
+                                  sizes="128px"
+                                  className={`object-cover transition-opacity duration-200 ${
+                                    posterLoaded ? 'opacity-100' : 'opacity-0'
+                                  }`}
+                                  onLoad={() => setPosterLoaded(true)}
+                                  unoptimized
+                                />
+                              </>
+                            ) : (
+                              <div className="bg-muted text-muted-foreground flex h-full items-center justify-center">
+                                {content.watchlists.itemDetails.notAvailable}
+                              </div>
                             )}
-                            <Image
-                              src={resizeTMDBPoster(details.posterUrl, 'w185')}
-                              alt={details.title}
-                              fill
-                              sizes="128px"
-                              className={`object-cover transition-opacity duration-200 ${
-                                posterLoaded ? 'opacity-100' : 'opacity-0'
-                              }`}
-                              onLoad={() => setPosterLoaded(true)}
-                              unoptimized
-                            />
-                          </>
-                        ) : (
-                          <div className="bg-muted text-muted-foreground flex h-full items-center justify-center">
-                            {content.watchlists.itemDetails.notAvailable}
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        </div>
 
-                    {/* Info */}
-                    <div className="min-w-0 flex-1 space-y-4">
-                      {/* Title */}
-                      <div>
-                        <h2 className="truncate pr-12 text-3xl font-bold">{details.title}</h2>
-                        <div className="mt-2.5 flex flex-wrap items-center gap-3 text-sm text-white/90">
-                          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
-                            {type === 'movie'
-                              ? content.watchlists.contentTypes.movie
-                              : content.watchlists.contentTypes.series}
-                          </span>
-                          {formatDate(details.releaseDate) && (
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              <span>{formatDate(details.releaseDate)}</span>
-                            </div>
-                          )}
-                          {type === 'movie' && details.runtime && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              <span>{formatRuntime(details.runtime)}</span>
-                            </div>
-                          )}
-                          {type === 'tv' && details.numberOfSeasons && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              <span>
-                                {details.numberOfSeasons}{' '}
-                                {details.numberOfSeasons > 1
-                                  ? content.watchlists.seriesInfo.seasons
-                                  : content.watchlists.seriesInfo.season}
-                                {details.numberOfEpisodes &&
-                                  ` • ${details.numberOfEpisodes} ${content.watchlists.seriesInfo.episodes}`}
+                        {/* Info */}
+                        <div className="min-w-0 flex-1 space-y-4">
+                          {/* Title */}
+                          <div>
+                            <h2 className="truncate pr-12 text-3xl font-bold">{details.title}</h2>
+                            <div className="mt-2.5 flex flex-wrap items-center gap-3 text-sm text-white/90">
+                              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
+                                {type === 'movie'
+                                  ? content.watchlists.contentTypes.movie
+                                  : content.watchlists.contentTypes.series}
                               </span>
-                            </div>
-                          )}{' '}
-                        </div>
-                      </div>
-
-                      {/* Rating */}
-                      {details.voteCount > 0 && <div>{renderStars(details.rating)}</div>}
-
-                      {/* Genres */}
-                      {details.genres.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {details.genres.map(genre => (
-                            <span
-                              key={genre}
-                              className="border-border bg-muted/50 rounded-full border px-3 py-1 text-xs"
-                            >
-                              {genre}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Overview */}
-                      {details.overview && (
-                        <div className="pt-1">
-                          <h3 className="mb-2 text-base font-semibold">
-                            {content.watchlists.itemDetails.synopsis}
-                          </h3>
-                          <p
-                            ref={overviewRef}
-                            className={`text-muted-foreground min-h-[4.5rem] text-sm leading-relaxed ${!isOverviewExpanded ? 'line-clamp-3' : ''}`}
-                          >
-                            {details.overview}
-                          </p>
-                          {(showSeeMore || isOverviewExpanded) && (
-                            <button
-                              type="button"
-                              onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
-                              className="text-muted-foreground hover:text-foreground mt-2 text-sm font-bold underline transition-colors"
-                            >
-                              {isOverviewExpanded
-                                ? content.watchlists.itemDetails.seeLess
-                                : content.watchlists.itemDetails.seeMore}
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Director */}
-                      {details.director && (
-                        <div className="pt-1">
-                          <span className="text-sm font-semibold">
-                            {type === 'movie'
-                              ? content.watchlists.itemDetails.director
-                              : content.watchlists.itemDetails.creator}
-                            :
-                          </span>{' '}
-                          <span className="text-muted-foreground text-sm">{details.director}</span>
-                        </div>
-                      )}
-
-                      {/* Platforms */}
-                      {(platforms.length > 0 || fetchedPlatforms.length > 0) && (
-                        <div className="pt-1">
-                          <h3 className="mb-2 text-sm font-semibold">
-                            {content.watchlists.itemDetails.availableOn}
-                          </h3>
-                          <WatchProviderList providers={platforms.length > 0 ? platforms : fetchedPlatforms} maxVisible={6} />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Cast */}
-                  {details.cast.length > 0 && (
-                    <div className="mt-6 pt-2">
-                      <h3 className="mb-4 text-base font-semibold">
-                        {content.watchlists.itemDetails.mainCast}
-                      </h3>
-                      <div className="grid grid-cols-3 gap-4 pb-2">
-                        {details.cast.map(actor => (
-                          <div key={`${actor.name}-${actor.character}`} className="flex gap-3">
-                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
-                              {actor.profileUrl ? (
-                                <>
-                                  {!loadedActorImages.has(actor.profileUrl) && (
-                                    <div className="bg-muted absolute inset-0 animate-pulse" />
-                                  )}
-                                  <Image
-                                    src={resizeTMDBPoster(actor.profileUrl, 'w185')}
-                                    alt={actor.name}
-                                    fill
-                                    sizes="64px"
-                                    className={`object-cover transition-opacity duration-200 ${
-                                      loadedActorImages.has(actor.profileUrl)
-                                        ? 'opacity-100'
-                                        : 'opacity-0'
-                                    }`}
-                                    onLoad={() => {
-                                      setLoadedActorImages(prev => {
-                                        const newSet = new Set(prev);
-                                        newSet.add(actor.profileUrl!);
-                                        return newSet;
-                                      });
-                                    }}
-                                    unoptimized
-                                  />
-                                </>
-                              ) : (
-                                <div className="bg-muted text-muted-foreground flex h-full items-center justify-center text-xs">
-                                  {content.watchlists.itemDetails.notAvailable}
+                              {formatDate(details.releaseDate) && (
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-4 w-4" />
+                                  <span>{formatDate(details.releaseDate)}</span>
                                 </div>
                               )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-sm font-medium">{actor.name}</div>
-                              <div className="text-muted-foreground/80 text-xs">
-                                {localizeCharacter(actor.character)}
-                              </div>
+                              {type === 'movie' && details.runtime && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  <span>{formatRuntime(details.runtime)}</span>
+                                </div>
+                              )}
+                              {type === 'tv' && details.numberOfSeasons && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  <span>
+                                    {details.numberOfSeasons}{' '}
+                                    {details.numberOfSeasons > 1
+                                      ? content.watchlists.seriesInfo.seasons
+                                      : content.watchlists.seriesInfo.season}
+                                    {details.numberOfEpisodes &&
+                                      ` • ${details.numberOfEpisodes} ${content.watchlists.seriesInfo.episodes}`}
+                                  </span>
+                                </div>
+                              )}{' '}
                             </div>
                           </div>
-                        ))}
+
+                          {/* Rating */}
+                          {details.voteCount > 0 && <div>{renderStars(details.rating)}</div>}
+
+                          {/* Genres */}
+                          {details.genres.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {details.genres.map(genre => (
+                                <span
+                                  key={genre}
+                                  className="border-border bg-muted/50 rounded-full border px-3 py-1 text-xs"
+                                >
+                                  {genre}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Overview */}
+                          {details.overview && (
+                            <div className="pt-1">
+                              <h3 className="mb-2 text-base font-semibold">
+                                {content.watchlists.itemDetails.synopsis}
+                              </h3>
+                              <p
+                                ref={overviewRef}
+                                className={`text-muted-foreground min-h-18 text-sm leading-relaxed ${!isOverviewExpanded ? 'line-clamp-3' : ''}`}
+                              >
+                                {details.overview}
+                              </p>
+                              {(showSeeMore || isOverviewExpanded) && (
+                                <button
+                                  type="button"
+                                  onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
+                                  className="text-muted-foreground hover:text-foreground text-sm font-bold underline transition-colors"
+                                >
+                                  {isOverviewExpanded
+                                    ? content.watchlists.itemDetails.seeLess
+                                    : content.watchlists.itemDetails.seeMore}
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Director */}
+                          {details.director && (
+                            <div className="pt-1">
+                              <span className="text-sm font-semibold">
+                                {type === 'movie'
+                                  ? content.watchlists.itemDetails.director
+                                  : content.watchlists.itemDetails.creator}
+                                :
+                              </span>{' '}
+                              <span className="text-muted-foreground text-sm">
+                                {details.director}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Platforms */}
+                          {(platforms.length > 0 || fetchedPlatforms.length > 0) && (
+                            <div className="pt-1">
+                              <h3 className="mb-2 text-sm font-semibold">
+                                {content.watchlists.itemDetails.availableOn}
+                              </h3>
+                              <WatchProviderList
+                                providers={platforms.length > 0 ? platforms : fetchedPlatforms}
+                                maxVisible={6}
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
+
+                    {/* Cast */}
+                    {details.cast.length > 0 && (
+                      <div className="mt-6 pt-2">
+                        <h3 className="mb-4 text-base font-semibold">
+                          {content.watchlists.itemDetails.mainCast}
+                        </h3>
+                        <div className="grid grid-cols-3 gap-4 pb-2">
+                          {details.cast.map(actor => (
+                            <div key={`${actor.name}-${actor.character}`} className="flex gap-3">
+                              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
+                                {actor.profileUrl ? (
+                                  <>
+                                    {!loadedActorImages.has(actor.profileUrl) && (
+                                      <div className="bg-muted absolute inset-0 animate-pulse" />
+                                    )}
+                                    <Image
+                                      src={resizeTMDBPoster(actor.profileUrl, 'w185')}
+                                      alt={actor.name}
+                                      fill
+                                      sizes="64px"
+                                      className={`object-cover transition-opacity duration-200 ${
+                                        loadedActorImages.has(actor.profileUrl)
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      }`}
+                                      onLoad={() => {
+                                        setLoadedActorImages(prev => {
+                                          const newSet = new Set(prev);
+                                          newSet.add(actor.profileUrl!);
+                                          return newSet;
+                                        });
+                                      }}
+                                      unoptimized
+                                    />
+                                  </>
+                                ) : (
+                                  <div className="bg-muted text-muted-foreground flex h-full items-center justify-center text-xs">
+                                    {content.watchlists.itemDetails.notAvailable}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">{actor.name}</div>
+                                <div className="text-muted-foreground/80 text-xs">
+                                  {localizeCharacter(actor.character)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               </m.div>
             </LazyMotion>
           )}
