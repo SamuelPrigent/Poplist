@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router'
-import { Home, Search, Bookmark, Compass, User } from 'lucide-react-native'
+import { Home, Bookmark, Compass, User } from 'lucide-react-native'
 import { useAuth } from '../../context/auth-context'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
@@ -45,13 +45,6 @@ export default function TabLayout() {
         options={{
           title: 'Mes listes',
           tabBarIcon: ({ color, size }) => <Bookmark size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Recherche',
-          tabBarIcon: ({ color, size }) => <Search size={size} color={color} />,
         }}
       />
       <Tabs.Screen

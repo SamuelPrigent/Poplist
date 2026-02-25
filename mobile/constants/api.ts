@@ -1,5 +1,6 @@
-// In development, use your local IP (not localhost - doesn't work from phone)
-// In production, use the Railway URL
+// Production Railway URL used for both dev and production.
+// To use a local backend in dev, switch to 'http://localhost:3456'
+// and run `adb reverse tcp:3456 tcp:3456` (USB or wireless ADB).
 export const API_BASE_URL = 'https://poplist-production.up.railway.app';
 
 // Google OAuth client IDs (created in Google Cloud Console)

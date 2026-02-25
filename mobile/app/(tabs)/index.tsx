@@ -26,7 +26,7 @@ import SectionHeader from '../../components/SectionHeader';
 import HorizontalList from '../../components/HorizontalList';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GENRE_ITEM_WIDTH = (SCREEN_WIDTH - spacing.lg * 2) / 2.5;
+const GENRE_ITEM_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 3.2;
 const CREATOR_CARD_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 2;
 
 function getCardWidth(cols: number) {
@@ -109,7 +109,6 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.appTitle}>{content.header.appName}</Text>
           <View style={[styles.avatarButton, { backgroundColor: theme.secondary }]}>
             {user?.avatarUrl ? (
               <Image
@@ -121,6 +120,8 @@ export default function HomeScreen() {
               <User size={18} color={colors.mutedForeground} />
             )}
           </View>
+          <Text style={styles.appTitle}>{content.header.appName}</Text>
+          <View style={{ flex: 1 }} />
         </View>
 
         {/* Popular Watchlists */}
@@ -214,8 +215,9 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,

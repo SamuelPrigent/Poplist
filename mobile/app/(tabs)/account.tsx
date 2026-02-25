@@ -1,15 +1,20 @@
 import { useState, useRef, useCallback } from 'react'
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Dimensions, Modal } from 'react-native'
+import { View, Text, Pressable, StyleSheet, ScrollView, Dimensions, Modal, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
+import * as ImagePicker from 'expo-image-picker'
+import Toast from 'react-native-toast-message'
 import { useAuth } from '../../context/auth-context'
+import { userAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
-import { usePreferencesStore, type ColumnCount, type Handedness, type BgTheme, type ExploreColumnCount } from '../../store/preferences'
+import { usePreferencesStore, type ColumnCount, type ExploreColumnCount } from '../../store/preferences'
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
-import { LogOut, User as UserIcon, Check, ChevronDown } from 'lucide-react-native'
+import { LogOut, User as UserIcon, ChevronDown, ChevronRight, Pencil, Trash2, Camera } from 'lucide-react-native'
 import type { Language } from '../../store/language'
+import EditProfileSheet, { type EditProfileSheetRef } from '../../components/sheets/EditProfileSheet'
+import DeleteAccountSheet, { type DeleteAccountSheetRef } from '../../components/sheets/DeleteAccountSheet'
 
 const LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
@@ -88,15 +93,18 @@ const mockupStyles = StyleSheet.create({
 })
 
 export default function AccountScreen() {
-  const { user, logout } = useAuth()
+  const { user, logout, refetch } = useAuth()
   const { content, language, setLanguage } = useLanguageStore()
-  const { columns, setColumns, handedness, setHandedness, bgTheme, setBgTheme, exploreColumns, setExploreColumns } = usePreferencesStore()
+  const { columns, setColumns, exploreColumns, setExploreColumns } = usePreferencesStore()
   const theme = useTheme()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabKey>('display')
-  const [usernameInput, setUsernameInput] = useState(user?.username || '')
   const [langDropdownOpen, setLangDropdownOpen] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
+
+  // Sheet refs
+  const editProfileRef = useRef<EditProfileSheetRef>(null)
+  const deleteAccountRef = useRef<DeleteAccountSheetRef>(null)
 
   const currentLang = LANGUAGES.find((l) => l.code === language) || LANGUAGES[0]
 
@@ -115,12 +123,78 @@ export default function AccountScreen() {
     router.replace('/login')
   }
 
+  // Avatar: pick image from library and upload
+  const handleAvatarPress = useCallback(async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert('Permission requise', "L'acces a la galerie est necessaire pour changer votre photo.")
+        return
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        base64: true,
+      })
+
+      if (result.canceled || !result.assets[0]?.base64) return
+
+      const base64 = result.assets[0].base64
+      const mimeType = result.assets[0].mimeType || 'image/jpeg'
+      const imageData = `data:${mimeType};base64,${base64}`
+
+      await userAPI.uploadAvatar(imageData)
+      await refetch()
+      Toast.show({ type: 'success', text1: 'Photo de profil mise a jour' })
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: error instanceof Error ? error.message : 'Erreur lors du changement de photo',
+      })
+    }
+  }, [refetch])
+
+  // Avatar: long press menu
+  const handleAvatarLongPress = useCallback(() => {
+    Alert.alert(
+      'Photo de profil',
+      undefined,
+      [
+        { text: 'Changer la photo', onPress: handleAvatarPress },
+        {
+          text: 'Supprimer la photo',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await userAPI.deleteAvatar()
+              await refetch()
+              Toast.show({ type: 'success', text1: 'Photo de profil supprimee' })
+            } catch (error) {
+              Toast.show({
+                type: 'error',
+                text1: error instanceof Error ? error.message : 'Erreur lors de la suppression',
+              })
+            }
+          },
+        },
+        { text: 'Annuler', style: 'cancel' },
+      ],
+    )
+  }, [handleAvatarPress, refetch])
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Fixed header + tabs */}
       <View style={styles.headerSection}>
         <View style={styles.headerRow}>
-          <View style={[styles.avatar, { backgroundColor: theme.secondary }]}>
+          <Pressable
+            style={[styles.avatar, { backgroundColor: theme.secondary }]}
+            onPress={handleAvatarPress}
+            onLongPress={handleAvatarLongPress}
+          >
             {user?.avatarUrl ? (
               <Image
                 source={{ uri: user.avatarUrl }}
@@ -130,7 +204,10 @@ export default function AccountScreen() {
             ) : (
               <UserIcon size={24} color={colors.mutedForeground} />
             )}
-          </View>
+            <View style={styles.avatarBadge}>
+              <Camera size={10} color={colors.foreground} />
+            </View>
+          </Pressable>
           <View style={styles.headerInfo}>
             <Text style={styles.username} numberOfLines={1}>{user?.username || 'User'}</Text>
             <Text style={styles.email} numberOfLines={1}>{user?.email}</Text>
@@ -177,34 +254,7 @@ export default function AccountScreen() {
           contentContainerStyle={styles.pageContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectionTitle}>{(content as any).settings?.display?.backgroundColor ?? 'Couleur de fond'}</Text>
-          <Text style={styles.sectionHint}>{(content as any).settings?.display?.backgroundColorHint ?? "Th\u00e8me de l'application"}</Text>
-          <View style={styles.columnsRow}>
-            {([
-              { key: 'midnight' as BgTheme, color: '#080808', label: (content as any).settings?.display?.midnight ?? 'Minuit' },
-              { key: 'ocean' as BgTheme, color: '#020817', label: (content as any).settings?.display?.ocean ?? 'Oc\u00e9an' },
-            ]).map(({ key, color, label }) => {
-              const isActive = bgTheme === key
-              return (
-                <Pressable
-                  key={key}
-                  style={styles.columnOption}
-                  onPress={() => setBgTheme(key)}
-                >
-                  <View style={[
-                    styles.themePreview,
-                    { backgroundColor: color, borderColor: theme.border },
-                    isActive && { borderColor: colors.primary, borderWidth: 2 },
-                  ]}>
-                    <View style={[styles.themePreviewInner, { backgroundColor: key === 'ocean' ? '#0a1122' : '#141414' }]} />
-                  </View>
-                  <Text style={[styles.columnLabel, isActive && styles.columnLabelActive]}>{label}</Text>
-                </Pressable>
-              )
-            })}
-          </View>
-
-          <Text style={[styles.sectionTitle, { marginTop: spacing['2xl'] }]}>{(content as any).settings?.display?.listColumns ?? 'Colonnes des listes'}</Text>
+          <Text style={styles.sectionTitle}>{(content as any).settings?.display?.listColumns ?? 'Colonnes des listes'}</Text>
           <Text style={styles.sectionHint}>{(content as any).settings?.display?.listColumnsHint ?? 'Nombre de colonnes'}</Text>
           <View style={styles.columnsRow}>
             {([2, 3] as const).map((col) => {
@@ -281,27 +331,6 @@ export default function AccountScreen() {
             </Modal>
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: spacing['2xl'] }]}>{(content as any).settings?.preferences?.handedness ?? 'Main dominante'}</Text>
-          <Text style={styles.sectionHint}>{(content as any).settings?.preferences?.handednessHint ?? "Position des boutons d'action"}</Text>
-          <View style={styles.handednessRow}>
-            {([
-              { key: 'left', label: (content as any).settings?.preferences?.leftHanded ?? 'Gaucher' },
-              { key: 'right', label: (content as any).settings?.preferences?.rightHanded ?? 'Droitier' },
-            ] as const).map(({ key, label }) => {
-              const isActive = handedness === key
-              return (
-                <Pressable
-                  key={key}
-                  style={[styles.handednessChip, { borderColor: theme.border }, isActive && styles.handednessChipActive]}
-                  onPress={() => setHandedness(key as Handedness)}
-                >
-                  <Text style={[styles.handednessText, isActive && styles.handednessTextActive]}>
-                    {label}
-                  </Text>
-                </Pressable>
-              )
-            })}
-          </View>
         </ScrollView>
 
         {/* Page: Compte (account) */}
@@ -311,30 +340,42 @@ export default function AccountScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.sectionTitle}>{content.profile.usernameSection.title}</Text>
-          <View style={styles.usernameRow}>
-            <TextInput
-              style={[styles.usernameInput, { backgroundColor: theme.secondary, borderColor: theme.border }]}
-              value={usernameInput}
-              onChangeText={setUsernameInput}
-              placeholder={content.profile.usernameSection.placeholder}
-              placeholderTextColor={colors.mutedForeground}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable style={styles.usernameOk} onPress={() => {/* Phase 1: non-functional */}}>
-              <Check size={18} color={colors.primaryForeground} />
-            </Pressable>
-          </View>
+
+          {/* Edit username row */}
+          <Pressable
+            style={[styles.actionRow, { backgroundColor: theme.container, borderColor: theme.border }]}
+            onPress={() => editProfileRef.current?.present()}
+          >
+            <Pencil size={18} color={colors.mutedForeground} />
+            <View style={styles.actionRowContent}>
+              <Text style={styles.actionRowLabel}>Modifier le nom d'utilisateur</Text>
+              <Text style={styles.actionRowValue} numberOfLines={1}>{user?.username || ''}</Text>
+            </View>
+            <ChevronRight size={18} color={colors.mutedForeground} />
+          </Pressable>
 
           <View style={[styles.dangerSection, { borderTopColor: theme.border }]}>
             <Text style={styles.dangerTitle}>{content.profile.deleteSection.title}</Text>
             <Text style={styles.dangerDesc}>{content.profile.deleteSection.description}</Text>
-            <Pressable style={styles.dangerBtn} onPress={() => {/* Phase 1: non-functional */}}>
-              <Text style={styles.dangerBtnText}>{content.profile.deleteSection.deleteButton}</Text>
+
+            {/* Delete account row */}
+            <Pressable
+              style={[styles.actionRow, { backgroundColor: theme.container, borderColor: colors.destructive }]}
+              onPress={() => deleteAccountRef.current?.present()}
+            >
+              <Trash2 size={18} color={colors.destructive} />
+              <View style={styles.actionRowContent}>
+                <Text style={[styles.actionRowLabel, { color: colors.destructive }]}>Supprimer le compte</Text>
+              </View>
+              <ChevronRight size={18} color={colors.destructive} />
             </Pressable>
           </View>
         </ScrollView>
       </ScrollView>
+
+      {/* Bottom sheets */}
+      <EditProfileSheet ref={editProfileRef} />
+      <DeleteAccountSheet ref={deleteAccountRef} />
     </SafeAreaView>
   )
 }
@@ -418,20 +459,6 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     fontWeight: '600',
   },
-  // Theme preview
-  themePreview: {
-    width: 64,
-    height: 104,
-    borderRadius: 12,
-    borderWidth: 2,
-    overflow: 'hidden',
-    padding: 8,
-    justifyContent: 'flex-end',
-  },
-  themePreviewInner: {
-    height: '40%',
-    borderRadius: 6,
-  },
   // Language
   sectionTitle: {
     fontSize: fontSize.base,
@@ -511,53 +538,44 @@ const styles = StyleSheet.create({
   columnLabelActive: {
     color: colors.primary,
   },
-  // Handedness
-  handednessRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  handednessChip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  handednessChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  handednessText: {
-    fontSize: fontSize.sm,
-    color: colors.foreground,
-  },
-  handednessTextActive: {
-    color: colors.primaryForeground,
-  },
-  // Username
-  usernameRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  usernameInput: {
-    flex: 1,
-    backgroundColor: colors.secondary,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: fontSize.base,
-    color: colors.foreground,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  usernameOk: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
+  // Avatar badge
+  avatarBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  // Action rows
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  actionRowContent: {
+    flex: 1,
+  },
+  actionRowLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.foreground,
+  },
+  actionRowValue: {
+    fontSize: fontSize.xs,
+    color: colors.mutedForeground,
+    marginTop: 2,
   },
   // Danger zone
   dangerSection: {
@@ -576,18 +594,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.mutedForeground,
     marginBottom: spacing.lg,
-  },
-  dangerBtn: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.destructive,
-    alignSelf: 'flex-start',
-  },
-  dangerBtnText: {
-    fontSize: fontSize.sm,
-    color: colors.destructive,
-    fontWeight: '500',
   },
 })

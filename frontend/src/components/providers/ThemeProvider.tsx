@@ -9,7 +9,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		const root = document.documentElement;
-		const vars = themes[theme];
+		const vars = themes[theme] ?? themes.ocean;
 		for (const [key, value] of Object.entries(vars)) {
 			root.style.setProperty(key, value);
 		}

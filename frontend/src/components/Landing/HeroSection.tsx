@@ -235,7 +235,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                       fill
                       sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
                       className="object-cover"
-                      priority
+                      loading="eager"
                     />
                   </div>
                 ))}

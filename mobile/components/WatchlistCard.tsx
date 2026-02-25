@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: fontSize.sm,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: colors.foreground,
   },
   owner: {

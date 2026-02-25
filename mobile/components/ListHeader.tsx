@@ -1,26 +1,34 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Dimensions, LayoutChangeEvent } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { User, UserPlus, Send, Pencil, CirclePlus, Copy } from 'lucide-react-native';
+import Animated, { useAnimatedStyle, interpolate, Extrapolation, type SharedValue } from 'react-native-reanimated';
+import { User, UserPlus, Send, Pencil, Copy, Trash2, LogOut } from 'lucide-react-native';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
 import { useLanguageStore } from '../store/language';
 import type { Watchlist } from '../types';
 import PosterGrid from './PosterGrid';
+import SaveButton from './SaveButton';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const IMAGE_SIZE = Math.round(SCREEN_WIDTH * 0.48);
+const IMAGE_SIZE_MAX = Math.round(IMAGE_SIZE * 1.15);  // 15% bigger at top
+const IMAGE_SIZE_MIN = Math.round(IMAGE_SIZE * 0.73);  // 27% smaller when scrolled
 
 interface ListHeaderProps {
   watchlist: Watchlist;
   isOwner?: boolean;
   isSaved?: boolean;
   isCollaborator?: boolean;
+  scrollY?: SharedValue<number>;
   onAddCollaborator?: () => void;
   onShare?: () => void;
   onEdit?: () => void;
   onSave?: () => void;
   onDuplicate?: () => void;
+  onDelete?: () => void;
+  onLeave?: () => void;
+  onTitleLayout?: (event: LayoutChangeEvent) => void;
 }
 
 export default function ListHeader({
@@ -28,15 +36,30 @@ export default function ListHeader({
   isOwner = false,
   isSaved = false,
   isCollaborator = false,
+  scrollY,
   onAddCollaborator,
   onShare,
   onEdit,
   onSave,
   onDuplicate,
+  onDelete,
+  onLeave,
+  onTitleLayout,
 }: ListHeaderProps) {
   const router = useRouter();
   const { content } = useLanguageStore();
   const itemCount = watchlist.items.length;
+
+  const animatedImageStyle = useAnimatedStyle(() => {
+    if (!scrollY) return { width: IMAGE_SIZE, height: IMAGE_SIZE };
+    const size = interpolate(
+      scrollY.value,
+      [0, 300],
+      [IMAGE_SIZE_MAX, IMAGE_SIZE_MIN],
+      Extrapolation.CLAMP,
+    );
+    return { width: size, height: size };
+  });
   const itemLabel =
     itemCount === 1 ? content.watchlists.item : content.watchlists.items;
   const saveCount = watchlist.followersCount ?? 0;
@@ -46,26 +69,28 @@ export default function ListHeader({
     <View style={styles.container}>
       {/* Centered cover image / poster grid */}
       <View style={styles.imageRow}>
-        {watchlist.imageUrl ? (
-          <Image
-            source={{ uri: watchlist.imageUrl }}
-            style={styles.coverImage}
-            contentFit="cover"
-          />
-        ) : (
-          <PosterGrid items={watchlist.items} size={IMAGE_SIZE} />
-        )}
+        <Animated.View style={[styles.animatedImageWrapper, animatedImageStyle]}>
+          {watchlist.imageUrl ? (
+            <Image
+              source={{ uri: watchlist.imageUrl }}
+              style={styles.coverImageFill}
+              contentFit="cover"
+            />
+          ) : (
+            <PosterGrid items={watchlist.items} size="fill" />
+          )}
+        </Animated.View>
       </View>
 
       {/* Title */}
-      <Text style={styles.name}>{watchlist.name}</Text>
+      <Text style={styles.name} onLayout={onTitleLayout}>{watchlist.name}</Text>
 
       {/* Description */}
       {watchlist.description ? (
         <Text style={styles.description}>{watchlist.description}</Text>
       ) : null}
 
-      {/* Meta row: avatar · nb éléments · nb sauvegardes */}
+      {/* Meta row: avatar · nb elements · nb sauvegardes */}
       <View style={styles.metaRow}>
         {watchlist.owner?.username && (
           <Pressable
@@ -113,22 +138,24 @@ export default function ListHeader({
             <Pressable style={styles.actionBtn} onPress={onEdit}>
               <Pencil size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
+            <Pressable style={styles.actionBtn} onPress={onDelete}>
+              <Trash2 size={26} color={colors.destructive} strokeWidth={1.8} />
+            </Pressable>
           </>
         ) : (
           <>
-            <Pressable style={styles.actionBtn} onPress={onSave}>
-              <CirclePlus
-                size={26}
-                color={colors.foreground}
-                strokeWidth={isSaved ? 2.5 : 1.5}
-              />
-            </Pressable>
+            <SaveButton isSaved={isSaved} onToggle={onSave ?? (() => {})} />
             <Pressable style={styles.actionBtn} onPress={onDuplicate}>
               <Copy size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
               <Send size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
+            {isCollaborator && (
+              <Pressable style={styles.actionBtn} onPress={onLeave}>
+                <LogOut size={26} color={colors.destructive} strokeWidth={1.8} />
+              </Pressable>
+            )}
           </>
         )}
       </View>
@@ -144,10 +171,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  coverImage: {
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE,
-    borderRadius: borderRadius.lg,
+  animatedImageWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  coverImageFill: {
+    width: '100%',
+    height: '100%',
   },
   name: {
     fontSize: fontSize.xl,

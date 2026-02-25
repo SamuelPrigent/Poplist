@@ -1,8 +1,7 @@
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, Dimensions } from 'react-native'
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { Plus } from 'lucide-react-native'
 import { useMyWatchlists } from '../../hooks/swr'
 import { useLanguageStore } from '../../store/language'
 import { usePreferencesStore } from '../../store/preferences'
@@ -11,7 +10,9 @@ import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import WatchlistCard from '../../components/WatchlistCard'
 import EmptyState from '../../components/EmptyState'
-import FloatingActionButton from '../../components/FloatingActionButton'
+import CreateListSheet, { type CreateListSheetRef } from '../../components/sheets/CreateListSheet'
+import DeleteListSheet, { type DeleteListSheetRef } from '../../components/sheets/DeleteListSheet'
+import { Plus } from 'lucide-react-native'
 import type { Watchlist } from '../../types'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
@@ -24,13 +25,25 @@ type FilterKey = 'mine' | 'saved'
 
 export default function ListsScreen() {
   const { content } = useLanguageStore()
-  const { columns, handedness } = usePreferencesStore()
+  const { columns } = usePreferencesStore()
   const { user } = useAuth()
   const theme = useTheme()
   const cardWidth = getCardWidth(columns)
   const router = useRouter()
   const { data, isLoading } = useMyWatchlists()
   const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set(['mine', 'saved']))
+
+  // Sheet refs
+  const createListRef = useRef<CreateListSheetRef>(null)
+  const deleteListRef = useRef<DeleteListSheetRef>(null)
+
+  const handleCreateList = useCallback(() => {
+    createListRef.current?.present()
+  }, [])
+
+  const handleDeleteList = useCallback((watchlist: Watchlist) => {
+    deleteListRef.current?.present({ id: watchlist.id, name: watchlist.name })
+  }, [])
 
   const toggleFilter = (key: FilterKey) => {
     setActiveFilters((prev) => {
@@ -107,7 +120,7 @@ export default function ListsScreen() {
         keyExtractor={(item) => item.id}
         numColumns={columns}
         columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <View style={{ width: cardWidth }}>
@@ -123,12 +136,18 @@ export default function ListsScreen() {
         }
       />
 
-      {/* FAB */}
-      <FloatingActionButton
-        icon={<Plus size={24} color={colors.foreground} />}
-        onPress={() => {/* Phase 1: non-functional */}}
-        handedness={handedness}
-      />
+      {/* Sticky bottom button */}
+      <Pressable
+        style={styles.createButton}
+        onPress={handleCreateList}
+      >
+        <Plus size={20} color="#000" />
+        <Text style={styles.createButtonText}>Créer une liste</Text>
+      </Pressable>
+
+      {/* Sheets */}
+      <CreateListSheet ref={createListRef} />
+      <DeleteListSheet ref={deleteListRef} />
     </SafeAreaView>
   )
 }
@@ -157,7 +176,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing['3xl'],
     gap: spacing.sm,
   },
   filterChip: {
@@ -186,5 +205,23 @@ const styles = StyleSheet.create({
   columnWrapper: {
     gap: spacing.sm,
     marginBottom: spacing.xl,
+  },
+  createButton: {
+    position: 'absolute',
+    bottom: 24,
+    alignSelf: 'center',
+    width: '70%',
+    height: 48,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  createButtonText: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: fontSize.base,
   },
 })

@@ -10,15 +10,15 @@ interface GenreCardProps {
   onPress: () => void;
 }
 
-// Vibrant color palette per category (Spotify-inspired)
+// Deep, darker, more desaturated color palette per category
 const CATEGORY_COLORS: Record<string, { bg: string; accent: string }> = {
-  movies: { bg: '#1a3a6b', accent: '#5B86E5' },
-  series: { bg: '#6b1a2e', accent: '#E61E4D' },
-  anime: { bg: '#8B1A5C', accent: '#FF6B9D' },
-  enfant: { bg: '#1a6b4a', accent: '#1DB954' },
-  documentaries: { bg: '#6b5520', accent: '#E8A838' },
-  jeunesse: { bg: '#4a1a8b', accent: '#B266FF' },
-  action: { bg: '#8b2222', accent: '#FF5544' },
+  movies: { bg: '#0f1f3d', accent: '#3d6bb5' },
+  series: { bg: '#3d0f1a', accent: '#b5243d' },
+  anime: { bg: '#4a0f30', accent: '#cc4d80' },
+  enfant: { bg: '#0f3d27', accent: '#1a8a4a' },
+  documentaries: { bg: '#3d2d10', accent: '#b8862d' },
+  jeunesse: { bg: '#270f4a', accent: '#8a4dcc' },
+  action: { bg: '#4a1111', accent: '#cc3333' },
 };
 
 // Different geometric shapes per category
@@ -43,7 +43,7 @@ function GeometricShape({ shape, color, size, uniqueId }: { shape: ShapeType; co
         <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={color} stopOpacity="0" />
           <Stop offset="0.5" stopColor={color} stopOpacity="0.25" />
-          <Stop offset="1" stopColor={color} stopOpacity="0.45" />
+          <Stop offset="1" stopColor={color} stopOpacity="0.7" />
         </LinearGradient>
       </Defs>
       {shape === 'circle' && (
@@ -108,7 +108,7 @@ export default function GenreCard({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    aspectRatio: 1.4,
+    aspectRatio: 1,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
     justifyContent: 'flex-start',

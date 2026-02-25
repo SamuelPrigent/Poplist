@@ -53,7 +53,6 @@ export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardG
               className="h-[85%] w-auto object-contain opacity-80 saturate-[0.95]"
               style={{ objectPosition: 'center bottom' }}
               loading="eager"
-              priority
             />
           </div>
         )}

@@ -1,29 +1,35 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
-  Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Dimensions,
   Animated,
-  PanResponder,
+  ScrollView,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Star, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
+import { Star, Plus, ChevronLeft, CheckCircle2, CirclePlus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
 import { getTMDBImageUrl, getTMDBRegion } from '../lib/utils';
-import { LinearGradient } from 'expo-linear-gradient';
 import { watchlistAPI } from '../lib/api-client';
 import { useLanguageStore } from '../store/language';
-import { usePreferencesStore } from '../store/preferences';
 import { useTheme } from '../hooks/useTheme';
+import { mutate } from 'swr';
+import Toast from 'react-native-toast-message';
 import ProviderIcon, { type ProviderKey } from './ProviderIcon';
+import PosterGrid from './PosterGrid';
+import { useMyWatchlists } from '../hooks/swr';
+import {
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetBackdrop,
+} from '@gorhom/bottom-sheet';
 import type { WatchlistItem, FullMediaDetails, Platform } from '../types';
+import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const PROVIDER_MAP: Record<string, ProviderKey> = {
   Netflix: 'netflix',
@@ -52,15 +58,23 @@ function getMatchedProviders(platforms: Platform[]): ProviderKey[] {
   return result.slice(0, 3);
 }
 
-const IMAGE_WIDTH = Math.round(SCREEN_WIDTH * 0.93);
-const IMAGE_HEIGHT = Math.round((IMAGE_WIDTH * 3) / 4);
+const POSTER_WIDTH = 120;
+const MAX_DYNAMIC_CONTENT_SIZE = SCREEN_HEIGHT * 0.85;
+
+export interface ItemDetailSheetRef {
+  present: () => void;
+  dismiss: () => void;
+}
 
 interface ItemDetailSheetProps {
   item: WatchlistItem | null;
   visible: boolean;
   onClose: () => void;
+  /** @deprecated Navigation removed — kept for backward compatibility */
   items?: WatchlistItem[];
+  /** @deprecated Navigation removed — kept for backward compatibility */
   currentIndex?: number;
+  /** @deprecated Navigation removed — kept for backward compatibility */
   onNavigate?: (index: number) => void;
 }
 
@@ -72,31 +86,8 @@ function formatRuntime(minutes: number): string {
   return `${h}h${m.toString().padStart(2, '0')}`;
 }
 
-/** Pulsing skeleton placeholder for the image */
-function SkeletonPulse() {
-  const theme = useTheme();
-  const pulse = useRef(new Animated.Value(0.15)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.4, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.15, duration: 900, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, []);
-
-  return (
-    <Animated.View
-      style={[StyleSheet.absoluteFill, { backgroundColor: theme.mutedForeground, opacity: pulse }]}
-    />
-  );
-}
-
-/** Skeleton matching the exact real content structure */
-function SkeletonContent() {
+/** Shared skeleton pulse hook */
+function useSkeletonPulse() {
   const theme = useTheme();
   const pulse = useRef(new Animated.Value(0.12)).current;
 
@@ -126,31 +117,39 @@ function SkeletonContent() {
     />
   );
 
+  return { pulse, block, theme };
+}
+
+/** Skeleton for the text info column (next to the poster) */
+function SkeletonTextBlock() {
+  const { block } = useSkeletonPulse();
+
   return (
     <>
-      {/* Hero section — same structure as real content */}
-      <View style={styles.heroSection}>
-        <View style={[styles.imageContainer, { backgroundColor: theme.container }]}>
-          <View style={styles.overlaidContent}>
-            {/* Top info: title + rating + meta */}
-            <View>
-              {block('70%', 22, { marginBottom: spacing.sm })}
-              <View style={[styles.ratingRow, { marginBottom: spacing.xs }]}>{block(50, 16)}</View>
-              {block('45%', 16)}
-            </View>
-            {/* Bottom info: overview lines */}
-            <View>
-              {block('100%', 14, { marginBottom: spacing.sm })}
-              {block('90%', 14, { marginBottom: spacing.sm })}
-              {block('75%', 14)}
-            </View>
-          </View>
-        </View>
+      {block('80%', 20, { marginBottom: spacing.sm })}
+      {block(60, 16, { marginBottom: spacing.sm })}
+      {block('60%', 14, { marginBottom: spacing.sm })}
+      {block('70%', 14)}
+    </>
+  );
+}
+
+/** Skeleton for description + details sections below the poster row */
+function SkeletonDetailsBlock() {
+  const { block } = useSkeletonPulse();
+
+  return (
+    <>
+      {/* Description skeleton */}
+      <View style={styles.descriptionSection}>
+        {block('100%', 14, { marginBottom: spacing.sm })}
+        {block('95%', 14, { marginBottom: spacing.sm })}
+        {block('70%', 14)}
       </View>
 
-      {/* Details section — same structure */}
+      {/* Details section skeleton */}
       <View style={styles.detailsSection}>
-        {/* Platform section: left (label + icons) / right (button) */}
+        {/* Platform section */}
         <View style={styles.platformSection}>
           <View style={styles.platformLeft}>
             {block('35%', 14, { marginBottom: spacing.xs })}
@@ -179,430 +178,488 @@ function SkeletonContent() {
   );
 }
 
-export default function ItemDetailSheet({
-  item,
-  visible,
-  onClose,
-  items,
-  currentIndex,
-  onNavigate,
-}: ItemDetailSheetProps) {
-  const { content, language } = useLanguageStore();
-  const { handedness } = usePreferencesStore();
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  const [details, setDetails] = useState<FullMediaDetails | null>(null);
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
-  const [providers, setProviders] = useState<Platform[]>([]);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const isNavigatingRef = useRef(false);
-
-  // Crossfade animation
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  const hasNavigation = !!(items && items.length > 1 && onNavigate);
-  const idx = currentIndex ?? 0;
-
-  // Refs for PanResponder (avoid stale closures)
-  const idxRef = useRef(idx);
-  const itemsRef = useRef(items);
-  const onNavigateRef = useRef(onNavigate);
-  const onCloseRef = useRef(onClose);
-  idxRef.current = idx;
-  itemsRef.current = items;
-  onNavigateRef.current = onNavigate;
-  onCloseRef.current = onClose;
-
-  const navigateWithFade = (newIndex: number) => {
-    if (!onNavigateRef.current) return;
-    isNavigatingRef.current = true;
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 120,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) {
-        onNavigateRef.current?.(newIndex);
-      }
-    });
-  };
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_evt, gs) => {
-          if (gs.dy > 25 && Math.abs(gs.dx) < 20) return true;
-          if (hasNavigation && Math.abs(gs.dx) > 30 && Math.abs(gs.dy) < 15) return true;
-          return false;
-        },
-        onPanResponderRelease: (_evt, gs) => {
-          if (gs.dy > 80 && Math.abs(gs.dx) < 40) {
-            onCloseRef.current();
-            return;
-          }
-          const curIdx = idxRef.current;
-          const curItems = itemsRef.current;
-          if (!curItems || !onNavigateRef.current) return;
-          if (gs.dx < -50 && curIdx < curItems.length - 1) {
-            navigateWithFade(curIdx + 1);
-          } else if (gs.dx > 50 && curIdx > 0) {
-            navigateWithFade(curIdx - 1);
-          }
-        },
-      }),
-    [hasNavigation]
-  );
+/** Individual list row with pulse animation on toggle */
+function ListPickerRow({ list, isAdded, onToggle }: {
+  list: { id: string; name: string; items: any[] };
+  isAdded: boolean;
+  onToggle: (listId: string) => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const prevAdded = useRef(isAdded);
 
   useEffect(() => {
-    setImageLoaded(false);
-  }, [item?.tmdbId]);
-
-  useEffect(() => {
-    if (item && visible) {
-      if (isNavigatingRef.current) {
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }).start();
-        isNavigatingRef.current = false;
-      }
-      loadDetails();
-    } else {
-      setDetails(null);
-      setProviders([]);
-      setImageLoaded(false);
-      fadeAnim.setValue(1);
+    if (prevAdded.current !== isAdded) {
+      prevAdded.current = isAdded;
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.35, duration: 80, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 80, useNativeDriver: true }),
+      ]).start();
     }
-  }, [item, visible]);
-
-  const loadDetails = async () => {
-    if (!item) return;
-    setIsLoadingDetails(true);
-    setDetails(null);
-    try {
-      const langMap: Record<string, string> = {
-        fr: 'fr-FR',
-        en: 'en-US',
-        es: 'es-ES',
-        de: 'de-DE',
-        it: 'it-IT',
-        pt: 'pt-BR',
-      };
-      const detailsPromise = watchlistAPI.getItemDetails(
-        item.tmdbId.toString(),
-        item.mediaType,
-        langMap[language] || 'fr-FR'
-      );
-      const providersPromise =
-        item.platformList.length === 0
-          ? watchlistAPI.fetchTMDBProviders(
-              item.tmdbId.toString(),
-              item.mediaType,
-              getTMDBRegion(language)
-            )
-          : Promise.resolve([]);
-      const [detailsRes, providersRes] = await Promise.all([detailsPromise, providersPromise]);
-      setDetails(detailsRes.details);
-      if (providersRes.length > 0) setProviders(providersRes);
-    } catch (error) {
-      console.error('Failed to load item details:', error);
-    } finally {
-      setIsLoadingDetails(false);
-    }
-  };
-
-  if (!item) return null;
-
-  const isMovie = item.mediaType === 'movie';
-  const typeLabel = isMovie
-    ? content.watchlists.contentTypes.movie
-    : content.watchlists.contentTypes.series;
-
-  let durationText = '';
-  if (details) {
-    if (isMovie && details.runtime) {
-      durationText = formatRuntime(details.runtime);
-    } else if (!isMovie && details.numberOfSeasons) {
-      const seasonWord =
-        details.numberOfSeasons > 1
-          ? content.watchlists.seriesInfo.seasons
-          : content.watchlists.seriesInfo.season;
-      durationText = `${details.numberOfSeasons} ${seasonWord}`;
-    }
-  } else {
-    if (isMovie && item.runtime) {
-      durationText = formatRuntime(item.runtime);
-    } else if (!isMovie && item.numberOfSeasons) {
-      const seasonWord =
-        item.numberOfSeasons > 1
-          ? content.watchlists.seriesInfo.seasons
-          : content.watchlists.seriesInfo.season;
-      durationText = `${item.numberOfSeasons} ${seasonWord}`;
-    }
-  }
-
-  const backdropUrl = details?.backdropUrl ?? null;
-  const rating = details?.rating;
-  const overview = details?.overview;
-  const releaseYear = details?.releaseDate ? new Date(details.releaseDate).getFullYear() : null;
-
-  const metaParts = [typeLabel, durationText, releaseYear].filter(Boolean);
-  const metaText = metaParts.join(' \u00B7 ');
-
-  const matchedProviders = getMatchedProviders(
-    providers.length > 0 ? providers : item.platformList
-  );
-  const cast = details?.cast?.slice(0, 3) ?? [];
+  }, [isAdded]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <View
-          style={[styles.contentPanel, { backgroundColor: theme.panel }]}
-          {...panResponder.panHandlers}
-        >
-          <Pressable onPress={() => {}} style={{ flex: 1 }}>
-            {/* Drag handle */}
-            <View style={styles.handleRow}>
-              <View style={styles.handle} />
-            </View>
-
-            <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
-              <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-              >
-                {isLoadingDetails ? (
-                  <SkeletonContent />
-                ) : (
-                  <>
-                    {/* Hero section: image + overlaid content */}
-                    <View style={styles.heroSection}>
-                      <View style={[styles.imageContainer, { backgroundColor: theme.container }]}>
-                        {/* Backdrop image — fills entire container */}
-                        {!imageLoaded && <SkeletonPulse />}
-                        {backdropUrl ? (
-                          <Image
-                            source={{ uri: backdropUrl }}
-                            style={StyleSheet.absoluteFill}
-                            contentFit="cover"
-                            transition={350}
-                            onLoad={() => setImageLoaded(true)}
-                          />
-                        ) : (
-                          <View
-                            style={[StyleSheet.absoluteFill, { backgroundColor: theme.muted }]}
-                          />
-                        )}
-
-                        {/* Very dark cinematic overlay */}
-                        <LinearGradient
-                          colors={[
-                            'rgba(0,0,0,0.88)',
-                            'rgba(0,0,0,0.6)',
-                            'rgba(0,0,0,0.65)',
-                            'rgba(0,0,0,0.88)',
-                          ]}
-                          locations={[0, 0.3, 0.6, 1]}
-                          style={StyleSheet.absoluteFill}
-                        />
-
-                        {/* Content overlaid on darkened image */}
-                        <View style={styles.overlaidContent}>
-                          {/* Top: title + rating + metadata */}
-                          <View>
-                            <Text style={styles.titleText} numberOfLines={2}>
-                              {details?.title || item.title}
-                            </Text>
-                            {rating != null && rating > 0 && (
-                              <View style={styles.ratingRow}>
-                                <Star size={14} color="#fbbf24" fill="#fbbf24" />
-                                <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
-                              </View>
-                            )}
-                            <Text style={styles.metaText}>{metaText}</Text>
-                          </View>
-
-                          {/* Bottom: overview (3 lines max) */}
-                          {overview ? (
-                            <Text style={styles.overview} numberOfLines={3}>
-                              {overview}
-                            </Text>
-                          ) : null}
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Details section below hero */}
-                    <View style={styles.detailsSection}>
-                      {/* Platform section: left (label + icons) / right (Ajouter) */}
-                      <View style={styles.platformSection}>
-                        <View style={styles.platformLeft}>
-                          <Text style={[styles.sectionLabel, { marginBottom: spacing.xs }]}>
-                            {content.watchlists.itemDetails.availableOn}
-                          </Text>
-                          {matchedProviders.length > 0 ? (
-                            <View style={styles.platformRow}>
-                              {matchedProviders.map(key => (
-                                <ProviderIcon key={key} provider={key} />
-                              ))}
-                            </View>
-                          ) : (
-                            <Text style={styles.unavailable}>
-                              {content.watchlists.itemDetails.notAvailable}
-                            </Text>
-                          )}
-                        </View>
-                        <Pressable
-                          style={styles.addToListBtn}
-                          onPress={() => {
-                            /* Phase 1: non-functional */
-                          }}
-                        >
-                          <Plus size={14} color={colors.foreground} strokeWidth={2.5} />
-                          <Text style={styles.addToListText}>
-                            {content.watchlists.itemDetails.add}
-                          </Text>
-                        </Pressable>
-                      </View>
-
-                      {/* Cast — 3 actors on one line */}
-                      {cast.length > 0 && (
-                        <>
-                          <Text style={[styles.sectionLabel, { marginBottom: spacing.sm + 3 }]}>
-                            {content.watchlists.itemDetails.mainCast}
-                          </Text>
-                          <View style={styles.castRow}>
-                            {cast.map(actor => {
-                              const photoUrl = getTMDBImageUrl(actor.profileUrl, 'w185');
-                              return (
-                                <View
-                                  key={`${actor.name}-${actor.character}`}
-                                  style={styles.castItem}
-                                >
-                                  {photoUrl ? (
-                                    <Image
-                                      source={{ uri: photoUrl }}
-                                      style={styles.castPhoto}
-                                      contentFit="cover"
-                                    />
-                                  ) : (
-                                    <View
-                                      style={[styles.castPhoto, { backgroundColor: theme.muted }]}
-                                    />
-                                  )}
-                                  <Text style={styles.castName} numberOfLines={1}>
-                                    {actor.name}
-                                  </Text>
-                                  <Text style={styles.castCharacter} numberOfLines={1}>
-                                    {actor.character}
-                                  </Text>
-                                </View>
-                              );
-                            })}
-                            {cast.length === 2 && <View style={styles.castItem} />}
-                          </View>
-                        </>
-                      )}
-                    </View>
-                  </>
-                )}
-              </ScrollView>
-            </Animated.View>
-
-            {/* Bottom spacer when there is no navigation */}
-            {!hasNavigation && (
-              <View style={{ height: Math.max(spacing.lg, insets.bottom + spacing.md) }} />
-            )}
-
-            {/* Navigation bar (only when navigating a list) */}
-            {hasNavigation && (
-              <View
-                style={[
-                  styles.navBar,
-                  { paddingBottom: Math.max(spacing.lg, insets.bottom + spacing.md) },
-                ]}
-              >
-                <Pressable
-                  style={styles.navBtn}
-                  onPress={() => idx > 0 && navigateWithFade(idx - 1)}
-                  disabled={idx === 0}
-                >
-                  <ChevronLeft size={24} color={idx === 0 ? colors.border : colors.foreground} />
-                </Pressable>
-                <Text style={styles.navCounter}>
-                  {idx + 1} / {items!.length}
-                </Text>
-                <Pressable
-                  style={styles.navBtn}
-                  onPress={() => idx < items!.length - 1 && navigateWithFade(idx + 1)}
-                  disabled={idx === items!.length - 1}
-                >
-                  <ChevronRight
-                    size={24}
-                    color={idx === items!.length - 1 ? colors.border : colors.foreground}
-                  />
-                </Pressable>
-              </View>
-            )}
-          </Pressable>
-        </View>
+    <View style={styles.listPickerRow}>
+      <PosterGrid items={list.items} size={48} />
+      <View style={styles.listPickerInfo}>
+        <Text style={styles.listPickerName} numberOfLines={1}>{list.name}</Text>
+        <Text style={styles.listPickerCount}>{list.items.length} éléments</Text>
+      </View>
+      <Pressable onPress={() => onToggle(list.id)} hitSlop={8}>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          {isAdded ? (
+            <CheckCircle2 size={24} color="#121212" fill="#22c55e" />
+          ) : (
+            <CirclePlus size={24} color="#fff" />
+          )}
+        </Animated.View>
       </Pressable>
-    </Modal>
+    </View>
   );
 }
 
+const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
+  function ItemDetailSheet(
+    {
+      item,
+      visible,
+      onClose,
+      items,
+      currentIndex,
+    },
+    ref
+  ) {
+    const { content, language } = useLanguageStore();
+    const theme = useTheme();
+    const insets = useSafeAreaInsets();
+    const [details, setDetails] = useState<FullMediaDetails | null>(null);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [providers, setProviders] = useState<Platform[]>([]);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [showAddToList, setShowAddToList] = useState(false);
+    const [addedToLists, setAddedToLists] = useState<Set<string>>(new Set());
+    const addListOpacity = useRef(new Animated.Value(0)).current;
+
+    const { data: watchlistsData } = useMyWatchlists();
+    const watchlists = watchlistsData?.watchlists ?? [];
+
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+    // Expose present/dismiss via ref
+    useImperativeHandle(ref, () => ({
+      present: () => bottomSheetModalRef.current?.present(),
+      dismiss: () => bottomSheetModalRef.current?.dismiss(),
+    }));
+
+    // Sync visible prop with bottom sheet present/dismiss
+    useEffect(() => {
+      if (visible && item) {
+        bottomSheetModalRef.current?.present();
+      } else {
+        bottomSheetModalRef.current?.dismiss();
+      }
+    }, [visible, item]);
+
+    const handleDismiss = useCallback(() => {
+      onClose();
+    }, [onClose]);
+
+    const renderBackdrop = useCallback(
+      (props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop
+          {...props}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          opacity={0.7}
+          pressBehavior="close"
+        />
+      ),
+      []
+    );
+
+    // Reset states when item changes
+    useEffect(() => {
+      setIsDescriptionExpanded(false);
+      setAddedToLists(new Set());
+      setShowAddToList(false);
+    }, [item?.tmdbId]);
+
+    // Animate add-to-list overlay
+    useEffect(() => {
+      if (showAddToList) {
+        Animated.timing(addListOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      }
+    }, [showAddToList]);
+
+    const handleBackFromAddList = useCallback(() => {
+      Animated.timing(addListOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowAddToList(false);
+      });
+    }, [addListOpacity]);
+
+    const langMap: Record<string, string> = {
+      fr: 'fr-FR',
+      en: 'en-US',
+      es: 'es-ES',
+      de: 'de-DE',
+      it: 'it-IT',
+      pt: 'pt-BR',
+    };
+
+    // Pre-check which lists already contain this item
+    useEffect(() => {
+      if (showAddToList && item) {
+        const existing = new Set<string>();
+        for (const list of watchlists) {
+          if (list.items.some((i: WatchlistItem) => i.tmdbId === item.tmdbId)) {
+            existing.add(list.id);
+          }
+        }
+        setAddedToLists(existing);
+      }
+    }, [showAddToList, item?.tmdbId, watchlists]);
+
+    const handleToggleList = useCallback(async (listId: string) => {
+      if (!item) return;
+      const isCurrentlyAdded = addedToLists.has(listId);
+
+      // Optimistic update — immediately toggle the UI
+      if (isCurrentlyAdded) {
+        setAddedToLists(prev => {
+          const next = new Set(prev);
+          next.delete(listId);
+          return next;
+        });
+      } else {
+        setAddedToLists(prev => new Set(prev).add(listId));
+      }
+
+      try {
+        if (isCurrentlyAdded) {
+          await watchlistAPI.removeItem(listId, item.tmdbId.toString());
+        } else {
+          await watchlistAPI.addItem(listId, {
+            tmdbId: item.tmdbId.toString(),
+            mediaType: item.mediaType,
+            language: langMap[language] || 'fr-FR',
+          });
+        }
+        mutate('/watchlists/mine');
+        mutate(`/watchlists/${listId}`);
+      } catch (error: any) {
+        // Revert on error
+        if (isCurrentlyAdded) {
+          setAddedToLists(prev => new Set(prev).add(listId));
+        } else {
+          setAddedToLists(prev => {
+            const next = new Set(prev);
+            next.delete(listId);
+            return next;
+          });
+        }
+        Toast.show({ type: 'error', text1: error?.message || 'Erreur' });
+      }
+    }, [item, addedToLists, language]);
+
+    useEffect(() => {
+      if (item && visible) {
+        loadDetails();
+      } else {
+        setDetails(null);
+        setProviders([]);
+        setIsDescriptionExpanded(false);
+      }
+    }, [item, visible]);
+
+    const loadDetails = async () => {
+      if (!item) return;
+      setIsLoadingDetails(true);
+      setDetails(null);
+      try {
+        const detailsPromise = watchlistAPI.getItemDetails(
+          item.tmdbId.toString(),
+          item.mediaType,
+          langMap[language] || 'fr-FR'
+        );
+        const providersPromise =
+          item.platformList.length === 0
+            ? watchlistAPI.fetchTMDBProviders(
+                item.tmdbId.toString(),
+                item.mediaType,
+                getTMDBRegion(language)
+              )
+            : Promise.resolve([]);
+        const [detailsRes, providersRes] = await Promise.all([detailsPromise, providersPromise]);
+        setDetails(detailsRes.details);
+        if (providersRes.length > 0) setProviders(providersRes);
+      } catch (error) {
+        console.error('Failed to load item details:', error);
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    };
+
+    if (!item) return null;
+
+    const isMovie = item.mediaType === 'movie';
+    const typeLabel = isMovie
+      ? content.watchlists.contentTypes.movie
+      : content.watchlists.contentTypes.series;
+
+    let durationText = '';
+    if (details) {
+      if (isMovie && details.runtime) {
+        durationText = formatRuntime(details.runtime);
+      } else if (!isMovie && details.numberOfSeasons) {
+        const seasonWord =
+          details.numberOfSeasons > 1
+            ? content.watchlists.seriesInfo.seasons
+            : content.watchlists.seriesInfo.season;
+        durationText = `${details.numberOfSeasons} ${seasonWord}`;
+      }
+    } else {
+      if (isMovie && item.runtime) {
+        durationText = formatRuntime(item.runtime);
+      } else if (!isMovie && item.numberOfSeasons) {
+        const seasonWord =
+          item.numberOfSeasons > 1
+            ? content.watchlists.seriesInfo.seasons
+            : content.watchlists.seriesInfo.season;
+        durationText = `${item.numberOfSeasons} ${seasonWord}`;
+      }
+    }
+
+    const posterUrl = item.posterPath
+      ? getTMDBImageUrl(item.posterPath, 'w185')
+      : details?.posterUrl
+        ? getTMDBImageUrl(details.posterUrl, 'w185')
+        : null;
+    const rating = details?.rating;
+    const overview = details?.overview;
+    const releaseYear = details?.releaseDate ? new Date(details.releaseDate).getFullYear() : null;
+    const genres = details?.genres ?? [];
+
+    const metaParts = [typeLabel, durationText, releaseYear].filter(Boolean);
+    const metaText = metaParts.join(' \u00B7 ');
+
+    const matchedProviders = getMatchedProviders(
+      providers.length > 0 ? providers : item.platformList
+    );
+    const cast = details?.cast?.slice(0, 3) ?? [];
+
+    return (
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        enableDynamicSizing={true}
+        maxDynamicContentSize={MAX_DYNAMIC_CONTENT_SIZE}
+        enablePanDownToClose
+        onDismiss={handleDismiss}
+        backdropComponent={renderBackdrop}
+        handleIndicatorStyle={{ backgroundColor: 'rgba(255,255,255,0.25)', width: 36 }}
+        backgroundStyle={{ backgroundColor: theme.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+      >
+        <BottomSheetScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {showAddToList ? (
+            <Animated.View style={[styles.addToListOverlay, { opacity: addListOpacity }]}>
+              <View style={styles.addToListHeader}>
+                <Pressable onPress={handleBackFromAddList} hitSlop={8}>
+                  <ChevronLeft size={24} color="#fff" />
+                </Pressable>
+                <Text style={styles.addToListTitle}>Ajouter à une liste</Text>
+                <View style={{ width: 24 }} />
+              </View>
+              <ScrollView>
+                {watchlists.map((list) => (
+                  <ListPickerRow
+                    key={list.id}
+                    list={list}
+                    isAdded={addedToLists.has(list.id)}
+                    onToggle={handleToggleList}
+                  />
+                ))}
+              </ScrollView>
+            </Animated.View>
+          ) : (
+            <>
+              {/* Poster + info row */}
+              <View style={styles.topRow}>
+                {posterUrl ? (
+                  <Image
+                    source={{ uri: posterUrl }}
+                    style={styles.posterImage}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <View style={[styles.posterImage, { backgroundColor: theme.muted }]} />
+                )}
+                {isLoadingDetails ? (
+                  <View style={styles.infoColumn}>
+                    <SkeletonTextBlock />
+                  </View>
+                ) : (
+                  <View style={styles.infoColumn}>
+                    <Text style={styles.titleText} numberOfLines={2}>
+                      {details?.title || item.title}
+                    </Text>
+                    {rating != null && rating > 0 && (
+                      <View style={styles.ratingRow}>
+                        <Star size={14} color="#fbbf24" fill="#fbbf24" />
+                        <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.metaText}>{metaText}</Text>
+                    {genres.length > 0 && (
+                      <View style={styles.genreRow}>
+                        {genres.map((genre) => (
+                          <View key={genre} style={styles.genreBadge}>
+                            <Text style={styles.genreBadgeText}>{genre}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+
+              {isLoadingDetails ? (
+                <SkeletonDetailsBlock />
+              ) : (
+                <>
+                  {/* Description section — full width, expandable */}
+                  {overview ? (
+                    <View style={styles.descriptionSection}>
+                      <Pressable onPress={() => setIsDescriptionExpanded(prev => !prev)}>
+                        <Text
+                          style={styles.overview}
+                          numberOfLines={isDescriptionExpanded ? undefined : 3}
+                        >
+                          {overview}
+                        </Text>
+                        <Text style={styles.descriptionToggle}>
+                          {isDescriptionExpanded ? 'Voir moins' : 'Voir plus'}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+
+                  {/* Details section below poster row */}
+                  <View style={styles.detailsSection}>
+                    {/* Platform section: left (label + icons) / right (Ajouter) */}
+                    <View style={styles.platformSection}>
+                      <View style={styles.platformLeft}>
+                        <Text style={[styles.sectionLabel, { marginBottom: spacing.xs }]}>
+                          {content.watchlists.itemDetails.availableOn}
+                        </Text>
+                        {matchedProviders.length > 0 ? (
+                          <View style={styles.platformRow}>
+                            {matchedProviders.map(key => (
+                              <ProviderIcon key={key} provider={key} />
+                            ))}
+                          </View>
+                        ) : (
+                          <Text style={styles.unavailable}>
+                            {content.watchlists.itemDetails.notAvailable}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Cast — 3 actors on one line */}
+                    {cast.length > 0 && (
+                      <>
+                        <Text style={[styles.sectionLabel, { marginBottom: spacing.sm + 3 }]}>
+                          {content.watchlists.itemDetails.mainCast}
+                        </Text>
+                        <View style={styles.castRow}>
+                          {cast.map(actor => {
+                            const photoUrl = getTMDBImageUrl(actor.profileUrl, 'w185');
+                            return (
+                              <View
+                                key={`${actor.name}-${actor.character}`}
+                                style={styles.castItem}
+                              >
+                                {photoUrl ? (
+                                  <Image
+                                    source={{ uri: photoUrl }}
+                                    style={styles.castPhoto}
+                                    contentFit="cover"
+                                  />
+                                ) : (
+                                  <View
+                                    style={[styles.castPhoto, { backgroundColor: theme.muted }]}
+                                  />
+                                )}
+                                <Text style={styles.castName} numberOfLines={1}>
+                                  {actor.name}
+                                </Text>
+                                <Text style={styles.castCharacter} numberOfLines={1}>
+                                  {actor.character}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                          {cast.length === 2 && <View style={styles.castItem} />}
+                        </View>
+                      </>
+                    )}
+                  </View>
+                </>
+              )}
+
+              {/* Big "Add to list" button at the bottom */}
+              <View style={[styles.addToListSection, { paddingBottom: Math.max(spacing.lg, insets.bottom + spacing.md) }]}>
+                <Pressable
+                  style={styles.addToListBtn}
+                  onPress={() => setShowAddToList(true)}
+                >
+                  <Plus size={18} color={colors.primaryForeground} strokeWidth={2.5} />
+                  <Text style={styles.addToListBtnText}>
+                    {content.watchlists.addToWatchlist}
+                  </Text>
+                </Pressable>
+              </View>
+            </>
+          )}
+        </BottomSheetScrollView>
+      </BottomSheetModal>
+    );
+  }
+);
+
+export default ItemDetailSheet;
+
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  contentPanel: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
-    height: Math.round(SCREEN_HEIGHT * 0.76),
-  },
-  handleRow: {
-    alignItems: 'center',
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xs,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-  },
   scrollContent: {
     paddingBottom: spacing.md,
   },
-  // Hero section — image with overlaid content
-  heroSection: {
-    alignItems: 'center',
-    paddingTop: spacing.xs,
-  },
-  imageContainer: {
-    width: IMAGE_WIDTH,
-    height: IMAGE_HEIGHT,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  overlaidContent: {
-    position: 'relative',
-    zIndex: 2,
-    height: IMAGE_HEIGHT,
+  // Poster + info row
+  topRow: {
+    flexDirection: 'row',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    justifyContent: 'space-between',
+    paddingTop: spacing.sm,
+  },
+  posterImage: {
+    width: POSTER_WIDTH,
+    aspectRatio: 2 / 3,
+    borderRadius: 8,
+  },
+  infoColumn: {
+    flex: 1,
+    marginLeft: 16,
   },
   titleText: {
-    fontSize: fontSize.xl,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.foreground,
   },
@@ -622,11 +679,48 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     marginTop: spacing.sm,
   },
-  // Overview
+  // Genre badges
+  genreRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: spacing.sm,
+  },
+  genreBadge: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  genreBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  // Description section
+  descriptionSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
   overview: {
     fontSize: fontSize.sm,
     color: 'rgba(255,255,255,0.85)',
     lineHeight: 20,
+  },
+  descriptionToggle: {
+    color: '#b3b3b3',
+    fontSize: 13,
+    marginTop: spacing.xs,
+  },
+  // Details section below poster row
+  detailsSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: 'bold',
+    color: colors.foreground,
+    marginBottom: spacing.sm,
   },
   // Platform section: left column (label + logos) / right column (button)
   platformSection: {
@@ -638,34 +732,6 @@ const styles = StyleSheet.create({
   platformLeft: {
     flex: 1,
   },
-  // Add-to-list pill button
-  addToListBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    marginLeft: spacing.md,
-  },
-  addToListText: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
-  // Details section below hero
-  detailsSection: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  sectionLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: 'bold',
-    color: colors.foreground,
-    marginBottom: spacing.sm,
-  },
-  // Provider icons row
   platformRow: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -701,25 +767,60 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
   },
-  // Navigation bar
-  navBar: {
+  // Big "Add to list" button at the bottom
+  addToListSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
+  addToListBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xs,
-    gap: spacing.xl,
+    gap: spacing.sm,
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
   },
-  navBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
+  addToListBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primaryForeground,
+  },
+  // Inline add-to-list overlay
+  addToListOverlay: {
+    flex: 1,
+  },
+  addToListHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
-  navCounter: {
+  addToListTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.foreground,
+  },
+  listPickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    gap: spacing.md,
+  },
+  listPickerInfo: {
+    flex: 1,
+  },
+  listPickerName: {
+    fontSize: fontSize.base,
+    fontWeight: '600',
+    color: colors.foreground,
+  },
+  listPickerCount: {
     fontSize: fontSize.sm,
     color: colors.mutedForeground,
-    fontWeight: '500',
-    minWidth: 60,
-    textAlign: 'center',
+    marginTop: 2,
   },
 });

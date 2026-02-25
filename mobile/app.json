@@ -16,7 +16,8 @@
     },
     "ios": {
       "bundleIdentifier": "com.poplist.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "associatedDomains": ["applinks:poplist.me"]
     },
     "android": {
       "adaptiveIcon": {

@@ -8,22 +8,27 @@ import type { WatchlistItem } from '../types';
 
 interface PosterGridProps {
   items: WatchlistItem[];
-  size: number;
+  size: number | 'fill';
 }
 
 export default function PosterGrid({ items, size }: PosterGridProps) {
-  const cellSize = (size - 1) / 2;
+  const isFill = size === 'fill';
+  const cellSize = isFill ? undefined : ((size as number) - 1) / 2;
 
   const renderCell = (index: number) => {
     const item = items[index];
     const imageUrl = item ? getTMDBImageUrl(item.posterPath, 'w185') : null;
+
+    const cellStyle = isFill
+      ? styles.cell
+      : [styles.cell, { width: cellSize, height: cellSize }];
 
     if (imageUrl) {
       return (
         <Image
           key={index}
           source={{ uri: imageUrl }}
-          style={[styles.cell, { width: cellSize, height: cellSize }]}
+          style={cellStyle}
           contentFit="cover"
         />
       );
@@ -33,23 +38,21 @@ export default function PosterGrid({ items, size }: PosterGridProps) {
       <View
         key={index}
         style={[
-          styles.cell,
+          ...(Array.isArray(cellStyle) ? cellStyle : [cellStyle]),
           styles.placeholderCell,
-          { width: cellSize, height: cellSize },
         ]}
       >
-        <Film size={cellSize * 0.3} color={colors.mutedForeground} />
+        <Film size={isFill ? 20 : (cellSize as number) * 0.3} color={colors.mutedForeground} />
       </View>
     );
   };
 
+  const containerStyle = isFill
+    ? [styles.container, styles.fillContainer]
+    : [styles.container, { width: size as number, height: size as number, borderRadius: borderRadius.md }];
+
   return (
-    <View
-      style={[
-        styles.container,
-        { width: size, height: size, borderRadius: borderRadius.md },
-      ]}
-    >
+    <View style={containerStyle}>
       <View style={styles.row}>
         {renderCell(0)}
         {renderCell(1)}
@@ -66,6 +69,10 @@ const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
     gap: 1,
+  },
+  fillContainer: {
+    width: '100%',
+    height: '100%',
   },
   row: {
     flexDirection: 'row',

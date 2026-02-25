@@ -57,10 +57,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(30, 41, 59, 0.5)',
-    borderRadius: borderRadius.lg,
-    padding: spacing.sm,
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
     gap: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#333333',
   },
   thumbnail: {
     width: 64,
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.sm,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: colors.foreground,
   },
   count: {

@@ -1,30 +1,31 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
-import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
-import { getTMDBImageUrl } from '../lib/utils';
-import { useLanguageStore } from '../store/language';
-import { useTheme } from '../hooks/useTheme';
-import type { WatchlistItem } from '../types';
+import React from 'react'
+import { View, Text, Pressable, StyleSheet } from 'react-native'
+import { Image } from 'expo-image'
+import { MoreVertical } from 'lucide-react-native'
+import { getTMDBImageUrl } from '../lib/utils'
+import { useLanguageStore } from '../store/language'
+import type { WatchlistItem } from '../types'
 
 interface WatchlistItemRowProps {
-  item: WatchlistItem;
-  index: number;
-  onPress: () => void;
+  item: WatchlistItem
+  onPress: () => void
+  onOptionsPress?: () => void
 }
 
-export default function WatchlistItemRow({ item, index, onPress }: WatchlistItemRowProps) {
-  const theme = useTheme();
-  const { content } = useLanguageStore();
+export default function WatchlistItemRow({
+  item,
+  onPress,
+  onOptionsPress,
+}: WatchlistItemRowProps) {
+  const { content } = useLanguageStore()
   const typeLabel =
     item.mediaType === 'movie'
       ? content.watchlists.contentTypes.movie
-      : content.watchlists.contentTypes.series;
-  const posterUrl = getTMDBImageUrl(item.posterPath, 'w92');
+      : content.watchlists.contentTypes.series
+  const posterUrl = getTMDBImageUrl(item.posterPath, 'w154')
 
   return (
-    <Pressable style={[styles.container, { borderBottomColor: theme.border }]} onPress={onPress}>
-      <Text style={styles.index}>{index + 1}</Text>
+    <Pressable style={styles.container} onPress={onPress}>
       {posterUrl ? (
         <Image
           source={{ uri: posterUrl }}
@@ -34,51 +35,74 @@ export default function WatchlistItemRow({ item, index, onPress }: WatchlistItem
       ) : (
         <View style={[styles.poster, styles.noPoster]} />
       )}
+
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>
           {item.title}
         </Text>
-        <Text style={styles.type}>{typeLabel}</Text>
+        <View style={styles.badgesRow}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{typeLabel}</Text>
+          </View>
+        </View>
       </View>
+
+      <Pressable
+        style={styles.optionsButton}
+        onPress={onOptionsPress}
+        hitSlop={4}
+      >
+        <MoreVertical size={20} color="#b3b3b3" />
+      </Pressable>
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  index: {
-    width: 28,
-    fontSize: fontSize.sm,
-    color: colors.mutedForeground,
-    textAlign: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 0,
   },
   poster: {
-    width: 40,
-    height: 60,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.muted,
+    width: 56,
+    height: 56,
+    borderRadius: 4,
+    backgroundColor: '#2a2a2a',
   },
   noPoster: {
-    backgroundColor: colors.secondary,
+    backgroundColor: '#282828',
   },
   info: {
     flex: 1,
-    marginLeft: spacing.md,
+    marginLeft: 12,
+    paddingRight: 4,
   },
   title: {
-    fontSize: fontSize.base,
+    fontSize: 15,
     fontWeight: '500',
-    color: colors.foreground,
+    color: '#ffffff',
   },
-  type: {
-    fontSize: fontSize.xs,
-    color: colors.mutedForeground,
-    marginTop: 2,
+  badgesRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 4,
   },
-});
+  badge: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  badgeText: {
+    fontSize: 11,
+    color: '#fff',
+  },
+  optionsButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+})

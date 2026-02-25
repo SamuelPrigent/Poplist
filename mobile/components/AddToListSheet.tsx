@@ -8,32 +8,72 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { useSWRConfig } from 'swr';
 import { colors, spacing, fontSize } from '../constants/theme';
 import { useLanguageStore } from '../store/language';
 import { useMyWatchlists } from '../hooks/swr';
+import { watchlistAPI } from '../lib/api-client';
 import WatchlistCardSmall from './WatchlistCardSmall';
 import EmptyState from './EmptyState';
+
+interface SelectedItem {
+  tmdbId: number;
+  mediaType: 'movie' | 'tv';
+  title: string;
+}
 
 interface AddToListSheetProps {
   visible: boolean;
   onClose: () => void;
+  selectedItem?: SelectedItem;
   onSelectList?: (listId: string) => void;
 }
 
 export default function AddToListSheet({
   visible,
   onClose,
+  selectedItem,
   onSelectList,
 }: AddToListSheetProps) {
-  const { content } = useLanguageStore();
+  const { content, language } = useLanguageStore();
   const { data, isLoading } = useMyWatchlists();
+  const { mutate } = useSWRConfig();
   const watchlists = data?.watchlists ?? [];
 
-  const handleSelectList = (listId: string, listName: string) => {
+  const handleSelectList = async (listId: string, listName: string) => {
     if (onSelectList) {
       onSelectList(listId);
-    } else {
-      console.log(`Selected list: ${listName} (${listId})`);
+      return;
+    }
+
+    if (!selectedItem) {
+      console.warn('No item selected to add');
+      return;
+    }
+
+    try {
+      await watchlistAPI.addItem(listId, {
+        tmdbId: selectedItem.tmdbId.toString(),
+        mediaType: selectedItem.mediaType,
+        language: language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : language === 'de' ? 'de-DE' : language === 'it' ? 'it-IT' : language === 'pt' ? 'pt-BR' : 'en-US',
+      });
+
+      // Invalidate SWR cache for the specific list and the list of all watchlists
+      mutate(`/watchlists/${listId}`);
+      mutate('/watchlists/mine');
+
+      Toast.show({
+        type: 'success',
+        text1: `${content.watchlists.itemDetails.add} \u2014 ${listName}`,
+      });
+
+      onClose();
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: error?.message || 'Error',
+      });
     }
   };
 
