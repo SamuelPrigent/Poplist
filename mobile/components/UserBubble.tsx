@@ -23,6 +23,8 @@ export default function UserBubble({ user, listCount, onPress }: UserBubbleProps
           source={{ uri: user.avatarUrl }}
           style={styles.avatar}
           contentFit="cover"
+          recyclingKey={`bubble-${user.username}`}
+          transition={0}
         />
       ) : (
         <View style={[styles.avatarPlaceholder, { backgroundColor: theme.muted }]}>

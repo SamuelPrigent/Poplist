@@ -1,15 +1,15 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Share, Platform, Pressable, LayoutChangeEvent, FlatListProps } from 'react-native'
+import { View, Text, StyleSheet, ActivityIndicator, Share, Platform, Pressable, LayoutChangeEvent } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
-import { useEffect, useState, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
-import { LinearGradient } from 'expo-linear-gradient'
-import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation, withTiming, Easing, AnimatedProps } from 'react-native-reanimated'
+import { useEffect, useState, useLayoutEffect, useCallback, useRef } from 'react'
+import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation, withTiming, Easing, useAnimatedRef } from 'react-native-reanimated'
+import * as ImagePicker from 'expo-image-picker'
 import { Plus } from 'lucide-react-native'
 import Toast from 'react-native-toast-message'
-import { Image } from 'expo-image'
+import Sortable from 'react-native-sortables'
+import * as Haptics from 'expo-haptics'
 import { mutate } from 'swr'
 import { watchlistAPI } from '../../lib/api-client'
-import { getTMDBImageUrl } from '../../lib/utils'
 import { useAuth } from '../../context/auth-context'
 import { colors, fontSize, spacing } from '../../constants/theme'
 import ListHeader from '../../components/ListHeader'
@@ -24,6 +24,7 @@ import DeleteListSheet from '../../components/sheets/DeleteListSheet'
 import ItemActionsSheet from '../../components/sheets/ItemActionsSheet'
 import SearchSheet from '../../components/sheets/SearchSheet'
 import ConfirmDeleteSheet from '../../components/sheets/ConfirmDeleteSheet'
+import ListMenuSheet from '../../components/sheets/ListMenuSheet'
 import type { EditListSheetRef } from '../../components/sheets/EditListSheet'
 import type { CollaboratorSheetRef } from '../../components/sheets/CollaboratorSheet'
 import type { LeaveListSheetRef } from '../../components/sheets/LeaveListSheet'
@@ -31,11 +32,12 @@ import type { DeleteListSheetRef } from '../../components/sheets/DeleteListSheet
 import type { ItemActionsSheetRef } from '../../components/sheets/ItemActionsSheet'
 import type { SearchSheetRef } from '../../components/sheets/SearchSheet'
 import type { ConfirmDeleteSheetRef } from '../../components/sheets/ConfirmDeleteSheet'
+import type { ListMenuSheetRef } from '../../components/sheets/ListMenuSheet'
+import AddToListSheet from '../../components/AddToListSheet'
 import type { Watchlist, WatchlistItem } from '../../types'
 import { useLanguageStore } from '../../store/language'
 import { useTheme } from '../../hooks/useTheme'
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList) as React.ComponentType<AnimatedProps<FlatListProps<WatchlistItem>>>
 
 export default function ListDetailScreen() {
   const theme = useTheme()
@@ -50,6 +52,7 @@ export default function ListDetailScreen() {
   const [isCollaborator, setIsCollaborator] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [addToListItem, setAddToListItem] = useState<WatchlistItem | null>(null)
   const [titleBottomY, setTitleBottomY] = useState(0)
 
   // Sheet refs
@@ -60,6 +63,10 @@ export default function ListDetailScreen() {
   const itemActionsSheetRef = useRef<ItemActionsSheetRef>(null)
   const searchSheetRef = useRef<SearchSheetRef>(null)
   const confirmDeleteRef = useRef<ConfirmDeleteSheetRef>(null)
+  const listMenuRef = useRef<ListMenuSheetRef>(null)
+
+  // ScrollView ref for auto-scroll during drag
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
 
   // Animated scroll tracking
   const scrollY = useSharedValue(0)
@@ -74,7 +81,7 @@ export default function ListDetailScreen() {
       const diff = y - lastScrollY.value
       const timingConfig = { duration: 200, easing: Easing.out(Easing.quad) }
       if (diff > 5 && y > 100) {
-        buttonTranslateY.value = withTiming(100, timingConfig)
+        buttonTranslateY.value = withTiming(200, timingConfig)
       } else if (diff < -5) {
         buttonTranslateY.value = withTiming(0, timingConfig)
       }
@@ -132,20 +139,6 @@ export default function ListDetailScreen() {
     }
   }, [watchlist, id])
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: Array<{ item: unknown }> }) => {
-    const urls: string[] = []
-    viewableItems.forEach((viewable) => {
-      const item = viewable.item as WatchlistItem
-      const posterUrl = getTMDBImageUrl(item.posterPath, 'w342')
-      if (posterUrl) urls.push(posterUrl)
-    })
-    if (urls.length > 0) {
-      Image.prefetch(urls)
-    }
-  }, [])
-
-  const viewabilityConfig = useMemo(() => ({ itemVisiblePercentThreshold: 50 }), [])
-
   const { moveToTop, moveToBottom } = useReorderActions({
     watchlistId: id!,
     watchlist,
@@ -177,6 +170,34 @@ export default function ListDetailScreen() {
     searchSheetRef.current?.present()
   }, [])
 
+  const handleCoverPhoto = useCallback(async () => {
+    if (!watchlist) return
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    })
+
+    if (result.canceled || !result.assets[0]?.base64) return
+
+    try {
+      const imageData = `data:image/jpeg;base64,${result.assets[0].base64}`
+      const { watchlist: updated } = await watchlistAPI.uploadCover(watchlist.id, imageData)
+      setWatchlist(updated)
+      mutate(`/watchlists/${watchlist.id}`)
+      mutate('/watchlists/mine')
+      Toast.show({ type: 'success', text1: 'Photo de couverture mise à jour' })
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: error instanceof Error ? error.message : 'Erreur lors de l\'upload',
+      })
+    }
+  }, [watchlist])
+
   // --- Early returns (after all hooks) ---
 
   if (isLoading) {
@@ -197,6 +218,23 @@ export default function ListDetailScreen() {
 
   const isOwner = watchlist.isOwner === true || watchlist.ownerId === user?.id
   const canEdit = isOwner || isCollaborator
+
+  const handleItemDragStart = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+  }
+
+  const handleItemDragEnd = async ({ data: reorderedItems }: { data: WatchlistItem[] }) => {
+    const previousItems = watchlist.items
+    setWatchlist((prev) => prev ? { ...prev, items: reorderedItems } : prev)
+
+    try {
+      await watchlistAPI.reorderItems(id!, reorderedItems.map(i => i.tmdbId.toString()))
+      mutate(`/watchlists/${id}`)
+    } catch {
+      setWatchlist((prev) => prev ? { ...prev, items: previousItems } : prev)
+      Toast.show({ type: 'error', text1: 'Erreur lors du réordonnancement' })
+    }
+  }
 
   const handleShare = async () => {
     const url = `https://poplist.me/lists/${id}`
@@ -310,61 +348,73 @@ export default function ListDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom']}>
-      <AnimatedFlatList
+      <Animated.ScrollView
+        ref={scrollViewRef}
         style={styles.list}
-        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 32, paddingBottom: 100 }]}
-        data={watchlist.items}
-        keyExtractor={(item) => item.tmdbId.toString()}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 32, paddingBottom: 160 }]}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        ListHeaderComponent={
-          <View>
-            <LinearGradient
-              colors={['rgba(12, 39, 55, 0.45)', 'transparent']}
-              style={[styles.headerGradient, { top: -(insets.top + 32), left: -spacing.lg, right: -spacing.lg }]}
-              pointerEvents="none"
-            />
-            <ListHeader
-              watchlist={watchlist}
-              isOwner={isOwner}
-              isSaved={isSaved}
-              isCollaborator={isCollaborator}
-              scrollY={scrollY}
-              onShare={handleShare}
-              onSave={handleSaveToggle}
-              onEdit={handleEdit}
-              onDuplicate={handleDuplicate}
-              onAddCollaborator={handleAddCollaborator}
-              onDelete={handleDelete}
-              onLeave={handleLeave}
-              onTitleLayout={handleTitleLayout}
-            />
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <WatchlistItemRow
-            item={item}
-            onPress={() => setSelectedIndex(index)}
-            onOptionsPress={() =>
-              itemActionsSheetRef.current?.present({
-                item,
-                index,
-                totalItems: watchlist.items.length,
-                canEdit,
-                watchlistId: id!,
-              })
-            }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View>
+          <ListHeader
+            watchlist={watchlist}
+            isOwner={isOwner}
+            isSaved={isSaved}
+            isCollaborator={isCollaborator}
+            scrollY={scrollY}
+            onShare={handleShare}
+            onSave={handleSaveToggle}
+            onMenu={() => listMenuRef.current?.present()}
+            onDuplicate={handleDuplicate}
+            onAddCollaborator={handleAddCollaborator}
+            onLeave={handleLeave}
+            onTitleLayout={handleTitleLayout}
           />
-        )}
-        ListEmptyComponent={
+        </View>
+
+        {/* Items */}
+        {watchlist.items.length === 0 ? (
           <EmptyState
             title={content.watchlists.noItemsYet}
             description={content.watchlists.noItemsDescription}
           />
-        }
-      />
+        ) : (
+          <Sortable.Grid
+            data={watchlist.items}
+            renderItem={({ item, index }: { item: WatchlistItem; index: number }) => (
+              <WatchlistItemRow
+                item={item}
+                onPress={() => setSelectedIndex(index)}
+                onOptionsPress={() =>
+                  itemActionsSheetRef.current?.present({
+                    item,
+                    index,
+                    totalItems: watchlist.items.length,
+                    canEdit,
+                    watchlistId: id!,
+                  })
+                }
+              />
+            )}
+            columns={1}
+            keyExtractor={(item: WatchlistItem) => item.tmdbId.toString()}
+            onDragStart={handleItemDragStart}
+            onDragEnd={handleItemDragEnd}
+            sortEnabled={canEdit}
+            dragActivationDelay={600}
+            hapticsEnabled={false}
+            strategy="insert"
+            activeItemScale={1.02}
+            activeItemOpacity={0.9}
+            inactiveItemOpacity={0.5}
+            rowGap={0}
+            scrollableRef={scrollViewRef}
+            autoScrollEnabled
+          />
+        )}
+      </Animated.ScrollView>
 
       {/* Bottom sticky button — only if user can edit */}
       {canEdit && (
@@ -407,7 +457,7 @@ export default function ListDetailScreen() {
       <EditListSheet ref={editSheetRef} onUpdated={handleEditUpdated} />
       <CollaboratorSheet ref={collaboratorSheetRef} onCollaboratorsChanged={handleCollaboratorsChanged} />
       <LeaveListSheet ref={leaveSheetRef} onLeft={handleLeftList} />
-      <DeleteListSheet ref={deleteSheetRef} />
+      <DeleteListSheet ref={deleteSheetRef} onDeleted={() => router.back()} />
       <ItemActionsSheet
         ref={itemActionsSheetRef}
         onDelete={(tmdbId) => {
@@ -418,10 +468,25 @@ export default function ListDetailScreen() {
         }}
         onMoveToFirst={(item) => moveToTop(item.tmdbId)}
         onMoveToLast={(item) => moveToBottom(item.tmdbId)}
-        onAddToList={() => {}}
+        onAddToList={(item) => setAddToListItem(item)}
       />
       <SearchSheet ref={searchSheetRef} watchlistId={id} onItemAdded={loadWatchlist} />
       <ConfirmDeleteSheet ref={confirmDeleteRef} />
+      <ListMenuSheet
+        ref={listMenuRef}
+        onEdit={handleEdit}
+        onCoverPhoto={handleCoverPhoto}
+        onDelete={handleDelete}
+      />
+      <AddToListSheet
+        visible={addToListItem !== null}
+        onClose={() => setAddToListItem(null)}
+        selectedItem={addToListItem ? {
+          tmdbId: addToListItem.tmdbId,
+          mediaType: addToListItem.mediaType,
+          title: addToListItem.title,
+        } : undefined}
+      />
     </SafeAreaView>
   )
 }
@@ -437,11 +502,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
-  },
-  headerGradient: {
-    position: 'absolute',
-    height: 260,
-    zIndex: 0,
   },
   fixedHeader: {
     position: 'absolute',

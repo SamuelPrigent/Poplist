@@ -5,10 +5,8 @@ import { mutate } from 'swr'
 import { watchlistAPI } from '../lib/api-client'
 import type { Watchlist, WatchlistItem } from '../types'
 
-// TODO: expo-haptics is not currently installed.
-// Once installed, add haptic feedback on long-press activation:
-//   import * as Haptics from 'expo-haptics'
-//   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+// Haptic feedback is handled in [id].tsx and lists.tsx via expo-haptics
+// in the Sortable.Grid onDragStart callback.
 
 interface UseReorderActionsOptions {
   watchlistId: string

@@ -86,6 +86,8 @@ export default function UserProfileScreen() {
               source={{ uri: profile.avatarUrl }}
               style={styles.avatar}
               contentFit="cover"
+              recyclingKey={`profile-${profile.username}`}
+              transition={0}
             />
           ) : (
             <View style={styles.avatarPlaceholder}>

@@ -205,6 +205,8 @@ export default function ExploreScreen() {
             source={{ uri: posterUrl }}
             style={{ width: posterWidth, height: posterHeight, borderRadius: borderRadius.md }}
             contentFit="cover"
+            recyclingKey={`explore-${item.id}`}
+            transition={0}
           />
         ) : (
           <View style={{ width: posterWidth, height: posterHeight, borderRadius: borderRadius.md, backgroundColor: theme.secondary, justifyContent: 'center', alignItems: 'center', padding: spacing.sm }}>

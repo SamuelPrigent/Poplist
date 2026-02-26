@@ -115,6 +115,8 @@ export default function HomeScreen() {
                 source={{ uri: user.avatarUrl }}
                 style={styles.avatarImage}
                 contentFit="cover"
+                recyclingKey="home-avatar"
+                transition={0}
               />
             ) : (
               <User size={18} color={colors.mutedForeground} />

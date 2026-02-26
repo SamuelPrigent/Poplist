@@ -12,6 +12,7 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet'
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import { mutate } from 'swr'
 import { watchlistAPI } from '../../lib/api-client'
@@ -30,8 +31,8 @@ interface LeaveListSheetProps {
 const LeaveListSheet = forwardRef<LeaveListSheetRef, LeaveListSheetProps>(
   function LeaveListSheet({ onLeft }, ref) {
     const theme = useTheme()
+    const insets = useSafeAreaInsets()
     const bottomSheetRef = useRef<BottomSheetModal>(null)
-    const snapPoints = ['25%']
 
     const [targetList, setTargetList] = useState<{ id: string; name: string } | null>(null)
     const [isLeaving, setIsLeaving] = useState(false)
@@ -90,7 +91,7 @@ const LeaveListSheet = forwardRef<LeaveListSheetRef, LeaveListSheetProps>(
     return (
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={snapPoints}
+        enableDynamicSizing
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{
@@ -103,7 +104,7 @@ const LeaveListSheet = forwardRef<LeaveListSheetRef, LeaveListSheetProps>(
           borderTopRightRadius: 20,
         }}
       >
-        <BottomSheetView style={styles.container}>
+        <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
           {/* Title */}
           <Text style={styles.title}>Quitter cette liste ?</Text>
 

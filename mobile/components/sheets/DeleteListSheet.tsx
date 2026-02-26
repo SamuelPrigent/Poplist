@@ -12,6 +12,7 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet'
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import { mutate } from 'swr'
 import { watchlistAPI } from '../../lib/api-client'
@@ -24,13 +25,17 @@ export interface DeleteListSheetRef {
   dismiss: () => void
 }
 
-const DeleteListSheet = forwardRef<DeleteListSheetRef>(function DeleteListSheet(
-  _props,
+interface DeleteListSheetProps {
+  onDeleted?: () => void
+}
+
+const DeleteListSheet = forwardRef<DeleteListSheetRef, DeleteListSheetProps>(function DeleteListSheet(
+  { onDeleted },
   ref,
 ) {
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
   const bottomSheetRef = useRef<BottomSheetModal>(null)
-  const snapPoints = ['30%']
 
   const [targetList, setTargetList] = useState<{ id: string; name: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -84,6 +89,7 @@ const DeleteListSheet = forwardRef<DeleteListSheetRef>(function DeleteListSheet(
 
       Toast.show({ type: 'success', text1: 'Liste supprimée' })
       bottomSheetRef.current?.dismiss()
+      onDeleted?.()
     } catch (error) {
       // Rollback on error
       await mutate('/watchlists/mine')
@@ -99,7 +105,7 @@ const DeleteListSheet = forwardRef<DeleteListSheetRef>(function DeleteListSheet(
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      snapPoints={snapPoints}
+      enableDynamicSizing
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{
@@ -112,7 +118,7 @@ const DeleteListSheet = forwardRef<DeleteListSheetRef>(function DeleteListSheet(
         borderTopRightRadius: 20,
       }}
     >
-      <BottomSheetView style={styles.container}>
+      <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         {/* Title */}
         <Text style={styles.title}>Supprimer cette liste ?</Text>
 

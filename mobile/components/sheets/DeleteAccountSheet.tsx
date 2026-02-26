@@ -15,6 +15,7 @@ import {
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import { useRouter } from 'expo-router'
 import { useAuth } from '../../context/auth-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 
@@ -30,10 +31,10 @@ const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(function DeleteAcco
   ref,
 ) {
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
   const { deleteAccount } = useAuth()
   const router = useRouter()
   const bottomSheetRef = useRef<BottomSheetModal>(null)
-  const snapPoints = ['80%']
 
   const [confirmation, setConfirmation] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -78,7 +79,7 @@ const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(function DeleteAcco
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      snapPoints={snapPoints}
+      enableDynamicSizing
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{
@@ -94,7 +95,7 @@ const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(function DeleteAcco
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
     >
-      <BottomSheetView style={styles.container}>
+      <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         <Text style={styles.title}>Supprimer mon compte</Text>
 
         <Text style={styles.warning}>

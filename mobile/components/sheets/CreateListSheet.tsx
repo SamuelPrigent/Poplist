@@ -16,6 +16,7 @@ import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import Toast from 'react-native-toast-message'
 import { mutate } from 'swr'
 import { watchlistAPI } from '../../lib/api-client'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import type { Watchlist } from '../../types'
@@ -30,8 +31,8 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
   ref,
 ) {
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
   const bottomSheetRef = useRef<BottomSheetModal>(null)
-  const snapPoints = ['70%']
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -121,7 +122,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      snapPoints={snapPoints}
+      enableDynamicSizing
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{
@@ -137,7 +138,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
     >
-      <BottomSheetView style={styles.container}>
+      <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         {/* Title */}
         <Text style={styles.title}>Nouvelle liste</Text>
 

@@ -19,6 +19,7 @@ import { User, X, Plus, Check } from 'lucide-react-native'
 import Toast from 'react-native-toast-message'
 import { mutate } from 'swr'
 import { watchlistAPI, userAPI } from '../../lib/api-client'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import type { Collaborator } from '../../types'
@@ -40,8 +41,8 @@ interface CollaboratorSheetProps {
 const CollaboratorSheet = forwardRef<CollaboratorSheetRef, CollaboratorSheetProps>(
   function CollaboratorSheet({ onCollaboratorsChanged }, ref) {
     const theme = useTheme()
+    const insets = useSafeAreaInsets()
     const bottomSheetRef = useRef<BottomSheetModal>(null)
-    const snapPoints = ['85%']
 
     const [watchlistId, setWatchlistId] = useState<string | null>(null)
     const [collaborators, setCollaborators] = useState<Collaborator[]>([])
@@ -162,6 +163,8 @@ const CollaboratorSheet = forwardRef<CollaboratorSheetRef, CollaboratorSheetProp
             source={{ uri: item.avatarUrl }}
             style={styles.avatar}
             contentFit="cover"
+            recyclingKey={`collab-${item.username}`}
+            transition={0}
           />
         ) : (
           <View style={[styles.avatarPlaceholder, { backgroundColor: theme.muted }]}>
@@ -189,7 +192,7 @@ const CollaboratorSheet = forwardRef<CollaboratorSheetRef, CollaboratorSheetProp
     return (
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={snapPoints}
+        snapPoints={['85%']}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{
@@ -201,11 +204,11 @@ const CollaboratorSheet = forwardRef<CollaboratorSheetRef, CollaboratorSheetProp
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
         }}
-        keyboardBehavior="interactive"
+        keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
       >
-        <BottomSheetView style={styles.container}>
+        <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
           {/* Title */}
           <Text style={styles.title}>Collaborateurs</Text>
 

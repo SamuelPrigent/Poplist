@@ -12,6 +12,7 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet'
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 
@@ -23,8 +24,8 @@ export interface ConfirmDeleteSheetRef {
 const ConfirmDeleteSheet = forwardRef<ConfirmDeleteSheetRef>(
   function ConfirmDeleteSheet(_props, ref) {
     const theme = useTheme()
+    const insets = useSafeAreaInsets()
     const bottomSheetRef = useRef<BottomSheetModal>(null)
-    const snapPoints = ['30%']
 
     const [title, setTitle] = useState('')
     const onConfirmRef = useRef<(() => void) | null>(null)
@@ -63,7 +64,7 @@ const ConfirmDeleteSheet = forwardRef<ConfirmDeleteSheetRef>(
     return (
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={snapPoints}
+        enableDynamicSizing
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{
@@ -76,7 +77,7 @@ const ConfirmDeleteSheet = forwardRef<ConfirmDeleteSheetRef>(
           borderTopRightRadius: 20,
         }}
       >
-        <BottomSheetView style={styles.container}>
+        <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
           {/* Title */}
           <Text style={styles.title}>{title}</Text>
 
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    paddingBottom: spacing['2xl'],
+    paddingBottom: spacing.sm,
     alignItems: 'center',
   },
   title: {

@@ -14,6 +14,8 @@ import {
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
 import { Plus, Trash2, ArrowUpToLine, ArrowDownToLine } from 'lucide-react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { spacing } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import { useLanguageStore } from '../../store/language'
 import { getTMDBImageUrl } from '../../lib/utils'
@@ -42,9 +44,9 @@ interface ItemActionsSheetProps {
 const ItemActionsSheet = forwardRef<ItemActionsSheetRef, ItemActionsSheetProps>(
   function ItemActionsSheet({ onDelete, onMoveToFirst, onMoveToLast, onAddToList }, ref) {
     const theme = useTheme()
+    const insets = useSafeAreaInsets()
     const { content } = useLanguageStore()
     const bottomSheetRef = useRef<BottomSheetModal>(null)
-    // no snapPoints — using enableDynamicSizing
 
     const [data, setData] = useState<PresentData | null>(null)
 
@@ -124,7 +126,7 @@ const ItemActionsSheet = forwardRef<ItemActionsSheetRef, ItemActionsSheetProps>(
           borderTopRightRadius: 20,
         }}
       >
-        <BottomSheetView style={styles.container}>
+        <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
           {/* Header */}
           {data && (
             <View style={styles.header}>
@@ -133,6 +135,8 @@ const ItemActionsSheet = forwardRef<ItemActionsSheetRef, ItemActionsSheetProps>(
                   source={{ uri: posterUrl }}
                   style={styles.headerPoster}
                   contentFit="cover"
+                  recyclingKey={`action-${data.item.tmdbId}`}
+                  transition={0}
                 />
               ) : (
                 <View style={[styles.headerPoster, styles.headerPosterEmpty]} />

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useSWRConfig } from 'swr';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize } from '../constants/theme';
 import { useLanguageStore } from '../store/language';
 import { useMyWatchlists } from '../hooks/swr';
@@ -37,9 +38,12 @@ export default function AddToListSheet({
   onSelectList,
 }: AddToListSheetProps) {
   const { content, language } = useLanguageStore();
+  const insets = useSafeAreaInsets();
   const { data, isLoading } = useMyWatchlists();
   const { mutate } = useSWRConfig();
-  const watchlists = data?.watchlists ?? [];
+  const watchlists = (data?.watchlists ?? []).filter(
+    (w) => w.isOwner === true || w.isCollaborator === true
+  );
 
   const handleSelectList = async (listId: string, listName: string) => {
     if (onSelectList) {
@@ -99,7 +103,7 @@ export default function AddToListSheet({
           ) : (
             <ScrollView
               style={styles.listContainer}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom + spacing.md, spacing['3xl']) }]}
             >
               {watchlists.map((watchlist) => (
                 <WatchlistCardSmall
@@ -148,6 +152,5 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: spacing.sm,
-    paddingBottom: spacing['3xl'],
   },
 });

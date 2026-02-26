@@ -15,6 +15,7 @@ import {
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import Toast from 'react-native-toast-message'
 import { useAuth } from '../../context/auth-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 
@@ -28,9 +29,9 @@ const EditProfileSheet = forwardRef<EditProfileSheetRef>(function EditProfileShe
   ref,
 ) {
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
   const { user, updateUsername } = useAuth()
   const bottomSheetRef = useRef<BottomSheetModal>(null)
-  const snapPoints = ['75%']
 
   const [username, setUsername] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -83,7 +84,7 @@ const EditProfileSheet = forwardRef<EditProfileSheetRef>(function EditProfileShe
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      snapPoints={snapPoints}
+      enableDynamicSizing
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{
@@ -99,7 +100,7 @@ const EditProfileSheet = forwardRef<EditProfileSheetRef>(function EditProfileShe
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
     >
-      <BottomSheetView style={styles.container}>
+      <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         <Text style={styles.title}>Modifier le nom d'utilisateur</Text>
 
         <Text style={styles.label}>Nom d'utilisateur</Text>

@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router'
-import { Home, Bookmark, Compass, User } from 'lucide-react-native'
+import { Home, ListPlus, Compass, User } from 'lucide-react-native'
 import { useAuth } from '../../context/auth-context'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
@@ -31,34 +31,37 @@ export default function TabLayout() {
         },
         headerTintColor: colors.foreground,
         headerShown: false,
+        tabBarLabelStyle: {
+          marginTop: 1,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Accueil',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          tabBarIcon: ({ color }) => <Home size={26} color={color} strokeWidth={1.8} />,
         }}
       />
       <Tabs.Screen
         name="lists"
         options={{
           title: 'Mes listes',
-          tabBarIcon: ({ color, size }) => <Bookmark size={size} color={color} />,
+          tabBarIcon: ({ color }) => <ListPlus size={26} color={color} strokeWidth={1.8} />,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Explorer',
-          tabBarIcon: ({ color, size }) => <Compass size={size} color={color} />,
+          tabBarIcon: ({ color }) => <Compass size={26} color={color} strokeWidth={1.8} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
           title: 'Compte',
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          tabBarIcon: ({ color }) => <User size={26} color={color} strokeWidth={1.8} />,
         }}
       />
     </Tabs>

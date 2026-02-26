@@ -37,6 +37,9 @@ export default function WatchlistCardSmall({
           source={{ uri: watchlist.imageUrl }}
           style={styles.thumbnail}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={`small-${watchlist.id}`}
+          transition={0}
         />
       ) : (
         <PosterGrid items={watchlist.items} size={64} />

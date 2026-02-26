@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
   Pressable,
   StyleSheet,
-  Dimensions,
   Animated,
   ScrollView,
 } from 'react-native';
@@ -28,8 +27,6 @@ import {
 } from '@gorhom/bottom-sheet';
 import type { WatchlistItem, FullMediaDetails, Platform } from '../types';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const PROVIDER_MAP: Record<string, ProviderKey> = {
   Netflix: 'netflix',
@@ -59,7 +56,7 @@ function getMatchedProviders(platforms: Platform[]): ProviderKey[] {
 }
 
 const POSTER_WIDTH = 120;
-const MAX_DYNAMIC_CONTENT_SIZE = SCREEN_HEIGHT * 0.85;
+const POSTER_HEIGHT = 180; // 2:3 aspect ratio
 
 export interface ItemDetailSheetRef {
   present: () => void;
@@ -180,7 +177,7 @@ function SkeletonDetailsBlock() {
 
 /** Individual list row with pulse animation on toggle */
 function ListPickerRow({ list, isAdded, onToggle }: {
-  list: { id: string; name: string; items: any[] };
+  list: { id: string; name: string; items: any[]; imageUrl?: string };
   isAdded: boolean;
   onToggle: (listId: string) => void;
 }) {
@@ -199,7 +196,18 @@ function ListPickerRow({ list, isAdded, onToggle }: {
 
   return (
     <View style={styles.listPickerRow}>
-      <PosterGrid items={list.items} size={48} />
+      {list.imageUrl ? (
+        <Image
+          source={{ uri: list.imageUrl }}
+          style={styles.listPickerImage}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={`lp-${list.id}`}
+          transition={0}
+        />
+      ) : (
+        <PosterGrid items={list.items} size={48} />
+      )}
       <View style={styles.listPickerInfo}>
         <Text style={styles.listPickerName} numberOfLines={1}>{list.name}</Text>
         <Text style={styles.listPickerCount}>{list.items.length} éléments</Text>
@@ -240,7 +248,12 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
     const addListOpacity = useRef(new Animated.Value(0)).current;
 
     const { data: watchlistsData } = useMyWatchlists();
-    const watchlists = watchlistsData?.watchlists ?? [];
+    const watchlists = useMemo(
+      () => (watchlistsData?.watchlists ?? []).filter(
+        (w) => w.isOwner === true || w.isCollaborator === true
+      ),
+      [watchlistsData?.watchlists],
+    );
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -373,7 +386,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
         loadDetails();
       } else {
         setDetails(null);
-        setProviders([]);
+        setProviders(prev => prev.length === 0 ? prev : []);
         setIsDescriptionExpanded(false);
       }
     }, [item, visible]);
@@ -457,8 +470,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
     return (
       <BottomSheetModal
         ref={bottomSheetModalRef}
-        enableDynamicSizing={true}
-        maxDynamicContentSize={MAX_DYNAMIC_CONTENT_SIZE}
+        snapPoints={['85%']}
         enablePanDownToClose
         onDismiss={handleDismiss}
         backdropComponent={renderBackdrop}
@@ -479,7 +491,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
                 <Text style={styles.addToListTitle}>Ajouter à une liste</Text>
                 <View style={{ width: 24 }} />
               </View>
-              <ScrollView>
+              <ScrollView contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, spacing.lg) }}>
                 {watchlists.map((list) => (
                   <ListPickerRow
                     key={list.id}
@@ -499,6 +511,9 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
                     source={{ uri: posterUrl }}
                     style={styles.posterImage}
                     contentFit="cover"
+                    cachePolicy="memory-disk"
+                    recyclingKey={`detail-${item.tmdbId}`}
+                    transition={0}
                   />
                 ) : (
                   <View style={[styles.posterImage, { backgroundColor: theme.muted }]} />
@@ -594,6 +609,9 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
                                     source={{ uri: photoUrl }}
                                     style={styles.castPhoto}
                                     contentFit="cover"
+                                    cachePolicy="memory-disk"
+                                    recyclingKey={`cast-${actor.name}`}
+                                    transition={0}
                                   />
                                 ) : (
                                   <View
@@ -651,7 +669,7 @@ const styles = StyleSheet.create({
   },
   posterImage: {
     width: POSTER_WIDTH,
-    aspectRatio: 2 / 3,
+    height: POSTER_HEIGHT,
     borderRadius: 8,
   },
   infoColumn: {
@@ -809,6 +827,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: 12,
     gap: spacing.md,
+  },
+  listPickerImage: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.sm,
   },
   listPickerInfo: {
     flex: 1,

@@ -1,8 +1,14 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, Dimensions } from 'react-native'
-import { useState, useRef, useCallback } from 'react'
+import { View, Text, StyleSheet, ActivityIndicator, Pressable, Dimensions } from 'react-native'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
+import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, withTiming, Easing, useAnimatedRef } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
+import Sortable from 'react-native-sortables'
+import * as Haptics from 'expo-haptics'
+import Toast from 'react-native-toast-message'
+import { mutate } from 'swr'
 import { useMyWatchlists } from '../../hooks/swr'
+import { watchlistAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
 import { usePreferencesStore } from '../../store/preferences'
 import { useAuth } from '../../context/auth-context'
@@ -33,6 +39,41 @@ export default function ListsScreen() {
   const { data, isLoading } = useMyWatchlists()
   const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set(['mine', 'saved']))
 
+  // Local state for ordering (optimistic updates)
+  const [orderedWatchlists, setOrderedWatchlists] = useState<Watchlist[]>([])
+
+  // Sync SWR data to local state
+  useEffect(() => {
+    if (data?.watchlists) {
+      setOrderedWatchlists(data.watchlists)
+    }
+  }, [data?.watchlists])
+
+  // ScrollView ref for auto-scroll during drag
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
+
+  // Scroll-based FAB animation
+  const lastScrollY = useSharedValue(0)
+  const buttonTranslateY = useSharedValue(0)
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const y = event.contentOffset.y
+      const diff = y - lastScrollY.value
+      const timingConfig = { duration: 200, easing: Easing.out(Easing.quad) }
+      if (diff > 5 && y > 50) {
+        buttonTranslateY.value = withTiming(200, timingConfig)
+      } else if (diff < -5) {
+        buttonTranslateY.value = withTiming(0, timingConfig)
+      }
+      lastScrollY.value = y
+    },
+  })
+
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: buttonTranslateY.value }],
+  }))
+
   // Sheet refs
   const createListRef = useRef<CreateListSheetRef>(null)
   const deleteListRef = useRef<DeleteListSheetRef>(null)
@@ -57,21 +98,49 @@ export default function ListsScreen() {
     })
   }
 
-  const watchlists = data?.watchlists ?? []
+  const filteredWatchlists = useMemo(() => {
+    return orderedWatchlists.filter((w: Watchlist) => {
+      const isOwner = w.isOwner === true || w.ownerId === user?.id
+      const isCollab = w.isCollaborator === true
+      const isSaved = w.isSaved === true && !isOwner && !isCollab
 
-  const filteredWatchlists = watchlists.filter((w: Watchlist) => {
-    const isOwner = w.isOwner === true || w.ownerId === user?.id
-    const isCollab = w.isCollaborator === true
-    const isSaved = w.isSaved === true && !isOwner && !isCollab
+      if (activeFilters.size === 0) return true
+      if (activeFilters.has('mine') && (isOwner || isCollab)) return true
+      if (activeFilters.has('saved') && isSaved) return true
+      return false
+    })
+  }, [orderedWatchlists, activeFilters, user?.id])
 
-    // No filter active → show all
-    if (activeFilters.size === 0) return true
+  // Sorting only enabled when showing all items (no subset filtering)
+  const isSortEnabled = activeFilters.size === 0 || activeFilters.size === 2
 
-    if (activeFilters.has('mine') && (isOwner || isCollab)) return true
-    if (activeFilters.has('saved') && isSaved) return true
+  const handleDragStart = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+  }, [])
 
-    return false
-  })
+  // Drag end handler with optimistic update
+  const handleDragEnd = useCallback(async ({ data: reorderedData }: { data: Watchlist[] }) => {
+    const previousOrder = orderedWatchlists
+    setOrderedWatchlists(reorderedData)
+
+    try {
+      await watchlistAPI.reorderWatchlists(reorderedData.map(w => w.id))
+      mutate('/watchlists/mine')
+    } catch {
+      setOrderedWatchlists(previousOrder)
+      Toast.show({ type: 'error', text1: 'Erreur lors du réordonnancement' })
+    }
+  }, [orderedWatchlists])
+
+  const renderItem = useCallback(({ item }: { item: Watchlist }) => (
+    <WatchlistCard
+      watchlist={item}
+      showOwner={false}
+      width={cardWidth}
+    />
+  ), [cardWidth])
+
+  const keyExtractor = useCallback((item: Watchlist) => item.id, [])
 
   const filters: { key: FilterKey; label: string }[] = [
     { key: 'mine', label: content.watchlists.myWatchlists },
@@ -114,36 +183,51 @@ export default function ListsScreen() {
       </View>
 
       {/* Watchlists grid */}
-      <FlatList
-        key={columns}
-        data={filteredWatchlists}
-        keyExtractor={(item) => item.id}
-        numColumns={columns}
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={{ width: cardWidth }}>
-            <WatchlistCard
-              watchlist={item}
-              showOwner={false}
-              width={cardWidth}
-            />
-          </View>
-        )}
-        ListEmptyComponent={
+      {filteredWatchlists.length === 0 ? (
+        <View style={styles.emptyContainer}>
           <EmptyState title={content.watchlists.noWatchlists} />
-        }
-      />
+        </View>
+      ) : (
+        <Animated.ScrollView
+          key={columns}
+          ref={scrollViewRef}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <Sortable.Grid
+            data={filteredWatchlists}
+            renderItem={renderItem}
+            columns={columns}
+            keyExtractor={keyExtractor}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            sortEnabled={isSortEnabled}
+            dragActivationDelay={600}
+            hapticsEnabled={false}
+            strategy="insert"
+            activeItemScale={1.05}
+            activeItemOpacity={0.9}
+            inactiveItemOpacity={0.6}
+            rowGap={spacing.xl}
+            columnGap={spacing.sm}
+            scrollableRef={scrollViewRef}
+            autoScrollEnabled
+          />
+        </Animated.ScrollView>
+      )}
 
       {/* Sticky bottom button */}
-      <Pressable
-        style={styles.createButton}
-        onPress={handleCreateList}
-      >
-        <Plus size={20} color="#000" />
-        <Text style={styles.createButtonText}>Créer une liste</Text>
-      </Pressable>
+      <Animated.View style={[styles.createButton, fabAnimatedStyle]}>
+        <Pressable
+          style={styles.createButtonInner}
+          onPress={handleCreateList}
+        >
+          <Plus size={20} color="#000" />
+          <Text style={styles.createButtonText}>Créer une liste</Text>
+        </Pressable>
+      </Animated.View>
 
       {/* Sheets */}
       <CreateListSheet ref={createListRef} />
@@ -198,19 +282,22 @@ const styles = StyleSheet.create({
   filterTextActive: {
     color: colors.primaryForeground,
   },
-  listContent: {
+  scrollContent: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing['4xl'],
+    paddingBottom: 160,
   },
-  columnWrapper: {
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   createButton: {
     position: 'absolute',
     bottom: 24,
     alignSelf: 'center',
     width: '70%',
+  },
+  createButtonInner: {
     height: 48,
     borderRadius: 999,
     backgroundColor: colors.primary,

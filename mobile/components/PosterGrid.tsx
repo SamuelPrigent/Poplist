@@ -30,6 +30,9 @@ export default function PosterGrid({ items, size }: PosterGridProps) {
           source={{ uri: imageUrl }}
           style={cellStyle}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={`grid-${item!.tmdbId}-${index}`}
+          transition={0}
         />
       );
     }

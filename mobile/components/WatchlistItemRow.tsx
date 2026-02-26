@@ -10,12 +10,16 @@ interface WatchlistItemRowProps {
   item: WatchlistItem
   onPress: () => void
   onOptionsPress?: () => void
+  drag?: () => void
+  isActive?: boolean
 }
 
 export default function WatchlistItemRow({
   item,
   onPress,
   onOptionsPress,
+  drag,
+  isActive,
 }: WatchlistItemRowProps) {
   const { content } = useLanguageStore()
   const typeLabel =
@@ -25,12 +29,20 @@ export default function WatchlistItemRow({
   const posterUrl = getTMDBImageUrl(item.posterPath, 'w154')
 
   return (
-    <Pressable style={styles.container} onPress={onPress}>
+    <Pressable
+      style={[styles.container, isActive && styles.containerActive]}
+      onPress={onPress}
+      onLongPress={drag}
+      delayLongPress={600}
+    >
       {posterUrl ? (
         <Image
           source={{ uri: posterUrl }}
           style={styles.poster}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={`item-${item.tmdbId}`}
+          transition={0}
         />
       ) : (
         <View style={[styles.poster, styles.noPoster]} />
@@ -98,6 +110,16 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     color: '#fff',
+  },
+  containerActive: {
+    backgroundColor: '#1e1e1e',
+    borderRadius: 8,
+    transform: [{ scale: 1.03 }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   optionsButton: {
     width: 44,

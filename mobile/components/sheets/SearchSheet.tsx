@@ -20,6 +20,7 @@ import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import { watchlistAPI } from '../../lib/api-client'
 import { getTMDBImageUrl } from '../../lib/utils'
 import { useLanguageStore } from '../../store/language'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import Toast from 'react-native-toast-message'
@@ -76,6 +77,7 @@ function PulseAddButton({ isAdded, onPress }: { isAdded: boolean; onPress: () =>
 const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function SearchSheet({ watchlistId, onItemAdded }, ref) {
   const { content, language } = useLanguageStore()
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<TMDBResult[]>([])
@@ -87,7 +89,7 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
   const bottomSheetRef = useRef<BottomSheetModal>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const snapPoints = ['95%']
+  const snapPoints = ['100%']
 
   useImperativeHandle(ref, () => ({
     present: () => bottomSheetRef.current?.present(),
@@ -226,6 +228,8 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
             source={{ uri: posterUrl }}
             style={[styles.poster, { backgroundColor: theme.secondary }]}
             contentFit="cover"
+            recyclingKey={`search-${item.id}`}
+            transition={0}
           />
         ) : (
           <View style={[styles.poster, styles.noPoster, { backgroundColor: theme.secondary }]}>
@@ -303,7 +307,7 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
             data={results}
             keyExtractor={(item: TMDBResult) => `${item.id}-${item.media_type}`}
             renderItem={renderResultItem}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom + spacing.lg, spacing['4xl']) }]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             ListEmptyComponent={

@@ -200,6 +200,8 @@ export default function AccountScreen() {
                 source={{ uri: user.avatarUrl }}
                 style={styles.avatarImage}
                 contentFit="cover"
+                recyclingKey="account-avatar"
+                transition={0}
               />
             ) : (
               <UserIcon size={24} color={colors.mutedForeground} />
