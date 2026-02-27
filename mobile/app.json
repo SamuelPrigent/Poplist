@@ -17,7 +17,9 @@
     "ios": {
       "bundleIdentifier": "com.poplist.app",
       "supportsTablet": false,
-      "associatedDomains": ["applinks:poplist.me"]
+      "associatedDomains": [
+        "applinks:poplist.me"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -41,6 +43,12 @@
       "eas": {
         "projectId": "a476ab80-67fc-4af9-9019-0ab511bba185"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a476ab80-67fc-4af9-9019-0ab511bba185"
     }
   }
 }
