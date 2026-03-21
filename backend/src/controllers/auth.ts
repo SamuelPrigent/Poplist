@@ -340,7 +340,7 @@ export const setTokens = async (c: C) => {
 }
 
 export const checkUsernameAvailability = async (c: C) => {
-  const username = c.req.param('username')
+  const username = c.req.param('username') as string
 
   if (!username || username.length < 3 || username.length > 20) {
     return c.json({ error: 'Username must be between 3 and 20 characters' }, 400)

@@ -27,7 +27,7 @@ export const getProfile = async (c: C) => {
 }
 
 export const getUserProfileByUsername = async (c: C) => {
-  const username = c.req.param('username')
+  const username = c.req.param('username') as string
 
   const foundUser = await prisma.user.findUnique({ where: { username } })
   if (!foundUser) {

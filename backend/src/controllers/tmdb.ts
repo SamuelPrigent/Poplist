@@ -4,8 +4,12 @@ import type { AppEnv } from '../app.js'
 
 type C = Context<AppEnv>
 
+function param(c: C, name: string): string {
+  return c.req.param(name) as string
+}
+
 export const getTrending = async (c: C) => {
-  const timeWindow = c.req.param('timeWindow')
+  const timeWindow = param(c, 'timeWindow')
 
   if (timeWindow !== 'day' && timeWindow !== 'week') {
     return c.json({ error: 'timeWindow must be "day" or "week"' }, 400)
@@ -25,7 +29,7 @@ export const getTrending = async (c: C) => {
 }
 
 export const discover = async (c: C) => {
-  const type = c.req.param('type')
+  const type = param(c, 'type')
 
   if (type !== 'movie' && type !== 'tv') {
     return c.json({ error: 'type must be "movie" or "tv"' }, 400)
@@ -66,7 +70,7 @@ export const discover = async (c: C) => {
 }
 
 export const getGenres = async (c: C) => {
-  const type = c.req.param('type')
+  const type = param(c, 'type')
 
   if (type !== 'movie' && type !== 'tv') {
     return c.json({ error: 'type must be "movie" or "tv"' }, 400)
@@ -82,7 +86,7 @@ export const getGenres = async (c: C) => {
 }
 
 export const getPopular = async (c: C) => {
-  const type = c.req.param('type')
+  const type = param(c, 'type')
 
   if (type !== 'movie' && type !== 'tv') {
     return c.json({ error: 'type must be "movie" or "tv"' }, 400)
@@ -103,7 +107,7 @@ export const getPopular = async (c: C) => {
 }
 
 export const getTopRated = async (c: C) => {
-  const type = c.req.param('type')
+  const type = param(c, 'type')
 
   if (type !== 'movie' && type !== 'tv') {
     return c.json({ error: 'type must be "movie" or "tv"' }, 400)
@@ -124,8 +128,8 @@ export const getTopRated = async (c: C) => {
 }
 
 export const getProviders = async (c: C) => {
-  const type = c.req.param('type')
-  const id = c.req.param('id')
+  const type = param(c, 'type')
+  const id = param(c, 'id')
 
   if (type !== 'movie' && type !== 'tv') {
     return c.json({ error: 'type must be "movie" or "tv"' }, 400)
@@ -141,8 +145,8 @@ export const getProviders = async (c: C) => {
 }
 
 export const getSimilar = async (c: C) => {
-  const type = c.req.param('type')
-  const id = c.req.param('id')
+  const type = param(c, 'type')
+  const id = param(c, 'id')
 
   if (type !== 'movie' && type !== 'tv') {
     return c.json({ error: 'type must be "movie" or "tv"' }, 400)

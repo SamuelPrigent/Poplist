@@ -29,6 +29,10 @@ type C = Context<AppEnv>
 // Helpers
 // ========================================
 
+function param(c: C, name: string): string {
+  return c.req.param(name) as string
+}
+
 function isValidWatchlistId(id: string): boolean {
   if (id.startsWith('offline-')) return false
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -123,7 +127,7 @@ export const getPublicFeatured = async (c: C) => {
 }
 
 export const getPublicWatchlist = async (c: C) => {
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Watchlist not found' }, 404)
@@ -146,7 +150,7 @@ export const getPublicWatchlist = async (c: C) => {
 }
 
 export const getWatchlistsByGenre = async (c: C) => {
-  const genre = c.req.param('genre')
+  const genre = param(c, 'genre')
 
   if (!genre || genre.trim().length === 0) {
     return c.json({ error: 'Genre parameter is required' }, 400)
@@ -165,7 +169,7 @@ export const getWatchlistsByGenre = async (c: C) => {
 }
 
 export const getWatchlistCountByGenre = async (c: C) => {
-  const genre = c.req.param('genre')
+  const genre = param(c, 'genre')
 
   if (!genre || genre.trim().length === 0) {
     return c.json({ error: 'Genre parameter is required' }, 400)
@@ -199,8 +203,8 @@ export const searchTMDB = async (c: C) => {
 }
 
 export const getItemDetails = async (c: C) => {
-  const tmdbId = c.req.param('tmdbId')
-  const type = c.req.param('type')
+  const tmdbId = param(c, 'tmdbId')
+  const type = param(c, 'type')
   const language = c.req.query('language') || 'fr-FR'
 
   if (!tmdbId || !type) {
@@ -437,7 +441,7 @@ export const reorderWatchlists = async (c: C) => {
 
 export const getWatchlistById = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Watchlist not found' }, 404)
@@ -475,7 +479,7 @@ export const getWatchlistById = async (c: C) => {
 
 export const updateWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
   const body = await c.req.json()
   const parsed = updateWatchlistSchema.safeParse(body)
   if (!parsed.success) {
@@ -564,7 +568,7 @@ export const updateWatchlist = async (c: C) => {
 
 export const deleteWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Watchlist not found' }, 404)
@@ -607,7 +611,7 @@ export const deleteWatchlist = async (c: C) => {
 
 export const addCollaborator = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
   const body = await c.req.json()
   const parsed = addCollaboratorSchema.safeParse(body)
   if (!parsed.success) {
@@ -685,8 +689,8 @@ export const addCollaborator = async (c: C) => {
 
 export const removeCollaborator = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
-  const collaboratorId = c.req.param('collaboratorId')
+  const id = param(c, 'id')
+  const collaboratorId = param(c, 'collaboratorId')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Invalid watchlist ID' }, 400)
@@ -737,7 +741,7 @@ export const removeCollaborator = async (c: C) => {
 
 export const leaveWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Invalid watchlist ID' }, 400)
@@ -767,7 +771,7 @@ export const leaveWatchlist = async (c: C) => {
 
 export const addItemToWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
   const body = await c.req.json()
   const parsed = addItemSchema.safeParse(body)
   if (!parsed.success) {
@@ -870,8 +874,8 @@ export const addItemToWatchlist = async (c: C) => {
 
 export const removeItemFromWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
-  const tmdbId = c.req.param('tmdbId')
+  const id = param(c, 'id')
+  const tmdbId = param(c, 'tmdbId')
 
   const watchlist = await prisma.watchlist.findUnique({
     where: { id },
@@ -944,8 +948,8 @@ export const removeItemFromWatchlist = async (c: C) => {
 
 export const moveItemPosition = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
-  const tmdbId = c.req.param('tmdbId')
+  const id = param(c, 'id')
+  const tmdbId = param(c, 'tmdbId')
   const body = await c.req.json()
   const parsed = moveItemSchema.safeParse(body)
   if (!parsed.success) {
@@ -1032,7 +1036,7 @@ export const moveItemPosition = async (c: C) => {
 
 export const reorderItems = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
   const body = await c.req.json()
   const parsed = reorderItemsSchema.safeParse(body)
   if (!parsed.success) {
@@ -1118,7 +1122,7 @@ export const reorderItems = async (c: C) => {
 
 export const uploadCover = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Watchlist not found' }, 404)
@@ -1172,7 +1176,7 @@ export const uploadCover = async (c: C) => {
 
 export const deleteCover = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Watchlist not found' }, 404)
@@ -1219,7 +1223,7 @@ export const deleteCover = async (c: C) => {
 
 export const generateWatchlistThumbnail = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Invalid watchlist ID' }, 400)
@@ -1263,7 +1267,7 @@ export const generateWatchlistThumbnail = async (c: C) => {
 
 export const saveWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Watchlist not found' }, 404)
@@ -1317,7 +1321,7 @@ export const saveWatchlist = async (c: C) => {
 
 export const unsaveWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   const deleted = await prisma.savedWatchlist.deleteMany({
     where: { userId, watchlistId: id },
@@ -1345,7 +1349,7 @@ export const unsaveWatchlist = async (c: C) => {
 
 export const duplicateWatchlist = async (c: C) => {
   const userId = c.get('user')!.sub
-  const id = c.req.param('id')
+  const id = param(c, 'id')
 
   if (!isValidWatchlistId(id)) {
     return c.json({ error: 'Watchlist not found' }, 404)
