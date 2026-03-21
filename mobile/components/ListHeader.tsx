@@ -68,13 +68,20 @@ export default function ListHeader({
   const saveCount = watchlist.followersCount ?? 0;
   const saveLabel = saveCount === 1 ? 'sauvegarde' : 'sauvegardes';
 
+  // Mix dominant color with background at 40% strength for a dark-tinted solid color
   const dominantColor = watchlist.dominantColor || '#1a1a2e';
+  const bg = { r: 0x12, g: 0x12, b: 0x12 }; // colors.background #121212
+  const mix = 0.55; // 55% dominant, 45% background
+  const r = parseInt(dominantColor.slice(1, 3), 16);
+  const g = parseInt(dominantColor.slice(3, 5), 16);
+  const b = parseInt(dominantColor.slice(5, 7), 16);
+  const tinted = `#${Math.round(r * mix + bg.r * (1 - mix)).toString(16).padStart(2, '0')}${Math.round(g * mix + bg.g * (1 - mix)).toString(16).padStart(2, '0')}${Math.round(b * mix + bg.b * (1 - mix)).toString(16).padStart(2, '0')}`;
 
   return (
     <View style={styles.container}>
-      {/* Gradient glow behind cover — Spotify-style: opaque top, sharp fade at ~75% */}
+      {/* Gradient glow behind cover — solid tinted color, smooth fade to background */}
       <LinearGradient
-        colors={[dominantColor, dominantColor, colors.background]}
+        colors={[tinted, tinted, colors.background]}
         locations={[0, 0.6, 0.85]}
         style={styles.gradientGlow}
       />

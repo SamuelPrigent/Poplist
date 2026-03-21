@@ -53,6 +53,7 @@ function formatWatchlistWithRelations(watchlist: any) {
     description: watchlist.description,
     imageUrl: watchlist.imageUrl,
     thumbnailUrl: watchlist.thumbnailUrl,
+    dominantColor: watchlist.dominantColor,
     isPublic: watchlist.isPublic,
     genres: watchlist.genres,
     position: watchlist.position,
