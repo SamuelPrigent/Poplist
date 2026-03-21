@@ -9,6 +9,7 @@ import {
   uploadThumbnailToCloudinary,
 } from '../services/thumbnail.js'
 import { enrichMediaData, getFullMediaDetails, searchMedia } from '../services/tmdb.js'
+import { extractDominantColorFromBase64, extractDominantColorFromUrl, FALLBACK_COLOR } from '../services/dominant-color.js'
 import { saveToCache } from '../services/cache.js'
 import {
   createWatchlistSchema,
@@ -852,6 +853,18 @@ export const addItemToWatchlist = async (c: C) => {
     })
     .catch((err: Error) => console.error('Failed to regenerate thumbnail:', err))
 
+  // Si c'est le 1er item et pas d'image custom → calculer dominantColor
+  if (newPosition === 0 && !watchlist.imageUrl && enrichedData.posterPath) {
+    const posterUrl = getTMDBImageUrl(enrichedData.posterPath)
+    if (posterUrl) {
+      extractDominantColorFromUrl(posterUrl)
+        .then(async (dominantColor) => {
+          await prisma.watchlist.update({ where: { id }, data: { dominantColor } })
+        })
+        .catch((err) => console.error('Failed to extract dominant color:', err))
+    }
+  }
+
   return c.json({ watchlist: updatedWatchlist })
 }
 
@@ -907,6 +920,24 @@ export const removeItemFromWatchlist = async (c: C) => {
       }
     })
     .catch((err: Error) => console.error('Failed to regenerate thumbnail:', err))
+
+  // Recalculer dominantColor si pas d'image custom
+  if (!watchlist.imageUrl) {
+    const firstItem = updatedWatchlist!.items[0]
+    if (firstItem?.posterPath) {
+      const posterUrl = getTMDBImageUrl(firstItem.posterPath)
+      if (posterUrl) {
+        extractDominantColorFromUrl(posterUrl)
+          .then(async (dominantColor) => {
+            await prisma.watchlist.update({ where: { id }, data: { dominantColor } })
+          })
+          .catch((err) => console.error('Failed to extract dominant color:', err))
+      }
+    } else {
+      prisma.watchlist.update({ where: { id }, data: { dominantColor: FALLBACK_COLOR } })
+        .catch((err) => console.error('Failed to reset dominant color:', err))
+    }
+  }
 
   return c.json({ watchlist: updatedWatchlist })
 }
@@ -978,6 +1009,24 @@ export const moveItemPosition = async (c: C) => {
     }
   }
 
+  // Recalculer dominantColor si le 1er item a changé et pas d'image custom
+  const oldFirstTmdbId = watchlist.items[0]?.tmdbId
+  const newFirstTmdbId = updatedWatchlist!.items[0]?.tmdbId
+
+  if (!watchlist.imageUrl && oldFirstTmdbId !== newFirstTmdbId) {
+    const firstItem = updatedWatchlist!.items[0]
+    if (firstItem?.posterPath) {
+      const posterUrl = getTMDBImageUrl(firstItem.posterPath)
+      if (posterUrl) {
+        extractDominantColorFromUrl(posterUrl)
+          .then(async (dominantColor) => {
+            await prisma.watchlist.update({ where: { id }, data: { dominantColor } })
+          })
+          .catch((err) => console.error('Failed to extract dominant color:', err))
+      }
+    }
+  }
+
   return c.json({ watchlist: updatedWatchlist })
 }
 
@@ -1046,6 +1095,24 @@ export const reorderItems = async (c: C) => {
     }
   }
 
+  // Recalculer dominantColor si le 1er item a changé et pas d'image custom
+  const oldFirstTmdbId = watchlist.items[0]?.tmdbId
+  const newFirstTmdbId = updatedWatchlist!.items[0]?.tmdbId
+
+  if (!watchlist.imageUrl && oldFirstTmdbId !== newFirstTmdbId) {
+    const firstItem = updatedWatchlist!.items[0]
+    if (firstItem?.posterPath) {
+      const posterUrl = getTMDBImageUrl(firstItem.posterPath)
+      if (posterUrl) {
+        extractDominantColorFromUrl(posterUrl)
+          .then(async (dominantColor) => {
+            await prisma.watchlist.update({ where: { id }, data: { dominantColor } })
+          })
+          .catch((err) => console.error('Failed to extract dominant color:', err))
+      }
+    }
+  }
+
   return c.json({ watchlist: updatedWatchlist })
 }
 
@@ -1081,17 +1148,20 @@ export const uploadCover = async (c: C) => {
       await deleteFromCloudinary(watchlist.imageUrl)
     }
 
-    const result = await cloudinary.uploader.upload(body.imageData, {
-      folder: 'watchlists',
-      width: 500,
-      height: 500,
-      crop: 'fill',
-      resource_type: 'image',
-    })
+    const [result, dominantColor] = await Promise.all([
+      cloudinary.uploader.upload(body.imageData, {
+        folder: 'watchlists',
+        width: 500,
+        height: 500,
+        crop: 'fill',
+        resource_type: 'image',
+      }),
+      extractDominantColorFromBase64(body.imageData),
+    ])
 
     const updated = await prisma.watchlist.update({
       where: { id },
-      data: { imageUrl: result.secure_url },
+      data: { imageUrl: result.secure_url, dominantColor },
     })
 
     return c.json({ watchlist: updated, imageUrl: result.secure_url })
@@ -1124,9 +1194,24 @@ export const deleteCover = async (c: C) => {
 
   await deleteFromCloudinary(watchlist.imageUrl)
 
+  // Recalculer dominantColor depuis le poster du 1er item
+  const watchlistWithItems = await prisma.watchlist.findUnique({
+    where: { id },
+    include: { items: { orderBy: { position: 'asc' }, take: 1 } },
+  })
+
+  let dominantColor: string = FALLBACK_COLOR
+  const firstItem = watchlistWithItems?.items[0]
+  if (firstItem?.posterPath) {
+    const posterUrl = getTMDBImageUrl(firstItem.posterPath)
+    if (posterUrl) {
+      dominantColor = await extractDominantColorFromUrl(posterUrl)
+    }
+  }
+
   const updated = await prisma.watchlist.update({
     where: { id },
-    data: { imageUrl: null },
+    data: { imageUrl: null, dominantColor },
   })
 
   return c.json({ message: 'Cover image deleted successfully', watchlist: updated })

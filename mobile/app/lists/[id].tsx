@@ -33,7 +33,6 @@ import type { ItemActionsSheetRef } from '../../components/sheets/ItemActionsShe
 import type { SearchSheetRef } from '../../components/sheets/SearchSheet'
 import type { ConfirmDeleteSheetRef } from '../../components/sheets/ConfirmDeleteSheet'
 import type { ListMenuSheetRef } from '../../components/sheets/ListMenuSheet'
-import AddToListSheet from '../../components/AddToListSheet'
 import type { Watchlist, WatchlistItem } from '../../types'
 import { useLanguageStore } from '../../store/language'
 import { useTheme } from '../../hooks/useTheme'
@@ -52,7 +51,7 @@ export default function ListDetailScreen() {
   const [isCollaborator, setIsCollaborator] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [addToListItem, setAddToListItem] = useState<WatchlistItem | null>(null)
+  const [openAddToList, setOpenAddToList] = useState(false)
   const [titleBottomY, setTitleBottomY] = useState(0)
 
   // Sheet refs
@@ -186,7 +185,7 @@ export default function ListDetailScreen() {
     try {
       const imageData = `data:image/jpeg;base64,${result.assets[0].base64}`
       const { watchlist: updated } = await watchlistAPI.uploadCover(watchlist.id, imageData)
-      setWatchlist(updated)
+      setWatchlist(prev => prev ? { ...prev, ...updated, items: prev.items, collaborators: prev.collaborators } : updated)
       mutate(`/watchlists/${watchlist.id}`)
       mutate('/watchlists/mine')
       Toast.show({ type: 'success', text1: 'Photo de couverture mise à jour' })
@@ -313,11 +312,12 @@ export default function ListDetailScreen() {
       name: watchlist.name,
       description: watchlist.description,
       isPublic: watchlist.isPublic,
+      genres: watchlist.genres,
     })
   }
 
   const handleEditUpdated = (updated: Watchlist) => {
-    setWatchlist(updated)
+    setWatchlist(prev => prev ? { ...prev, ...updated, items: updated.items ?? prev.items, collaborators: updated.collaborators ?? prev.collaborators, owner: updated.owner ?? prev.owner } : updated)
   }
 
   const handleAddCollaborator = () => {
@@ -330,6 +330,7 @@ export default function ListDetailScreen() {
 
   const handleCollaboratorsChanged = (collaborators: Watchlist['collaborators']) => {
     setWatchlist((prev) => (prev ? { ...prev, collaborators } : prev))
+    mutate('/watchlists/mine')
   }
 
   const handleDelete = () => {
@@ -375,7 +376,7 @@ export default function ListDetailScreen() {
         </View>
 
         {/* Items */}
-        {watchlist.items.length === 0 ? (
+        {!watchlist.items?.length ? (
           <EmptyState
             title={content.watchlists.noItemsYet}
             description={content.watchlists.noItemsDescription}
@@ -391,7 +392,7 @@ export default function ListDetailScreen() {
                   itemActionsSheetRef.current?.present({
                     item,
                     index,
-                    totalItems: watchlist.items.length,
+                    totalItems: watchlist.items?.length ?? 0,
                     canEdit,
                     watchlistId: id!,
                   })
@@ -447,7 +448,11 @@ export default function ListDetailScreen() {
       <ItemDetailSheet
         item={selectedIndex !== null ? watchlist.items[selectedIndex] : null}
         visible={selectedIndex !== null}
-        onClose={() => setSelectedIndex(null)}
+        onClose={() => {
+          setSelectedIndex(null)
+          setOpenAddToList(false)
+        }}
+        initialShowAddToList={openAddToList}
         items={watchlist.items}
         currentIndex={selectedIndex ?? 0}
         onNavigate={setSelectedIndex}
@@ -468,7 +473,13 @@ export default function ListDetailScreen() {
         }}
         onMoveToFirst={(item) => moveToTop(item.tmdbId)}
         onMoveToLast={(item) => moveToBottom(item.tmdbId)}
-        onAddToList={(item) => setAddToListItem(item)}
+        onAddToList={(item) => {
+          const index = watchlist.items.findIndex(i => i.tmdbId === item.tmdbId)
+          if (index !== -1) {
+            setOpenAddToList(true)
+            setSelectedIndex(index)
+          }
+        }}
       />
       <SearchSheet ref={searchSheetRef} watchlistId={id} onItemAdded={loadWatchlist} />
       <ConfirmDeleteSheet ref={confirmDeleteRef} />
@@ -477,15 +488,6 @@ export default function ListDetailScreen() {
         onEdit={handleEdit}
         onCoverPhoto={handleCoverPhoto}
         onDelete={handleDelete}
-      />
-      <AddToListSheet
-        visible={addToListItem !== null}
-        onClose={() => setAddToListItem(null)}
-        selectedItem={addToListItem ? {
-          tmdbId: addToListItem.tmdbId,
-          mediaType: addToListItem.mediaType,
-          title: addToListItem.title,
-        } : undefined}
       />
     </SafeAreaView>
   )

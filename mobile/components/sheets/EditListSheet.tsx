@@ -20,12 +20,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import type { Watchlist } from '../../types'
+import { GENRE_CATEGORIES, getCategoryInfo, type GenreCategory } from '../../types/categories'
+import { useLanguageStore } from '../../store/language'
 
 interface EditListData {
   id: string
   name: string
   description?: string
   isPublic: boolean
+  genres?: string[]
 }
 
 export interface EditListSheetRef {
@@ -41,12 +44,14 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
   function EditListSheet({ onUpdated }, ref) {
     const theme = useTheme()
     const insets = useSafeAreaInsets()
+    const { content } = useLanguageStore()
     const bottomSheetRef = useRef<BottomSheetModal>(null)
 
     const [targetId, setTargetId] = useState<string | null>(null)
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
     const [isPublic, setIsPublic] = useState(false)
+    const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     useImperativeHandle(ref, () => ({
@@ -55,6 +60,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
         setName(watchlist.name)
         setDescription(watchlist.description ?? '')
         setIsPublic(watchlist.isPublic)
+        setGenreCategories((watchlist.genres ?? []) as GenreCategory[])
         setIsSubmitting(false)
         bottomSheetRef.current?.present()
       },
@@ -81,10 +87,12 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
       setIsSubmitting(true)
 
       try {
+        const genresData = isPublic && genreCategories.length > 0 ? genreCategories : undefined
         const { watchlist } = await watchlistAPI.update(targetId, {
           name: trimmedName,
           description: description.trim() || undefined,
           isPublic,
+          genres: genresData,
         })
 
         // Revalidate caches
@@ -104,7 +112,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
       } finally {
         setIsSubmitting(false)
       }
-    }, [name, description, isPublic, targetId, isSubmitting, onUpdated])
+    }, [name, description, isPublic, genreCategories, targetId, isSubmitting, onUpdated])
 
     return (
       <BottomSheetModal
@@ -121,7 +129,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
         }}
-        keyboardBehavior="interactive"
+        keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
       >
@@ -200,6 +208,46 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
             </Pressable>
           </View>
 
+          {/* Genre categories — only when public */}
+          {isPublic && (
+            <>
+              <Text style={[styles.label, { marginTop: spacing.lg }]}>
+                {content.watchlists.genreCategories || 'Catégories'}
+              </Text>
+              <View style={styles.genreRow}>
+                {GENRE_CATEGORIES.map((category) => {
+                  const isActive = genreCategories.includes(category)
+                  return (
+                    <Pressable
+                      key={category}
+                      style={[
+                        styles.genrePill,
+                        { backgroundColor: theme.secondary },
+                        isActive && styles.genrePillActive,
+                      ]}
+                      onPress={() =>
+                        setGenreCategories((prev) =>
+                          prev.includes(category)
+                            ? prev.filter((c) => c !== category)
+                            : [...prev, category],
+                        )
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.genrePillText,
+                          isActive && styles.genrePillTextActive,
+                        ]}
+                      >
+                        {getCategoryInfo(category, content).name}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            </>
+          )}
+
           {/* Save button */}
           <Pressable
             style={[
@@ -276,6 +324,30 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
   },
   toggleTextActive: {
+    color: colors.primaryForeground,
+  },
+  genreRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  genrePill: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  genrePillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  genrePillText: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    color: colors.mutedForeground,
+  },
+  genrePillTextActive: {
     color: colors.primaryForeground,
   },
   saveBtn: {

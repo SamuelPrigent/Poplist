@@ -1,14 +1,15 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Animated,
-  ScrollView,
-} from 'react-native';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
+import { View, Text, Pressable, StyleSheet, Animated, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
-import { Star, Plus, ChevronLeft, CheckCircle2, CirclePlus } from 'lucide-react-native';
+import { Star, Plus, ChevronLeft, CheckCircle2, CirclePlus, Check } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
 import { getTMDBImageUrl, getTMDBRegion } from '../lib/utils';
@@ -20,11 +21,7 @@ import Toast from 'react-native-toast-message';
 import ProviderIcon, { type ProviderKey } from './ProviderIcon';
 import PosterGrid from './PosterGrid';
 import { useMyWatchlists } from '../hooks/swr';
-import {
-  BottomSheetModal,
-  BottomSheetScrollView,
-  BottomSheetBackdrop,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import type { WatchlistItem, FullMediaDetails, Platform } from '../types';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
@@ -67,6 +64,8 @@ interface ItemDetailSheetProps {
   item: WatchlistItem | null;
   visible: boolean;
   onClose: () => void;
+  /** When true, opens directly in add-to-list mode */
+  initialShowAddToList?: boolean;
   /** @deprecated Navigation removed — kept for backward compatibility */
   items?: WatchlistItem[];
   /** @deprecated Navigation removed — kept for backward compatibility */
@@ -176,7 +175,11 @@ function SkeletonDetailsBlock() {
 }
 
 /** Individual list row with pulse animation on toggle */
-function ListPickerRow({ list, isAdded, onToggle }: {
+function ListPickerRow({
+  list,
+  isAdded,
+  onToggle,
+}: {
   list: { id: string; name: string; items: any[]; imageUrl?: string };
   isAdded: boolean;
   onToggle: (listId: string) => void;
@@ -209,16 +212,35 @@ function ListPickerRow({ list, isAdded, onToggle }: {
         <PosterGrid items={list.items} size={48} />
       )}
       <View style={styles.listPickerInfo}>
-        <Text style={styles.listPickerName} numberOfLines={1}>{list.name}</Text>
+        <Text style={styles.listPickerName} numberOfLines={1}>
+          {list.name}
+        </Text>
         <Text style={styles.listPickerCount}>{list.items.length} éléments</Text>
       </View>
       <Pressable onPress={() => onToggle(list.id)} hitSlop={8}>
-        <Animated.View style={{ transform: [{ scale }] }}>
-          {isAdded ? (
-            <CheckCircle2 size={24} color="#121212" fill="#22c55e" />
-          ) : (
-            <CirclePlus size={24} color="#fff" />
-          )}
+        <Animated.View
+          style={{
+            transform: [{ scale }],
+          }}
+        >
+          <View style={{ width: 22, height: 22, justifyContent: 'center', alignItems: 'center' }}>
+            {isAdded ? (
+              <View
+                style={{
+                  width: 19,
+                  height: 19,
+                  borderRadius: 10,
+                  backgroundColor: '#22c55e',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Check size={14} strokeWidth={2.7} color="#121212" />
+              </View>
+            ) : (
+              <CirclePlus strokeWidth={1.9} size={22} color="#fff" />
+            )}
+          </View>
         </Animated.View>
       </Pressable>
     </View>
@@ -226,16 +248,7 @@ function ListPickerRow({ list, isAdded, onToggle }: {
 }
 
 const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
-  function ItemDetailSheet(
-    {
-      item,
-      visible,
-      onClose,
-      items,
-      currentIndex,
-    },
-    ref
-  ) {
+  function ItemDetailSheet({ item, visible, onClose, initialShowAddToList, items, currentIndex }, ref) {
     const { content, language } = useLanguageStore();
     const theme = useTheme();
     const insets = useSafeAreaInsets();
@@ -249,10 +262,11 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
 
     const { data: watchlistsData } = useMyWatchlists();
     const watchlists = useMemo(
-      () => (watchlistsData?.watchlists ?? []).filter(
-        (w) => w.isOwner === true || w.isCollaborator === true
-      ),
-      [watchlistsData?.watchlists],
+      () =>
+        (watchlistsData?.watchlists ?? []).filter(
+          w => w.isOwner === true || w.isCollaborator === true
+        ),
+      [watchlistsData?.watchlists]
     );
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -293,7 +307,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
     useEffect(() => {
       setIsDescriptionExpanded(false);
       setAddedToLists(new Set());
-      setShowAddToList(false);
+      setShowAddToList(initialShowAddToList ?? false);
     }, [item?.tmdbId]);
 
     // Animate add-to-list overlay
@@ -339,54 +353,57 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
       }
     }, [showAddToList, item?.tmdbId, watchlists]);
 
-    const handleToggleList = useCallback(async (listId: string) => {
-      if (!item) return;
-      const isCurrentlyAdded = addedToLists.has(listId);
+    const handleToggleList = useCallback(
+      async (listId: string) => {
+        if (!item) return;
+        const isCurrentlyAdded = addedToLists.has(listId);
 
-      // Optimistic update — immediately toggle the UI
-      if (isCurrentlyAdded) {
-        setAddedToLists(prev => {
-          const next = new Set(prev);
-          next.delete(listId);
-          return next;
-        });
-      } else {
-        setAddedToLists(prev => new Set(prev).add(listId));
-      }
-
-      try {
+        // Optimistic update — immediately toggle the UI
         if (isCurrentlyAdded) {
-          await watchlistAPI.removeItem(listId, item.tmdbId.toString());
-        } else {
-          await watchlistAPI.addItem(listId, {
-            tmdbId: item.tmdbId.toString(),
-            mediaType: item.mediaType,
-            language: langMap[language] || 'fr-FR',
-          });
-        }
-        mutate('/watchlists/mine');
-        mutate(`/watchlists/${listId}`);
-      } catch (error: any) {
-        // Revert on error
-        if (isCurrentlyAdded) {
-          setAddedToLists(prev => new Set(prev).add(listId));
-        } else {
           setAddedToLists(prev => {
             const next = new Set(prev);
             next.delete(listId);
             return next;
           });
+        } else {
+          setAddedToLists(prev => new Set(prev).add(listId));
         }
-        Toast.show({ type: 'error', text1: error?.message || 'Erreur' });
-      }
-    }, [item, addedToLists, language]);
+
+        try {
+          if (isCurrentlyAdded) {
+            await watchlistAPI.removeItem(listId, item.tmdbId.toString());
+          } else {
+            await watchlistAPI.addItem(listId, {
+              tmdbId: item.tmdbId.toString(),
+              mediaType: item.mediaType,
+              language: langMap[language] || 'fr-FR',
+            });
+          }
+          mutate('/watchlists/mine');
+          mutate(`/watchlists/${listId}`);
+        } catch (error: any) {
+          // Revert on error
+          if (isCurrentlyAdded) {
+            setAddedToLists(prev => new Set(prev).add(listId));
+          } else {
+            setAddedToLists(prev => {
+              const next = new Set(prev);
+              next.delete(listId);
+              return next;
+            });
+          }
+          Toast.show({ type: 'error', text1: error?.message || 'Erreur' });
+        }
+      },
+      [item, addedToLists, language]
+    );
 
     useEffect(() => {
       if (item && visible) {
         loadDetails();
       } else {
         setDetails(null);
-        setProviders(prev => prev.length === 0 ? prev : []);
+        setProviders(prev => (prev.length === 0 ? prev : []));
         setIsDescriptionExpanded(false);
       }
     }, [item, visible]);
@@ -475,7 +492,11 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
         onDismiss={handleDismiss}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{ backgroundColor: 'rgba(255,255,255,0.25)', width: 36 }}
-        backgroundStyle={{ backgroundColor: theme.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+        backgroundStyle={{
+          backgroundColor: theme.panel,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
       >
         <BottomSheetScrollView
           style={{ flex: 1 }}
@@ -491,8 +512,10 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
                 <Text style={styles.addToListTitle}>Ajouter à une liste</Text>
                 <View style={{ width: 24 }} />
               </View>
-              <ScrollView contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, spacing.lg) }}>
-                {watchlists.map((list) => (
+              <ScrollView
+                contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, spacing.lg) }}
+              >
+                {watchlists.map(list => (
                   <ListPickerRow
                     key={list.id}
                     list={list}
@@ -536,7 +559,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
                     <Text style={styles.metaText}>{metaText}</Text>
                     {genres.length > 0 && (
                       <View style={styles.genreRow}>
-                        {genres.map((genre) => (
+                        {genres.map(genre => (
                           <View key={genre} style={styles.genreBadge}>
                             <Text style={styles.genreBadgeText}>{genre}</Text>
                           </View>
@@ -636,15 +659,15 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
               )}
 
               {/* Big "Add to list" button at the bottom */}
-              <View style={[styles.addToListSection, { paddingBottom: Math.max(spacing.lg, insets.bottom + spacing.md) }]}>
-                <Pressable
-                  style={styles.addToListBtn}
-                  onPress={() => setShowAddToList(true)}
-                >
+              <View
+                style={[
+                  styles.addToListSection,
+                  { paddingBottom: Math.max(spacing.lg, insets.bottom + spacing.md) },
+                ]}
+              >
+                <Pressable style={styles.addToListBtn} onPress={() => setShowAddToList(true)}>
                   <Plus size={18} color={colors.primaryForeground} strokeWidth={2.5} />
-                  <Text style={styles.addToListBtnText}>
-                    {content.watchlists.addToWatchlist}
-                  </Text>
+                  <Text style={styles.addToListBtnText}>{content.watchlists.addToWatchlist}</Text>
                 </Pressable>
               </View>
             </>
@@ -837,12 +860,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listPickerName: {
-    fontSize: fontSize.base,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.foreground,
   },
   listPickerCount: {
-    fontSize: fontSize.sm,
+    fontSize: 13.5,
     color: colors.mutedForeground,
     marginTop: 2,
   },

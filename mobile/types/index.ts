@@ -63,6 +63,7 @@ export interface Watchlist {
   description?: string
   imageUrl?: string
   thumbnailUrl?: string
+  dominantColor?: string
   isPublic: boolean
   genres?: string[]
   collaborators: Collaborator[]

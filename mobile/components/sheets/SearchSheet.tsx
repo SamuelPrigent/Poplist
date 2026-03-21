@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
+import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle, useEffect } from 'react'
 import {
   View,
   Text,
@@ -24,7 +24,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import Toast from 'react-native-toast-message'
-import AddToListSheet from '../AddToListSheet'
 
 interface TMDBResult {
   id: number
@@ -82,17 +81,18 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<TMDBResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<TMDBResult | null>(null)
-  const [addToListVisible, setAddToListVisible] = useState(false)
   const [addedItems, setAddedItems] = useState<Set<number>>(new Set())
 
   const bottomSheetRef = useRef<BottomSheetModal>(null)
+  const inputRef = useRef<any>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const snapPoints = ['100%']
-
   useImperativeHandle(ref, () => ({
-    present: () => bottomSheetRef.current?.present(),
+    present: () => {
+      bottomSheetRef.current?.present()
+      // Focus input after sheet animation completes
+      setTimeout(() => inputRef.current?.focus(), 400)
+    },
     dismiss: () => bottomSheetRef.current?.dismiss(),
   }))
 
@@ -175,24 +175,13 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
           text1: error?.message || 'Erreur',
         })
       }
-    } else {
-      // Explorer mode — open list picker
-      setSelectedItem(item)
-      setAddToListVisible(true)
     }
   }, [watchlistId, language, onItemAdded, addedItems])
 
   const handleDismiss = useCallback(() => {
     setQuery('')
     setResults([])
-    setSelectedItem(null)
-    setAddToListVisible(false)
     setAddedItems(new Set())
-  }, [])
-
-  const handleAddToListClose = useCallback(() => {
-    setAddToListVisible(false)
-    setSelectedItem(null)
   }, [])
 
   const renderBackdrop = useCallback(
@@ -256,13 +245,13 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
     <>
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={snapPoints}
+        snapPoints={['92%']}
         enablePanDownToClose
         onDismiss={handleDismiss}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{ backgroundColor: 'rgba(255,255,255,0.25)', width: 36 }}
         backgroundStyle={{ backgroundColor: theme.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
-        keyboardBehavior="interactive"
+        keyboardBehavior="extend"
         keyboardBlurBehavior="none"
         android_keyboardInputMode="adjustResize"
       >
@@ -271,12 +260,12 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
           <View style={[styles.searchBar, { backgroundColor: theme.secondary }]}>
             <Search size={18} color={colors.mutedForeground} />
             <BottomSheetTextInput
+              ref={inputRef}
               style={styles.searchInput}
               placeholder={content.watchlists.searchPlaceholder}
               placeholderTextColor={colors.mutedForeground}
               value={query}
               onChangeText={handleSearch}
-              autoFocus
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="search"
@@ -320,17 +309,6 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
           />
         )}
       </BottomSheetModal>
-
-      {/* Add to list modal */}
-      <AddToListSheet
-        visible={addToListVisible}
-        onClose={handleAddToListClose}
-        selectedItem={selectedItem ? {
-          tmdbId: selectedItem.id,
-          mediaType: selectedItem.media_type,
-          title: selectedItem.title || selectedItem.name || '',
-        } : undefined}
-      />
     </>
   )
 })

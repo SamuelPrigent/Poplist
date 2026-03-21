@@ -4,15 +4,15 @@ import {
   Text,
   FlatList,
   Pressable,
-  Modal,
-  ScrollView,
   StyleSheet,
   ActivityIndicator,
   Dimensions,
-  TextInput,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet'
+import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
+import WheelPicker from '@quidone/react-native-wheel-picker'
 import { ChevronDown, X, Check } from 'lucide-react-native'
 import { tmdbAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
@@ -24,6 +24,9 @@ import ItemDetailSheet from '../../components/ItemDetailSheet'
 import type { WatchlistItem } from '../../types'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
+
+// Years from 2026 down to 1895 (first film) — same range as frontend
+const YEARS = Array.from({ length: 2026 - 1895 + 1 }, (_, i) => 2026 - i)
 
 type MediaType = 'movie' | 'tv'
 type SortType = 'popularity.desc' | 'vote_average.desc'
@@ -89,11 +92,53 @@ export default function ExploreScreen() {
   const [mediaType, setMediaType] = useState<MediaType>('movie')
   const [sortBy, setSortBy] = useState<SortType>('popularity.desc')
   const [selectedGenres, setSelectedGenres] = useState<Set<number>>(new Set())
-  const [yearMin, setYearMin] = useState('')
-  const [yearMax, setYearMax] = useState('')
+  const [yearFrom, setYearFrom] = useState<number | null>(null)
+  const [yearTo, setYearTo] = useState<number | null>(null)
 
-  // Genre modal
-  const [genreModalVisible, setGenreModalVisible] = useState(false)
+  // Bottom sheet refs
+  const genreSheetRef = useRef<BottomSheetModal>(null)
+  const yearSheetRef = useRef<BottomSheetModal>(null)
+  const insets = useSafeAreaInsets()
+
+  // Year picker — static data (same length always = indices never shift)
+  const currentYear = new Date().getFullYear()
+  const yearPickerData = useMemo(
+    () => YEARS.map((y) => ({ value: y, label: String(y) })),
+    [],
+  )
+
+  // Settled values — updated ONLY on scroll settle, serve as `value` prop
+  const [settledFrom, setSettledFrom] = useState(currentYear)
+  const [settledTo, setSettledTo] = useState(currentYear)
+
+  // On FROM settle: update FROM, clamp TO up if needed
+  const handleFromSettled = useCallback(({ item }: { item: { value: number } }) => {
+    setSettledFrom(item.value)
+    setSettledTo((prev) => (prev < item.value ? item.value : prev))
+  }, [])
+
+  // On TO settle: update TO, clamp FROM down if needed
+  const handleToSettled = useCallback(({ item }: { item: { value: number } }) => {
+    setSettledTo(item.value)
+    setSettledFrom((prev) => (prev > item.value ? item.value : prev))
+  }, [])
+
+  // renderItem: grey out invalid years (data unchanged, only visual)
+  const renderFromItem = useCallback(({ item, itemTextStyle }: { item: { value: number; label: string }; itemTextStyle?: any }) => (
+    <Text style={[{ textAlign: 'center', lineHeight: 48 }, itemTextStyle, item.value > settledTo && { opacity: 0.15 }]}>
+      {item.label}
+    </Text>
+  ), [settledTo])
+
+  const renderToItem = useCallback(({ item, itemTextStyle }: { item: { value: number; label: string }; itemTextStyle?: any }) => (
+    <Text style={[{ textAlign: 'center', lineHeight: 48 }, itemTextStyle, item.value < settledFrom && { opacity: 0.15 }]}>
+      {item.label}
+    </Text>
+  ), [settledFrom])
+
+  // For the API calls
+  const yearMin = yearFrom ? String(yearFrom) : ''
+  const yearMax = yearTo ? String(yearTo) : ''
 
   // Data
   const [results, setResults] = useState<DiscoverResult[]>([])
@@ -159,6 +204,46 @@ export default function ExploreScreen() {
     if (isLoadingMoreRef.current || page >= totalPages) return
     fetchDiscover(page + 1, false)
   }, [page, totalPages, mediaType, sortBy, selectedGenres, yearMin, yearMax])
+
+  const renderGenreBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.7}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  )
+
+  const openYearPicker = useCallback(() => {
+    const from = yearFrom ?? currentYear
+    const to = yearTo ?? currentYear
+    setSettledFrom(from)
+    setSettledTo(to)
+    yearSheetRef.current?.present()
+  }, [yearFrom, yearTo, currentYear])
+
+  const confirmYearPicker = useCallback(() => {
+    setYearFrom(settledFrom)
+    setYearTo(settledTo)
+    yearSheetRef.current?.dismiss()
+  }, [settledFrom, settledTo])
+
+  const renderYearBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.7}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  )
 
   const toggleGenre = (genreId: number) => {
     setSelectedGenres((prev) => {
@@ -281,7 +366,7 @@ export default function ExploreScreen() {
           {/* Genre select button */}
           <Pressable
             style={[styles.selectBtn, { borderColor: theme.border }, selectedGenres.size > 0 && styles.selectBtnActive]}
-            onPress={() => setGenreModalVisible(true)}
+            onPress={() => genreSheetRef.current?.present()}
           >
             <Text
               style={[styles.selectBtnText, selectedGenres.size > 0 && styles.selectBtnTextActive]}
@@ -292,37 +377,31 @@ export default function ExploreScreen() {
             <ChevronDown size={14} color={selectedGenres.size > 0 ? colors.foreground : colors.mutedForeground} />
           </Pressable>
 
-          {/* Year min */}
-          <View style={styles.yearInput}>
-            <TextInput
-              style={[styles.yearInputText, { backgroundColor: theme.secondary, borderColor: theme.border }]}
-              placeholder={content.explore.filters.yearMin}
-              placeholderTextColor={theme.mutedForeground}
-              value={yearMin}
-              onChangeText={(text) => setYearMin(text.replace(/[^0-9]/g, '').slice(0, 4))}
-              keyboardType="number-pad"
-              maxLength={4}
-            />
-          </View>
-
-          {/* Year max */}
-          <View style={styles.yearInput}>
-            <TextInput
-              style={[styles.yearInputText, { backgroundColor: theme.secondary, borderColor: theme.border }]}
-              placeholder={content.explore.filters.yearMax}
-              placeholderTextColor={theme.mutedForeground}
-              value={yearMax}
-              onChangeText={(text) => setYearMax(text.replace(/[^0-9]/g, '').slice(0, 4))}
-              keyboardType="number-pad"
-              maxLength={4}
-            />
-          </View>
+          {/* Year filter button */}
+          <Pressable
+            style={[styles.selectBtn, { borderColor: theme.border }, (yearFrom || yearTo) && styles.selectBtnActive]}
+            onPress={openYearPicker}
+          >
+            <Text
+              style={[styles.selectBtnText, (yearFrom || yearTo) && styles.selectBtnTextActive]}
+              numberOfLines={1}
+            >
+              {yearFrom && yearTo
+                ? `${yearFrom} – ${yearTo}`
+                : yearFrom
+                  ? `Dès ${yearFrom}`
+                  : yearTo
+                    ? `Jusqu'à ${yearTo}`
+                    : 'Année'}
+            </Text>
+            <ChevronDown size={14} color={(yearFrom || yearTo) ? colors.foreground : colors.mutedForeground} />
+          </Pressable>
 
           {/* Clear years */}
-          {(yearMin || yearMax) && (
+          {(yearFrom || yearTo) && (
             <Pressable
               style={styles.clearBtn}
-              onPress={() => { setYearMin(''); setYearMax('') }}
+              onPress={() => { setYearFrom(null); setYearTo(null) }}
             >
               <X size={14} color={colors.mutedForeground} />
             </Pressable>
@@ -356,50 +435,117 @@ export default function ExploreScreen() {
         />
       )}
 
-      {/* Genre select modal */}
-      <Modal
-        visible={genreModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setGenreModalVisible(false)}
+      {/* Genre select bottom sheet */}
+      <BottomSheetModal
+        ref={genreSheetRef}
+        snapPoints={['60%']}
+        enablePanDownToClose
+        backdropComponent={renderGenreBackdrop}
+        handleIndicatorStyle={{
+          backgroundColor: 'rgba(255,255,255,0.25)',
+          width: 36,
+        }}
+        backgroundStyle={{
+          backgroundColor: theme.panel,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setGenreModalVisible(false)}>
-          <Pressable style={[styles.modalContent, { backgroundColor: theme.panel }]} onPress={() => {}}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Genres</Text>
-              {selectedGenres.size > 0 && (
-                <Pressable onPress={() => setSelectedGenres(new Set())}>
-                  <Text style={styles.modalClear}>{content.explore.filters.clearYears}</Text>
-                </Pressable>
-              )}
-            </View>
-            <ScrollView style={styles.modalList}>
-              {genres.map((genre) => {
-                const isActive = selectedGenres.has(genre.id)
-                const label = (content.explore.genres as Record<string, string>)[genre.key] || genre.key
-                return (
-                  <Pressable
-                    key={genre.id}
-                    style={[styles.modalItem, { borderBottomColor: theme.border }]}
-                    onPress={() => toggleGenre(genre.id)}
-                  >
-                    <Text style={[styles.modalItemText, isActive && styles.modalItemTextActive]}>
-                      {label}
-                    </Text>
-                    {isActive && <Check size={18} color={colors.foreground} />}
-                  </Pressable>
-                )
-              })}
-            </ScrollView>
-            <Pressable
-              style={styles.modalDone}
-              onPress={() => setGenreModalVisible(false)}
-            >
-              <Text style={styles.modalDoneText}>OK</Text>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>Genres</Text>
+          {selectedGenres.size > 0 && (
+            <Pressable onPress={() => setSelectedGenres(new Set())}>
+              <Text style={styles.modalClear}>Effacer</Text>
             </Pressable>
-          </Pressable>
+          )}
+        </View>
+        <BottomSheetScrollView style={styles.modalList}>
+          {genres.map((genre) => {
+            const isActive = selectedGenres.has(genre.id)
+            const label = (content.explore.genres as Record<string, string>)[genre.key] || genre.key
+            return (
+              <Pressable
+                key={genre.id}
+                style={[styles.modalItem, { borderBottomColor: theme.border }]}
+                onPress={() => toggleGenre(genre.id)}
+              >
+                <Text style={[styles.modalItemText, isActive && styles.modalItemTextActive]}>
+                  {label}
+                </Text>
+                {isActive && <Check size={18} color={colors.foreground} />}
+              </Pressable>
+            )
+          })}
+        </BottomSheetScrollView>
+        <Pressable
+          style={[styles.applyBtn, { marginBottom: Math.max(insets.bottom, spacing.lg) }]}
+          onPress={() => genreSheetRef.current?.dismiss()}
+        >
+          <Text style={styles.applyBtnText}>Appliquer</Text>
         </Pressable>
-      </Modal>
+      </BottomSheetModal>
+
+      {/* Year picker bottom sheet */}
+      <BottomSheetModal
+        ref={yearSheetRef}
+        enableDynamicSizing
+        enablePanDownToClose
+        enableContentPanningGesture={false}
+        backdropComponent={renderYearBackdrop}
+        handleIndicatorStyle={{
+          backgroundColor: 'rgba(255,255,255,0.25)',
+          width: 36,
+        }}
+        backgroundStyle={{
+          backgroundColor: theme.panel,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
+      >
+        <BottomSheetView style={{ paddingBottom: Math.max(insets.bottom, spacing.lg) }}>
+          {/* Labels row */}
+          <View style={styles.yearPickerLabels}>
+            <Text style={styles.yearPickerLabel}>{content.explore.filters.yearMin}</Text>
+            <Text style={styles.yearPickerLabel}>{content.explore.filters.yearMax}</Text>
+          </View>
+          {/* Two wheels side by side */}
+          <View style={styles.yearPickerRow}>
+            <View style={styles.yearPickerCol}>
+              <WheelPicker
+                data={yearPickerData}
+                value={settledFrom}
+                onValueChanged={handleFromSettled}
+                renderItem={renderFromItem}
+                itemHeight={48}
+                visibleItemCount={5}
+                itemTextStyle={styles.yearPickerItemText}
+                width="100%"
+                _enableSyncScrollAfterScrollEnd={false}
+              />
+            </View>
+            <View style={styles.yearPickerSeparator} />
+            <View style={styles.yearPickerCol}>
+              <WheelPicker
+                data={yearPickerData}
+                value={settledTo}
+                onValueChanged={handleToSettled}
+                renderItem={renderToItem}
+                itemHeight={48}
+                visibleItemCount={5}
+                itemTextStyle={styles.yearPickerItemText}
+                width="100%"
+                _enableSyncScrollAfterScrollEnd={false}
+              />
+            </View>
+          </View>
+          <Pressable
+            style={[styles.applyBtn, { marginBottom: 0 }]}
+            onPress={confirmYearPicker}
+          >
+            <Text style={styles.applyBtnText}>Appliquer</Text>
+          </Pressable>
+        </BottomSheetView>
+      </BottomSheetModal>
 
       {/* Detail sheet */}
       <ItemDetailSheet
@@ -482,35 +628,10 @@ const styles = StyleSheet.create({
   selectBtnTextActive: {
     color: colors.foreground,
   },
-  yearInput: {
-    flex: 1,
-  },
-  yearInputText: {
-    backgroundColor: colors.secondary,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 7,
-    fontSize: fontSize.xs,
-    color: colors.foreground,
-    borderWidth: 1,
-    borderColor: colors.border,
-    textAlign: 'center',
-  },
   clearBtn: {
     padding: spacing.xs,
   },
-  // Modal
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#0a1122',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '60%',
-  },
+  // Genre sheet
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -547,15 +668,45 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     fontWeight: '600',
   },
-  modalDone: {
+  yearPickerLabels: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+  },
+  yearPickerLabel: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.mutedForeground,
+    textAlign: 'center',
+  },
+  yearPickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  yearPickerCol: {
+    flex: 1,
+  },
+  yearPickerSeparator: {
+    width: 1,
+    height: '70%',
+    backgroundColor: colors.border,
+  },
+  yearPickerItemText: {
+    fontSize: 22,
+    color: colors.foreground,
+  },
+  applyBtn: {
     alignItems: 'center',
     paddingVertical: spacing.lg,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
     backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
   },
-  modalDoneText: {
+  applyBtnText: {
     fontSize: fontSize.base,
     fontWeight: '600',
     color: colors.primaryForeground,

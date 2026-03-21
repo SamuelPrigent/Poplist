@@ -10,7 +10,7 @@ import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetTextInput,
-  BottomSheetView,
+  BottomSheetScrollView,
 } from '@gorhom/bottom-sheet'
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import Toast from 'react-native-toast-message'
@@ -20,6 +20,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import type { Watchlist } from '../../types'
+import { GENRE_CATEGORIES, getCategoryInfo, type GenreCategory } from '../../types/categories'
+import { useLanguageStore } from '../../store/language'
 
 export interface CreateListSheetRef {
   present: () => void
@@ -32,11 +34,13 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
 ) {
   const theme = useTheme()
   const insets = useSafeAreaInsets()
+  const { content } = useLanguageStore()
   const bottomSheetRef = useRef<BottomSheetModal>(null)
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(false)
+  const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useImperativeHandle(ref, () => ({
@@ -45,6 +49,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
       setName('')
       setDescription('')
       setIsPublic(false)
+      setGenreCategories([])
       setIsSubmitting(false)
       bottomSheetRef.current?.present()
     },
@@ -71,13 +76,14 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
     setIsSubmitting(true)
 
     // Build optimistic watchlist
+    const genresData = isPublic && genreCategories.length > 0 ? [...genreCategories] : []
     const optimisticWatchlist: Watchlist = {
       id: `temp-${Date.now()}`,
       ownerId: '',
       name: trimmedName,
       description: description.trim() || undefined,
       isPublic,
-      genres: [],
+      genres: genresData,
       collaborators: [],
       items: [],
       createdAt: new Date().toISOString(),
@@ -100,6 +106,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
         name: trimmedName,
         description: description.trim() || undefined,
         isPublic,
+        genres: genresData.length > 0 ? genresData : undefined,
       })
 
       // Revalidate with server data
@@ -117,12 +124,12 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
     } finally {
       setIsSubmitting(false)
     }
-  }, [name, description, isPublic, isSubmitting])
+  }, [name, description, isPublic, genreCategories, isSubmitting])
 
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      enableDynamicSizing
+      snapPoints={['92%']}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{
@@ -134,11 +141,11 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
       }}
-      keyboardBehavior="interactive"
+      keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
     >
-      <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+      <BottomSheetScrollView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         {/* Title */}
         <Text style={styles.title}>Nouvelle liste</Text>
 
@@ -213,6 +220,46 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
           </Pressable>
         </View>
 
+        {/* Genre categories — only when public */}
+        {isPublic && (
+          <>
+            <Text style={[styles.label, { marginTop: spacing.lg }]}>
+              {content.watchlists.genreCategories || 'Catégories'}
+            </Text>
+            <View style={styles.genreRow}>
+              {GENRE_CATEGORIES.map((category) => {
+                const isActive = genreCategories.includes(category)
+                return (
+                  <Pressable
+                    key={category}
+                    style={[
+                      styles.genrePill,
+                      { backgroundColor: theme.secondary },
+                      isActive && styles.genrePillActive,
+                    ]}
+                    onPress={() =>
+                      setGenreCategories((prev) =>
+                        prev.includes(category)
+                          ? prev.filter((c) => c !== category)
+                          : [...prev, category],
+                      )
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.genrePillText,
+                        isActive && styles.genrePillTextActive,
+                      ]}
+                    >
+                      {getCategoryInfo(category, content).name}
+                    </Text>
+                  </Pressable>
+                )
+              })}
+            </View>
+          </>
+        )}
+
         {/* Create button */}
         <Pressable
           style={[
@@ -228,7 +275,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
             <Text style={styles.createBtnText}>Créer</Text>
           )}
         </Pressable>
-      </BottomSheetView>
+      </BottomSheetScrollView>
     </BottomSheetModal>
   )
 })
@@ -288,6 +335,30 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
   },
   toggleTextActive: {
+    color: colors.primaryForeground,
+  },
+  genreRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  genrePill: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  genrePillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  genrePillText: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    color: colors.mutedForeground,
+  },
+  genrePillTextActive: {
     color: colors.primaryForeground,
   },
   createBtn: {

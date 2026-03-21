@@ -51,6 +51,11 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
 
+  // Forward browser console logs to terminal (errors, warnings, and logs)
+  logging: {
+    browserToTerminal: true,
+  },
+
   // Experimental features
   experimental: {
     // Optimized package imports
