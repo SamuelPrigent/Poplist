@@ -1,0 +1,30 @@
+export interface PrivacyContent {
+  title: string;
+  effective: string;
+  intro: string;
+  collectTitle: string;
+  collectIntro: string;
+  collectEmail: string;
+  collectUsername: string;
+  collectAvatar: string;
+  collectLists: string;
+  collectNoTracking: string;
+  useTitle: string;
+  useDescription: string;
+  thirdPartyTitle: string;
+  thirdPartyIntro: string;
+  thirdPartyExpo: string;
+  thirdPartyGoogle: string;
+  thirdPartyCloudinary: string;
+  thirdPartyTMDB: string;
+  storageTitle: string;
+  storageDescription: string;
+  deletionTitle: string;
+  deletionDescription: string;
+  childrenTitle: string;
+  childrenDescription: string;
+  changesTitle: string;
+  changesDescription: string;
+  contactTitle: string;
+  contactDescription: string;
+}
