@@ -30,6 +30,7 @@ const GENRE_ITEM_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 3.2;
 const CREATOR_CARD_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 2;
 
 function getCardWidth(cols: number) {
+  if (cols === 1) return SCREEN_WIDTH - spacing.lg * 2;
   return (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * (cols - 1)) / cols;
 }
 
@@ -39,7 +40,9 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const theme = useTheme();
   const router = useRouter();
-  const cardWidth = getCardWidth(columns);
+  const isListMode = columns === 1;
+  const gridCols = isListMode ? 1 : columns;
+  const cardWidth = getCardWidth(isListMode ? 2 : columns);
   const [popularWatchlists, setPopularWatchlists] = useState<Watchlist[]>([]);
   const [creators, setCreators] = useState<
     { username: string; avatarUrl?: string; listCount: number }[]
@@ -133,13 +136,14 @@ export default function HomeScreen() {
             onSeeAll={() => router.push('/popular')}
           />
           {popularWatchlists.length > 0 ? (
-            <View style={styles.grid}>
-              {popularWatchlists.slice(0, columns * 3).map(watchlist => (
+            <View style={isListMode ? styles.list : styles.grid}>
+              {popularWatchlists.slice(0, isListMode ? 6 : gridCols * 3).map(watchlist => (
                 <WatchlistCard
                   key={watchlist.id}
                   watchlist={watchlist}
                   showOwner
-                  width={cardWidth}
+                  width={isListMode ? undefined : cardWidth}
+                  layout={isListMode ? 'list' : 'grid'}
                 />
               ))}
             </View>
@@ -263,6 +267,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     columnGap: spacing.sm,
     rowGap: spacing.md,
+  },
+  list: {
+    flexDirection: 'column',
   },
   emptyText: {
     fontSize: fontSize.sm,

@@ -19,7 +19,9 @@ export default function AllPopularScreen() {
   const theme = useTheme()
   const { content } = useLanguageStore()
   const { columns } = usePreferencesStore()
-  const cardWidth = getCardWidth(columns)
+  const isListMode = columns === 1
+  const gridCols = isListMode ? 2 : columns
+  const cardWidth = getCardWidth(gridCols)
   const [watchlists, setWatchlists] = useState<Watchlist[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -46,14 +48,31 @@ export default function AllPopularScreen() {
     )
   }
 
+  if (isListMode) {
+    return (
+      <FlatList
+        style={[styles.container, { backgroundColor: theme.background }]}
+        contentContainerStyle={styles.content}
+        data={watchlists}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <WatchlistCard watchlist={item} showOwner layout="list" />
+        )}
+        ListEmptyComponent={
+          <EmptyState title={content.watchlists.noItemsYet} />
+        }
+      />
+    )
+  }
+
   return (
     <FlatList
-      key={columns}
+      key={gridCols}
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
       data={watchlists}
       keyExtractor={(item) => item.id}
-      numColumns={columns}
+      numColumns={gridCols}
       columnWrapperStyle={styles.row}
       renderItem={({ item }) => (
         <WatchlistCard watchlist={item} showOwner width={cardWidth} />

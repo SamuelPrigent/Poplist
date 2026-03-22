@@ -90,8 +90,7 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
   useImperativeHandle(ref, () => ({
     present: () => {
       bottomSheetRef.current?.present()
-      // Focus input after sheet animation completes
-      setTimeout(() => inputRef.current?.focus(), 400)
+      setTimeout(() => inputRef.current?.focus(), 300)
     },
     dismiss: () => bottomSheetRef.current?.dismiss(),
   }))
@@ -242,17 +241,18 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
   }, [content, theme, handleToggleItem, addedItems])
 
   return (
-    <>
       <BottomSheetModal
         ref={bottomSheetRef}
         snapPoints={['92%']}
+        enableDynamicSizing={false}
         enablePanDownToClose
+        enableOverDrag={false}
         onDismiss={handleDismiss}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{ backgroundColor: 'rgba(255,255,255,0.25)', width: 36 }}
         backgroundStyle={{ backgroundColor: theme.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
-        keyboardBehavior="extend"
-        keyboardBlurBehavior="none"
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
       >
         {/* Search bar */}
@@ -309,7 +309,6 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
           />
         )}
       </BottomSheetModal>
-    </>
   )
 })
 

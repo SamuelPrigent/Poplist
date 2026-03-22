@@ -138,7 +138,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
           <Text style={styles.title}>Modifier la liste</Text>
 
           {/* Name field */}
-          <Text style={styles.label}>Nom</Text>
+          <Text style={styles.label}>Nom <Text style={{ color: '#ef4444' }}>*</Text></Text>
           <BottomSheetTextInput
             style={[styles.textInput, { backgroundColor: theme.input, borderColor: theme.border, color: colors.foreground }]}
             placeholder="Nom de la liste"
@@ -151,7 +151,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
 
           {/* Description field */}
           <Text style={[styles.label, { marginTop: spacing.lg }]}>
-            Description (optionnel)
+            Description
           </Text>
           <BottomSheetTextInput
             style={[

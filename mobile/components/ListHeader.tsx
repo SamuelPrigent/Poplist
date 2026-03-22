@@ -68,14 +68,30 @@ export default function ListHeader({
   const saveCount = watchlist.followersCount ?? 0;
   const saveLabel = saveCount === 1 ? 'sauvegarde' : 'sauvegardes';
 
-  // Mix dominant color with background at 40% strength for a dark-tinted solid color
-  const dominantColor = watchlist.dominantColor || '#1a1a2e';
-  const bg = { r: 0x12, g: 0x12, b: 0x12 }; // colors.background #121212
-  const mix = 0.55; // 55% dominant, 45% background
-  const r = parseInt(dominantColor.slice(1, 3), 16);
-  const g = parseInt(dominantColor.slice(3, 5), 16);
-  const b = parseInt(dominantColor.slice(5, 7), 16);
-  const tinted = `#${Math.round(r * mix + bg.r * (1 - mix)).toString(16).padStart(2, '0')}${Math.round(g * mix + bg.g * (1 - mix)).toString(16).padStart(2, '0')}${Math.round(b * mix + bg.b * (1 - mix)).toString(16).padStart(2, '0')}`;
+  // Use dominant color as-is, but darken if too bright
+  const raw = watchlist.dominantColor;
+  let tinted = '#1a1a2e';
+  if (raw) {
+    const r = parseInt(raw.slice(1, 3), 16);
+    const g = parseInt(raw.slice(3, 5), 16);
+    const b = parseInt(raw.slice(5, 7), 16);
+    // Perceived luminance
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    const MAX_LUM = 0.18;
+    if (lum > MAX_LUM) {
+      // Scale down RGB proportionally to hit target brightness
+      const scale = MAX_LUM / lum;
+      tinted = `#${Math.round(r * scale)
+        .toString(16)
+        .padStart(2, '0')}${Math.round(g * scale)
+        .toString(16)
+        .padStart(2, '0')}${Math.round(b * scale)
+        .toString(16)
+        .padStart(2, '0')}`;
+    } else {
+      tinted = raw;
+    }
+  }
 
   return (
     <View style={styles.container}>

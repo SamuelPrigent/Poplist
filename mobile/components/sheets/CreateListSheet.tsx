@@ -150,7 +150,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
         <Text style={styles.title}>Nouvelle liste</Text>
 
         {/* Name field */}
-        <Text style={styles.label}>Nom</Text>
+        <Text style={styles.label}>Nom <Text style={{ color: '#ef4444' }}>*</Text></Text>
         <BottomSheetTextInput
           style={[styles.textInput, { backgroundColor: theme.input, color: colors.foreground }]}
           placeholder="Nom de la liste"
@@ -159,12 +159,11 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
           onChangeText={setName}
           autoCapitalize="sentences"
           maxLength={100}
+          autoFocus
         />
 
         {/* Description field */}
-        <Text style={[styles.label, { marginTop: spacing.lg }]}>
-          Description (optionnel)
-        </Text>
+        <Text style={[styles.label, { marginTop: spacing.lg }]}>Description</Text>
         <BottomSheetTextInput
           style={[
             styles.textInput,

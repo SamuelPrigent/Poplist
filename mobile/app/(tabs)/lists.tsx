@@ -1,160 +1,179 @@
-import { View, Text, StyleSheet, ActivityIndicator, Pressable, Dimensions } from 'react-native'
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, withTiming, Easing, useAnimatedRef } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import Sortable from 'react-native-sortables'
-import * as Haptics from 'expo-haptics'
-import Toast from 'react-native-toast-message'
-import { mutate } from 'swr'
-import { useMyWatchlists } from '../../hooks/swr'
-import { watchlistAPI } from '../../lib/api-client'
-import { useLanguageStore } from '../../store/language'
-import { usePreferencesStore } from '../../store/preferences'
-import { useAuth } from '../../context/auth-context'
-import { colors, fontSize, spacing, borderRadius } from '../../constants/theme'
-import { useTheme } from '../../hooks/useTheme'
-import WatchlistCard from '../../components/WatchlistCard'
-import EmptyState from '../../components/EmptyState'
-import CreateListSheet, { type CreateListSheetRef } from '../../components/sheets/CreateListSheet'
-import DeleteListSheet, { type DeleteListSheetRef } from '../../components/sheets/DeleteListSheet'
-import { Plus } from 'lucide-react-native'
-import type { Watchlist } from '../../types'
+import { View, Text, StyleSheet, ActivityIndicator, Pressable, Dimensions } from 'react-native';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  useAnimatedRef,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import Sortable from 'react-native-sortables';
+import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
+import { mutate } from 'swr';
+import { useMyWatchlists } from '../../hooks/swr';
+import { watchlistAPI } from '../../lib/api-client';
+import { useLanguageStore } from '../../store/language';
+import { usePreferencesStore } from '../../store/preferences';
+import { useAuth } from '../../context/auth-context';
+import { colors, fontSize, spacing, borderRadius } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
+import WatchlistCard from '../../components/WatchlistCard';
+import EmptyState from '../../components/EmptyState';
+import CreateListSheet, { type CreateListSheetRef } from '../../components/sheets/CreateListSheet';
+import DeleteListSheet, { type DeleteListSheetRef } from '../../components/sheets/DeleteListSheet';
+import type { Watchlist } from '../../types';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 function getCardWidth(cols: number) {
-  return (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * (cols - 1)) / cols
+  if (cols === 1) return SCREEN_WIDTH - spacing.lg * 2;
+  return (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * (cols - 1)) / cols;
 }
 
-type FilterKey = 'mine' | 'saved'
+type FilterKey = 'mine' | 'saved';
 
 export default function ListsScreen() {
-  const { content } = useLanguageStore()
-  const { columns } = usePreferencesStore()
-  const { user } = useAuth()
-  const theme = useTheme()
-  const cardWidth = getCardWidth(columns)
-  const router = useRouter()
-  const { data, isLoading } = useMyWatchlists()
-  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set(['mine', 'saved']))
+  const { content } = useLanguageStore();
+  const { columns } = usePreferencesStore();
+  const { user } = useAuth();
+  const theme = useTheme();
+  const cardWidth = getCardWidth(columns);
+  const router = useRouter();
+  const { data, isLoading } = useMyWatchlists();
+  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set(['mine', 'saved']));
 
   // Local state for ordering (optimistic updates)
-  const [orderedWatchlists, setOrderedWatchlists] = useState<Watchlist[]>([])
+  const [orderedWatchlists, setOrderedWatchlists] = useState<Watchlist[]>([]);
 
   // Sync SWR data to local state
   useEffect(() => {
     if (data?.watchlists) {
-      setOrderedWatchlists(data.watchlists)
+      setOrderedWatchlists(data.watchlists);
     }
-  }, [data?.watchlists])
+  }, [data?.watchlists]);
 
   // ScrollView ref for auto-scroll during drag
-  const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
 
   // Scroll-based FAB animation
-  const lastScrollY = useSharedValue(0)
-  const buttonTranslateY = useSharedValue(0)
+  const lastScrollY = useSharedValue(0);
+  const buttonTranslateY = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      const y = event.contentOffset.y
-      const diff = y - lastScrollY.value
-      const timingConfig = { duration: 200, easing: Easing.out(Easing.quad) }
+    onScroll: event => {
+      const y = event.contentOffset.y;
+      const diff = y - lastScrollY.value;
+      const timingConfig = { duration: 200, easing: Easing.out(Easing.quad) };
       if (diff > 5 && y > 50) {
-        buttonTranslateY.value = withTiming(200, timingConfig)
+        buttonTranslateY.value = withTiming(200, timingConfig);
       } else if (diff < -5) {
-        buttonTranslateY.value = withTiming(0, timingConfig)
+        buttonTranslateY.value = withTiming(0, timingConfig);
       }
-      lastScrollY.value = y
+      lastScrollY.value = y;
     },
-  })
+  });
 
   const fabAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: buttonTranslateY.value }],
-  }))
+  }));
 
   // Sheet refs
-  const createListRef = useRef<CreateListSheetRef>(null)
-  const deleteListRef = useRef<DeleteListSheetRef>(null)
+  const createListRef = useRef<CreateListSheetRef>(null);
+  const deleteListRef = useRef<DeleteListSheetRef>(null);
 
   const handleCreateList = useCallback(() => {
-    createListRef.current?.present()
-  }, [])
+    createListRef.current?.present();
+  }, []);
 
   const handleDeleteList = useCallback((watchlist: Watchlist) => {
-    deleteListRef.current?.present({ id: watchlist.id, name: watchlist.name })
-  }, [])
+    deleteListRef.current?.present({ id: watchlist.id, name: watchlist.name });
+  }, []);
 
   const toggleFilter = (key: FilterKey) => {
-    setActiveFilters((prev) => {
-      const next = new Set(prev)
+    setActiveFilters(prev => {
+      const next = new Set(prev);
       if (next.has(key)) {
-        next.delete(key)
+        next.delete(key);
       } else {
-        next.add(key)
+        next.add(key);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const filteredWatchlists = useMemo(() => {
     return orderedWatchlists.filter((w: Watchlist) => {
-      const isOwner = w.isOwner === true || w.ownerId === user?.id
-      const isCollab = w.isCollaborator === true
-      const isSaved = w.isSaved === true && !isOwner && !isCollab
+      const isOwner = w.isOwner === true || w.ownerId === user?.id;
+      const isCollab = w.isCollaborator === true;
+      const isSaved = w.isSaved === true && !isOwner && !isCollab;
 
-      if (activeFilters.size === 0) return true
-      if (activeFilters.has('mine') && (isOwner || isCollab)) return true
-      if (activeFilters.has('saved') && isSaved) return true
-      return false
-    })
-  }, [orderedWatchlists, activeFilters, user?.id])
+      if (activeFilters.size === 0) return true;
+      if (activeFilters.has('mine') && (isOwner || isCollab)) return true;
+      if (activeFilters.has('saved') && isSaved) return true;
+      return false;
+    });
+  }, [orderedWatchlists, activeFilters, user?.id]);
 
   // Sorting only enabled when showing all items (no subset filtering)
-  const isSortEnabled = activeFilters.size === 0 || activeFilters.size === 2
+  const isSortEnabled = activeFilters.size === 0 || activeFilters.size === 2;
 
   const handleDragStart = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-  }, [])
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
 
   // Drag end handler with optimistic update
-  const handleDragEnd = useCallback(async ({ data: reorderedData }: { data: Watchlist[] }) => {
-    const previousOrder = orderedWatchlists
-    setOrderedWatchlists(reorderedData)
+  const handleDragEnd = useCallback(
+    async ({ data: reorderedData }: { data: Watchlist[] }) => {
+      const previousOrder = orderedWatchlists;
+      setOrderedWatchlists(reorderedData);
 
-    try {
-      await watchlistAPI.reorderWatchlists(reorderedData.map(w => w.id))
-      mutate('/watchlists/mine')
-    } catch {
-      setOrderedWatchlists(previousOrder)
-      Toast.show({ type: 'error', text1: 'Erreur lors du réordonnancement' })
-    }
-  }, [orderedWatchlists])
+      try {
+        await watchlistAPI.reorderWatchlists(reorderedData.map(w => w.id));
+        mutate('/watchlists/mine');
+      } catch {
+        setOrderedWatchlists(previousOrder);
+        Toast.show({ type: 'error', text1: 'Erreur lors du réordonnancement' });
+      }
+    },
+    [orderedWatchlists]
+  );
 
-  const renderItem = useCallback(({ item }: { item: Watchlist }) => (
-    <WatchlistCard
-      watchlist={item}
-      showOwner={false}
-      width={cardWidth}
-    />
-  ), [cardWidth])
+  const isListMode = columns === 1;
 
-  const keyExtractor = useCallback((item: Watchlist) => item.id, [])
+  const renderItem = useCallback(
+    ({ item }: { item: Watchlist }) => (
+      <WatchlistCard
+        watchlist={item}
+        showOwner={false}
+        width={cardWidth}
+        layout={isListMode ? 'list' : 'grid'}
+      />
+    ),
+    [cardWidth, isListMode]
+  );
+
+  const keyExtractor = useCallback((item: Watchlist) => item.id, []);
 
   const filters: { key: FilterKey; label: string }[] = [
     { key: 'mine', label: content.watchlists.myWatchlists },
     { key: 'saved', label: content.watchlists.followed },
-  ]
+  ];
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.background }]}
+        edges={['top']}
+      >
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   return (
@@ -165,9 +184,9 @@ export default function ListsScreen() {
       </View>
 
       {/* Filter chips (multi-select) */}
-      <View style={styles.filters}>
-        {filters.map((filter) => {
-          const isActive = activeFilters.has(filter.key)
+      <View style={[styles.filters, isListMode && styles.filtersCompact]}>
+        {filters.map(filter => {
+          const isActive = activeFilters.has(filter.key);
           return (
             <Pressable
               key={filter.key}
@@ -178,7 +197,7 @@ export default function ListsScreen() {
                 {filter.label}
               </Text>
             </Pressable>
-          )
+          );
         })}
       </View>
 
@@ -199,7 +218,7 @@ export default function ListsScreen() {
           <Sortable.Grid
             data={filteredWatchlists}
             renderItem={renderItem}
-            columns={columns}
+            columns={isListMode ? 1 : columns}
             keyExtractor={keyExtractor}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
@@ -207,10 +226,10 @@ export default function ListsScreen() {
             dragActivationDelay={600}
             hapticsEnabled={false}
             strategy="insert"
-            activeItemScale={1.05}
+            activeItemScale={isListMode ? 1.01 : 1.05}
             activeItemOpacity={0.9}
             inactiveItemOpacity={0.6}
-            rowGap={spacing.xl}
+            rowGap={isListMode ? 0 : spacing.xl}
             columnGap={spacing.sm}
             scrollableRef={scrollViewRef}
             autoScrollEnabled
@@ -220,11 +239,7 @@ export default function ListsScreen() {
 
       {/* Sticky bottom button */}
       <Animated.View style={[styles.createButton, fabAnimatedStyle]}>
-        <Pressable
-          style={styles.createButtonInner}
-          onPress={handleCreateList}
-        >
-          <Plus size={20} color="#000" />
+        <Pressable style={styles.createButtonInner} onPress={handleCreateList}>
           <Text style={styles.createButtonText}>Créer une liste</Text>
         </Pressable>
       </Animated.View>
@@ -233,7 +248,7 @@ export default function ListsScreen() {
       <CreateListSheet ref={createListRef} />
       <DeleteListSheet ref={deleteListRef} />
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -262,6 +277,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing['3xl'],
     gap: spacing.sm,
+  },
+  filtersCompact: {
+    paddingBottom: spacing.lg,
   },
   filterChip: {
     paddingHorizontal: spacing.md,
@@ -295,20 +313,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     alignSelf: 'center',
-    width: '70%',
   },
   createButtonInner: {
     height: 48,
     borderRadius: 999,
     backgroundColor: colors.primary,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    paddingHorizontal: 32,
   },
   createButtonText: {
     color: '#000',
     fontWeight: '700',
     fontSize: fontSize.base,
+    paddingInline: 4,
   },
-})
+});

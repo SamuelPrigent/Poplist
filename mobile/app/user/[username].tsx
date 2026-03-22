@@ -25,7 +25,9 @@ export default function UserProfileScreen() {
   const insets = useSafeAreaInsets()
   const { content } = useLanguageStore()
   const { columns } = usePreferencesStore()
-  const cardWidth = getCardWidth(columns)
+  const isListMode = columns === 1
+  const gridCols = isListMode ? 2 : columns
+  const cardWidth = getCardWidth(gridCols)
   const [profile, setProfile] = useState<UserProfilePublic | null>(null)
   const [watchlists, setWatchlists] = useState<Watchlist[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -70,36 +72,56 @@ export default function UserProfileScreen() {
     ? content.userProfile.publicWatchlist
     : content.userProfile.publicWatchlists
 
+  const headerComponent = (
+    <View style={styles.profileHeader}>
+      {profile.avatarUrl ? (
+        <Image
+          source={{ uri: profile.avatarUrl }}
+          style={styles.avatar}
+          contentFit="cover"
+          recyclingKey={`profile-${profile.username}`}
+          transition={0}
+        />
+      ) : (
+        <View style={styles.avatarPlaceholder}>
+          <UserIcon size={40} color={colors.mutedForeground} />
+        </View>
+      )}
+      <Text style={styles.profileName}>{profile.username}</Text>
+      <Text style={styles.profileMeta}>
+        {watchlists.length} {listLabel}
+      </Text>
+    </View>
+  )
+
+  if (isListMode) {
+    return (
+      <FlatList
+        style={[styles.container, { backgroundColor: theme.background }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 32 }]}
+        data={watchlists}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={headerComponent}
+        renderItem={({ item }) => (
+          <WatchlistCard watchlist={item} showOwner={false} layout="list" />
+        )}
+        ListEmptyComponent={
+          <EmptyState title={content.userProfile.noPublicWatchlists} />
+        }
+      />
+    )
+  }
+
   return (
     <FlatList
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 32 }]}
       data={watchlists}
       keyExtractor={(item) => item.id}
-      key={columns}
-      numColumns={columns}
+      key={gridCols}
+      numColumns={gridCols}
       columnWrapperStyle={styles.row}
-      ListHeaderComponent={
-        <View style={styles.profileHeader}>
-          {profile.avatarUrl ? (
-            <Image
-              source={{ uri: profile.avatarUrl }}
-              style={styles.avatar}
-              contentFit="cover"
-              recyclingKey={`profile-${profile.username}`}
-              transition={0}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <UserIcon size={40} color={colors.mutedForeground} />
-            </View>
-          )}
-          <Text style={styles.profileName}>{profile.username}</Text>
-          <Text style={styles.profileMeta}>
-            {watchlists.length} {listLabel}
-          </Text>
-        </View>
-      }
+      ListHeaderComponent={headerComponent}
       renderItem={({ item }) => (
         <WatchlistCard watchlist={item} showOwner={false} width={cardWidth} />
       )}

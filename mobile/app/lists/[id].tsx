@@ -4,7 +4,6 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { useEffect, useState, useLayoutEffect, useCallback, useRef } from 'react'
 import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation, withTiming, Easing, useAnimatedRef } from 'react-native-reanimated'
 import * as ImagePicker from 'expo-image-picker'
-import { Plus } from 'lucide-react-native'
 import Toast from 'react-native-toast-message'
 import Sortable from 'react-native-sortables'
 import * as Haptics from 'expo-haptics'
@@ -421,7 +420,6 @@ export default function ListDetailScreen() {
       {canEdit && (
         <Animated.View style={[styles.bottomButtonWrapper, { bottom: insets.bottom + 16 }, animatedButtonStyle]}>
           <Pressable style={styles.bottomButton} onPress={handleAddElement}>
-            <Plus size={20} color="#000" />
             <Text style={styles.bottomButtonText}>Ajouter un élément</Text>
           </Pressable>
         </Animated.View>
@@ -530,15 +528,12 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   bottomButton: {
-    width: '70%',
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
     backgroundColor: colors.primary,
     borderRadius: 999,
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
   bottomButtonText: {
     color: '#000',
