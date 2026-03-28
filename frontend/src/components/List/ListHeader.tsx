@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Copy, Film, Pencil, Share2, User } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Film, Pencil, Share2, User } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -24,7 +24,7 @@ interface ListHeaderProps {
 }
 
 export const LIST_HEADER_BUTTON_CLASS =
-  'group relative flex h-[80%] items-center justify-center rounded-lg p-3 transition-all cursor-pointer  hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white';
+  'group relative flex h-[80%] items-center justify-center rounded-lg border border-transparent p-1.5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white';
 
 export const LIST_HEADER_ICON_CLASS = 'h-6 w-6 transition-all opacity-60 group-hover:opacity-100';
 
@@ -45,6 +45,7 @@ export function ListHeader({
   const router = useRouter();
   const { content } = useLanguageStore();
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
+  const [showShareConfirm, setShowShareConfirm] = useState(false);
 
   const itemCount = watchlist.items.length;
   const ownerUsername = watchlist.owner?.username || watchlist.owner?.email || null;
@@ -283,7 +284,7 @@ export function ListHeader({
             >
               {/* Left: Icon Buttons */}
               {hasLeftButtons && (
-                <div className="flex min-h-[50px] items-center justify-center gap-1">
+                <div className="flex min-h-[50px] items-center justify-center gap-[12px]">
                   {showSaveButton && onSave && (
                     <button
                       type="button"
@@ -350,11 +351,21 @@ export function ListHeader({
                   {onShare && (
                     <button
                       type="button"
-                      onClick={onShare}
-                      className={LIST_HEADER_BUTTON_CLASS}
+                      onClick={() => {
+                        setShowShareConfirm(true);
+                        onShare();
+                        setTimeout(() => setShowShareConfirm(false), 1500);
+                      }}
+                      className={`${LIST_HEADER_BUTTON_CLASS}`}
                       title={content.watchlists.tooltips.share}
                     >
-                      <Share2 className={`${LIST_HEADER_ICON_CLASS} text-white`} />
+                      {showShareConfirm ? (
+                        <div className="h-6 w-6 justify-center items-center flex">
+                          <Check strokeWidth={2} className="h-[24px] w-[24px] text-green-500" />
+                        </div>
+                      ) : (
+                        <Share2 className={`${LIST_HEADER_ICON_CLASS} text-white`} />
+                      )}
                     </button>
                   )}
                   {menuButton && menuButton}
