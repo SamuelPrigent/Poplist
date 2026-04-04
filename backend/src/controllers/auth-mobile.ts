@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+import bcrypt from 'bcryptjs'
 import prisma from '../lib/prisma.js'
 import {
   signAccessToken,
@@ -10,7 +11,7 @@ import {
 } from '../services/jwt.js'
 import { exchangeGoogleCodeMobile } from '../services/google-oauth.js'
 import { generateUniqueUsername } from '../services/username.js'
-import { googleMobileSchema, refreshMobileSchema } from '../validators/auth.js'
+import { googleMobileSchema, refreshMobileSchema, loginSchema, signupSchema } from '../validators/auth.js'
 import type { AppEnv } from '../app.js'
 
 type C = Context<AppEnv>
@@ -174,4 +175,93 @@ export const logoutMobile = async (c: C) => {
   } catch {
     return c.json({ message: 'Logged out' })
   }
+}
+
+export const loginMobile = async (c: C) => {
+  const body = await c.req.json()
+  const parsed = loginSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
+  }
+  const { email, password } = parsed.data
+
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user || !user.passwordHash) {
+    return c.json({ error: 'Invalid credentials' }, 401)
+  }
+
+  const isValid = await bcrypt.compare(password, user.passwordHash)
+  if (!isValid) {
+    return c.json({ error: 'Invalid credentials' }, 401)
+  }
+
+  if (!user.username) {
+    const username = await generateUniqueUsername()
+    await prisma.user.update({ where: { id: user.id }, data: { username } })
+    user.username = username
+  }
+
+  const tokenId = generateTokenId()
+  const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+  const refreshToken = signRefreshToken({ sub: user.id, tokenId })
+
+  await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
+
+  return c.json({
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      language: user.language || 'fr',
+      avatarUrl: user.avatarUrl,
+      roles: user.roles,
+      hasPassword: !!user.passwordHash,
+    },
+  })
+}
+
+export const signupMobile = async (c: C) => {
+  const body = await c.req.json()
+  const parsed = signupSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
+  }
+  const { email, password } = parsed.data
+
+  const existingUser = await prisma.user.findUnique({ where: { email } })
+  if (existingUser) {
+    return c.json({ error: 'User already exists' }, 409)
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10)
+  const username = await generateUniqueUsername()
+
+  const user = await prisma.user.create({
+    data: { email, username, passwordHash, roles: ['user'], language: 'fr' },
+  })
+
+  const tokenId = generateTokenId()
+  const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+  const refreshToken = signRefreshToken({ sub: user.id, tokenId })
+
+  await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
+
+  return c.json(
+    {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        language: user.language || 'fr',
+        avatarUrl: user.avatarUrl,
+        roles: user.roles,
+        hasPassword: !!user.passwordHash,
+      },
+    },
+    201
+  )
 }

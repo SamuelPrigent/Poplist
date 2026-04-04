@@ -116,14 +116,14 @@ export const authAPI = {
       body: { code, redirectUri },
     }),
 
-  login: (email: string, password: string): Promise<{ user: User }> =>
-    request('/auth/login', {
+  login: (email: string, password: string): Promise<{ accessToken: string; refreshToken: string; user: User }> =>
+    request('/auth/mobile/login', {
       method: 'POST',
       body: { email, password },
     }),
 
-  signup: (email: string, password: string): Promise<{ user: User }> =>
-    request('/auth/signup', {
+  signup: (email: string, password: string): Promise<{ accessToken: string; refreshToken: string; user: User }> =>
+    request('/auth/mobile/signup', {
       method: 'POST',
       body: { email, password },
     }),

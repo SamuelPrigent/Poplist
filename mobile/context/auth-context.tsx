@@ -18,6 +18,8 @@ export interface AuthContextValue {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
+  login: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string) => Promise<void>
   loginWithGoogle: (code: string, redirectUri: string) => Promise<void>
   loginWithTokens: (accessToken: string, refreshToken: string) => Promise<void>
   logout: () => Promise<void>
@@ -110,6 +112,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthErrorHandler(handleAutoLogout)
   }, [fetchUser, handleAutoLogout])
 
+  const login = async (email: string, password: string) => {
+    const response = await authAPI.login(email, password)
+    await saveTokens(response.accessToken, response.refreshToken)
+    setUser(response.user)
+    await setStoredUser(response.user)
+  }
+
+  const signup = async (email: string, password: string) => {
+    const response = await authAPI.signup(email, password)
+    await saveTokens(response.accessToken, response.refreshToken)
+    setUser(response.user)
+    await setStoredUser(response.user)
+  }
+
   const loginWithGoogle = async (code: string, redirectUri: string) => {
     const response = await authAPI.loginWithGoogle(code, redirectUri)
     await saveTokens(response.accessToken, response.refreshToken)
@@ -153,6 +169,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     isAuthenticated: !!user,
+    login,
+    signup,
     loginWithGoogle,
     loginWithTokens,
     logout,
