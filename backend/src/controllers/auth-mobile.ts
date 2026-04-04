@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import prisma from '../lib/prisma.js'
 import {
   signAccessToken,
