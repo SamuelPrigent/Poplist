@@ -46,6 +46,8 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
     const insets = useSafeAreaInsets()
     const { content } = useLanguageStore()
     const bottomSheetRef = useRef<BottomSheetModal>(null)
+    const nameRef = useRef<any>(null)
+    const descRef = useRef<any>(null)
 
     const [targetId, setTargetId] = useState<string | null>(null)
     const [name, setName] = useState('')
@@ -63,6 +65,11 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
         setGenreCategories((watchlist.genres ?? []) as GenreCategory[])
         setIsSubmitting(false)
         bottomSheetRef.current?.present()
+        // Pre-fill inputs after sheet opens
+        setTimeout(() => {
+          nameRef.current?.setNativeProps({ text: watchlist.name })
+          descRef.current?.setNativeProps({ text: watchlist.description ?? '' })
+        }, 50)
       },
       dismiss: () => bottomSheetRef.current?.dismiss(),
     }))
@@ -140,10 +147,10 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
           {/* Name field */}
           <Text style={styles.label}>Nom <Text style={{ color: '#ef4444' }}>*</Text></Text>
           <BottomSheetTextInput
+            ref={nameRef}
             style={[styles.textInput, { backgroundColor: theme.input, borderColor: theme.border, color: colors.foreground }]}
             placeholder="Nom de la liste"
             placeholderTextColor={colors.mutedForeground}
-            value={name}
             onChangeText={setName}
             autoCapitalize="sentences"
             maxLength={100}
@@ -154,6 +161,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
             Description
           </Text>
           <BottomSheetTextInput
+            ref={descRef}
             style={[
               styles.textInput,
               styles.textArea,
@@ -161,7 +169,6 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
             ]}
             placeholder="Décrivez votre liste..."
             placeholderTextColor={colors.mutedForeground}
-            value={description}
             onChangeText={setDescription}
             multiline
             numberOfLines={3}

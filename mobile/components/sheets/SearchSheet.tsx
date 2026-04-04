@@ -130,6 +130,7 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
   const handleClear = useCallback(() => {
     setQuery('')
     setResults([])
+    inputRef.current?.clear()
   }, [])
 
   const handleToggleItem = useCallback(async (item: TMDBResult) => {
@@ -264,7 +265,6 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
               style={styles.searchInput}
               placeholder={content.watchlists.searchPlaceholder}
               placeholderTextColor={colors.mutedForeground}
-              value={query}
               onChangeText={handleSearch}
               autoCapitalize="none"
               autoCorrect={false}
@@ -299,6 +299,7 @@ const SearchSheet = forwardRef<SearchSheetRef, SearchSheetProps>(function Search
             contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom + spacing.lg, spacing['4xl']) }]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             ListEmptyComponent={
               !isSearching ? (
                 <View style={styles.emptyContainer}>

@@ -36,6 +36,8 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
   const insets = useSafeAreaInsets()
   const { content } = useLanguageStore()
   const bottomSheetRef = useRef<BottomSheetModal>(null)
+  const nameRef = useRef<any>(null)
+  const descRef = useRef<any>(null)
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -51,6 +53,8 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
       setIsPublic(false)
       setGenreCategories([])
       setIsSubmitting(false)
+      nameRef.current?.clear()
+      descRef.current?.clear()
       bottomSheetRef.current?.present()
     },
     dismiss: () => bottomSheetRef.current?.dismiss(),
@@ -152,10 +156,10 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
         {/* Name field */}
         <Text style={styles.label}>Nom <Text style={{ color: '#ef4444' }}>*</Text></Text>
         <BottomSheetTextInput
+          ref={nameRef}
           style={[styles.textInput, { backgroundColor: theme.input, color: colors.foreground }]}
           placeholder="Nom de la liste"
           placeholderTextColor={colors.mutedForeground}
-          value={name}
           onChangeText={setName}
           autoCapitalize="sentences"
           maxLength={100}
@@ -165,6 +169,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
         {/* Description field */}
         <Text style={[styles.label, { marginTop: spacing.lg }]}>Description</Text>
         <BottomSheetTextInput
+          ref={descRef}
           style={[
             styles.textInput,
             styles.textArea,
@@ -172,7 +177,6 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
           ]}
           placeholder="Décrivez votre liste..."
           placeholderTextColor={colors.mutedForeground}
-          value={description}
           onChangeText={setDescription}
           multiline
           numberOfLines={3}

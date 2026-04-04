@@ -1,13 +1,13 @@
 import { View, FlatList, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { watchlistAPI } from '../../lib/api-client';
-import { useLanguageStore } from '../../store/language';
-import { colors, spacing } from '../../constants/theme';
-import { useTheme } from '../../hooks/useTheme';
-import UserBubble from '../../components/UserBubble';
-import EmptyState from '../../components/EmptyState';
-import type { Watchlist } from '../../types';
+import { watchlistAPI } from '../../../../lib/api-client';
+import { useLanguageStore } from '../../../../store/language';
+import { colors, spacing } from '../../../../constants/theme';
+import { useTheme } from '../../../../hooks/useTheme';
+import UserBubble from '../../../../components/UserBubble';
+import EmptyState from '../../../../components/EmptyState';
+import type { Watchlist } from '../../../../types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 2;
@@ -79,7 +79,7 @@ export default function AllCreatorsScreen() {
           <UserBubble
             user={{ username: item.username, avatarUrl: item.avatarUrl }}
             listCount={item.listCount}
-            onPress={() => router.push(`/user/${item.username}`)}
+            onPress={() => router.push(`/home/user/${item.username}`)}
           />
         </View>
       )}

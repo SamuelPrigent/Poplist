@@ -94,59 +94,6 @@ export default function RootLayout() {
                   headerShadowVisible: false,
                 }}
               />
-              <Stack.Screen
-                name="categories/index"
-                options={{
-                  animation: 'slide_from_right',
-                  animationDuration: 120,
-                  headerShown: true,
-                  headerTitle: 'Catégories',
-                  headerBackTitle: 'Retour',
-                }}
-              />
-              <Stack.Screen
-                name="categories/[id]"
-                options={{
-                  animation: 'slide_from_right',
-                  animationDuration: 120,
-                  headerShown: true,
-                  headerTitle: '',
-                  headerBackTitle: 'Retour',
-                }}
-              />
-              <Stack.Screen
-                name="user/[username]"
-                options={{
-                  animation: 'slide_from_right',
-                  animationDuration: 120,
-                  headerShown: true,
-                  headerTitle: '',
-                  headerBackTitle: 'Retour',
-                  headerTransparent: true,
-                  headerStyle: { backgroundColor: 'transparent' },
-                  headerShadowVisible: false,
-                }}
-              />
-              <Stack.Screen
-                name="users/index"
-                options={{
-                  animation: 'slide_from_right',
-                  animationDuration: 120,
-                  headerShown: true,
-                  headerTitle: 'Créateurs',
-                  headerBackTitle: 'Retour',
-                }}
-              />
-              <Stack.Screen
-                name="popular/index"
-                options={{
-                  animation: 'slide_from_right',
-                  animationDuration: 120,
-                  headerShown: true,
-                  headerTitle: 'Listes communautaires',
-                  headerBackTitle: 'Retour',
-                }}
-              />
             </Stack>
             <Toast config={toastConfig} position="top" topOffset={60} />
           </BottomSheetModalProvider>

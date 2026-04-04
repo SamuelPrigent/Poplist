@@ -1,10 +1,10 @@
 import { View, FlatList, StyleSheet, Dimensions } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useLanguageStore } from '../../store/language'
-import { GENRE_CATEGORIES } from '../../types/categories'
-import { colors, spacing } from '../../constants/theme'
-import { useTheme } from '../../hooks/useTheme'
-import GenreCard from '../../components/GenreCard'
+import { useLanguageStore } from '../../../../store/language'
+import { GENRE_CATEGORIES } from '../../../../types/categories'
+import { colors, spacing } from '../../../../constants/theme'
+import { useTheme } from '../../../../hooks/useTheme'
+import GenreCard from '../../../../components/GenreCard'
 
 const screenWidth = Dimensions.get('window').width
 const cardWidth = (screenWidth - spacing.lg * 2 - spacing.md) / 2
@@ -30,7 +30,7 @@ export default function CategoriesScreen() {
             <GenreCard
               categoryId={categoryId}
               name={cat.name}
-              onPress={() => router.push(`/categories/${categoryId}`)}
+              onPress={() => router.push(`/home/categories/${categoryId}`)}
             />
           </View>
         )

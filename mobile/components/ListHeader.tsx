@@ -135,7 +135,7 @@ export default function ListHeader({
         {watchlist.owner?.username && (
           <Pressable
             style={styles.ownerInline}
-            onPress={() => router.push(`/user/${watchlist.owner?.username}`)}
+            onPress={() => router.push(`/home/user/${watchlist.owner?.username}`)}
           >
             {watchlist.owner.avatarUrl ? (
               <Image
