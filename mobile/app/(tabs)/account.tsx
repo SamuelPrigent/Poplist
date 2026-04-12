@@ -302,7 +302,7 @@ export default function AccountScreen() {
           {/* Affichage des listes */}
           <Text style={styles.sectionTitle}>Affichage des listes</Text>
           <View style={styles.columnsRow}>
-            {([1, 3] as const).map(col => {
+            {([3, 1] as const).map(col => {
               const isActive = columns === col;
               return (
                 <Pressable
@@ -370,7 +370,7 @@ export default function AccountScreen() {
                     <PhoneMockup cols={col} isActive={isActive} theme={theme} />
                   )}
                   <Text style={[styles.columnLabel, isActive && styles.columnLabelActive]}>
-                    {col === 1 ? 'Liste' : `x${col}`}
+                    {col === 1 ? 'Liste' : 'Colonne'}
                   </Text>
                 </Pressable>
               );
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   },
   pageContent: {
     padding: spacing.lg,
-    paddingBottom: spacing['4xl'],
+    paddingBottom: 100,
   },
   // Header
   headerRow: {

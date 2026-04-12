@@ -9,7 +9,9 @@ import Animated, {
   useAnimatedRef,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { User as UserIcon } from 'lucide-react-native';
 import Sortable from 'react-native-sortables';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
@@ -180,6 +182,18 @@ export default function ListsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
+        <View style={styles.avatarButton}>
+          {user?.avatarUrl ? (
+            <Image
+              source={{ uri: user.avatarUrl }}
+              style={styles.avatarImage}
+              contentFit="cover"
+              transition={0}
+            />
+          ) : (
+            <UserIcon size={16} color={colors.mutedForeground} />
+          )}
+        </View>
         <Text style={styles.title}>{content.watchlists.myWatchlists}</Text>
       </View>
 
@@ -262,9 +276,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: 2,
+  },
+  avatarButton: {
+    width: 33,
+    height: 33,
+    borderRadius: 17,
+    backgroundColor: colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 33,
+    height: 33,
+    borderRadius: 17,
   },
   title: {
     fontSize: fontSize['2xl'],
@@ -311,7 +342,7 @@ const styles = StyleSheet.create({
   },
   createButton: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 110,
     alignSelf: 'center',
   },
   createButtonInner: {

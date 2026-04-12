@@ -15,9 +15,11 @@ import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
 import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
+import { toast } from 'sonner';
 import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
+import { getTMDBImageUrl } from '@/lib/utils';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
-// import { MoviePoster } from '@/components/Home/MoviePoster';
+import { MoviePoster } from '@/components/Home/MoviePoster';
 import {
   getTMDBLanguage,
   // getTMDBRegion
@@ -57,9 +59,8 @@ interface FeaturedCategory {
 
 function HomeContentInner() {
   const { content, language } = useLanguageStore();
-  const { user } = useAuth();
-  //   const tmdbLanguage = getTMDBLanguage(language);
-  //   const tmdbRegion = getTMDBRegion(language);
+  const { user, isAuthenticated } = useAuth();
+  const tmdbLanguage = getTMDBLanguage(language);
 
   const [mounted, setMounted] = useState(false);
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
@@ -67,6 +68,13 @@ function HomeContentInner() {
   const [recommendations, setRecommendations] = useState<DiscoverItem[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [creators, setCreators] = useState<Creator[]>([]);
+  const [trending, setTrending] = useState<DiscoverItem[]>([]);
+  const [selectedTrendingItem, setSelectedTrendingItem] = useState<{
+    tmdbId: string;
+    type: 'movie' | 'tv';
+  } | null>(null);
+  const [selectedTrendingIndex, setSelectedTrendingIndex] = useState<number>(-1);
+  const [trendingModalOpen, setTrendingModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -234,6 +242,19 @@ function HomeContentInner() {
           })
         );
         setCategoryCounts(counts);
+
+        // Fetch trending
+        try {
+          const trendingData = await tmdbAPI.getTrending('day');
+          setTrending(
+            (trendingData.results || [])
+              .filter((r: DiscoverItem) => r.poster_path)
+              .slice(0, 5)
+              .map((r: DiscoverItem) => ({ ...r, media_type: r.media_type || 'movie' }))
+          );
+        } catch {
+          // Non-blocking
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -243,6 +264,29 @@ function HomeContentInner() {
 
     fetchData();
   }, [user, fetchPublicWatchlists, fetchCreators, language]);
+
+  const handleOpenTrending = (item: DiscoverItem, index: number) => {
+    setSelectedTrendingItem({
+      tmdbId: item.id.toString(),
+      type: item.media_type || 'movie',
+    });
+    setSelectedTrendingIndex(index);
+    setTrendingModalOpen(true);
+  };
+
+  const handleAddTrendingToWatchlist = async (watchlistId: string, item: DiscoverItem) => {
+    try {
+      const itemType: 'movie' | 'tv' = item.title ? 'movie' : 'tv';
+      await watchlistAPI.addItem(watchlistId, {
+        tmdbId: item.id.toString(),
+        mediaType: itemType,
+        language: tmdbLanguage,
+      });
+      toast.success('Ajouté à la liste');
+    } catch {
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
 
   const handleOpenDetails = (item: DiscoverItem, index: number) => {
     setSelectedItem({
@@ -510,6 +554,41 @@ function HomeContentInner() {
         ) : null}
       </Section>
 
+      {/* Trending Section */}
+      {!loading && trending.length > 0 && (
+        <Section>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-white">{content.home.trending.title}</h2>
+              <p className="text-muted-foreground mt-1 text-sm">{content.home.trending.subtitle}</p>
+            </div>
+            <Link
+              href="/explore"
+              className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
+            >
+              {content.home.creators.seeMore}
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {trending.map((item, index) => (
+              <MoviePoster
+                key={item.id}
+                id={item.id}
+                title={item.title}
+                name={item.name}
+                posterPath={item.poster_path}
+                voteAverage={item.vote_average}
+                onClick={() => handleOpenTrending(item, index)}
+                watchlists={isAuthenticated ? userWatchlists : []}
+                onAddToWatchlist={(watchlistId) => handleAddTrendingToWatchlist(watchlistId, item)}
+                addToWatchlistLabel={content.watchlists.addToWatchlist}
+                noWatchlistLabel={content.watchlists.noWatchlist}
+              />
+            ))}
+          </div>
+        </Section>
+      )}
+
       {/* Item Details Modal */}
       {selectedItem && (
         <ItemDetailsModal
@@ -525,6 +604,30 @@ function HomeContentInner() {
           type={selectedItem.type}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < safeRecommendations.length - 1 ? handleNavigateNext : undefined}
+        />
+      )}
+
+      {/* Trending Details Modal */}
+      {selectedTrendingItem && (
+        <ItemDetailsModal
+          open={trendingModalOpen}
+          onOpenChange={open => {
+            setTrendingModalOpen(open);
+            if (!open) {
+              setSelectedTrendingItem(null);
+              setSelectedTrendingIndex(-1);
+            }
+          }}
+          tmdbId={selectedTrendingItem.tmdbId}
+          type={selectedTrendingItem.type}
+          onPrevious={selectedTrendingIndex > 0 ? () => {
+            const prev = trending[selectedTrendingIndex - 1];
+            handleOpenTrending(prev, selectedTrendingIndex - 1);
+          } : undefined}
+          onNext={selectedTrendingIndex < trending.length - 1 ? () => {
+            const next = trending[selectedTrendingIndex + 1];
+            handleOpenTrending(next, selectedTrendingIndex + 1);
+          } : undefined}
         />
       )}
     </div>

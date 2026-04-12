@@ -23,8 +23,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          backgroundColor: theme.background,
-          borderTopColor: theme.border,
+          backgroundColor: 'rgba(10, 10, 10, 0.72)',
+          borderTopWidth: 0,
+          position: 'absolute',
         },
         headerStyle: {
           backgroundColor: theme.background,

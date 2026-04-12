@@ -10,10 +10,11 @@ import {
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
+import { useAuth } from '../../context/auth-context'
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet'
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import WheelPicker from '@quidone/react-native-wheel-picker'
-import { ChevronDown, X, Check } from 'lucide-react-native'
+import { ChevronDown, X, Check, User as UserIcon } from 'lucide-react-native'
 import { tmdbAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
 import { usePreferencesStore } from '../../store/preferences'
@@ -82,6 +83,7 @@ interface DiscoverResult {
 export default function ExploreScreen() {
   const { content, language } = useLanguageStore()
   const { exploreColumns } = usePreferencesStore()
+  const { user } = useAuth()
   const theme = useTheme()
 
   const posterGap = spacing.sm
@@ -319,6 +321,13 @@ export default function ExploreScreen() {
       <View style={[styles.filtersContainer, { borderBottomColor: theme.border }]}>
         {/* Title */}
         <View style={styles.titleRow}>
+          <View style={styles.avatarButton}>
+            {user?.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} contentFit="cover" transition={0} />
+            ) : (
+              <UserIcon size={16} color={colors.mutedForeground} />
+            )}
+          </View>
           <Text style={styles.pageTitle}>{content.explore.title}</Text>
         </View>
 
@@ -571,9 +580,26 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
+  },
+  avatarButton: {
+    width: 33,
+    height: 33,
+    borderRadius: 17,
+    backgroundColor: colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 33,
+    height: 33,
+    borderRadius: 17,
   },
   pageTitle: {
     fontSize: fontSize['2xl'],
@@ -737,6 +763,7 @@ const styles = StyleSheet.create({
   gridContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    paddingBottom: 80,
   },
   posterPlaceholder: {
     justifyContent: 'center',

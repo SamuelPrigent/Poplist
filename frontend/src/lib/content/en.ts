@@ -370,7 +370,8 @@ export const en: Content = {
       },
     },
     trending: {
-      title: 'Trending Today',
+      title: 'Trending',
+      subtitle: 'Popular movies and series right now',
       noImage: 'No Image',
     },
     recommendations: {

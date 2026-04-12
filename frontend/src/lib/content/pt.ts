@@ -372,6 +372,7 @@ export const pt: Content = {
     },
     trending: {
       title: 'Tendências de hoje',
+      subtitle: 'Filmes e séries do momento',
       noImage: 'Sem imagem',
     },
     recommendations: {

@@ -2,6 +2,7 @@ import {
   View,
   Text,
   ScrollView,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
   Dimensions,
@@ -11,8 +12,11 @@ import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { User } from 'lucide-react-native';
-import { watchlistAPI } from '../../../lib/api-client';
+import { watchlistAPI, tmdbAPI } from '../../../lib/api-client';
+import { getTMDBImageUrl } from '../../../lib/utils';
 import { useLanguageStore } from '../../../store/language';
+import ItemDetailSheet from '../../../components/ItemDetailSheet';
+import type { WatchlistItem } from '../../../types';
 import { usePreferencesStore } from '../../../store/preferences';
 import { useAuth } from '../../../context/auth-context';
 import { colors, fontSize, spacing } from '../../../constants/theme';
@@ -28,6 +32,15 @@ import HorizontalList from '../../../components/HorizontalList';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GENRE_ITEM_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 3.2;
 const CREATOR_CARD_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 2;
+const TRENDING_3COL_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 2) / 3;
+
+interface TrendingItem {
+  id: number;
+  media_type: 'movie' | 'tv';
+  title?: string;
+  name?: string;
+  poster_path?: string;
+}
 
 function getCardWidth(cols: number) {
   if (cols === 1) return SCREEN_WIDTH - spacing.lg * 2;
@@ -44,6 +57,8 @@ export default function HomeScreen() {
   const gridCols = isListMode ? 1 : columns;
   const cardWidth = getCardWidth(isListMode ? 2 : columns);
   const [popularWatchlists, setPopularWatchlists] = useState<Watchlist[]>([]);
+  const [trending, setTrending] = useState<TrendingItem[]>([]);
+  const [selectedTrendingIndex, setSelectedTrendingIndex] = useState<number | null>(null);
   const [creators, setCreators] = useState<
     { username: string; avatarUrl?: string; listCount: number }[]
   >([]);
@@ -55,9 +70,10 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     try {
-      const [popularRes, creatorsRes] = await Promise.all([
+      const [popularRes, creatorsRes, trendingRes] = await Promise.all([
         watchlistAPI.getPublicWatchlists(9),
         watchlistAPI.getPublicWatchlists(500),
+        tmdbAPI.getTrending('day'),
       ]);
 
       setPopularWatchlists(popularRes.watchlists);
@@ -84,6 +100,7 @@ export default function HomeScreen() {
         .sort((a, b) => b.listCount - a.listCount)
         .slice(0, 6);
       setCreators(sortedCreators);
+      setTrending(trendingRes.results.filter((r: TrendingItem) => r.poster_path).slice(0, 6));
     } catch (error) {
       console.error('Failed to load home data:', error);
     } finally {
@@ -92,6 +109,15 @@ export default function HomeScreen() {
   };
 
   const categories = GENRE_CATEGORIES.map(id => getCategoryInfo(id, content));
+
+  const trendingSheetItems: WatchlistItem[] = trending.map(t => ({
+    tmdbId: t.id,
+    title: t.title || t.name || '',
+    posterPath: t.poster_path || null,
+    mediaType: t.media_type,
+    platformList: [],
+    addedAt: new Date().toISOString(),
+  }));
 
   if (isLoading) {
     return (
@@ -196,9 +222,49 @@ export default function HomeScreen() {
           ) : null}
         </View>
 
+        {/* Trending */}
+        {trending.length > 0 && (
+          <View style={styles.section}>
+            <SectionHeader
+              title={content.home.trending.title}
+              onSeeAll={() => router.push('/(tabs)/explore')}
+            />
+            <View style={styles.trending3ColGrid}>
+              {trending.slice(0, 6).map((item, index) => {
+                const posterUrl = getTMDBImageUrl(item.poster_path, 'w342');
+                return (
+                  <Pressable key={item.id} style={{ width: TRENDING_3COL_WIDTH }} onPress={() => setSelectedTrendingIndex(index)}>
+                    {posterUrl && (
+                      <Image
+                        source={{ uri: posterUrl }}
+                        style={[styles.trending3ColPoster, { backgroundColor: theme.secondary }]}
+                        contentFit="cover"
+                        transition={0}
+                      />
+                    )}
+                    <Text style={styles.trendingTitle} numberOfLines={1}>
+                      {item.title || item.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {/* Bottom spacing */}
         <View style={{ height: spacing['3xl'] }} />
       </ScrollView>
+
+      {/* Trending detail sheet */}
+      <ItemDetailSheet
+        item={selectedTrendingIndex !== null ? trendingSheetItems[selectedTrendingIndex] : null}
+        visible={selectedTrendingIndex !== null}
+        onClose={() => setSelectedTrendingIndex(null)}
+        items={trendingSheetItems}
+        currentIndex={selectedTrendingIndex ?? 0}
+        onNavigate={setSelectedTrendingIndex}
+      />
     </SafeAreaView>
   );
 }
@@ -212,7 +278,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing['2xl'],
+    paddingBottom: 80,
   },
   loading: {
     flex: 1,
@@ -234,18 +300,18 @@ const styles = StyleSheet.create({
     color: colors.foreground,
   },
   avatarButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 33,
+    height: 33,
+    borderRadius: 17,
     backgroundColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   avatarImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 33,
+    height: 33,
+    borderRadius: 17,
   },
   sectionFirst: {
     paddingHorizontal: spacing.lg,
@@ -284,5 +350,21 @@ const styles = StyleSheet.create({
   },
   creatorCard: {
     width: CREATOR_CARD_WIDTH,
+  },
+  trending3ColGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  trending3ColPoster: {
+    width: '100%',
+    aspectRatio: 2 / 3,
+    borderRadius: 8,
+  },
+  trendingTitle: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginTop: spacing.xs,
   },
 });

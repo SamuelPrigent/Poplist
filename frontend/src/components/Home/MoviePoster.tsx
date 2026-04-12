@@ -1,8 +1,10 @@
 "use client";
 
-import { Eye, Film, Star } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Eye, Film, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import type { Watchlist } from "@/lib/api-client";
 
 interface MoviePosterProps {
    id: number;
@@ -13,23 +15,39 @@ interface MoviePosterProps {
    releaseDate?: string;
    overview?: string;
    onClick?: () => void;
+   watchlists?: Watchlist[];
+   onAddToWatchlist?: (watchlistId: string) => void;
+   addToWatchlistLabel?: string;
+   noWatchlistLabel?: string;
 }
 
-export function MoviePoster({ title, name, posterPath, voteAverage, onClick }: MoviePosterProps) {
+export function MoviePoster({
+   title,
+   name,
+   posterPath,
+   voteAverage,
+   onClick,
+   watchlists,
+   onAddToWatchlist,
+   addToWatchlistLabel = "Ajouter à une liste",
+   noWatchlistLabel = "Aucune liste",
+}: MoviePosterProps) {
    const displayTitle = title || name;
    const [imageError, setImageError] = useState(false);
+   const ownedWatchlists = watchlists?.filter(w => w.isOwner || w.isCollaborator) ?? [];
+   const showAddButton = onAddToWatchlist && ownedWatchlists.length > 0;
 
-   const content = (
+   const posterContent = (
       <>
          <div className="bg-muted relative mb-3 aspect-2/3 overflow-hidden rounded-lg shadow-lg">
-            {/* Image with zoom on hover */}
+            {/* Image with zoom on hover/focus */}
             {posterPath && !imageError ? (
                <Image
                   src={`https://image.tmdb.org/t/p/w342${posterPath}`}
                   alt={displayTitle || "Movie poster"}
                   fill
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105"
                   onError={() => setImageError(true)}
                   unoptimized
                />
@@ -39,14 +57,14 @@ export function MoviePoster({ title, name, posterPath, voteAverage, onClick }: M
                </div>
             )}
 
-            {/* Dark overlay with centered eye icon on hover */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/50">
-               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            {/* Dark overlay with centered eye icon on hover/focus */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/50 group-focus-within:bg-black/50">
+               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
                   <Eye className="h-7 w-7 text-white" />
                </div>
             </div>
 
-            {/* Bottom gradient - always visible, darker at bottom */}
+            {/* Bottom gradient */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
 
             {/* Rating badge */}
@@ -56,6 +74,72 @@ export function MoviePoster({ title, name, posterPath, voteAverage, onClick }: M
                   <span className="text-sm font-semibold text-white">{voteAverage.toFixed(1)}</span>
                </div>
             )}
+
+            {/* Add to watchlist dropdown - top right */}
+            {showAddButton && (
+               <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                  <DropdownMenu.Root
+                     onOpenChange={open => {
+                        if (!open) {
+                           setTimeout(() => {
+                              if (document.activeElement instanceof HTMLElement) {
+                                 document.activeElement.blur();
+                              }
+                           }, 0);
+                        }
+                     }}
+                  >
+                     <DropdownMenu.Trigger asChild>
+                        <button
+                           type="button"
+                           className="cursor-pointer rounded-full bg-black/70 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black outline-none focus-visible:ring-2 focus-visible:ring-white"
+                           onClick={e => e.stopPropagation()}
+                           onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                 e.stopPropagation();
+                              }
+                           }}
+                           onMouseDown={e => e.preventDefault()}
+                        >
+                           <Plus className="h-4 w-4" />
+                        </button>
+                     </DropdownMenu.Trigger>
+
+                     <DropdownMenu.Portal>
+                        <DropdownMenu.Content
+                           className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-xl border p-1 shadow-md"
+                           sideOffset={5}
+                           onClick={e => e.stopPropagation()}
+                           onCloseAutoFocus={e => e.preventDefault()}
+                        >
+                           <DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-semibold">
+                              {addToWatchlistLabel}
+                           </DropdownMenu.Label>
+                           {ownedWatchlists.length > 0 ? (
+                              ownedWatchlists.map(watchlist => (
+                                 <DropdownMenu.Item
+                                    key={watchlist.id}
+                                    className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
+                                    onSelect={() => onAddToWatchlist!(watchlist.id)}
+                                    onKeyDown={e => {
+                                       if (e.key === 'Enter' || e.key === ' ') {
+                                          e.stopPropagation();
+                                       }
+                                    }}
+                                 >
+                                    {watchlist.name}
+                                 </DropdownMenu.Item>
+                              ))
+                           ) : (
+                              <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                                 {noWatchlistLabel}
+                              </div>
+                           )}
+                        </DropdownMenu.Content>
+                     </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
+               </div>
+            )}
          </div>
          <h3 className="line-clamp-2 text-base font-semibold text-white">{displayTitle}</h3>
       </>
@@ -63,11 +147,17 @@ export function MoviePoster({ title, name, posterPath, voteAverage, onClick }: M
 
    if (onClick) {
       return (
-         <button type="button" onClick={onClick} className="group w-full cursor-pointer text-left">
-            {content}
-         </button>
+         <div
+            role="button"
+            tabIndex={0}
+            onClick={onClick}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+            className="group w-full cursor-pointer text-left outline-none"
+         >
+            {posterContent}
+         </div>
       );
    }
 
-   return <div className="group">{content}</div>;
+   return <div className="group">{posterContent}</div>;
 }

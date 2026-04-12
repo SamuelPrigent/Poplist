@@ -376,6 +376,7 @@ export const de: Content = {
     },
     trending: {
       title: 'Heute im Trend',
+      subtitle: 'Beliebte Filme und Serien des Moments',
       noImage: 'Kein Bild',
     },
     recommendations: {

@@ -146,6 +146,10 @@ export const de: Content = {
       subtitle: 'Die aktivsten Mitglieder der Community',
       seeMore: 'Alle anzeigen',
     },
+    trending: {
+      title: 'Trends',
+      subtitle: 'Beliebte Filme und Serien des Moments',
+    },
   },
 
   explore: {

@@ -347,6 +347,7 @@ export interface Content {
 		};
 		trending: {
 			title: string;
+			subtitle: string;
 			noImage: string;
 		};
 		recommendations: {

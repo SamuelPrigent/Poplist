@@ -15,7 +15,7 @@ interface PreferencesState {
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({
-      columns: 2,
+      columns: 3,
       setColumns: (columns: ColumnCount) => set({ columns }),
       exploreColumns: 3 as ExploreColumnCount,
       setExploreColumns: (exploreColumns: ExploreColumnCount) => set({ exploreColumns }),

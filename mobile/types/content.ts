@@ -132,6 +132,10 @@ export interface Content {
 			subtitle: string;
 			seeMore: string;
 		};
+		trending: {
+			title: string;
+			subtitle: string;
+		};
 	};
 	explore: {
 		title: string;

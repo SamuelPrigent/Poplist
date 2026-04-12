@@ -28,7 +28,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace('/(tabs)')
+      router.replace('/home')
     }
   }, [isAuthenticated, isLoading, router])
 
@@ -52,7 +52,7 @@ export default function LoginScreen() {
       } else {
         await signup(email.trim(), password)
       }
-      router.replace('/(tabs)')
+      router.replace('/home')
     } catch (err: any) {
       const message = err?.message || ''
       if (message.includes('already exists') || message.includes('409')) {
@@ -86,7 +86,7 @@ export default function LoginScreen() {
 
         if (accessToken && refreshToken) {
           await loginWithTokens(accessToken, refreshToken)
-          router.replace('/(tabs)')
+          router.replace('/home')
         }
       }
     } catch (err) {
