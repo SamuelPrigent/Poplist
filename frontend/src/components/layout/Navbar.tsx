@@ -78,10 +78,11 @@ export function Navbar() {
               <>
                 <Link
                   href={isAuthenticated ? '/account/lists' : '/local/lists'}
-                  aria-label="Mes listes"
-                  className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
+                  aria-label={content.header.myLists}
+                  className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md px-3.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
                 >
                   <Bookmark className={`h-5 w-5 ${isAuthenticated ? 'fill-white' : ''}`} />
+                  {content.header.myLists}
                 </Link>
 
                 {isAuthenticated ? (

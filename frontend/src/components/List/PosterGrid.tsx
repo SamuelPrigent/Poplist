@@ -1,5 +1,6 @@
 import { Film } from 'lucide-react'
 import Image from 'next/image'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { WatchlistItem } from '@/lib/api-client'
 
 interface PosterGridProps {
@@ -17,6 +18,26 @@ export function PosterGrid({ items, alt, priority = false, imageSize = 'w154' }:
     posters.push(null)
   }
 
+  const expectedCount = posters.filter(Boolean).length
+  const [loadedCount, setLoadedCount] = useState(0)
+  const [forceReveal, setForceReveal] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const allLoaded = forceReveal || loadedCount >= expectedCount
+
+  const handleLoaded = useCallback(() => {
+    setLoadedCount(prev => prev + 1)
+  }, [])
+
+  // Safety timeout — reveal after 3s regardless
+  useEffect(() => {
+    if (expectedCount === 0) return
+    timeoutRef.current = setTimeout(() => setForceReveal(true), 3000)
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [expectedCount])
+
   if (posters.every(p => !p)) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -26,7 +47,7 @@ export function PosterGrid({ items, alt, priority = false, imageSize = 'w154' }:
   }
 
   return (
-    <div className="grid h-full w-full grid-cols-2 grid-rows-2 overflow-hidden">
+    <div className="relative grid h-full w-full grid-cols-2 grid-rows-2 overflow-hidden">
       {posters.map((posterPath, index) => (
         <div key={index} className="relative overflow-hidden bg-[#27272a]">
           {posterPath ? (
@@ -38,10 +59,24 @@ export function PosterGrid({ items, alt, priority = false, imageSize = 'w154' }:
               className="object-cover"
               priority={priority}
               unoptimized
+              onLoad={handleLoaded}
+              onError={handleLoaded}
             />
           ) : null}
         </div>
       ))}
+
+      {/* Skeleton overlay — visible until all images loaded */}
+      <div
+        className={`bg-muted absolute inset-0 grid grid-cols-2 grid-rows-2 transition-opacity duration-200 ${
+          allLoaded ? 'pointer-events-none opacity-0' : 'opacity-100'
+        }`}
+      >
+        <div className="bg-[#27272a]" />
+        <div className="bg-[#2a2a2e]" />
+        <div className="bg-[#2a2a2e]" />
+        <div className="bg-[#27272a]" />
+      </div>
     </div>
   )
 }

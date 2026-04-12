@@ -6,6 +6,7 @@ export interface Content {
 		login: string;
 		signup: string;
 		logout: string;
+		myLists: string;
 	};
 	auth: {
 		loginTitle: string;
@@ -166,10 +167,8 @@ export interface Content {
 	};
 	landing: {
 		hero: {
-			tagline: string;
 			title: string;
 			subtitle: string;
-			cta: string;
 		};
 		features: {
 			sectionTitle: string;

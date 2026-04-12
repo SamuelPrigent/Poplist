@@ -9,6 +9,7 @@ export const de: Content = {
     login: 'Anmelden',
     signup: 'Registrieren',
     logout: 'Abmelden',
+    myLists: 'Meine Listen',
   },
 
   // Auth Drawer
@@ -184,11 +185,9 @@ export const de: Content = {
 
   landing: {
     hero: {
-      tagline: 'Planen, verfolgen und genießen Sie Ihre Filme gemeinsam',
       title: 'Erstellen und teilen Sie Listen Ihrer Lieblingsfilme und -serien',
       subtitle:
         'Organisieren Sie Ihre TV-Abende und teilen Sie Ihre Entdeckungen mit Ihren Freunden',
-      cta: 'Liste erstellen',
     },
     features: {
       sectionTitle: 'Teilen Sie Ihr Filmuniversum',
@@ -263,7 +262,7 @@ export const de: Content = {
     hero: {
       title: 'Ihre Listen perfekt organisiert',
       subtitle: 'Ihr Film-Universum, organisiert und mit Freunden geteilt.',
-      cta: 'Liste erstellen',
+      cta: 'Entdecken',
       ctaSecondary: 'Mehr erfahren',
       pills: {
         organize: 'Organisieren Sie Ihre Filme',

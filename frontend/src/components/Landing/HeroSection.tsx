@@ -279,7 +279,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
             {/* CTA Buttons */}
             <div className="flex flex-wrap justify-center gap-4 mt-3 md:justify-start">
               <Link
-                href={watchlistsUrl}
+                href="/home"
                 className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
               >
                 {content.home.hero.cta}
