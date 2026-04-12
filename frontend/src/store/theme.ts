@@ -11,7 +11,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
 	persist(
 		(set) => ({
-			theme: "ocean",
+			theme: "midnight",
 			setTheme: (theme: Theme) => set({ theme }),
 		}),
 		{

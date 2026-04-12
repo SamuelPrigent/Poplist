@@ -29,8 +29,8 @@ import type { Content } from "@/types/content";
 function ThemeSelector({ content }: { content: Content }) {
 	const { theme, setTheme } = useThemeStore();
 	const themes: { id: Theme; label: string; description: string }[] = [
-		{ id: "ocean", label: content.profile.themeSection.ocean, description: content.profile.themeSection.oceanDescription },
 		{ id: "midnight", label: content.profile.themeSection.midnight, description: content.profile.themeSection.midnightDescription },
+		{ id: "ocean", label: content.profile.themeSection.ocean, description: content.profile.themeSection.oceanDescription },
 	];
 
 	return (
