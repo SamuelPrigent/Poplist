@@ -122,10 +122,21 @@ function SkeletonTextBlock() {
 
   return (
     <>
-      {block('80%', 20, { marginBottom: spacing.sm })}
-      {block(60, 16, { marginBottom: spacing.sm })}
-      {block('60%', 14, { marginBottom: spacing.sm })}
-      {block('70%', 14)}
+      {/* Title */}
+      {block('75%', 18, { marginBottom: spacing.xs })}
+      {/* Rating */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm }}>
+        {block(14, 14, { borderRadius: 7 })}
+        {block(28, 14)}
+      </View>
+      {/* Meta (Film · 1h41 · 2003) */}
+      {block('55%', 13, { marginBottom: spacing.sm })}
+      {/* Genre badges */}
+      <View style={{ flexDirection: 'row', gap: 6 }}>
+        {block(70, 22, { borderRadius: 4 })}
+        {block(55, 22, { borderRadius: 4 })}
+        {block(60, 22, { borderRadius: 4 })}
+      </View>
     </>
   );
 }
@@ -138,34 +149,31 @@ function SkeletonDetailsBlock() {
     <>
       {/* Description skeleton */}
       <View style={styles.descriptionSection}>
-        {block('100%', 14, { marginBottom: spacing.sm })}
-        {block('95%', 14, { marginBottom: spacing.sm })}
-        {block('70%', 14)}
+        {block('100%', 13, { marginBottom: 6 })}
+        {block('95%', 13, { marginBottom: 6 })}
+        {block('80%', 13, { marginBottom: 6 })}
+        {block('40%', 13)}
       </View>
 
       {/* Details section skeleton */}
       <View style={styles.detailsSection}>
-        {/* Platform section */}
-        <View style={styles.platformSection}>
-          <View style={styles.platformLeft}>
-            {block('35%', 14, { marginBottom: spacing.xs })}
-            <View style={styles.platformRow}>
-              {[0, 1, 2].map(i => (
-                <View key={i}>{block(37, 37, { borderRadius: borderRadius.md })}</View>
-              ))}
-            </View>
-          </View>
-          {block(90, 28, { borderRadius: borderRadius.full, marginLeft: spacing.md })}
+        {/* "Disponible sur" label + icons */}
+        {block(110, 14, { marginBottom: spacing.sm })}
+        <View style={styles.platformRow}>
+          {[0, 1].map(i => (
+            <View key={i}>{block(37, 37, { borderRadius: borderRadius.md })}</View>
+          ))}
         </View>
-        {/* Cast label */}
-        {block('40%', 14, { marginBottom: spacing.sm + 3 })}
+
+        {/* "Acteurs principaux" label */}
+        {block(130, 14, { marginTop: spacing.lg, marginBottom: spacing.sm })}
         {/* Cast items */}
         <View style={styles.castRow}>
           {[0, 1, 2].map(i => (
             <View key={i} style={styles.castItem}>
-              {block(38, 38, { borderRadius: borderRadius.md })}
-              {block(50, 10, { marginTop: spacing.xs })}
-              {block(40, 9, { marginTop: 2 })}
+              {block(52, 52, { borderRadius: 26 })}
+              {block(60, 10, { marginTop: spacing.xs })}
+              {block(45, 9, { marginTop: 2 })}
             </View>
           ))}
         </View>
@@ -488,6 +496,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
       <BottomSheetModal
         ref={bottomSheetModalRef}
         snapPoints={['85%']}
+        enableDynamicSizing={false}
         enablePanDownToClose
         onDismiss={handleDismiss}
         backdropComponent={renderBackdrop}

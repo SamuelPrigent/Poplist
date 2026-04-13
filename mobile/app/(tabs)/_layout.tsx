@@ -26,6 +26,7 @@ export default function TabLayout() {
           backgroundColor: 'rgba(10, 10, 10, 0.72)',
           borderTopWidth: 0,
           position: 'absolute',
+          paddingBottom: 8,
         },
         headerStyle: {
           backgroundColor: theme.background,
