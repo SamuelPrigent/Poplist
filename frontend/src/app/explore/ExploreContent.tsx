@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
+import { WatchlistPickerMenu } from '@/components/List/WatchlistPickerMenu';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
-import { type Watchlist, watchlistAPI } from '@/lib/api-client';
+import { type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
@@ -80,6 +81,22 @@ export function ExploreContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Track active grid column count (matches Tailwind breakpoints on the grid below)
+  const [gridCols, setGridCols] = useState(6);
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w >= 1280) setGridCols(6);
+      else if (w >= 1024) setGridCols(5);
+      else if (w >= 768) setGridCols(4);
+      else if (w >= 640) setGridCols(3);
+      else setGridCols(2);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Helper to update URL params
   const updateSearchParams = useCallback(
@@ -401,6 +418,71 @@ export function ExploreContent() {
       console.error('Failed to add to watchlist:', error);
     } finally {
       setAddingTo(null);
+    }
+  };
+
+  const handleAddFromDetails = async (
+    watchlistId: string,
+    tmdbId: string,
+    mediaType: 'movie' | 'tv'
+  ) => {
+    const idNum = Number(tmdbId);
+    const placeholder: WatchlistItem = {
+      tmdbId: idNum,
+      title: '',
+      posterPath: null,
+      mediaType,
+      platformList: [],
+      addedAt: new Date().toISOString(),
+    };
+    setWatchlists(prev =>
+      prev.map(wl =>
+        wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
+          ? { ...wl, items: [...wl.items, placeholder] }
+          : wl
+      )
+    );
+    try {
+      await watchlistAPI.addItem(watchlistId, {
+        tmdbId,
+        mediaType,
+        language: tmdbLanguage,
+        region: tmdbRegion,
+      });
+    } catch (error) {
+      console.error('Failed to add to watchlist:', error);
+      setWatchlists(prev =>
+        prev.map(wl =>
+          wl.id === watchlistId
+            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) }
+            : wl
+        )
+      );
+    }
+  };
+
+  const handleRemoveFromDetails = async (watchlistId: string, tmdbId: string) => {
+    const idNum = Number(tmdbId);
+    let removed: WatchlistItem | undefined;
+    setWatchlists(prev =>
+      prev.map(wl => {
+        if (wl.id !== watchlistId) return wl;
+        removed = wl.items.find(it => it.tmdbId === idNum);
+        return { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) };
+      })
+    );
+    try {
+      await watchlistAPI.removeItem(watchlistId, tmdbId);
+    } catch (error) {
+      console.error('Failed to remove from watchlist:', error);
+      if (removed) {
+        const restored = removed;
+        setWatchlists(prev =>
+          prev.map(wl =>
+            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl
+          )
+        );
+      }
     }
   };
 
@@ -749,18 +831,25 @@ export function ExploreContent() {
                       )}
 
                       {/* Add button in top right */}
-                      {(isAuthenticated || watchlists.length > 0) && (
+                      {isAuthenticated && (
                         <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                          <DropdownMenu.Root
-                            onOpenChange={open => {
-                              if (!open) {
-                                setTimeout(() => {
-                                  if (document.activeElement instanceof HTMLElement) {
-                                    document.activeElement.blur();
-                                  }
-                                }, 0);
-                              }
-                            }}
+                          <WatchlistPickerMenu
+                            watchlists={watchlists.filter(w => w.isOwner || w.isCollaborator)}
+                            tmdbId={item.id}
+                            onAdd={watchlistId =>
+                              handleAddFromDetails(
+                                watchlistId,
+                                item.id.toString(),
+                                item.title ? 'movie' : 'tv'
+                              )
+                            }
+                            onRemove={watchlistId =>
+                              handleRemoveFromDetails(watchlistId, item.id.toString())
+                            }
+                            addToLabel={content.watchlists.addToWatchlist}
+                            noWatchlistLabel={content.watchlists.noWatchlist}
+                            side={index % gridCols === gridCols - 1 ? 'left' : 'right'}
+                            align="start"
                           >
                             <DropdownMenu.Trigger asChild>
                               <button
@@ -772,37 +861,7 @@ export function ExploreContent() {
                                 <Plus className="h-4 w-4" />
                               </button>
                             </DropdownMenu.Trigger>
-
-                            <DropdownMenu.Portal>
-                              <DropdownMenu.Content
-                                className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-md border p-1 shadow-md"
-                                sideOffset={5}
-                                onClick={e => e.stopPropagation()}
-                              >
-                                <DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-semibold">
-                                  {content.watchlists.addToWatchlist}
-                                </DropdownMenu.Label>
-                                {watchlists.filter(w => w.isOwner || w.isCollaborator).length >
-                                0 ? (
-                                  watchlists
-                                    .filter(w => w.isOwner || w.isCollaborator)
-                                    .map(watchlist => (
-                                      <DropdownMenu.Item
-                                        key={watchlist.id}
-                                        className="hover:bg-accent hover:text-accent-foreground relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none"
-                                        onSelect={() => handleAddToWatchlist(watchlist.id, item)}
-                                      >
-                                        {watchlist.name}
-                                      </DropdownMenu.Item>
-                                    ))
-                                ) : (
-                                  <div className="text-muted-foreground px-2 py-1.5 text-sm">
-                                    {content.watchlists.noWatchlist}
-                                  </div>
-                                )}
-                              </DropdownMenu.Content>
-                            </DropdownMenu.Portal>
-                          </DropdownMenu.Root>
+                          </WatchlistPickerMenu>
                         </div>
                       )}
                     </m.div>
@@ -860,6 +919,14 @@ export function ExploreContent() {
           type={selectedItem.type}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < media.length - 1 ? handleNavigateNext : undefined}
+          watchlists={watchlists.filter(w => w.isOwner || w.isCollaborator)}
+          isAuthenticated={isAuthenticated}
+          onAddToWatchlist={watchlistId =>
+            handleAddFromDetails(watchlistId, selectedItem.tmdbId, selectedItem.type)
+          }
+          onRemoveFromWatchlist={watchlistId =>
+            handleRemoveFromDetails(watchlistId, selectedItem.tmdbId)
+          }
         />
       )}
     </div>

@@ -1,14 +1,17 @@
 'use client';
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Calendar, Clock, Star, X } from 'lucide-react';
 import Image from 'next/image';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
-import { type FullMediaDetails, watchlistAPI } from '@/lib/api-client';
+import { type FullMediaDetails, type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
+import { WatchlistPickerMenu } from '../WatchlistPickerMenu';
 import { WatchProviderList } from '../WatchProviderBubble';
 
 interface ItemDetailsModalProps {
@@ -19,6 +22,10 @@ interface ItemDetailsModalProps {
   platforms?: Array<{ name: string; logoPath: string }>;
   onPrevious?: () => void;
   onNext?: () => void;
+  watchlists?: Watchlist[];
+  onAddToWatchlist?: (watchlistId: string) => void;
+  onRemoveFromWatchlist?: (watchlistId: string) => void;
+  isAuthenticated?: boolean;
 }
 
 export function ItemDetailsModal({
@@ -29,6 +36,10 @@ export function ItemDetailsModal({
   platforms = [],
   onPrevious,
   onNext,
+  watchlists,
+  onAddToWatchlist,
+  onRemoveFromWatchlist,
+  isAuthenticated = false,
 }: ItemDetailsModalProps) {
   const { language, content } = useLanguageStore();
   const [details, setDetails] = useState<FullMediaDetails | null>(null);
@@ -282,6 +293,33 @@ export function ItemDetailsModal({
                               </div>
                             )}
                           </div>
+
+                          {isAuthenticated &&
+                            watchlists &&
+                            onAddToWatchlist &&
+                            onRemoveFromWatchlist && (
+                              <div className="mt-3 w-32">
+                                <WatchlistPickerMenu
+                                  watchlists={watchlists}
+                                  tmdbId={Number(tmdbId)}
+                                  onAdd={onAddToWatchlist}
+                                  onRemove={onRemoveFromWatchlist}
+                                  addToLabel={content.watchlists.addToWatchlist}
+                                  noWatchlistLabel={content.watchlists.noWatchlist}
+                                  side="right"
+                                  align="start"
+                                >
+                                  <DropdownMenu.Trigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full cursor-pointer"
+                                    >
+                                      {content.watchlists.add}
+                                    </Button>
+                                  </DropdownMenu.Trigger>
+                                </WatchlistPickerMenu>
+                              </div>
+                            )}
                         </div>
 
                         {/* Info */}

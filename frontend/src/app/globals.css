@@ -21,6 +21,12 @@ img {
   }
 }
 
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 @theme {
   --color-border: hsl(218 25% 16%);
   --color-input: hsl(218 25% 16%);
@@ -61,6 +67,13 @@ img {
   --animate-slide-right: slide-right 60s linear infinite;
   --animate-slide-left: slide-left 60s linear infinite;
   --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-border-spin: border-spin 9s linear infinite;
+
+  @keyframes border-spin {
+    to {
+      --border-angle: 360deg;
+    }
+  }
 
   @keyframes accordion-down {
     from {

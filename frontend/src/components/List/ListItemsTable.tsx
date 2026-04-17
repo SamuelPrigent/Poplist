@@ -60,6 +60,7 @@ import { mutate } from 'swr';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
 import { ItemDetailsModal } from './modal/ItemDetailsModal';
+import { WatchlistPickerMenu } from './WatchlistPickerMenu';
 import { WatchProviderList } from './WatchProviderBubble';
 
 // Separate component for poster image with its own loading state
@@ -149,8 +150,11 @@ interface DraggableRowProps {
   content: Content;
   watchlists: Watchlist[];
   addingTo: number | null;
-  handleAddToWatchlist: (watchlistId: string, item: WatchlistItem) => void;
+  handleAddFromRow: (watchlistId: string, tmdbId: string, mediaType: 'movie' | 'tv') => void;
+  handleRemoveFromRow: (watchlistId: string, tmdbId: string) => void;
   currentWatchlistId: string;
+  currentWatchlistItems: WatchlistItem[];
+  currentWatchlist: Watchlist;
 }
 
 function DraggableRow({
@@ -168,8 +172,11 @@ function DraggableRow({
   content,
   watchlists,
   addingTo,
-  handleAddToWatchlist,
+  handleAddFromRow,
+  handleRemoveFromRow,
   currentWatchlistId,
+  currentWatchlistItems,
+  currentWatchlist,
 }: DraggableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.tmdbId,
@@ -182,10 +189,13 @@ function DraggableRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // Filter watchlists for the "add to" dropdown
-  const availableWatchlists = watchlists.filter(
-    w => w.id !== currentWatchlistId && (w.isOwner || w.isCollaborator)
-  );
+  // Build watchlists shown in the picker: current list first (with live items), then others
+  const pickerWatchlists: Watchlist[] = [
+    { ...currentWatchlist, items: currentWatchlistItems },
+    ...watchlists.filter(
+      w => w.id !== currentWatchlistId && (w.isOwner || w.isCollaborator)
+    ),
+  ];
 
   return (
     <tr
@@ -213,16 +223,19 @@ function DraggableRow({
                 )}
               >
                 {/* Add to watchlist button */}
-                <DropdownMenu.Root
-                  onOpenChange={open => {
-                    if (!open) {
-                      setTimeout(() => {
-                        if (document.activeElement instanceof HTMLElement) {
-                          document.activeElement.blur();
-                        }
-                      }, 0);
-                    }
-                  }}
+                <WatchlistPickerMenu
+                  watchlists={pickerWatchlists}
+                  tmdbId={item.tmdbId}
+                  onAdd={watchlistId =>
+                    handleAddFromRow(watchlistId, item.tmdbId.toString(), item.mediaType)
+                  }
+                  onRemove={watchlistId =>
+                    handleRemoveFromRow(watchlistId, item.tmdbId.toString())
+                  }
+                  addToLabel={content.watchlists.addToWatchlist}
+                  noWatchlistLabel={content.watchlists.noWatchlist}
+                  side="left"
+                  align="start"
                 >
                   <DropdownMenu.Trigger asChild>
                     <button
@@ -235,34 +248,7 @@ function DraggableRow({
                       <Plus className="text-muted-foreground h-[18px] w-[18px]" />
                     </button>
                   </DropdownMenu.Trigger>
-
-                  <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                      className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
-                      sideOffset={5}
-                    >
-                      <DropdownMenu.Label className="text-muted-foreground px-3 py-2 text-xs font-semibold">
-                        {content.watchlists.addToWatchlist}
-                      </DropdownMenu.Label>
-                      {availableWatchlists.length > 0 ? (
-                        availableWatchlists.map(wl => (
-                          <DropdownMenu.Item
-                            key={wl.id}
-                            className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none"
-                            onSelect={() => handleAddToWatchlist(wl.id, item)}
-                            disabled={addingTo === item.tmdbId}
-                          >
-                            {wl.name}
-                          </DropdownMenu.Item>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground px-3 py-2.5 text-sm">
-                          {content.watchlists.noWatchlist}
-                        </div>
-                      )}
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                </DropdownMenu.Root>
+                </WatchlistPickerMenu>
 
                 {/* Delete button - only for canEdit */}
                 {canEdit && (
@@ -465,6 +451,95 @@ export function ListItemsTable({
       console.error('Failed to add to watchlist:', error);
     } finally {
       setAddingTo(null);
+    }
+  };
+
+  const handleAddFromDetails = async (
+    watchlistId: string,
+    tmdbId: string,
+    mediaType: 'movie' | 'tv'
+  ) => {
+    const idNum = Number(tmdbId);
+    const placeholder: WatchlistItem = {
+      tmdbId: idNum,
+      title: '',
+      posterPath: null,
+      mediaType,
+      platformList: [],
+      addedAt: new Date().toISOString(),
+    };
+    setWatchlists(prev =>
+      prev.map(wl =>
+        wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
+          ? { ...wl, items: [...wl.items, placeholder] }
+          : wl
+      )
+    );
+    if (watchlistId === watchlist.id) {
+      setItems(prev =>
+        prev.some(it => it.tmdbId === idNum) ? prev : [...prev, placeholder]
+      );
+    }
+    try {
+      await watchlistAPI.addItem(watchlistId, {
+        tmdbId,
+        mediaType,
+        language: tmdbLanguage,
+        region: tmdbRegion,
+      });
+      mutate('/watchlists/mine');
+      if (watchlistId === watchlist.id) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('Failed to add to watchlist:', error);
+      setWatchlists(prev =>
+        prev.map(wl =>
+          wl.id === watchlistId
+            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) }
+            : wl
+        )
+      );
+      if (watchlistId === watchlist.id) {
+        setItems(prev => prev.filter(it => it.tmdbId !== idNum));
+      }
+    }
+  };
+
+  const handleRemoveFromDetails = async (watchlistId: string, tmdbId: string) => {
+    const idNum = Number(tmdbId);
+    let removed: WatchlistItem | undefined;
+    setWatchlists(prev =>
+      prev.map(wl => {
+        if (wl.id !== watchlistId) return wl;
+        removed = wl.items.find(it => it.tmdbId === idNum);
+        return { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) };
+      })
+    );
+    if (watchlistId === watchlist.id) {
+      setItems(prev => prev.filter(it => it.tmdbId !== idNum));
+    }
+    try {
+      await watchlistAPI.removeItem(watchlistId, tmdbId);
+      mutate('/watchlists/mine');
+      if (watchlistId === watchlist.id) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('Failed to remove from watchlist:', error);
+      if (removed) {
+        const restored = removed;
+        setWatchlists(prev =>
+          prev.map(wl =>
+            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl
+          )
+        );
+        if (watchlistId === watchlist.id) {
+          setItems(prev =>
+            prev.some(it => it.tmdbId === idNum) ? prev : [...prev, restored]
+          );
+        }
+      }
     }
   };
 
@@ -846,8 +921,11 @@ export function ListItemsTable({
                     content={content}
                     watchlists={watchlists}
                     addingTo={addingTo}
-                    handleAddToWatchlist={handleAddToWatchlist}
+                    handleAddFromRow={handleAddFromDetails}
+                    handleRemoveFromRow={handleRemoveFromDetails}
                     currentWatchlistId={watchlist.id}
+                    currentWatchlistItems={items}
+                    currentWatchlist={watchlist}
                   />
                 ))}
               </SortableContext>
@@ -871,6 +949,24 @@ export function ListItemsTable({
           platforms={selectedItem.platformList}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < displayItems.length - 1 ? handleNavigateNext : undefined}
+          watchlists={(() => {
+            const currentMerged: Watchlist = { ...watchlist, items };
+            const others = watchlists.filter(
+              w => w.id !== watchlist.id && (w.isOwner || w.isCollaborator)
+            );
+            return [currentMerged, ...others];
+          })()}
+          isAuthenticated={isAuthenticated}
+          onAddToWatchlist={watchlistId =>
+            handleAddFromDetails(
+              watchlistId,
+              selectedItem.tmdbId.toString(),
+              selectedItem.mediaType
+            )
+          }
+          onRemoveFromWatchlist={watchlistId =>
+            handleRemoveFromDetails(watchlistId, selectedItem.tmdbId.toString())
+          }
         />
       )}
 

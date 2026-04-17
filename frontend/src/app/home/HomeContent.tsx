@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { getTMDBImageUrl } from '@/lib/utils';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { MoviePoster } from '@/components/Home/MoviePoster';
 import {
   getTMDBLanguage,
@@ -62,7 +63,7 @@ function HomeContentInner() {
   const { user, isAuthenticated } = useAuth();
   const tmdbLanguage = getTMDBLanguage(language);
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [publicWatchlists, setPublicWatchlists] = useState<Watchlist[]>([]);
   const [recommendations, setRecommendations] = useState<DiscoverItem[]>([]);
@@ -76,10 +77,6 @@ function HomeContentInner() {
   const [selectedTrendingIndex, setSelectedTrendingIndex] = useState<number>(-1);
   const [trendingModalOpen, setTrendingModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   //   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -274,17 +271,69 @@ function HomeContentInner() {
     setTrendingModalOpen(true);
   };
 
-  const handleAddTrendingToWatchlist = async (watchlistId: string, item: DiscoverItem) => {
+  const handleAddToWatchlist = async (
+    watchlistId: string,
+    tmdbId: string,
+    mediaType: 'movie' | 'tv'
+  ) => {
+    const idNum = Number(tmdbId);
+    const placeholder: WatchlistItem = {
+      tmdbId: idNum,
+      title: '',
+      posterPath: null,
+      mediaType,
+      platformList: [],
+      addedAt: new Date().toISOString(),
+    };
+    setUserWatchlists(prev =>
+      prev.map(wl =>
+        wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
+          ? { ...wl, items: [...wl.items, placeholder] }
+          : wl
+      )
+    );
     try {
-      const itemType: 'movie' | 'tv' = item.title ? 'movie' : 'tv';
       await watchlistAPI.addItem(watchlistId, {
-        tmdbId: item.id.toString(),
-        mediaType: itemType,
+        tmdbId,
+        mediaType,
         language: tmdbLanguage,
       });
       toast.success('Ajouté à la liste');
     } catch {
+      setUserWatchlists(prev =>
+        prev.map(wl =>
+          wl.id === watchlistId
+            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) }
+            : wl
+        )
+      );
       toast.error("Erreur lors de l'ajout");
+    }
+  };
+
+  const handleRemoveFromWatchlist = async (watchlistId: string, tmdbId: string) => {
+    const idNum = Number(tmdbId);
+    let removed: WatchlistItem | undefined;
+    setUserWatchlists(prev =>
+      prev.map(wl => {
+        if (wl.id !== watchlistId) return wl;
+        removed = wl.items.find(it => it.tmdbId === idNum);
+        return { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) };
+      })
+    );
+    try {
+      await watchlistAPI.removeItem(watchlistId, tmdbId);
+      toast.success('Retiré de la liste');
+    } catch {
+      if (removed) {
+        const restored = removed;
+        setUserWatchlists(prev =>
+          prev.map(wl =>
+            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl
+          )
+        );
+      }
+      toast.error('Erreur lors du retrait');
     }
   };
 
@@ -580,7 +629,16 @@ function HomeContentInner() {
                 voteAverage={item.vote_average}
                 onClick={() => handleOpenTrending(item, index)}
                 watchlists={isAuthenticated ? userWatchlists : []}
-                onAddToWatchlist={(watchlistId) => handleAddTrendingToWatchlist(watchlistId, item)}
+                onAddToWatchlist={watchlistId =>
+                  handleAddToWatchlist(
+                    watchlistId,
+                    item.id.toString(),
+                    item.media_type || (item.title ? 'movie' : 'tv')
+                  )
+                }
+                onRemoveFromWatchlist={watchlistId =>
+                  handleRemoveFromWatchlist(watchlistId, item.id.toString())
+                }
                 addToWatchlistLabel={content.watchlists.addToWatchlist}
                 noWatchlistLabel={content.watchlists.noWatchlist}
               />
@@ -604,6 +662,14 @@ function HomeContentInner() {
           type={selectedItem.type}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < safeRecommendations.length - 1 ? handleNavigateNext : undefined}
+          watchlists={userWatchlists.filter(w => w.isOwner || w.isCollaborator)}
+          isAuthenticated={isAuthenticated}
+          onAddToWatchlist={watchlistId =>
+            handleAddToWatchlist(watchlistId, selectedItem.tmdbId, selectedItem.type)
+          }
+          onRemoveFromWatchlist={watchlistId =>
+            handleRemoveFromWatchlist(watchlistId, selectedItem.tmdbId)
+          }
         />
       )}
 
@@ -628,6 +694,18 @@ function HomeContentInner() {
             const next = trending[selectedTrendingIndex + 1];
             handleOpenTrending(next, selectedTrendingIndex + 1);
           } : undefined}
+          watchlists={userWatchlists.filter(w => w.isOwner || w.isCollaborator)}
+          isAuthenticated={isAuthenticated}
+          onAddToWatchlist={watchlistId =>
+            handleAddToWatchlist(
+              watchlistId,
+              selectedTrendingItem.tmdbId,
+              selectedTrendingItem.type
+            )
+          }
+          onRemoveFromWatchlist={watchlistId =>
+            handleRemoveFromWatchlist(watchlistId, selectedTrendingItem.tmdbId)
+          }
         />
       )}
     </div>

@@ -14,6 +14,7 @@ import {
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useAuth } from '@/context/auth-context';
 import { tmdbAPI } from '@/lib/api-client';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { useLanguageStore } from '@/store/language';
 import { useThemeStore } from '@/store/theme';
 
@@ -35,11 +36,7 @@ function LandingPageInner() {
   const { theme } = useThemeStore();
   const { isAuthenticated } = useAuth();
   const [trending, setTrending] = useState<TrendingItem[]>([]);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsMounted();
 
   // Determine the lists URL based on authentication status
   // Utilise /local/lists par défaut côté SSR pour éviter hydration mismatch
@@ -163,20 +160,24 @@ function LandingPageInner() {
 
         <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6">
           {/* Step 1 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-violet-500/20 to-transparent p-px">
-            <div className="flex h-full flex-col items-center rounded-2xl bg-background/80 backdrop-blur-sm px-6 py-8 text-center">
-              {/* Step number badge */}
-              <span className="mb-4 text-xs font-medium text-violet-400/80 uppercase tracking-wider">
+          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px">
+            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] px-6 py-8 text-center">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)]"
+              >
+                1
+              </span>
+              <span className="relative mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
                 Étape 1
               </span>
-              {/* Icon */}
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-violet-500/10">
-                <ListPlus strokeWidth={1.4} className="h-7 w-7 text-violet-400" />
+              <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
+                <ListPlus strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
               </div>
-              <h3 className="mb-2 text-lg font-semibold text-violet-400">
+              <h3 className="relative mb-2 text-lg font-semibold text-white">
                 {content.landing.startInSeconds.step1.title}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="relative text-sm text-gray-400">
                 {content.landing.startInSeconds.step1.description}
               </p>
             </div>
@@ -184,26 +185,28 @@ function LandingPageInner() {
 
           {/* Arrow 1 */}
           <div className="hidden lg:flex items-center">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-r from-violet-500/20 to-blue-500/20">
-              <ChevronRight className="h-5 w-5 text-violet-400/60" />
-            </div>
+            <ChevronRight className="h-[18px] w-[18px] text-white/90" strokeWidth={1.6} />
           </div>
 
-          {/* Step 2 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px">
-            <div className="flex h-full flex-col items-center rounded-2xl bg-background/80 backdrop-blur-sm px-6 py-8 text-center">
-              {/* Step number badge */}
-              <span className="mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
+          {/* Step 2 - Card with animated spark border */}
+          <div className="relative w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px motion-safe:bg-[conic-gradient(from_var(--border-angle),transparent_0deg,transparent_155deg,rgba(96,165,250,0.3)_170deg,#60a5fa_180deg,#ffffff_183deg,#ffffff_187deg,#60a5fa_190deg,transparent_205deg,transparent_360deg),linear-gradient(to_bottom_right,rgb(59_130_246/0.2),transparent)] motion-safe:animate-border-spin">
+            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] px-6 py-8 text-center">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)]"
+              >
+                2
+              </span>
+              <span className="relative mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
                 Étape 2
               </span>
-              {/* Icon */}
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
+              <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
                 <Film strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
               </div>
-              <h3 className="mb-2 text-lg font-semibold text-blue-400">
+              <h3 className="relative mb-2 text-lg font-semibold text-white">
                 {content.landing.startInSeconds.step2.title}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="relative text-sm text-gray-400">
                 {content.landing.startInSeconds.step2.description}
               </p>
             </div>
@@ -211,26 +214,28 @@ function LandingPageInner() {
 
           {/* Arrow 2 */}
           <div className="hidden lg:flex items-center">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-r from-blue-500/20 from-80% to-yellow-400/10">
-              <ChevronRight className="h-5 w-5 text-blue-400/60" />
-            </div>
+            <ChevronRight className="h-[18px] w-[18px] text-white/90" strokeWidth={1.6} />
           </div>
 
           {/* Step 3 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-amber-500/20 to-transparent p-px">
-            <div className="flex h-full flex-col items-center rounded-2xl bg-background/80 backdrop-blur-sm px-6 py-8 text-center">
-              {/* Step number badge */}
-              <span className="mb-4 text-xs font-medium text-amber-400/80 uppercase tracking-wider">
+          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px">
+            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] px-6 py-8 text-center">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)]"
+              >
+                3
+              </span>
+              <span className="relative mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
                 Étape 3
               </span>
-              {/* Icon */}
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-amber-500/10">
-                <Share2 strokeWidth={1.4} className="h-7 w-7 text-amber-400" />
+              <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
+                <Share2 strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
               </div>
-              <h3 className="mb-2 text-lg font-semibold text-amber-400">
+              <h3 className="relative mb-2 text-lg font-semibold text-white">
                 {content.landing.startInSeconds.step3.title}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="relative text-sm text-gray-400">
                 {content.landing.startInSeconds.step3.description}
               </p>
             </div>
@@ -241,9 +246,15 @@ function LandingPageInner() {
       {/* Testimonials Section */}
       <section className="relative py-10 pb-30">
         {/* Blur glow shapes */}
-        <div className={`pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-violet-600/10'}`} />
-        <div className={`pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-blue-600/10'}`} />
-        <div className={`pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] ${theme === 'midnight' ? 'bg-slate-800/5' : 'bg-slate-500/10'}`} />
+        <div
+          className={`pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-violet-600/10'}`}
+        />
+        <div
+          className={`pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-blue-600/10'}`}
+        />
+        <div
+          className={`pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] ${theme === 'midnight' ? 'bg-slate-800/5' : 'bg-slate-500/10'}`}
+        />
 
         <div className="relative z-10 container mx-auto max-w-[1150px] px-4">
           <div className="mb-12 text-center">
@@ -255,8 +266,8 @@ function LandingPageInner() {
 
           <div className="grid gap-6 md:grid-cols-3">
             {/* Testimonial 1 */}
-            <div className="group rounded-xl transition-all duration-300">
-              <div className={`flex h-full flex-col justify-between rounded-xl p-6 ${theme === 'midnight' ? 'bg-[linear-gradient(135deg,#181c24a6,transparent)]' : 'bg-background/80 backdrop-blur-sm'}`}>
+            <div className="group rounded-xl bg-linear-to-br from-blue-500/20 to-transparent p-px transition-all duration-300">
+              <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
                 <div>
                   <div className="mb-4 flex gap-1">
                     {STAR_KEYS.map(starKey => (
@@ -294,8 +305,8 @@ function LandingPageInner() {
             </div>
 
             {/* Testimonial 2 */}
-            <div className="group rounded-xl transition-all duration-300">
-              <div className={`flex h-full flex-col justify-between rounded-xl p-6 ${theme === 'midnight' ? 'bg-[linear-gradient(135deg,#181c24a6,transparent)]' : 'bg-background/80 backdrop-blur-sm'}`}>
+            <div className="group rounded-xl bg-linear-to-br from-blue-500/20 to-transparent p-px transition-all duration-300">
+              <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
                 <div>
                   <div className="mb-4 flex gap-1">
                     {STAR_KEYS.map(starKey => (
@@ -333,8 +344,8 @@ function LandingPageInner() {
             </div>
 
             {/* Testimonial 3 */}
-            <div className="group rounded-xl transition-all duration-300">
-              <div className={`flex h-full flex-col justify-between rounded-xl p-6 ${theme === 'midnight' ? 'bg-[linear-gradient(135deg,#181c24a6,transparent)]' : 'bg-background/80 backdrop-blur-sm'}`}>
+            <div className="group rounded-xl bg-linear-to-br from-blue-500/20 to-transparent p-px transition-all duration-300">
+              <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
                 <div>
                   <div className="mb-4 flex gap-1">
                     {STAR_KEYS.map(starKey => (

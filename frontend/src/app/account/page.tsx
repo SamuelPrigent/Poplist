@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
+import { useIsMounted } from "@/hooks/useIsMounted";
 import { userAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { type Theme, useThemeStore } from "@/store/theme";
@@ -113,12 +114,7 @@ export default function AccountPage() {
 	const [avatarDeleting, setAvatarDeleting] = useState(false);
 
 	// Client-side mount state (for hydration consistency)
-	const [mounted, setMounted] = useState(false);
-
-	// Set mounted state for hydration consistency
-	useEffect(() => {
-		setMounted(true);
-	}, []);
+	const mounted = useIsMounted();
 
 	// Redirect to home if not authenticated (wait for auth to load first)
 	useEffect(() => {

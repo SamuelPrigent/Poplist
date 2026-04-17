@@ -4,10 +4,11 @@ import { Bookmark, LogOut, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 import { AuthDrawer } from '@/features/auth/AuthDrawer';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { useLanguageStore } from '@/store/language';
 
 export function Navbar() {
@@ -17,13 +18,8 @@ export function Navbar() {
   const pathname = usePathname();
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [mounted, setMounted] = useState(false);
-
   // Évite le mismatch SSR/client - on render l'UI auth seulement après mount
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
+  const mounted = useIsMounted();
 
   const openLogin = () => {
     setAuthMode('login');

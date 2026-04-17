@@ -208,7 +208,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                 {col1.map((movie, index) => (
                   <div
                     key={movie.id}
-                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10"
+                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)]"
                   >
                     <Image
                       src={movie.image}
@@ -227,7 +227,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                 {col2.map((movie, index) => (
                   <div
                     key={movie.id}
-                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
+                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
                   >
                     <Image
                       src={movie.image}
@@ -246,7 +246,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
                 {col3.map((movie, index) => (
                   <div
                     key={movie.id}
-                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-white/10 shadow-lg"
+                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
                   >
                     <Image
                       src={movie.image}

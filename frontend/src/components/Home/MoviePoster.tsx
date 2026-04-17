@@ -5,6 +5,7 @@ import { Eye, Film, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import type { Watchlist } from "@/lib/api-client";
+import { WatchlistPickerMenu } from "@/components/List/WatchlistPickerMenu";
 
 interface MoviePosterProps {
    id: number;
@@ -17,11 +18,13 @@ interface MoviePosterProps {
    onClick?: () => void;
    watchlists?: Watchlist[];
    onAddToWatchlist?: (watchlistId: string) => void;
+   onRemoveFromWatchlist?: (watchlistId: string) => void;
    addToWatchlistLabel?: string;
    noWatchlistLabel?: string;
 }
 
 export function MoviePoster({
+   id,
    title,
    name,
    posterPath,
@@ -29,13 +32,14 @@ export function MoviePoster({
    onClick,
    watchlists,
    onAddToWatchlist,
+   onRemoveFromWatchlist,
    addToWatchlistLabel = "Ajouter à une liste",
    noWatchlistLabel = "Aucune liste",
 }: MoviePosterProps) {
    const displayTitle = title || name;
    const [imageError, setImageError] = useState(false);
    const ownedWatchlists = watchlists?.filter(w => w.isOwner || w.isCollaborator) ?? [];
-   const showAddButton = onAddToWatchlist && ownedWatchlists.length > 0;
+   const showAddButton = onAddToWatchlist && onRemoveFromWatchlist;
 
    const posterContent = (
       <>
@@ -78,16 +82,15 @@ export function MoviePoster({
             {/* Add to watchlist dropdown - top right */}
             {showAddButton && (
                <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                  <DropdownMenu.Root
-                     onOpenChange={open => {
-                        if (!open) {
-                           setTimeout(() => {
-                              if (document.activeElement instanceof HTMLElement) {
-                                 document.activeElement.blur();
-                              }
-                           }, 0);
-                        }
-                     }}
+                  <WatchlistPickerMenu
+                     watchlists={ownedWatchlists}
+                     tmdbId={id}
+                     onAdd={onAddToWatchlist!}
+                     onRemove={onRemoveFromWatchlist!}
+                     addToLabel={addToWatchlistLabel}
+                     noWatchlistLabel={noWatchlistLabel}
+                     side="right"
+                     align="start"
                   >
                      <DropdownMenu.Trigger asChild>
                         <button
@@ -104,40 +107,7 @@ export function MoviePoster({
                            <Plus className="h-4 w-4" />
                         </button>
                      </DropdownMenu.Trigger>
-
-                     <DropdownMenu.Portal>
-                        <DropdownMenu.Content
-                           className="border-border bg-popover z-50 min-w-[200px] overflow-hidden rounded-xl border p-1 shadow-md"
-                           sideOffset={5}
-                           onClick={e => e.stopPropagation()}
-                           onCloseAutoFocus={e => e.preventDefault()}
-                        >
-                           <DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-semibold">
-                              {addToWatchlistLabel}
-                           </DropdownMenu.Label>
-                           {ownedWatchlists.length > 0 ? (
-                              ownedWatchlists.map(watchlist => (
-                                 <DropdownMenu.Item
-                                    key={watchlist.id}
-                                    className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center rounded-lg px-2 py-1.5 text-sm transition-colors outline-none select-none"
-                                    onSelect={() => onAddToWatchlist!(watchlist.id)}
-                                    onKeyDown={e => {
-                                       if (e.key === 'Enter' || e.key === ' ') {
-                                          e.stopPropagation();
-                                       }
-                                    }}
-                                 >
-                                    {watchlist.name}
-                                 </DropdownMenu.Item>
-                              ))
-                           ) : (
-                              <div className="text-muted-foreground px-2 py-1.5 text-sm">
-                                 {noWatchlistLabel}
-                              </div>
-                           )}
-                        </DropdownMenu.Content>
-                     </DropdownMenu.Portal>
-                  </DropdownMenu.Root>
+                  </WatchlistPickerMenu>
                </div>
             )}
          </div>

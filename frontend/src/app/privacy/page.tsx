@@ -59,7 +59,7 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground">{t.storageDescription}</p>
         </section>
 
-        <section>
+        <section id="delete-data">
           <h2 className="text-foreground mb-3 text-lg font-semibold">{t.deletionTitle}</h2>
           <p className="text-muted-foreground">
             {t.deletionDescription}{' '}
