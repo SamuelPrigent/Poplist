@@ -321,10 +321,6 @@ export const en: Content = {
       account: 'Account',
     },
     display: {
-      backgroundColor: 'Background color',
-      backgroundColorHint: 'App theme',
-      ocean: 'Ocean',
-      midnight: 'Midnight',
       listColumns: 'List columns',
       listColumnsHint: 'Number of columns on home and my lists pages',
       exploreColumns: 'Explore columns',

@@ -327,7 +327,7 @@ export function ListCard({
             window.location.href = href;
           }
         }}
-        className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
+        className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
       >
         {cardContent}
       </div>
@@ -337,7 +337,7 @@ export function ListCard({
   return (
     <Link
       href={href}
-      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
+      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
     >
       {cardContent}
     </Link>

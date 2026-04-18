@@ -337,10 +337,6 @@ export const fr: Content = {
          account: "Compte",
       },
       display: {
-         backgroundColor: "Couleur de fond",
-         backgroundColorHint: "Thème de l'application",
-         ocean: "Océan",
-         midnight: "Minuit",
          listColumns: "Colonnes des listes",
          listColumnsHint: "Nombre de colonnes sur la page d'accueil et mes listes",
          exploreColumns: "Colonnes Explorer",

@@ -23,7 +23,7 @@ export function UserCard({ user, listCount, content }: UserCardProps) {
   return (
     <Link
       href={`/user/${user.username}`}
-      className="group flex flex-col items-center gap-3 rounded-lg bg-muted/30 p-5 transition-colors hover:bg-[#36363780]"
+      className="group flex flex-col items-center gap-3 rounded-lg bg-muted/30 p-5 transition-colors hover:bg-muted/50"
     >
       {/* Avatar */}
       <div className="relative h-20 w-20 overflow-hidden rounded-full">

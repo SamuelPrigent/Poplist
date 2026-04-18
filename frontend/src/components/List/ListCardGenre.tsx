@@ -1,8 +1,8 @@
 'use client';
 
 import { motion } from 'motion/react';
-import Image from 'next/image';
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import type { Watchlist } from '@/lib/api-client';
 import type { Content } from '@/types/content';
 
@@ -15,70 +15,96 @@ interface ListCardGenreProps {
   index?: number;
 }
 
-// Mapping des catégories vers les images iconiques
-const categoryImages: Record<string, string> = {
-  anime: '/categories/spider.webp',
-  enfant: '/categories/yeti.webp',
-  movies: '/categories/avatar.webp',
-  series: '/categories/friends.webp',
-  documentaries: '/categories/perroquet.webp',
-  jeunesse: '/categories/brian.webp',
-  action: '/categories/neo.webp',
+interface CategoryVisuals {
+  bg: string;
+  accent: string;
+  svg: string; // path inside /public
+  svgSize?: string; // CSS mask-size override (default '75%')
+}
+
+// Deep, desaturated palette tuned for the slate/dark aesthetic.
+// Each entry maps to one Figma SVG in /public/categories/.
+const CATEGORY_VISUALS: Record<string, CategoryVisuals> = {
+  movies: { bg: '#0D1A2E', accent: '#3B6FC8', svg: '/categories/petanque.svg', svgSize: '74%' },
+  series: { bg: '#2A0A14', accent: '#A82649', svg: '/categories/squares.svg', svgSize: '62%' },
+  anime: { bg: '#2C0D23', accent: '#B73680', svg: '/categories/cone.svg' },
+  jeunesse: { bg: '#1D0A42', accent: '#7148C2', svg: '/categories/square-line.svg' },
+  enfant: { bg: '#2A1E0B', accent: '#A27A28', svg: '/categories/tube-line.svg' },
+  documentaries: { bg: '#0D2A1C', accent: '#2D8A4B', svg: '/categories/petanque2.svg' },
+  action: { bg: '#32100F', accent: '#B52929', svg: '/categories/double-sphere.svg' },
 };
+
+const DEFAULT_VISUALS: CategoryVisuals = CATEGORY_VISUALS.movies;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardGenreProps) {
-  const categoryImage = genreId ? categoryImages[genreId] : undefined;
+  const visuals = (genreId && CATEGORY_VISUALS[genreId]) || DEFAULT_VISUALS;
   const itemCount = watchlist.items.length;
+
+  // Background fades from the category color (bottom) to transparent (top),
+  // tilted -7° counter-clockwise so the colored area leans slightly.
+  const cardBgStyle: CSSProperties = {
+    backgroundImage: `linear-gradient(-7deg, ${visuals.bg} 0%, transparent 100%)`,
+  };
+
+  // The Figma SVG is used as a CSS mask so that any color can be applied
+  // (here: the per-category accent). The SVG's internal alpha gradient
+  // (Figma exports use stop-opacity 0→1) is preserved as a soft fade.
+  const maskedShapeStyle: CSSProperties = {
+    backgroundColor: visuals.accent,
+    maskImage: `url(${visuals.svg})`,
+    WebkitMaskImage: `url(${visuals.svg})`,
+    maskSize: visuals.svgSize || '75%',
+    WebkitMaskSize: visuals.svgSize || '75%',
+    maskPosition: 'center',
+    WebkitMaskPosition: 'center',
+    maskRepeat: 'no-repeat',
+    WebkitMaskRepeat: 'no-repeat',
+  };
 
   return (
     <Link
       href={href}
-      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/30"
+      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
     >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="relative aspect-32/29 w-full overflow-hidden rounded-xl bg-muted/30"
-      >
-        {/* Background image */}
-        {categoryImage && (
-          <div className="absolute inset-0 flex items-end justify-center">
-            <Image
-              src={categoryImage}
-              alt=""
-              width={300}
-              height={400}
-              className="h-[85%] w-auto object-contain opacity-80 saturate-[0.95]"
-              style={{ objectPosition: 'center bottom' }}
-              loading="eager"
-            />
+      <div className="bg-background rounded-2xl">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="relative aspect-square w-full overflow-hidden rounded-2xl"
+          style={cardBgStyle}
+        >
+          {/* Centered Figma SVG, colored via mask-image with per-category accent */}
+          <div className="pointer-events-none absolute inset-0" style={maskedShapeStyle} />
+
+          {/* Bottom gradient for text readability */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5"
+            style={{
+              background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)',
+            }}
+          />
+
+          {/* Subtle inner border for definition */}
+          <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/4" />
+
+          {/* Genre name + count — identical to V1 */}
+          <div className="absolute inset-0 flex flex-col justify-end p-5">
+            <h3 className="text-[20px] font-bold tracking-tight text-white drop-shadow-lg">
+              {watchlist.name}
+            </h3>
+            <span className="text-muted-foreground mt-1 text-xs drop-shadow-lg">
+              {itemCount} {itemCount === 1 ? 'liste' : 'listes'}
+            </span>
           </div>
-        )}
 
-        {/* Dark gradient overlay - top */}
-        <div className="absolute inset-0 bg-linear-to-b from-background/40 to-transparent to-35%" />
-
-        {/* Dark gradient overlay - bottom for text readability */}
-        <div className="absolute inset-0 bg-linear-to-t from-(--genre-card-gradient) to-transparent to-45%" />
-        {/* <div className="absolute inset-0 bg-linear-to-t from-(--genre-card-gradient) to-transparent to-45%" /> */}
-
-        {/* Genre name + count */}
-        <div className="absolute inset-0 flex flex-col justify-end p-5">
-          <h3 className="text-[20px] font-bold tracking-tight text-white drop-shadow-lg">
-            {watchlist.name}
-          </h3>
-          <span className="text-muted-foreground mt-1 text-xs drop-shadow-lg">
-            {itemCount} {itemCount === 1 ? 'liste' : 'listes'}
-          </span>
-        </div>
-
-        {/* White bottom line */}
-        <div className="absolute right-5 bottom-0 left-5 flex justify-center">
-          <div className="h-[2.7px] w-full rounded-full bg-white/80" />
-        </div>
-      </motion.div>
+          {/* White bottom accent line — same decoration as V1 */}
+          <div className="absolute right-5 bottom-0 left-5 flex justify-center">
+            <div className="h-[2.7px] w-full rounded-full bg-white/80" />
+          </div>
+        </motion.div>
+      </div>
     </Link>
   );
 }

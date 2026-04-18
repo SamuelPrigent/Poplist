@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { Providers } from '@/components/providers';
-import { ThemeScript } from '@/components/providers/ThemeScript';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -52,7 +51,6 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        <ThemeScript />
         <link rel="preconnect" href="https://image.tmdb.org" />
         <link rel="dns-prefetch" href="https://image.tmdb.org" />
       </head>

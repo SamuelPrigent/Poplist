@@ -42,3 +42,6 @@ next-env.d.ts
 
 # lighthouse
 lighthouse-report.json
+
+# local archives (components / assets kept for reference, not shipped)
+/src/archives/

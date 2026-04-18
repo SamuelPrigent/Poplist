@@ -6,8 +6,8 @@ export const GENRE_CATEGORIES = [
   'series',
   'anime',
   'enfant',
-  'documentaries',
   'jeunesse',
+  'documentaries',
   'action',
 ] as const;
 

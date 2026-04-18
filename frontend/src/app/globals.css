@@ -55,6 +55,8 @@ img {
   --color-card: hsl(222 20% 7%);
   --color-card-foreground: hsl(210 25% 96%);
 
+  --genre-card-gradient: lab(5 0.69 -5.48 / 0.9);
+
   --maxWidth: 1470px;
   --sectionWidth: 93%;
 

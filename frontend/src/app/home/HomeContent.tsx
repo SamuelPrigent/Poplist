@@ -17,7 +17,7 @@ import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
 import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
-import { getTMDBImageUrl } from '@/lib/utils';
+// import { getTMDBImageUrl } from '@/lib/utils';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { MoviePoster } from '@/components/Home/MoviePoster';
@@ -152,10 +152,7 @@ function HomeContentInner() {
     const fetchData = async () => {
       try {
         // Fetch public watchlists and creators in parallel
-        await Promise.allSettled([
-          fetchPublicWatchlists(),
-          fetchCreators(),
-        ]);
+        await Promise.allSettled([fetchPublicWatchlists(), fetchCreators()]);
 
         let userWatchlistsData: Watchlist[] = [];
         if (user) {
@@ -302,9 +299,7 @@ function HomeContentInner() {
     } catch {
       setUserWatchlists(prev =>
         prev.map(wl =>
-          wl.id === watchlistId
-            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) }
-            : wl
+          wl.id === watchlistId ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) } : wl
         )
       );
       toast.error("Erreur lors de l'ajout");
@@ -328,9 +323,7 @@ function HomeContentInner() {
       if (removed) {
         const restored = removed;
         setUserWatchlists(prev =>
-          prev.map(wl =>
-            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl
-          )
+          prev.map(wl => (wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl))
         );
       }
       toast.error('Erreur lors du retrait');
@@ -597,7 +590,12 @@ function HomeContentInner() {
         ) : creators.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {creators.map(creator => (
-              <UserCard key={creator.id} user={creator} listCount={creator.listCount} content={content} />
+              <UserCard
+                key={creator.id}
+                user={creator}
+                listCount={creator.listCount}
+                content={content}
+              />
             ))}
           </div>
         ) : null}
@@ -686,14 +684,22 @@ function HomeContentInner() {
           }}
           tmdbId={selectedTrendingItem.tmdbId}
           type={selectedTrendingItem.type}
-          onPrevious={selectedTrendingIndex > 0 ? () => {
-            const prev = trending[selectedTrendingIndex - 1];
-            handleOpenTrending(prev, selectedTrendingIndex - 1);
-          } : undefined}
-          onNext={selectedTrendingIndex < trending.length - 1 ? () => {
-            const next = trending[selectedTrendingIndex + 1];
-            handleOpenTrending(next, selectedTrendingIndex + 1);
-          } : undefined}
+          onPrevious={
+            selectedTrendingIndex > 0
+              ? () => {
+                  const prev = trending[selectedTrendingIndex - 1];
+                  handleOpenTrending(prev, selectedTrendingIndex - 1);
+                }
+              : undefined
+          }
+          onNext={
+            selectedTrendingIndex < trending.length - 1
+              ? () => {
+                  const next = trending[selectedTrendingIndex + 1];
+                  handleOpenTrending(next, selectedTrendingIndex + 1);
+                }
+              : undefined
+          }
           watchlists={userWatchlists.filter(w => w.isOwner || w.isCollaborator)}
           isAuthenticated={isAuthenticated}
           onAddToWatchlist={watchlistId =>

@@ -324,10 +324,6 @@ export const pt: Content = {
       account: 'Conta',
     },
     display: {
-      backgroundColor: 'Cor de fundo',
-      backgroundColorHint: 'Tema da aplicação',
-      ocean: 'Oceano',
-      midnight: 'Meia-noite',
       listColumns: 'Colunas das listas',
       listColumnsHint: 'Número de colunas na página inicial e as minhas listas',
       exploreColumns: 'Colunas Explorar',

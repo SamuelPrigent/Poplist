@@ -16,7 +16,6 @@ import { useAuth } from '@/context/auth-context';
 import { tmdbAPI } from '@/lib/api-client';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useLanguageStore } from '@/store/language';
-import { useThemeStore } from '@/store/theme';
 
 interface TrendingItem {
   id: number;
@@ -33,7 +32,6 @@ const STAR_KEYS = ['star-1', 'star-2', 'star-3', 'star-4', 'star-5'];
 
 function LandingPageInner() {
   const { content } = useLanguageStore();
-  const { theme } = useThemeStore();
   const { isAuthenticated } = useAuth();
   const [trending, setTrending] = useState<TrendingItem[]>([]);
   const mounted = useIsMounted();
@@ -246,15 +244,9 @@ function LandingPageInner() {
       {/* Testimonials Section */}
       <section className="relative py-10 pb-30">
         {/* Blur glow shapes */}
-        <div
-          className={`pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-violet-600/10'}`}
-        />
-        <div
-          className={`pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] ${theme === 'midnight' ? 'bg-slate-700/5' : 'bg-blue-600/10'}`}
-        />
-        <div
-          className={`pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] ${theme === 'midnight' ? 'bg-slate-800/5' : 'bg-slate-500/10'}`}
-        />
+        <div className="pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] bg-slate-700/5" />
+        <div className="pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] bg-slate-700/5" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] bg-slate-800/5" />
 
         <div className="relative z-10 container mx-auto max-w-[1150px] px-4">
           <div className="mb-12 text-center">

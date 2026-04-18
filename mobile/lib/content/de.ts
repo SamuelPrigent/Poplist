@@ -325,10 +325,6 @@ export const de: Content = {
       account: 'Konto',
     },
     display: {
-      backgroundColor: 'Hintergrundfarbe',
-      backgroundColorHint: 'App-Design',
-      ocean: 'Ozean',
-      midnight: 'Mitternacht',
       listColumns: 'Listenspalten',
       listColumnsHint: 'Anzahl der Spalten auf der Startseite und Meine Listen',
       exploreColumns: 'Entdecken-Spalten',

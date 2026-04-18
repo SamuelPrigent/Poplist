@@ -262,10 +262,6 @@ export interface Content {
 			account: string;
 		};
 		display: {
-			backgroundColor: string;
-			backgroundColorHint: string;
-			ocean: string;
-			midnight: string;
 			listColumns: string;
 			listColumnsHint: string;
 			exploreColumns: string;

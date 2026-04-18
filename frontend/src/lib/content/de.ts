@@ -584,14 +584,6 @@ export const de: Content = {
       deleting: 'Löschen...',
       cancel: 'Abbrechen',
     },
-    themeSection: {
-      title: 'Design',
-      description: 'Wählen Sie das visuelle Thema der Oberfläche',
-      ocean: 'Ozean',
-      oceanDescription: 'Tiefe Blautöne',
-      midnight: 'Mitternacht',
-      midnightDescription: 'Neutrales Dunkelgrau',
-    },
     toasts: {
       usernameUpdated: 'Benutzername aktualisiert',
       usernameUpdatedDesc: 'Ihr Benutzername wurde erfolgreich aktualisiert.',

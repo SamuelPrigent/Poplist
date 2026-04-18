@@ -330,10 +330,6 @@ export const es: Content = {
       account: 'Cuenta',
     },
     display: {
-      backgroundColor: 'Color de fondo',
-      backgroundColorHint: 'Tema de la aplicación',
-      ocean: 'Océano',
-      midnight: 'Medianoche',
       listColumns: 'Columnas de listas',
       listColumnsHint: 'Número de columnas en las páginas de inicio y mis listas',
       exploreColumns: 'Columnas Explorar',
