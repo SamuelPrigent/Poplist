@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, getCategoryInfo } from '@/types/categories';
@@ -15,9 +16,7 @@ function CategoriesPageInner() {
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useScrollToTopOnMount();
 
   useEffect(() => {
     const fetchCategoryCounts = async () => {
@@ -49,7 +48,6 @@ function CategoriesPageInner() {
 
   const handleBackClick = () => {
     router.push('/home');
-    window.scrollTo(0, 0);
   };
 
   return (

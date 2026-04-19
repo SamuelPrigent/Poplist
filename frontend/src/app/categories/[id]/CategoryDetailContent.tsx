@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
 import { useAuth } from "@/context/auth-context";
+import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
 import { type Watchlist, watchlistAPI } from "@/lib/api-client";
 import { useLanguageStore } from "@/store/language";
 import { type GenreCategory, getCategoryInfo } from "@/types/categories";
@@ -37,9 +38,7 @@ function CategoryDetailPageInner() {
 
    const categoryInfo = id ? getCategoryInfo(id as GenreCategory, content) : null;
 
-   useEffect(() => {
-      window.scrollTo(0, 0);
-   }, []);
+   useScrollToTopOnMount();
 
    useEffect(() => {
       const fetchData = async () => {

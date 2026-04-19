@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Section } from '@/components/layout/Section';
 import { Pagination } from '@/components/ui/pagination';
 import { UserCard } from '@/components/User/UserCard';
+import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { watchlistAPI, type Watchlist } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 
@@ -37,6 +38,8 @@ function UsersContentInner() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE_DEFAULT);
+
+  useScrollToTopOnMount();
 
   const fetchCreators = useCallback(async () => {
     try {

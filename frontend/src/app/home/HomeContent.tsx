@@ -20,6 +20,7 @@ import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib
 // import { getTMDBImageUrl } from '@/lib/utils';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { MoviePoster } from '@/components/Home/MoviePoster';
 import {
   getTMDBLanguage,
@@ -135,18 +136,7 @@ function HomeContentInner() {
     }
   }, []);
 
-  useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-
-    return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
-      }
-    };
-  }, []);
+  useScrollToTopOnMount();
 
   useEffect(() => {
     const fetchData = async () => {

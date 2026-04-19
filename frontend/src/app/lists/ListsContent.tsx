@@ -8,6 +8,7 @@ import { ListCard } from '@/components/List/ListCard';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
+import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { type Watchlist, watchlistAPI } from '@/lib/api-client';
 import { useLanguageStore } from '@/store/language';
 
@@ -37,9 +38,7 @@ function CommunityListsPageInner() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE_DEFAULT);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useScrollToTopOnMount();
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -50,7 +49,6 @@ function CommunityListsPageInner() {
 
   const handleBackClick = () => {
     router.push('/home');
-    window.scrollTo(0, 0);
   };
 
   const fetchWatchlists = useCallback(async () => {

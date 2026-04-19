@@ -39,6 +39,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { PosterGrid } from "@/components/List/PosterGrid";
+import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
 import type { Watchlist } from "@/lib/api-client";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
@@ -239,6 +240,8 @@ function ListsOfflineContentInner() {
    const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
    const [popoverOpen, setPopoverOpen] = useState(false);
    const popoverTimeoutRef = useRef<number | null>(null);
+
+   useScrollToTopOnMount();
 
    // Redirect to account lists if authenticated
    useEffect(() => {

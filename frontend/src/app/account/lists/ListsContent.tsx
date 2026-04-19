@@ -39,6 +39,7 @@ import {
 import type { Watchlist } from '@/lib/api-client';
 import { watchlistAPI } from '@/lib/api-client';
 import { useMyWatchlists } from '@/hooks/swr';
+import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { useLanguageStore } from '@/store/language';
 import { useListFiltersStore } from '@/store/listFilters';
 
@@ -120,6 +121,8 @@ function ListsContentInner() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedWatchlist, setSelectedWatchlist] = useState<Watchlist | null>(null);
+
+  useScrollToTopOnMount();
 
   // Redirect to local lists if not authenticated (wait for auth to load first)
   useEffect(() => {
