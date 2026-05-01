@@ -1,6 +1,8 @@
 import type { Context } from 'hono'
 import bcrypt from 'bcrypt'
-import prisma from '../lib/prisma.js'
+import { and, asc, eq, lt, or } from 'drizzle-orm'
+import { db } from '../db/index.js'
+import { refreshTokens, users } from '../db/schema.js'
 import {
   signAccessToken,
   signRefreshToken,
@@ -21,27 +23,26 @@ async function cleanupAndCreateToken(
   refreshToken: string,
   userAgent: string | null
 ) {
-  await prisma.refreshToken.deleteMany({
-    where: { userId, expiresAt: { lt: new Date() } },
-  })
+  await db
+    .delete(refreshTokens)
+    .where(and(eq(refreshTokens.userId, userId), lt(refreshTokens.expiresAt, new Date())))
 
-  const existingTokens = await prisma.refreshToken.findMany({
-    where: { userId },
-    orderBy: { issuedAt: 'asc' },
-  })
+  const existingTokens = await db
+    .select({ id: refreshTokens.id })
+    .from(refreshTokens)
+    .where(eq(refreshTokens.userId, userId))
+    .orderBy(asc(refreshTokens.issuedAt))
 
   if (existingTokens.length >= 5) {
-    await prisma.refreshToken.delete({ where: { id: existingTokens[0].id } })
+    await db.delete(refreshTokens).where(eq(refreshTokens.id, existingTokens[0].id))
   }
 
-  await prisma.refreshToken.create({
-    data: {
-      userId,
-      tokenHash: hashToken(refreshToken),
-      issuedAt: new Date(),
-      expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
-      userAgent,
-    },
+  await db.insert(refreshTokens).values({
+    userId,
+    tokenHash: hashToken(refreshToken),
+    issuedAt: new Date(),
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
+    userAgent,
   })
 }
 
@@ -61,26 +62,35 @@ export const googleAuthMobile = async (c: C) => {
       return c.json({ error: 'Could not retrieve email from Google' }, 400)
     }
 
-    let user = await prisma.user.findFirst({
-      where: { OR: [{ googleId }, { email }] },
-    })
+    let [user] = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.googleId, googleId), eq(users.email, email)))
+      .limit(1)
 
     if (!user) {
       const username = await generateUniqueUsername()
-      user = await prisma.user.create({
-        data: { email, username, googleId, roles: ['user'], language: 'fr' },
-      })
+      const [created] = await db
+        .insert(users)
+        .values({ email, username, googleId, language: 'fr' })
+        .returning()
+      user = created
     } else {
-      const updates: any = {}
+      const updates: { googleId?: string; username?: string } = {}
       if (!user.googleId) updates.googleId = googleId
       if (!user.username) updates.username = await generateUniqueUsername()
       if (Object.keys(updates).length > 0) {
-        user = await prisma.user.update({ where: { id: user.id }, data: updates })
+        const [updated] = await db
+          .update(users)
+          .set(updates)
+          .where(eq(users.id, user.id))
+          .returning()
+        user = updated
       }
     }
 
     const tokenId = generateTokenId()
-    const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+    const accessToken = signAccessToken({ sub: user.id, email: user.email })
     const refreshToken = signRefreshToken({ sub: user.id, tokenId })
 
     await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
@@ -94,7 +104,6 @@ export const googleAuthMobile = async (c: C) => {
         username: user.username,
         language: user.language || 'fr',
         avatarUrl: user.avatarUrl,
-        roles: user.roles,
         hasPassword: !!user.passwordHash,
       },
     })
@@ -116,33 +125,33 @@ export const refreshMobile = async (c: C) => {
     const payload = verifyRefreshToken(refreshToken)
     const tokenHash = hashToken(refreshToken)
 
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } })
+    const [user] = await db.select().from(users).where(eq(users.id, payload.sub)).limit(1)
     if (!user) {
       return c.json({ error: 'User not found' }, 401)
     }
 
-    const existingToken = await prisma.refreshToken.findFirst({
-      where: { userId: user.id, tokenHash },
-    })
+    const [existingToken] = await db
+      .select({ id: refreshTokens.id })
+      .from(refreshTokens)
+      .where(and(eq(refreshTokens.userId, user.id), eq(refreshTokens.tokenHash, tokenHash)))
+      .limit(1)
 
     if (!existingToken) {
       return c.json({ error: 'Invalid refresh token' }, 401)
     }
 
-    await prisma.refreshToken.delete({ where: { id: existingToken.id } })
+    await db.delete(refreshTokens).where(eq(refreshTokens.id, existingToken.id))
 
     const newTokenId = generateTokenId()
-    const newAccessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+    const newAccessToken = signAccessToken({ sub: user.id, email: user.email })
     const newRefreshToken = signRefreshToken({ sub: user.id, tokenId: newTokenId })
 
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        tokenHash: hashToken(newRefreshToken),
-        issuedAt: new Date(),
-        expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
-        userAgent: c.req.header('user-agent') || null,
-      },
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      tokenHash: hashToken(newRefreshToken),
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
+      userAgent: c.req.header('user-agent') || null,
     })
 
     return c.json({ accessToken: newAccessToken, refreshToken: newRefreshToken })
@@ -164,9 +173,9 @@ export const logoutMobile = async (c: C) => {
 
     try {
       const payload = verifyRefreshToken(refreshToken)
-      await prisma.refreshToken.deleteMany({
-        where: { userId: payload.sub, tokenHash },
-      })
+      await db
+        .delete(refreshTokens)
+        .where(and(eq(refreshTokens.userId, payload.sub), eq(refreshTokens.tokenHash, tokenHash)))
     } catch {
       // Token invalid or expired, continue with logout
     }
@@ -185,7 +194,7 @@ export const loginMobile = async (c: C) => {
   }
   const { email, password } = parsed.data
 
-  const user = await prisma.user.findUnique({ where: { email } })
+  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
   if (!user || !user.passwordHash) {
     return c.json({ error: 'Invalid credentials' }, 401)
   }
@@ -197,12 +206,12 @@ export const loginMobile = async (c: C) => {
 
   if (!user.username) {
     const username = await generateUniqueUsername()
-    await prisma.user.update({ where: { id: user.id }, data: { username } })
+    await db.update(users).set({ username }).where(eq(users.id, user.id))
     user.username = username
   }
 
   const tokenId = generateTokenId()
-  const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+  const accessToken = signAccessToken({ sub: user.id, email: user.email })
   const refreshToken = signRefreshToken({ sub: user.id, tokenId })
 
   await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
@@ -216,7 +225,6 @@ export const loginMobile = async (c: C) => {
       username: user.username,
       language: user.language || 'fr',
       avatarUrl: user.avatarUrl,
-      roles: user.roles,
       hasPassword: !!user.passwordHash,
     },
   })
@@ -230,7 +238,11 @@ export const signupMobile = async (c: C) => {
   }
   const { email, password } = parsed.data
 
-  const existingUser = await prisma.user.findUnique({ where: { email } })
+  const [existingUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1)
   if (existingUser) {
     return c.json({ error: 'User already exists' }, 409)
   }
@@ -238,12 +250,13 @@ export const signupMobile = async (c: C) => {
   const passwordHash = await bcrypt.hash(password, 10)
   const username = await generateUniqueUsername()
 
-  const user = await prisma.user.create({
-    data: { email, username, passwordHash, roles: ['user'], language: 'fr' },
-  })
+  const [user] = await db
+    .insert(users)
+    .values({ email, username, passwordHash, language: 'fr' })
+    .returning()
 
   const tokenId = generateTokenId()
-  const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+  const accessToken = signAccessToken({ sub: user.id, email: user.email })
   const refreshToken = signRefreshToken({ sub: user.id, tokenId })
 
   await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
@@ -258,7 +271,6 @@ export const signupMobile = async (c: C) => {
         username: user.username,
         language: user.language || 'fr',
         avatarUrl: user.avatarUrl,
-        roles: user.roles,
         hasPassword: !!user.passwordHash,
       },
     },

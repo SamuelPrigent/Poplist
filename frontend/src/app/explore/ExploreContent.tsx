@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
-import { type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
+import { createPlaceholderItem, fetchTMDBProviders, honoAPI, type Watchlist, type WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
@@ -277,7 +277,7 @@ export function ExploreContent() {
   // Fetch user watchlists (authenticated or offline)
   useEffect(() => {
     if (isAuthenticated) {
-      watchlistAPI
+      honoAPI.watchlists
         .getMine()
         .then(data => {
           setWatchlists(data.watchlists);
@@ -371,7 +371,7 @@ export function ExploreContent() {
       const itemType: 'movie' | 'tv' = mediaItem.title ? 'movie' : 'tv';
 
       if (isAuthenticated) {
-        await watchlistAPI.addItem(watchlistId, {
+        await honoAPI.watchlists.addItem(watchlistId, {
           tmdbId: mediaItem.id.toString(),
           mediaType: itemType,
           language: tmdbLanguage,
@@ -390,19 +390,18 @@ export function ExploreContent() {
 
             if (!itemExists) {
               const [platformList, mediaDetails] = await Promise.all([
-                watchlistAPI.fetchTMDBProviders(mediaItem.id.toString(), itemType, tmdbRegion),
-                watchlistAPI.getItemDetails(mediaItem.id.toString(), itemType, tmdbLanguage),
+                fetchTMDBProviders(mediaItem.id.toString(), itemType, tmdbRegion),
+                honoAPI.watchlists.getItemDetails(mediaItem.id.toString(), itemType, tmdbLanguage),
               ]);
 
-              const newItem = {
+              const newItem = createPlaceholderItem({
                 tmdbId: mediaItem.id,
                 title: mediaItem.title || mediaItem.name || '',
                 posterPath: mediaItem.poster_path || null,
                 mediaType: itemType,
                 platformList,
                 runtime: mediaDetails.details.runtime,
-                addedAt: new Date().toISOString(),
-              };
+              });
 
               watchlistsData[watchlistIndex].items.push(newItem);
               watchlistsData[watchlistIndex].updatedAt = new Date().toISOString();
@@ -427,14 +426,12 @@ export function ExploreContent() {
     mediaType: 'movie' | 'tv'
   ) => {
     const idNum = Number(tmdbId);
-    const placeholder: WatchlistItem = {
+    const placeholder = createPlaceholderItem({
       tmdbId: idNum,
       title: '',
       posterPath: null,
       mediaType,
-      platformList: [],
-      addedAt: new Date().toISOString(),
-    };
+    });
     setWatchlists(prev =>
       prev.map(wl =>
         wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
@@ -443,7 +440,7 @@ export function ExploreContent() {
       )
     );
     try {
-      await watchlistAPI.addItem(watchlistId, {
+      await honoAPI.watchlists.addItem(watchlistId, {
         tmdbId,
         mediaType,
         language: tmdbLanguage,
@@ -472,7 +469,7 @@ export function ExploreContent() {
       })
     );
     try {
-      await watchlistAPI.removeItem(watchlistId, tmdbId);
+      await honoAPI.watchlists.removeItem(watchlistId, tmdbId);
     } catch (error) {
       console.error('Failed to remove from watchlist:', error);
       if (removed) {

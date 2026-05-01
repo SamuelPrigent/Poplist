@@ -3,7 +3,7 @@
 import { Film } from "lucide-react";
 import Image from "next/image";
 import { PosterGrid } from "@/components/List/PosterGrid";
-import type { Watchlist } from "@/lib/api-client";
+import type { Watchlist } from "@/api";
 import { useLanguageStore } from "@/store/language";
 
 interface ListCardSmallProps {

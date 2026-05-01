@@ -8,9 +8,9 @@ interface TrendingItem {
   id: number;
   title?: string;
   name?: string;
-  poster_path?: string;
-  backdrop_path?: string;
-  media_type: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  media_type?: 'movie' | 'tv';
 }
 
 interface HeroSectionProps {

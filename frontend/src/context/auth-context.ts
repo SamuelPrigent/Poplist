@@ -3,11 +3,11 @@ import { createContext, useContext } from "react";
 export interface User {
 	id: string;
 	email: string;
-	username: string;
-	language?: string;
-	avatarUrl?: string;
-	roles: string[];
+	username: string | null;
+	language?: string | null;
+	avatarUrl?: string | null;
 	hasPassword?: boolean;
+	createdAt?: string | null;
 }
 
 export interface AuthContextValue {

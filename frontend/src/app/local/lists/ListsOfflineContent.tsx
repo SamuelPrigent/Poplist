@@ -40,7 +40,7 @@ import { useAuth } from "@/context/auth-context";
 import { AuthDrawer } from "@/features/auth/AuthDrawer";
 import { PosterGrid } from "@/components/List/PosterGrid";
 import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
-import type { Watchlist } from "@/lib/api-client";
+import type { Watchlist } from "@/api";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
 
@@ -82,7 +82,7 @@ function WatchlistCardOffline({
                router.push(`/local/list/${watchlist.id}`);
             }
          }}
-         className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-[#36363780]"
+         className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
       >
          {/* Cover Image */}
          <button
@@ -309,7 +309,7 @@ function ListsOfflineContentInner() {
             }
             if (aWithOrder.order !== undefined) return -1;
             if (bWithOrder.order !== undefined) return 1;
-            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
          });
 
          setWatchlists(ownedWatchlists);

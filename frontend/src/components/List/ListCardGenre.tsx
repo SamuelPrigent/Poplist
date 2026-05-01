@@ -2,8 +2,8 @@
 
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
-import type { Watchlist } from '@/lib/api-client';
+import { useState, type CSSProperties } from 'react';
+import type { Watchlist } from '@/api';
 import type { Content } from '@/types/content';
 
 interface ListCardGenreProps {
@@ -16,22 +16,20 @@ interface ListCardGenreProps {
 }
 
 interface CategoryVisuals {
-  bg: string;
-  accent: string;
-  svg: string; // path inside /public
-  svgSize?: string; // CSS mask-size override (default '75%')
+  vivid: string;
+  deep: string;
+  cutout: string;
 }
 
-// Deep, desaturated palette tuned for the slate/dark aesthetic.
-// Each entry maps to one Figma SVG in /public/categories/.
+// Card genre color
 const CATEGORY_VISUALS: Record<string, CategoryVisuals> = {
-  movies: { bg: '#0D1A2E', accent: '#3B6FC8', svg: '/categories/petanque.svg', svgSize: '74%' },
-  series: { bg: '#2A0A14', accent: '#A82649', svg: '/categories/squares.svg', svgSize: '62%' },
-  anime: { bg: '#2C0D23', accent: '#B73680', svg: '/categories/cone.svg' },
-  jeunesse: { bg: '#1D0A42', accent: '#7148C2', svg: '/categories/square-line.svg' },
-  enfant: { bg: '#2A1E0B', accent: '#A27A28', svg: '/categories/tube-line.svg' },
-  documentaries: { bg: '#0D2A1C', accent: '#2D8A4B', svg: '/categories/petanque2.svg' },
-  action: { bg: '#32100F', accent: '#B52929', svg: '/categories/double-sphere.svg' },
+  movies: { vivid: '#005ef4', deep: '#24a7cf', cutout: '/categories/avatar.webp' },
+  series: { vivid: '#ffb700', deep: '#e5e22a', cutout: '/categories/friends.webp' },
+  anime: { vivid: '#ff0c49', deep: '#e02076', cutout: '/categories/spider.webp' },
+  enfant: { vivid: '#0b6dff', deep: '#0e8dc8', cutout: '/categories/yeti.webp' },
+  jeunesse: { vivid: '#00d0ff', deep: '#33a261', cutout: '/categories/brian.webp' },
+  documentaries: { vivid: '#0055FF', deep: '#076498', cutout: '/categories/perroquet.webp' },
+  action: { vivid: '#11ff00', deep: '#3fa43a', cutout: '/categories/neo.webp' },
 };
 
 const DEFAULT_VISUALS: CategoryVisuals = CATEGORY_VISUALS.movies;
@@ -40,71 +38,84 @@ const DEFAULT_VISUALS: CategoryVisuals = CATEGORY_VISUALS.movies;
 export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardGenreProps) {
   const visuals = (genreId && CATEGORY_VISUALS[genreId]) || DEFAULT_VISUALS;
   const itemCount = watchlist.items.length;
+  const [hover, setHover] = useState(false);
 
-  // Background fades from the category color (bottom) to transparent (top),
-  // tilted -7° counter-clockwise so the colored area leans slightly.
-  const cardBgStyle: CSSProperties = {
-    backgroundImage: `linear-gradient(-7deg, ${visuals.bg} 0%, transparent 100%)`,
+  const cardStyle: CSSProperties = {
+    aspectRatio: '21 / 20',
+    background: `linear-gradient(160deg, ${visuals.vivid} 0%, ${visuals.deep} 100%)`,
+    transform: hover ? 'translateY(-2px)' : 'translateY(0)',
+    transition: 'transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms',
+    boxShadow: hover ? '0 18px 36px -14px rgba(0,0,0,0.55)' : '0 8px 22px -14px rgba(0,0,0,0.4)',
   };
 
-  // The Figma SVG is used as a CSS mask so that any color can be applied
-  // (here: the per-category accent). The SVG's internal alpha gradient
-  // (Figma exports use stop-opacity 0→1) is preserved as a soft fade.
-  const maskedShapeStyle: CSSProperties = {
-    backgroundColor: visuals.accent,
-    maskImage: `url(${visuals.svg})`,
-    WebkitMaskImage: `url(${visuals.svg})`,
-    maskSize: visuals.svgSize || '75%',
-    WebkitMaskSize: visuals.svgSize || '75%',
-    maskPosition: 'center',
-    WebkitMaskPosition: 'center',
-    maskRepeat: 'no-repeat',
-    WebkitMaskRepeat: 'no-repeat',
+  const cutoutStyle: CSSProperties = {
+    height: '100%',
+    width: 'auto',
+    objectFit: 'contain',
+    objectPosition: 'center bottom',
+    transform: hover ? 'translateY(0px) scale(1.02)' : 'scale(1)',
+    transition: 'transform 380ms cubic-bezier(.2,.8,.2,1)',
+    filter: 'drop-shadow(0 12px 18px rgba(0,0,0,0.30))',
   };
 
   return (
     <Link
       href={href}
-      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="group block cursor-pointer"
     >
-      <div className="bg-background rounded-2xl">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="relative aspect-square w-full overflow-hidden rounded-2xl"
-          style={cardBgStyle}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+        className="relative w-full overflow-hidden rounded-xl"
+        style={cardStyle}
+      >
+        {/* Top dark gradient (top→transparent at 40%) */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.18) 0%, transparent 40%)',
+          }}
+        />
+
+        {/* Cutout image, centered bottom, 85% height */}
+        <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex h-[85%] items-end justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={visuals.cutout} alt="" style={cutoutStyle} />
+        </div>
+
+        {/* Bottom dark gradient (bottom→transparent at 40%) for text readability */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: 'linear-gradient(0deg, rgba(0,0,0,0.32) 0%, transparent 40%)',
+          }}
+        />
+
+        {/* Count badge — top right, backdrop-blur */}
+        <div
+          className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/95"
+          style={{
+            background: 'rgba(0,0,0,0.30)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          }}
         >
-          {/* Centered Figma SVG, colored via mask-image with per-category accent */}
-          <div className="pointer-events-none absolute inset-0" style={maskedShapeStyle} />
+          {itemCount} {itemCount === 1 ? 'liste' : 'listes'}
+        </div>
 
-          {/* Bottom gradient for text readability */}
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5"
-            style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)',
-            }}
-          />
-
-          {/* Subtle inner border for definition */}
-          <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/4" />
-
-          {/* Genre name + count — identical to V1 */}
-          <div className="absolute inset-0 flex flex-col justify-end p-5">
-            <h3 className="text-[20px] font-bold tracking-tight text-white drop-shadow-lg">
-              {watchlist.name}
-            </h3>
-            <span className="text-muted-foreground mt-1 text-xs drop-shadow-lg">
-              {itemCount} {itemCount === 1 ? 'liste' : 'listes'}
-            </span>
-          </div>
-
-          {/* White bottom accent line — same decoration as V1 */}
-          <div className="absolute right-5 bottom-0 left-5 flex justify-center">
-            <div className="h-[2.7px] w-full rounded-full bg-white/80" />
-          </div>
-        </motion.div>
-      </div>
+        {/* Title bottom-left */}
+        <div className="absolute inset-0 flex flex-col justify-end px-[18px] pt-[18px] pb-[22px]">
+          <h3
+            className="m-0 text-[22px] leading-none font-bold tracking-tight text-white"
+            style={{ textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
+          >
+            {watchlist.name}
+          </h3>
+        </div>
+      </motion.div>
     </Link>
   );
 }

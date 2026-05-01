@@ -8,7 +8,9 @@ import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
-import { type FullMediaDetails, type Watchlist, watchlistAPI } from '@/lib/api-client';
+import { client } from '@/api';
+import type { FullMediaDetails, Watchlist } from '@/api';
+import { fetchTMDBProviders } from '@/api';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import { WatchlistPickerMenu } from '../WatchlistPickerMenu';
@@ -88,16 +90,21 @@ export function ItemDetailsModal({
     const fetchDetails = async () => {
       setError(null);
       try {
-        const detailsPromise = watchlistAPI.getItemDetails(tmdbId, type, languageCode);
+        const detailsPromise = client.watchlists.items[':tmdbId'][':type'].details.$get({
+          param: { tmdbId, type },
+          query: { language: languageCode },
+        });
         const providersPromise =
           platforms.length === 0
-            ? watchlistAPI.fetchTMDBProviders(tmdbId, type, region)
+            ? fetchTMDBProviders(tmdbId, type, region)
             : Promise.resolve([]);
 
-        const [{ details: data }, providersRes] = await Promise.all([
+        const [detailsRes, providersRes] = await Promise.all([
           detailsPromise,
           providersPromise,
         ]);
+        if (!detailsRes.ok) throw new Error('Failed to fetch item details');
+        const { details: data } = await detailsRes.json();
         setDetails(data);
         if (providersRes.length > 0) setFetchedPlatforms(providersRes);
         hasLoadedRef.current = true;

@@ -36,8 +36,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { Watchlist } from '@/lib/api-client';
-import { watchlistAPI } from '@/lib/api-client';
+import { honoAPI, type Watchlist } from '@/api';
 import { useMyWatchlists } from '@/hooks/swr';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { useLanguageStore } from '@/store/language';
@@ -175,7 +174,7 @@ function ListsContentInner() {
       // Persist to backend
       try {
         const allWatchlistIds = newWatchlists.map(w => w.id);
-        await watchlistAPI.reorderWatchlists(allWatchlistIds);
+        await honoAPI.watchlists.reorderWatchlists(allWatchlistIds);
       } catch (error) {
         console.error('Failed to reorder watchlists:', error);
         // Revert on error
@@ -280,7 +279,7 @@ function ListsContentInner() {
       )}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {Array.from({ length: 10 }).map((_, i) => (
             <ListCardSkeleton key={i} />
           ))}
@@ -309,7 +308,7 @@ function ListsContentInner() {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={filteredWatchlists.map(w => w.id)} strategy={rectSortingStrategy}>
             {/* Grid */}
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filteredWatchlists.map((watchlist, index) => (
                 <SortableWatchlistCard
                   key={watchlist.id}

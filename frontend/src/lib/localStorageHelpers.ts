@@ -1,4 +1,4 @@
-import type { Watchlist } from "./api-client";
+import type { Watchlist } from "@/api";
 
 // Storage keys
 export const WATCHLISTS_KEY = "watchlists";

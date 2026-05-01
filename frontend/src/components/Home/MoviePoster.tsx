@@ -4,7 +4,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Eye, Film, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import type { Watchlist } from "@/lib/api-client";
+import type { Watchlist } from "@/api";
 import { WatchlistPickerMenu } from "@/components/List/WatchlistPickerMenu";
 
 interface MoviePosterProps {

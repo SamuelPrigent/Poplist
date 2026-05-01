@@ -7,7 +7,6 @@ export const REFRESH_TOKEN_EXPIRY_DAYS = 30
 export interface AccessTokenPayload {
   sub: string
   email: string
-  roles: string[]
 }
 
 export interface RefreshTokenPayload {

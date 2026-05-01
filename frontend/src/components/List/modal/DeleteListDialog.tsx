@@ -5,7 +5,8 @@ import { AlertTriangle, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { type Watchlist, watchlistAPI } from "@/lib/api-client";
+import { client } from "@/api";
+import type { Watchlist } from "@/api";
 import { useLanguageStore } from "@/store/language";
 
 interface DeleteListDialogProps {
@@ -52,7 +53,10 @@ export function DeleteListDialog({
 				}
 			} else {
 				// Online mode: delete via API
-				await watchlistAPI.delete(watchlist.id);
+				const res = await client.watchlists[':id'].$delete({
+					param: { id: watchlist.id },
+				});
+				if (!res.ok) throw new Error("Failed to delete watchlist");
 
 				onOpenChange(false);
 				if (onSuccess) {

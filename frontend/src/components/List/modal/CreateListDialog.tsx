@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { type Watchlist, watchlistAPI } from '@/lib/api-client';
+import { client } from '@/api';
+import type { Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, type GenreCategory, getCategoryInfo } from '@/types/categories';
 
@@ -92,14 +93,17 @@ export function CreateListDialog({
 
       if (offline) {
         // Offline mode: create in localStorage
-        const newWatchlist = {
+        const newWatchlist: Watchlist = {
           id: `offline-${Date.now()}`,
           ownerId: 'offline',
           name: name.trim(),
-          description: description.trim() || undefined,
-          imageUrl: imagePreview || undefined,
-          isPublic: false, // Offline watchlists cannot be public
-          genres: undefined, // Offline watchlists don't support genres
+          description: description.trim() || null,
+          imageUrl: imagePreview || null,
+          thumbnailUrl: null,
+          dominantColor: null,
+          isPublic: false,
+          genres: [],
+          position: 0,
           collaborators: [],
           items: [],
           likedBy: [],
@@ -118,17 +122,33 @@ export function CreateListDialog({
         onOpenChange(false);
       } else {
         // Online mode: create via API
-        let { watchlist } = await watchlistAPI.create({
-          name: name.trim(),
-          description: description.trim() || undefined,
-          isPublic,
-          genres: genresData,
+        const createRes = await client.watchlists.$post({
+          json: {
+            name: name.trim(),
+            description: description.trim() || undefined,
+            isPublic,
+            genres: genresData,
+          },
         });
+        if (!createRes.ok) throw new Error('Failed to create watchlist');
+        const created = await createRes.json();
+        if (!created.watchlist) throw new Error('Watchlist creation failed');
+        let watchlist: Watchlist = {
+          ...created.watchlist,
+          collaborators: [],
+        };
 
         // Upload cover image if provided and update watchlist with imageUrl
         if (imagePreview) {
-          const uploadResult = await watchlistAPI.uploadCover(watchlist.id, imagePreview);
-          watchlist = uploadResult.watchlist;
+          const uploadRes = await client.watchlists[':id']['upload-cover'].$post({
+            param: { id: watchlist.id },
+            json: { imageData: imagePreview },
+          });
+          if (!uploadRes.ok) throw new Error('Failed to upload cover');
+          const uploadResult = await uploadRes.json();
+          if (uploadResult.watchlist) {
+            watchlist = { ...watchlist, ...uploadResult.watchlist };
+          }
         }
 
         // Reset form

@@ -1,9 +1,21 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { mergeLocalWatchlistsToDB } from "@/features/watchlists/localStorage";
-import { authAPI, setAuthErrorHandler } from "@/lib/api-client";
+import { client, setAuthErrorHandler } from "@/api";
 import { type Language, useLanguageStore } from "@/store/language";
 import { AuthContext, type AuthContextValue, type User } from "./auth-context";
+
+async function jsonOrThrow<T>(res: Response): Promise<T> {
+	if (!res.ok) {
+		const err = await res
+			.json()
+			.catch(() => ({ error: `Request failed: ${res.status}` }));
+		throw new Error(
+			(err as { error?: string }).error || `Request failed: ${res.status}`,
+		);
+	}
+	return res.json() as Promise<T>;
+}
 
 // Clé localStorage pour l'état d'auth optimiste
 const AUTH_STORAGE_KEY = "poplist_auth";
@@ -67,8 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	const fetchUser = useCallback(async () => {
 		try {
-			const response = await authAPI.me();
-			const fetchedUser = (response as { user: User }).user;
+			const res = await client.auth.me.$get();
+			if (!res.ok) {
+				throw new Error("Unauthenticated");
+			}
+			const { user: fetchedUser } = await res.json();
 			setUser(fetchedUser);
 			setOptimisticAuth(true);
 			setStoredAuthState(true, fetchedUser);
@@ -89,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		console.log("🚪 Auto-logout: Refresh token expired, cleaning up...");
 		// Call the real logout to clean cookies on backend
 		try {
-			await authAPI.logout();
+			await client.auth.logout.$post();
 		} catch {
 			// Ignore errors - just clean up local state
 			console.log(
@@ -109,16 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, [fetchUser, handleAutoLogout]);
 
 	const login = async (email: string, password: string) => {
-		const response = await authAPI.login(email, password);
-		const loggedInUser = (response as { user: User }).user;
+		const res = await client.auth.login.$post({ json: { email, password } });
+		const { user: loggedInUser } = await jsonOrThrow<{ user: User }>(res);
 		setUser(loggedInUser);
 		setOptimisticAuth(true);
 		setStoredAuthState(true, loggedInUser);
 	};
 
 	const signup = async (email: string, password: string) => {
-		const response = await authAPI.signup(email, password);
-		const signedUpUser = (response as { user: User }).user;
+		const res = await client.auth.signup.$post({ json: { email, password } });
+		const { user: signedUpUser } = await jsonOrThrow<{ user: User }>(res);
 		setUser(signedUpUser);
 		setOptimisticAuth(true);
 		setStoredAuthState(true, signedUpUser);
@@ -133,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	};
 
 	const logout = async () => {
-		await authAPI.logout();
+		await client.auth.logout.$post();
 		setUser(null);
 		setOptimisticAuth(false);
 		setStoredAuthState(false, null);
@@ -144,16 +159,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	};
 
 	const updateUsername = async (username: string) => {
-		const response = await authAPI.updateUsername(username);
-		setUser((response as { user: User }).user);
+		const res = await client.auth.profile.username.$put({ json: { username } });
+		const { user: updatedUser } = await jsonOrThrow<{ user: User }>(res);
+		setUser(updatedUser);
 	};
 
 	const changePassword = async (oldPassword: string, newPassword: string) => {
-		await authAPI.changePassword(oldPassword, newPassword);
+		const res = await client.auth.profile.password.$put({
+			json: { oldPassword, newPassword },
+		});
+		if (!res.ok) {
+			const err = await res.json().catch(() => ({ error: "Failed to change password" }));
+			throw new Error((err as { error?: string }).error || "Failed to change password");
+		}
 	};
 
 	const deleteAccount = async (confirmation: string) => {
-		await authAPI.deleteAccount(confirmation);
+		const res = await client.auth.profile.account.$delete({
+			json: { confirmation: confirmation as "confirmer" },
+		});
+		if (!res.ok) {
+			const err = await res.json().catch(() => ({ error: "Failed to delete account" }));
+			throw new Error((err as { error?: string }).error || "Failed to delete account");
+		}
 		setUser(null);
 	};
 

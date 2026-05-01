@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { PosterGrid } from "@/components/List/PosterGrid";
-import type { Watchlist } from "@/lib/api-client";
+import type { Watchlist } from "@/api";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
 

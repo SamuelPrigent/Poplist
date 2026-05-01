@@ -1,5 +1,5 @@
 import useSWR, { type SWRConfiguration } from 'swr'
-import type { Watchlist } from '@/lib/api-client'
+import type { Watchlist } from '@/api'
 
 /**
  * SWR fetcher compatible with the api-client cookie-based auth.

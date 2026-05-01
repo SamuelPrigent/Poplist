@@ -1,4 +1,6 @@
-import prisma from '../lib/prisma.js';
+import { and, eq, gt, lt } from 'drizzle-orm';
+import { db } from '../db/index.js';
+import { apiCaches } from '../db/schema.js';
 
 export function buildCacheKey(endpoint: string, params: Record<string, string> = {}): string {
   const sortedParams = Object.entries(params)
@@ -10,12 +12,11 @@ export function buildCacheKey(endpoint: string, params: Record<string, string> =
 
 export async function getFromCache(cacheKey: string): Promise<unknown | null> {
   try {
-    const cached = await prisma.apiCache.findFirst({
-      where: {
-        requestUrl: cacheKey,
-        expiresAt: { gt: new Date() },
-      },
-    });
+    const [cached] = await db
+      .select({ responseData: apiCaches.responseData })
+      .from(apiCaches)
+      .where(and(eq(apiCaches.requestUrl, cacheKey), gt(apiCaches.expiresAt, new Date())))
+      .limit(1);
 
     if (cached) {
       return cached.responseData;
@@ -36,20 +37,22 @@ export async function saveToCache(
   try {
     const expiresAt = new Date(Date.now() + cacheDurationDays * 24 * 60 * 60 * 1000);
 
-    await prisma.apiCache.upsert({
-      where: { requestUrl: cacheKey },
-      update: {
-        responseData: responseData as any,
-        cachedAt: new Date(),
-        expiresAt,
-      },
-      create: {
+    await db
+      .insert(apiCaches)
+      .values({
         requestUrl: cacheKey,
-        responseData: responseData as any,
+        responseData,
         cachedAt: new Date(),
         expiresAt,
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: apiCaches.requestUrl,
+        set: {
+          responseData,
+          cachedAt: new Date(),
+          expiresAt,
+        },
+      });
   } catch (error) {
     console.error('[CACHE ERROR] saveToCache:', error);
   }
@@ -57,10 +60,11 @@ export async function saveToCache(
 
 export async function clearExpiredCache(): Promise<number> {
   try {
-    const result = await prisma.apiCache.deleteMany({
-      where: { expiresAt: { lt: new Date() } },
-    });
-    return result.count;
+    const result = await db
+      .delete(apiCaches)
+      .where(lt(apiCaches.expiresAt, new Date()))
+      .returning({ id: apiCaches.id });
+    return result.length;
   } catch (error) {
     console.error('[CACHE ERROR] clearExpiredCache:', error);
     return 0;

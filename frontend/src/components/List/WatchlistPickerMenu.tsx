@@ -5,7 +5,7 @@ import { Film } from 'lucide-react';
 import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { PosterGrid } from '@/components/List/PosterGrid';
-import type { Watchlist } from '@/lib/api-client';
+import type { Watchlist } from '@/api';
 
 interface WatchlistPickerMenuProps {
   watchlists: Watchlist[];

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { PosterGrid } from '@/components/List/PosterGrid';
-import type { Collaborator, Watchlist } from '@/lib/api-client';
+import type { Collaborator, Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 interface ListHeaderProps {
@@ -212,7 +212,7 @@ export function ListHeader({
                               <div
                                 key={collaborator.id}
                                 className="bg-muted ring-background flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ring-2"
-                                title={collaborator.username}
+                                title={collaborator.username ?? undefined}
                               >
                                 {(
                                   collaborator as Collaborator & {

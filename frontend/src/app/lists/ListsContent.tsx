@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { type Watchlist, watchlistAPI } from '@/lib/api-client';
+import { honoAPI, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 30; // 6 rows of 5 cards
@@ -54,7 +54,7 @@ function CommunityListsPageInner() {
   const fetchWatchlists = useCallback(async () => {
     try {
       // Fetch all public watchlists with higher limit for community page
-      const data = await watchlistAPI.getPublicWatchlists(1000);
+      const data = await honoAPI.watchlists.getPublicFeatured(1000);
       setWatchlists(data.watchlists || []);
     } catch (error) {
       console.error('Failed to fetch community watchlists:', error);
@@ -71,7 +71,7 @@ function CommunityListsPageInner() {
       // Fetch user's watchlists if authenticated
       if (user) {
         try {
-          const userData = await watchlistAPI.getMine();
+          const userData = await honoAPI.watchlists.getMine();
           setUserWatchlists(userData.watchlists || []);
         } catch (error) {
           console.error('Failed to fetch user watchlists:', error);
@@ -103,14 +103,14 @@ function CommunityListsPageInner() {
 
         {/* Watchlists Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 5 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
           </div>
         ) : watchlists.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6">
               {paginatedWatchlists.map(watchlist => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;

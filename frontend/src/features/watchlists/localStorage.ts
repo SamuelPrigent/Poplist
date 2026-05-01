@@ -1,5 +1,5 @@
-import type { Watchlist } from "@/lib/api-client";
-import { watchlistAPI } from "@/lib/api-client";
+import { client } from "@/api";
+import type { Watchlist } from "@/api";
 
 const STORAGE_KEY = "watchlists";
 
@@ -84,13 +84,15 @@ export async function mergeLocalWatchlistsToDB(): Promise<void> {
 			};
 		});
 
-		return watchlistAPI.create({
-			name: watchlist.name,
-			description: watchlist.description,
-			isPublic: watchlist.isPublic,
-			genres: watchlist.genres,
-			items: items,
-			fromLocalStorage: true,
+		return client.watchlists.$post({
+			json: {
+				name: watchlist.name,
+				description: watchlist.description ?? undefined,
+				isPublic: watchlist.isPublic ?? undefined,
+				genres: watchlist.genres ?? undefined,
+				items: items,
+				fromLocalStorage: true,
+			},
 		});
 	});
 

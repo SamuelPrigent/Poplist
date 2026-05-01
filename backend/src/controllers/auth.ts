@@ -1,7 +1,9 @@
 import type { Context } from 'hono'
 import { getCookie } from 'hono/cookie'
 import bcrypt from 'bcrypt'
-import prisma from '../lib/prisma.js'
+import { and, asc, eq, inArray, lt, or } from 'drizzle-orm'
+import { db } from '../db/index.js'
+import { refreshTokens, savedWatchlists, userWatchlistPositions, users, watchlistLikes, watchlists } from '../db/schema.js'
 import {
   signAccessToken,
   signRefreshToken,
@@ -17,6 +19,7 @@ import {
 } from '../services/cookie.js'
 import { getGoogleAuthURL, getGoogleUserInfo, getClientURL } from '../services/google-oauth.js'
 import { generateUniqueUsername } from '../services/username.js'
+import type { z } from 'zod'
 import {
   signupSchema,
   loginSchema,
@@ -30,44 +33,46 @@ import type { AppEnv } from '../app.js'
 
 type C = Context<AppEnv>
 
+export type SignupInput = z.infer<typeof signupSchema>
+export type LoginInput = z.infer<typeof loginSchema>
+export type UpdateUsernameInput = z.infer<typeof updateUsernameSchema>
+export type UpdateLanguageInput = z.infer<typeof updateLanguageSchema>
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>
+export type SetTokensInput = z.infer<typeof setTokensSchema>
+
 async function cleanupAndCreateToken(
   userId: string,
   refreshToken: string,
   userAgent: string | null
 ) {
-  await prisma.refreshToken.deleteMany({
-    where: { userId, expiresAt: { lt: new Date() } },
-  })
+  await db
+    .delete(refreshTokens)
+    .where(and(eq(refreshTokens.userId, userId), lt(refreshTokens.expiresAt, new Date())))
 
-  const existingTokens = await prisma.refreshToken.findMany({
-    where: { userId },
-    orderBy: { issuedAt: 'asc' },
-  })
+  const existingTokens = await db
+    .select({ id: refreshTokens.id })
+    .from(refreshTokens)
+    .where(eq(refreshTokens.userId, userId))
+    .orderBy(asc(refreshTokens.issuedAt))
 
   if (existingTokens.length >= 5) {
-    await prisma.refreshToken.delete({ where: { id: existingTokens[0].id } })
+    await db.delete(refreshTokens).where(eq(refreshTokens.id, existingTokens[0].id))
   }
 
-  await prisma.refreshToken.create({
-    data: {
-      userId,
-      tokenHash: hashToken(refreshToken),
-      issuedAt: new Date(),
-      expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
-      userAgent,
-    },
+  await db.insert(refreshTokens).values({
+    userId,
+    tokenHash: hashToken(refreshToken),
+    issuedAt: new Date(),
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
+    userAgent,
   })
 }
 
-export const signup = async (c: C) => {
-  const body = await c.req.json()
-  const parsed = signupSchema.safeParse(body)
-  if (!parsed.success) {
-    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
-  }
-  const { email, password } = parsed.data
+export const signup = async (c: C, data: SignupInput) => {
+  const { email, password } = data
 
-  const existingUser = await prisma.user.findUnique({ where: { email } })
+  const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1)
   if (existingUser) {
     return c.json({ error: 'User already exists' }, 409)
   }
@@ -75,12 +80,13 @@ export const signup = async (c: C) => {
   const passwordHash = await bcrypt.hash(password, 10)
   const username = await generateUniqueUsername()
 
-  const user = await prisma.user.create({
-    data: { email, username, passwordHash, roles: ['user'], language: 'fr' },
-  })
+  const [user] = await db
+    .insert(users)
+    .values({ email, username, passwordHash, language: 'fr' })
+    .returning()
 
   const tokenId = generateTokenId()
-  const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+  const accessToken = signAccessToken({ sub: user.id, email: user.email })
   const refreshToken = signRefreshToken({ sub: user.id, tokenId })
 
   await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
@@ -96,7 +102,6 @@ export const signup = async (c: C) => {
         username: user.username,
         language: user.language || 'fr',
         avatarUrl: user.avatarUrl,
-        roles: user.roles,
         hasPassword: !!user.passwordHash,
       },
     },
@@ -104,15 +109,10 @@ export const signup = async (c: C) => {
   )
 }
 
-export const login = async (c: C) => {
-  const body = await c.req.json()
-  const parsed = loginSchema.safeParse(body)
-  if (!parsed.success) {
-    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
-  }
-  const { email, password } = parsed.data
+export const login = async (c: C, data: LoginInput) => {
+  const { email, password } = data
 
-  const user = await prisma.user.findUnique({ where: { email } })
+  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
   if (!user || !user.passwordHash) {
     return c.json({ error: 'Invalid credentials' }, 401)
   }
@@ -124,12 +124,12 @@ export const login = async (c: C) => {
 
   if (!user.username) {
     const username = await generateUniqueUsername()
-    await prisma.user.update({ where: { id: user.id }, data: { username } })
+    await db.update(users).set({ username }).where(eq(users.id, user.id))
     user.username = username
   }
 
   const tokenId = generateTokenId()
-  const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+  const accessToken = signAccessToken({ sub: user.id, email: user.email })
   const refreshToken = signRefreshToken({ sub: user.id, tokenId })
 
   await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
@@ -144,7 +144,6 @@ export const login = async (c: C) => {
       username: user.username,
       language: user.language || 'fr',
       avatarUrl: user.avatarUrl,
-      roles: user.roles,
       hasPassword: !!user.passwordHash,
     },
   })
@@ -177,26 +176,35 @@ export const googleCallback = async (c: C) => {
       return c.json({ error: 'Could not retrieve email from Google' }, 400)
     }
 
-    let user = await prisma.user.findFirst({
-      where: { OR: [{ googleId }, { email }] },
-    })
+    let [user] = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.googleId, googleId), eq(users.email, email)))
+      .limit(1)
 
     if (!user) {
       const username = await generateUniqueUsername()
-      user = await prisma.user.create({
-        data: { email, username, googleId, roles: ['user'], language: 'fr' },
-      })
+      const [created] = await db
+        .insert(users)
+        .values({ email, username, googleId, language: 'fr' })
+        .returning()
+      user = created
     } else {
-      const updates: any = {}
+      const updates: { googleId?: string; username?: string } = {}
       if (!user.googleId) updates.googleId = googleId
       if (!user.username) updates.username = await generateUniqueUsername()
       if (Object.keys(updates).length > 0) {
-        user = await prisma.user.update({ where: { id: user.id }, data: updates })
+        const [updated] = await db
+          .update(users)
+          .set(updates)
+          .where(eq(users.id, user.id))
+          .returning()
+        user = updated
       }
     }
 
     const tokenId = generateTokenId()
-    const accessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+    const accessToken = signAccessToken({ sub: user.id, email: user.email })
     const refreshToken = signRefreshToken({ sub: user.id, tokenId })
 
     await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null)
@@ -269,33 +277,33 @@ export const refresh = async (c: C) => {
     const payload = verifyRefreshToken(refreshToken)
     const tokenHash = hashToken(refreshToken)
 
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } })
+    const [user] = await db.select().from(users).where(eq(users.id, payload.sub)).limit(1)
     if (!user) {
       return c.json({ error: 'User not found' }, 401)
     }
 
-    const existingToken = await prisma.refreshToken.findFirst({
-      where: { userId: user.id, tokenHash },
-    })
+    const [existingToken] = await db
+      .select({ id: refreshTokens.id })
+      .from(refreshTokens)
+      .where(and(eq(refreshTokens.userId, user.id), eq(refreshTokens.tokenHash, tokenHash)))
+      .limit(1)
 
     if (!existingToken) {
       return c.json({ error: 'Invalid refresh token' }, 401)
     }
 
-    await prisma.refreshToken.delete({ where: { id: existingToken.id } })
+    await db.delete(refreshTokens).where(eq(refreshTokens.id, existingToken.id))
 
     const newTokenId = generateTokenId()
-    const newAccessToken = signAccessToken({ sub: user.id, email: user.email, roles: user.roles })
+    const newAccessToken = signAccessToken({ sub: user.id, email: user.email })
     const newRefreshToken = signRefreshToken({ sub: user.id, tokenId: newTokenId })
 
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        tokenHash: hashToken(newRefreshToken),
-        issuedAt: new Date(),
-        expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
-        userAgent: c.req.header('user-agent') || null,
-      },
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      tokenHash: hashToken(newRefreshToken),
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
+      userAgent: c.req.header('user-agent') || null,
     })
 
     setAccessTokenCookie(c, newAccessToken)
@@ -314,9 +322,9 @@ export const logout = async (c: C) => {
     const tokenHash = hashToken(refreshToken)
     try {
       const payload = verifyRefreshToken(refreshToken)
-      await prisma.refreshToken.deleteMany({
-        where: { userId: payload.sub, tokenHash },
-      })
+      await db
+        .delete(refreshTokens)
+        .where(and(eq(refreshTokens.userId, payload.sub), eq(refreshTokens.tokenHash, tokenHash)))
     } catch {
       // Token invalid or expired, continue with logout
     }
@@ -326,15 +334,9 @@ export const logout = async (c: C) => {
   return c.json({ message: 'Logged out successfully' })
 }
 
-export const setTokens = async (c: C) => {
-  const body = await c.req.json()
-  const parsed = setTokensSchema.safeParse(body)
-  if (!parsed.success) {
-    return c.json({ error: 'Validation failed' }, 422)
-  }
-
-  setAccessTokenCookie(c, parsed.data.accessToken)
-  setRefreshTokenCookie(c, parsed.data.refreshToken)
+export const setTokens = async (c: C, data: SetTokensInput) => {
+  setAccessTokenCookie(c, data.accessToken)
+  setRefreshTokenCookie(c, data.refreshToken)
 
   return c.json({ message: 'Tokens set successfully' })
 }
@@ -350,7 +352,11 @@ export const checkUsernameAvailability = async (c: C) => {
     return c.json({ error: 'Username can only contain letters, numbers, and underscores' }, 400)
   }
 
-  const existingUser = await prisma.user.findUnique({ where: { username } })
+  const [existingUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1)
 
   return c.json({ available: !existingUser, username })
 }
@@ -358,7 +364,7 @@ export const checkUsernameAvailability = async (c: C) => {
 export const me = async (c: C) => {
   const user = c.get('user')!
 
-  const fullUser = await prisma.user.findUnique({ where: { id: user.sub } })
+  const [fullUser] = await db.select().from(users).where(eq(users.id, user.sub)).limit(1)
   if (!fullUser) {
     return c.json({ error: 'User not found' }, 404)
   }
@@ -370,35 +376,38 @@ export const me = async (c: C) => {
       username: fullUser.username,
       language: fullUser.language || 'fr',
       avatarUrl: fullUser.avatarUrl,
-      roles: fullUser.roles,
       createdAt: fullUser.createdAt,
       hasPassword: !!fullUser.passwordHash,
     },
   })
 }
 
-export const updateUsername = async (c: C) => {
+export const updateUsername = async (c: C, data: UpdateUsernameInput) => {
   const user = c.get('user')!
-  const body = await c.req.json()
-  const parsed = updateUsernameSchema.safeParse(body)
-  if (!parsed.success) {
-    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
-  }
 
-  const fullUser = await prisma.user.findUnique({ where: { id: user.sub } })
+  const [fullUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, user.sub))
+    .limit(1)
   if (!fullUser) {
     return c.json({ error: 'User not found' }, 404)
   }
 
-  const existingUser = await prisma.user.findUnique({ where: { username: parsed.data.username } })
+  const [existingUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, data.username))
+    .limit(1)
   if (existingUser && existingUser.id !== fullUser.id) {
     return c.json({ error: 'Username already taken' }, 409)
   }
 
-  const updated = await prisma.user.update({
-    where: { id: user.sub },
-    data: { username: parsed.data.username },
-  })
+  const [updated] = await db
+    .update(users)
+    .set({ username: data.username })
+    .where(eq(users.id, user.sub))
+    .returning()
 
   return c.json({
     user: {
@@ -407,21 +416,19 @@ export const updateUsername = async (c: C) => {
       username: updated.username,
       language: updated.language || 'fr',
       avatarUrl: updated.avatarUrl,
-      roles: updated.roles,
       hasPassword: !!updated.passwordHash,
     },
   })
 }
 
-export const changePassword = async (c: C) => {
+export const changePassword = async (c: C, data: ChangePasswordInput) => {
   const user = c.get('user')!
-  const body = await c.req.json()
-  const parsed = changePasswordSchema.safeParse(body)
-  if (!parsed.success) {
-    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
-  }
 
-  const fullUser = await prisma.user.findUnique({ where: { id: user.sub } })
+  const [fullUser] = await db
+    .select({ passwordHash: users.passwordHash })
+    .from(users)
+    .where(eq(users.id, user.sub))
+    .limit(1)
   if (!fullUser) {
     return c.json({ error: 'User not found' }, 404)
   }
@@ -430,29 +437,25 @@ export const changePassword = async (c: C) => {
     return c.json({ error: 'Cannot change password for OAuth accounts' }, 400)
   }
 
-  const isValid = await bcrypt.compare(parsed.data.oldPassword, fullUser.passwordHash)
+  const isValid = await bcrypt.compare(data.oldPassword, fullUser.passwordHash)
   if (!isValid) {
     return c.json({ error: 'Invalid old password' }, 401)
   }
 
-  const newHash = await bcrypt.hash(parsed.data.newPassword, 10)
-  await prisma.user.update({ where: { id: user.sub }, data: { passwordHash: newHash } })
+  const newHash = await bcrypt.hash(data.newPassword, 10)
+  await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.sub))
 
   return c.json({ message: 'Password changed successfully' })
 }
 
-export const updateLanguage = async (c: C) => {
+export const updateLanguage = async (c: C, data: UpdateLanguageInput) => {
   const user = c.get('user')!
-  const body = await c.req.json()
-  const parsed = updateLanguageSchema.safeParse(body)
-  if (!parsed.success) {
-    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
-  }
 
-  const updated = await prisma.user.update({
-    where: { id: user.sub },
-    data: { language: parsed.data.language },
-  })
+  const [updated] = await db
+    .update(users)
+    .set({ language: data.language })
+    .where(eq(users.id, user.sub))
+    .returning()
 
   return c.json({
     user: {
@@ -461,44 +464,36 @@ export const updateLanguage = async (c: C) => {
       username: updated.username,
       language: updated.language,
       avatarUrl: updated.avatarUrl,
-      roles: updated.roles,
       hasPassword: !!updated.passwordHash,
     },
   })
 }
 
-export const deleteAccount = async (c: C) => {
+export const deleteAccount = async (c: C, _data: DeleteAccountInput) => {
   const user = c.get('user')!
-  const body = await c.req.json()
-  const parsed = deleteAccountSchema.safeParse(body)
-  if (!parsed.success) {
-    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422)
-  }
 
   const userId = user.sub
 
-  await prisma.watchlistLike.deleteMany({ where: { userId } })
-  await prisma.savedWatchlist.deleteMany({ where: { userId } })
-  await prisma.userWatchlistPosition.deleteMany({ where: { userId } })
+  await db.delete(watchlistLikes).where(eq(watchlistLikes.userId, userId))
+  await db.delete(savedWatchlists).where(eq(savedWatchlists.userId, userId))
+  await db.delete(userWatchlistPositions).where(eq(userWatchlistPositions.userId, userId))
 
-  const userWatchlists = await prisma.watchlist.findMany({
-    where: { ownerId: userId },
-    select: { id: true },
-  })
+  const userWatchlists = await db
+    .select({ id: watchlists.id })
+    .from(watchlists)
+    .where(eq(watchlists.ownerId, userId))
   const watchlistIds = userWatchlists.map(w => w.id)
 
   if (watchlistIds.length > 0) {
-    await prisma.savedWatchlist.deleteMany({
-      where: { watchlistId: { in: watchlistIds } },
-    })
+    await db.delete(savedWatchlists).where(inArray(savedWatchlists.watchlistId, watchlistIds))
   }
 
-  await prisma.watchlist.deleteMany({ where: { ownerId: userId } })
-  await prisma.refreshToken.deleteMany({ where: { userId } })
+  await db.delete(watchlists).where(eq(watchlists.ownerId, userId))
+  await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId))
 
   clearAuthCookies(c)
 
-  await prisma.user.delete({ where: { id: userId } })
+  await db.delete(users).where(eq(users.id, userId))
 
   return c.json({ message: 'Account deleted successfully' })
 }

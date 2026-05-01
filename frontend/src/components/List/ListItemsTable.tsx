@@ -51,8 +51,8 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useAuth } from '@/context/auth-context';
-import type { Watchlist, WatchlistItem } from '@/lib/api-client';
-import { watchlistAPI } from '@/lib/api-client';
+import { client } from '@/api';
+import { createPlaceholderItem, type Watchlist, type WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
@@ -227,7 +227,7 @@ function DraggableRow({
                   watchlists={pickerWatchlists}
                   tmdbId={item.tmdbId}
                   onAdd={watchlistId =>
-                    handleAddFromRow(watchlistId, item.tmdbId.toString(), item.mediaType)
+                    handleAddFromRow(watchlistId, item.tmdbId.toString(), item.mediaType as 'movie' | 'tv')
                   }
                   onRemove={watchlistId =>
                     handleRemoveFromRow(watchlistId, item.tmdbId.toString())
@@ -371,10 +371,13 @@ export function ListItemsTable({
   // Fetch user watchlists if authenticated, or load from localStorage if not
   const loadWatchlists = useCallback(() => {
     if (isAuthenticated) {
-      watchlistAPI
-        .getMine()
-        .then(data => {
-          setWatchlists(data.watchlists);
+      client.watchlists.mine
+        .$get()
+        .then(async res => {
+          if (res.ok) {
+            const data = await res.json();
+            setWatchlists(data.watchlists);
+          }
         })
         .catch(console.error);
     } else {
@@ -440,12 +443,16 @@ export function ListItemsTable({
   const handleAddToWatchlist = async (watchlistId: string, item: WatchlistItem) => {
     try {
       setAddingTo(item.tmdbId);
-      await watchlistAPI.addItem(watchlistId, {
-        tmdbId: item.tmdbId.toString(),
-        mediaType: item.mediaType,
-        language: tmdbLanguage,
-        region: tmdbRegion,
+      const res = await client.watchlists[':id'].items.$post({
+        param: { id: watchlistId },
+        json: {
+          tmdbId: item.tmdbId.toString(),
+          mediaType: item.mediaType as 'movie' | 'tv',
+          language: tmdbLanguage,
+          region: tmdbRegion,
+        },
       });
+      if (!res.ok) throw new Error('Failed to add item');
       mutate('/watchlists/mine');
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
@@ -460,14 +467,12 @@ export function ListItemsTable({
     mediaType: 'movie' | 'tv'
   ) => {
     const idNum = Number(tmdbId);
-    const placeholder: WatchlistItem = {
+    const placeholder = createPlaceholderItem({
       tmdbId: idNum,
       title: '',
       posterPath: null,
       mediaType,
-      platformList: [],
-      addedAt: new Date().toISOString(),
-    };
+    });
     setWatchlists(prev =>
       prev.map(wl =>
         wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
@@ -481,12 +486,16 @@ export function ListItemsTable({
       );
     }
     try {
-      await watchlistAPI.addItem(watchlistId, {
-        tmdbId,
-        mediaType,
-        language: tmdbLanguage,
-        region: tmdbRegion,
+      const res = await client.watchlists[':id'].items.$post({
+        param: { id: watchlistId },
+        json: {
+          tmdbId,
+          mediaType,
+          language: tmdbLanguage,
+          region: tmdbRegion,
+        },
       });
+      if (!res.ok) throw new Error('Failed to add item');
       mutate('/watchlists/mine');
       if (watchlistId === watchlist.id) {
         onUpdate();
@@ -520,7 +529,10 @@ export function ListItemsTable({
       setItems(prev => prev.filter(it => it.tmdbId !== idNum));
     }
     try {
-      await watchlistAPI.removeItem(watchlistId, tmdbId);
+      const res = await client.watchlists[':id'].items[':tmdbId'].$delete({
+        param: { id: watchlistId, tmdbId },
+      });
+      if (!res.ok) throw new Error('Failed to remove item');
       mutate('/watchlists/mine');
       if (watchlistId === watchlist.id) {
         onUpdate();
@@ -549,7 +561,10 @@ export function ListItemsTable({
       const newItems = items.filter(item => item.tmdbId !== tmdbId);
       setItems(newItems);
 
-      await watchlistAPI.removeItem(watchlist.id, tmdbId.toString());
+      const res = await client.watchlists[':id'].items[':tmdbId'].$delete({
+        param: { id: watchlist.id, tmdbId: tmdbId.toString() },
+      });
+      if (!res.ok) throw new Error('Failed to remove item');
 
       // Notify parent with updated watchlist (no loading flicker)
       onUpdate({ ...watchlist, items: newItems });
@@ -577,7 +592,11 @@ export function ListItemsTable({
       }
       setItems(newItems);
 
-      await watchlistAPI.moveItem(watchlist.id, tmdbId.toString(), position);
+      const res = await client.watchlists[':id'].items[':tmdbId'].position.$put({
+        param: { id: watchlist.id, tmdbId: tmdbId.toString() },
+        json: { position },
+      });
+      if (!res.ok) throw new Error('Failed to move item');
 
       // Notify parent with updated watchlist (no loading flicker)
       onUpdate({ ...watchlist, items: newItems });
@@ -602,7 +621,11 @@ export function ListItemsTable({
 
       try {
         const orderedTmdbIds = newItems.map(item => item.tmdbId.toString());
-        await watchlistAPI.reorderItems(watchlist.id, orderedTmdbIds);
+        const res = await client.watchlists[':id'].items.reorder.$put({
+          param: { id: watchlist.id },
+          json: { orderedTmdbIds },
+        });
+        if (!res.ok) throw new Error('Failed to reorder items');
 
         // Notify parent with updated watchlist (no loading flicker)
         onUpdate({ ...watchlist, items: newItems });
@@ -677,7 +700,7 @@ export function ListItemsTable({
                   <>
                     <PosterImage
                       src={getTMDBImageUrl(item.posterPath, 'w92') || ''}
-                      alt={item.title}
+                      alt={item.title ?? ''}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
                       <Eye className="h-5 w-5 text-white" />
@@ -806,7 +829,7 @@ export function ListItemsTable({
           }
 
           return (
-            <span className="text-muted-foreground text-sm">{formatRuntime(item.runtime)}</span>
+            <span className="text-muted-foreground text-sm">{formatRuntime(item.runtime ?? undefined)}</span>
           );
         },
         size: 150,
@@ -945,8 +968,8 @@ export function ListItemsTable({
             }
           }}
           tmdbId={selectedItem.tmdbId.toString()}
-          type={selectedItem.mediaType}
-          platforms={selectedItem.platformList}
+          type={selectedItem.mediaType as 'movie' | 'tv'}
+          platforms={selectedItem.platformList ?? undefined}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < displayItems.length - 1 ? handleNavigateNext : undefined}
           watchlists={(() => {
@@ -961,7 +984,7 @@ export function ListItemsTable({
             handleAddFromDetails(
               watchlistId,
               selectedItem.tmdbId.toString(),
-              selectedItem.mediaType
+              selectedItem.mediaType as 'movie' | 'tv'
             )
           }
           onRemoveFromWatchlist={watchlistId =>

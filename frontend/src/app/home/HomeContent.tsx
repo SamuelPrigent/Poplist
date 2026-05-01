@@ -16,7 +16,7 @@ import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
-import { tmdbAPI, type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
+import { createPlaceholderItem, honoAPI, type Watchlist, type WatchlistItem } from '@/api';
 // import { getTMDBImageUrl } from '@/lib/utils';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
@@ -33,8 +33,8 @@ interface DiscoverItem {
   id: number;
   title?: string;
   name?: string;
-  poster_path?: string;
-  backdrop_path?: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
   media_type?: 'movie' | 'tv';
   vote_average?: number;
   vote_count?: number;
@@ -88,7 +88,7 @@ function HomeContentInner() {
 
   const fetchPublicWatchlists = useCallback(async () => {
     try {
-      const publicData = await watchlistAPI.getPublicWatchlists(50);
+      const publicData = await honoAPI.watchlists.getPublicFeatured(50);
       const sorted = (publicData.watchlists || []).sort(
         (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
       );
@@ -101,7 +101,7 @@ function HomeContentInner() {
   const fetchCreators = useCallback(async () => {
     try {
       // Get public watchlists with higher limit to aggregate creators
-      const publicData = await watchlistAPI.getPublicWatchlists(100);
+      const publicData = await honoAPI.watchlists.getPublicFeatured(100);
       const watchlists = publicData.watchlists || [];
 
       // Aggregate by owner
@@ -109,7 +109,7 @@ function HomeContentInner() {
 
       for (const watchlist of watchlists) {
         if (watchlist.owner) {
-          const ownerId = watchlist.owner.id || watchlist.ownerId;
+          const ownerId = watchlist.owner.id;
           const existing = creatorsMap.get(ownerId);
 
           if (existing) {
@@ -118,7 +118,7 @@ function HomeContentInner() {
             creatorsMap.set(ownerId, {
               id: ownerId,
               username: watchlist.owner.username || 'Utilisateur',
-              avatarUrl: watchlist.owner.avatarUrl,
+              avatarUrl: watchlist.owner.avatarUrl ?? undefined,
               listCount: 1,
             });
           }
@@ -146,7 +146,7 @@ function HomeContentInner() {
 
         let userWatchlistsData: Watchlist[] = [];
         if (user) {
-          const userData = await watchlistAPI.getMine();
+          const userData = await honoAPI.watchlists.getMine();
           userWatchlistsData = userData.watchlists || [];
           setUserWatchlists(userWatchlistsData);
         } else {
@@ -159,14 +159,14 @@ function HomeContentInner() {
         const randomPage = Math.floor(Math.random() * 5) + 1;
 
         const [movieData, tvData] = await Promise.all([
-          tmdbAPI.getDiscover('movie', {
+          honoAPI.tmdb.discover('movie', {
             page: randomPage,
             language: tmdbLanguage,
             voteCountGte: 100,
             voteAverageGte: 5.0,
             releaseDateGte: '2015-01-01',
           }),
-          tmdbAPI.getDiscover('tv', {
+          honoAPI.tmdb.discover('tv', {
             page: randomPage,
             language: tmdbLanguage,
             voteCountGte: 100,
@@ -217,7 +217,7 @@ function HomeContentInner() {
         await Promise.all(
           genreIds.map(async genreId => {
             try {
-              const data = await watchlistAPI.getWatchlistsByGenre(genreId);
+              const data = await honoAPI.watchlists.getByGenre(genreId);
               counts[genreId] = data.watchlists?.length || 0;
             } catch (error) {
               console.error(`Failed to fetch count for ${genreId}:`, error);
@@ -229,11 +229,11 @@ function HomeContentInner() {
 
         // Fetch trending
         try {
-          const trendingData = await tmdbAPI.getTrending('day');
+          const trendingData = await honoAPI.tmdb.getTrending('day');
           setTrending(
             (trendingData.results || [])
               .filter((r: DiscoverItem) => r.poster_path)
-              .slice(0, 5)
+              .slice(0, 6)
               .map((r: DiscoverItem) => ({ ...r, media_type: r.media_type || 'movie' }))
           );
         } catch {
@@ -264,14 +264,12 @@ function HomeContentInner() {
     mediaType: 'movie' | 'tv'
   ) => {
     const idNum = Number(tmdbId);
-    const placeholder: WatchlistItem = {
+    const placeholder = createPlaceholderItem({
       tmdbId: idNum,
       title: '',
       posterPath: null,
       mediaType,
-      platformList: [],
-      addedAt: new Date().toISOString(),
-    };
+    });
     setUserWatchlists(prev =>
       prev.map(wl =>
         wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
@@ -280,7 +278,7 @@ function HomeContentInner() {
       )
     );
     try {
-      await watchlistAPI.addItem(watchlistId, {
+      await honoAPI.watchlists.addItem(watchlistId, {
         tmdbId,
         mediaType,
         language: tmdbLanguage,
@@ -307,7 +305,7 @@ function HomeContentInner() {
       })
     );
     try {
-      await watchlistAPI.removeItem(watchlistId, tmdbId);
+      await honoAPI.watchlists.removeItem(watchlistId, tmdbId);
       toast.success('Retiré de la liste');
     } catch {
       if (removed) {
@@ -343,8 +341,21 @@ function HomeContentInner() {
     }
   };
 
-  // Featured categories
-  const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 5).map(categoryId => {
+  // Featured categories (V1 — 5 first)
+  //   const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 5).map(categoryId => {
+  //     const categoryInfo = getCategoryInfo(categoryId, content);
+  //     return {
+  //       id: categoryId,
+  //       name: categoryInfo.name,
+  //       description: categoryInfo.description,
+  //       gradient: categoryInfo.cardGradient,
+  //       itemCount: categoryCounts[categoryId] || 0,
+  //       username: 'Poplist',
+  //     };
+  //   });
+
+  // Featured categories — 6 first
+  const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 6).map(categoryId => {
     const categoryInfo = getCategoryInfo(categoryId, content);
     return {
       id: categoryId,
@@ -433,7 +444,7 @@ function HomeContentInner() {
       )}
 
       {/* Categories Section */}
-      <Section>
+      {/* <Section>
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-white">{content.home.categories.title}</h2>
@@ -452,14 +463,13 @@ function HomeContentInner() {
             const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
             const placeholderItems: WatchlistItem[] = Array.from(
               { length: category.itemCount },
-              (_, idx) => ({
-                tmdbId: idx,
-                title: category.name,
-                posterPath: null,
-                mediaType: 'movie' as const,
-                platformList: [],
-                addedAt: placeholderTimestamp,
-              })
+              (_, idx) =>
+                createPlaceholderItem({
+                  tmdbId: idx,
+                  title: category.name,
+                  mediaType: 'movie',
+                  addedAt: placeholderTimestamp,
+                })
             );
 
             const mockWatchlist: Watchlist = {
@@ -469,11 +479,83 @@ function HomeContentInner() {
                 id: 'featured',
                 email: 'featured@poplist.app',
                 username: category.username,
+                avatarUrl: null,
               },
               name: category.name,
               description: category.description,
-              imageUrl: '',
+              imageUrl: null,
+              thumbnailUrl: null,
+              dominantColor: null,
               isPublic: true,
+              genres: [],
+              position: 0,
+              collaborators: [],
+              items: placeholderItems,
+              createdAt: placeholderTimestamp,
+              updatedAt: placeholderTimestamp,
+              likedBy: [],
+            };
+
+            return (
+              <ListCardGenre
+                key={category.id}
+                watchlist={mockWatchlist}
+                content={content}
+                href={`/categories/${category.id}`}
+                genreId={category.id}
+                index={index}
+              />
+            );
+          })}
+        </div>
+      </Section> */}
+
+      {/* Categories Section —  (Custom mix palette) */}
+      <Section className="">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-white">{content.home.categories.title}</h2>
+            <p className="text-muted-foreground mt-1 text-sm">{content.home.categories.subtitle}</p>
+          </div>
+          <Link
+            href="/categories"
+            className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
+          >
+            {content.home.categories.seeMore}
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-3 gap-[14px] md:grid-cols-4 lg:grid-cols-6">
+          {categories.map((category, index) => {
+            const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
+            const placeholderItems: WatchlistItem[] = Array.from(
+              { length: category.itemCount },
+              (_, idx) =>
+                createPlaceholderItem({
+                  tmdbId: idx,
+                  title: category.name,
+                  mediaType: 'movie',
+                  addedAt: placeholderTimestamp,
+                })
+            );
+
+            const mockWatchlist: Watchlist = {
+              id: category.id,
+              ownerId: 'featured',
+              owner: {
+                id: 'featured',
+                email: 'featured@poplist.app',
+                username: category.username,
+                avatarUrl: null,
+              },
+              name: category.name,
+              description: category.description,
+              imageUrl: null,
+              thumbnailUrl: null,
+              dominantColor: null,
+              isPublic: true,
+              genres: [],
+              position: 0,
               collaborators: [],
               items: placeholderItems,
               createdAt: placeholderTimestamp,
@@ -515,14 +597,14 @@ function HomeContentInner() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {Array.from({ length: 10 }).map((_, i) => (
+          <div className="grid grid-cols-3 gap-[8px] md:grid-cols-4 lg:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
           </div>
         ) : publicWatchlists.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {publicWatchlists.slice(0, 10).map((watchlist, index) => {
+          <div className="grid grid-cols-3 gap-[4px] md:grid-cols-4 lg:grid-cols-6">
+            {publicWatchlists.slice(0, 12).map((watchlist, index) => {
               const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
               const isOwner = userWatchlist?.isOwner ?? false;
               const isCollaborator = userWatchlist?.isCollaborator ?? false;
@@ -572,13 +654,13 @@ function HomeContentInner() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {Array.from({ length: 10 }).map((_, i) => (
+          <div className="grid grid-cols-3 gap-[11px] md:grid-cols-4 lg:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-3 gap-[11px] md:grid-cols-4 lg:grid-cols-6">
             {creators.map(creator => (
               <UserCard
                 key={creator.id}
@@ -606,14 +688,14 @@ function HomeContentInner() {
               {content.home.creators.seeMore}
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             {trending.map((item, index) => (
               <MoviePoster
                 key={item.id}
                 id={item.id}
                 title={item.title}
                 name={item.name}
-                posterPath={item.poster_path}
+                posterPath={item.poster_path ?? undefined}
                 voteAverage={item.vote_average}
                 onClick={() => handleOpenTrending(item, index)}
                 watchlists={isAuthenticated ? userWatchlists : []}

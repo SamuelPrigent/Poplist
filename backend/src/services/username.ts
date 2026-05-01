@@ -1,4 +1,6 @@
-import prisma from '../lib/prisma.js'
+import { eq } from 'drizzle-orm'
+import { db } from '../db/index.js'
+import { users } from '../db/schema.js'
 
 export async function generateUniqueUsername(): Promise<string> {
   let attempts = 0
@@ -8,7 +10,11 @@ export async function generateUniqueUsername(): Promise<string> {
     const randomNum = Math.floor(1000 + Math.random() * 9000)
     const username = `user${randomNum}`
 
-    const existing = await prisma.user.findUnique({ where: { username } })
+    const [existing] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.username, username))
+      .limit(1)
 
     if (!existing) {
       return username

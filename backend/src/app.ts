@@ -14,28 +14,33 @@ export type AppEnv = {
     user?: {
       sub: string;
       email: string;
-      roles: string[];
     };
   };
 };
 
-const app = new Hono<AppEnv>();
+const app = new Hono<AppEnv>()
+  .use('*', logger())
+  .use(
+    '*',
+    cors({
+      origin: env.CLIENT_URL,
+      allowMethods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+      exposeHeaders: ['X-Cache', 'X-Cache-Date'],
+      credentials: true,
+      maxAge: 90,
+    })
+  )
+  .route('/auth', authRoutes)
+  .route('/user', userRoutes)
+  .route('/tmdb', tmdbRoutes)
+  .route('/watchlists', watchlistRoutes);
 
-// Logger
-app.use('*', logger());
+export type AppType = typeof app;
+//   ↑ Ne contient QUE les routes web utilisées par le client RPC
 
-// CORS
-app.use(
-  '*',
-  cors({
-    origin: env.CLIENT_URL,
-    allowMethods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
-    exposeHeaders: ['X-Cache', 'X-Cache-Date'],
-    credentials: true,
-    maxAge: 90,
-  })
-);
+// Routes mountées au runtime mais HORS AppType (invisibles côté RPC)
+app.route('/auth/mobile', authMobileRoutes);
 
 // Health check
 app.get('/', c => c.json({ status: 'ok' }));
@@ -70,13 +75,6 @@ app.get('/image-proxy', async c => {
     return c.json({ error: 'Failed to proxy image' }, 500);
   }
 });
-
-// Routes
-app.route('/auth', authRoutes);
-app.route('/auth/mobile', authMobileRoutes);
-app.route('/user', userRoutes);
-app.route('/tmdb', tmdbRoutes);
-app.route('/watchlists', watchlistRoutes);
 
 // Global error handler
 app.onError((err, c) => {

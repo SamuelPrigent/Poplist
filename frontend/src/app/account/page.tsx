@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { useIsMounted } from "@/hooks/useIsMounted";
-import { userAPI } from "@/lib/api-client";
+import { client } from "@/api";
 import { useLanguageStore } from "@/store/language";
 
 export default function AccountPage() {
@@ -243,7 +243,10 @@ export default function AccountPage() {
 			reader.onloadend = async () => {
 				try {
 					const base64String = reader.result as string;
-					await userAPI.uploadAvatar(base64String);
+					const res = await client.user["upload-avatar"].$post({
+						json: { imageData: base64String },
+					});
+					if (!res.ok) throw new Error("Failed to upload avatar");
 
 					// Refresh user data to get the new avatar URL
 					await refetch();
@@ -275,7 +278,8 @@ export default function AccountPage() {
 	const handleAvatarDelete = async () => {
 		setAvatarDeleting(true);
 		try {
-			await userAPI.deleteAvatar();
+			const res = await client.user.avatar.$delete();
+			if (!res.ok) throw new Error("Failed to delete avatar");
 
 			// Refresh user data to remove the avatar URL
 			await refetch();

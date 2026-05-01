@@ -1,5 +1,6 @@
 import { getCookie } from 'hono/cookie';
 import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
 import { verifyAccessToken } from '../services/jwt.js';
 import type { AppEnv } from '../app.js';
 
@@ -12,20 +13,24 @@ function extractToken(c: any): string | undefined {
   return undefined;
 }
 
+// Note: throws HTTPException instead of returning c.json — keeps the route's
+// response type clean (only the handler's success path is captured by RPC).
+// app.onError wraps HTTPException as { error: message } at runtime.
 export const auth = createMiddleware<AppEnv>(async (c, next) => {
   const accessToken = extractToken(c);
 
   if (!accessToken) {
-    return c.json({ error: 'Authentication required' }, 401);
+    throw new HTTPException(401, { message: 'Authentication required' });
   }
 
   try {
     const payload = verifyAccessToken(accessToken);
     c.set('user', payload);
-    return next();
   } catch {
-    return c.json({ error: 'Invalid or expired token' }, 401);
+    throw new HTTPException(401, { message: 'Invalid or expired token' });
   }
+
+  await next();
 });
 
 export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
@@ -40,5 +45,5 @@ export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
     }
   }
 
-  return next();
+  await next();
 });

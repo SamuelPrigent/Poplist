@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { type Watchlist, type WatchlistItem, watchlistAPI } from '@/lib/api-client';
+import { createPlaceholderItem, honoAPI, type Watchlist, type WatchlistItem } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, getCategoryInfo } from '@/types/categories';
 
@@ -27,7 +27,7 @@ function CategoriesPageInner() {
         await Promise.all(
           genreIds.map(async genreId => {
             try {
-              const data = await watchlistAPI.getWatchlistsByGenre(genreId);
+              const data = await honoAPI.watchlists.getByGenre(genreId);
               counts[genreId] = data.watchlists?.length || 0;
             } catch (error) {
               console.error(`Failed to fetch count for ${genreId}:`, error);
@@ -76,7 +76,7 @@ function CategoriesPageInner() {
                   },
                 },
               }}
-              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
+              className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-6"
             >
               {GENRE_CATEGORIES.map((categoryId, index) => {
                 const category = getCategoryInfo(categoryId, content);
@@ -84,27 +84,31 @@ function CategoriesPageInner() {
                 const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
                 const placeholderItems: WatchlistItem[] = Array.from(
                   { length: itemCount },
-                  (_, idx) => ({
-                    tmdbId: idx,
-                    title: category.name,
-                    posterPath: null,
-                    mediaType: 'movie' as const,
-                    platformList: [],
-                    addedAt: placeholderTimestamp,
-                  })
+                  (_, idx) =>
+                    createPlaceholderItem({
+                      tmdbId: idx,
+                      title: category.name,
+                      mediaType: 'movie',
+                      addedAt: placeholderTimestamp,
+                    })
                 );
 
                 const mockWatchlist: Watchlist = {
                   id: categoryId,
                   ownerId: 'featured',
+                  thumbnailUrl: null,
+                  dominantColor: null,
+                  genres: [],
+                  position: 0,
+                  imageUrl: null,
                   owner: {
                     id: 'featured',
                     email: 'featured@poplist.app',
                     username: 'Poplist',
+                    avatarUrl: null,
                   },
                   name: category.name,
                   description: category.description,
-                  imageUrl: '',
                   isPublic: true,
                   collaborators: [],
                   items: placeholderItems,

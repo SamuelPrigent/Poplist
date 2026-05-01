@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { PosterGrid } from '@/components/List/PosterGrid';
-import type { Watchlist } from '@/lib/api-client';
+import type { Watchlist } from '@/api';
 import type { Content } from '@/types/content';
 
 interface ListCardProps {

@@ -8,7 +8,7 @@ import { Section } from '@/components/layout/Section';
 import { Pagination } from '@/components/ui/pagination';
 import { UserCard } from '@/components/User/UserCard';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { watchlistAPI, type Watchlist } from '@/lib/api-client';
+import { honoAPI, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 40;
@@ -44,7 +44,7 @@ function UsersContentInner() {
   const fetchCreators = useCallback(async () => {
     try {
       // Get public watchlists with higher limit to aggregate creators
-      const publicData = await watchlistAPI.getPublicWatchlists(500);
+      const publicData = await honoAPI.watchlists.getPublicFeatured(500);
       const watchlists: Watchlist[] = publicData.watchlists || [];
 
       // Aggregate by owner
@@ -52,7 +52,7 @@ function UsersContentInner() {
 
       for (const watchlist of watchlists) {
         if (watchlist.owner) {
-          const ownerId = watchlist.owner.id || watchlist.ownerId;
+          const ownerId = watchlist.owner.id;
           const existing = creatorsMap.get(ownerId);
 
           if (existing) {
@@ -61,7 +61,7 @@ function UsersContentInner() {
             creatorsMap.set(ownerId, {
               id: ownerId,
               username: watchlist.owner.username || 'Utilisateur',
-              avatarUrl: watchlist.owner.avatarUrl,
+              avatarUrl: watchlist.owner.avatarUrl ?? undefined,
               listCount: 1,
             });
           }
@@ -122,14 +122,14 @@ function UsersContentInner() {
 
         {/* Creators grid */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 10 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-6">
               {paginatedCreators.map(creator => (
                 <UserCard key={creator.id} user={creator} listCount={creator.listCount} content={content} />
               ))}

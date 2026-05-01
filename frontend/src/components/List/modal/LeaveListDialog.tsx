@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { watchlistAPI } from "@/lib/api-client";
+import { client } from "@/api";
 import { useLanguageStore } from "@/store/language";
 
 interface LeaveListDialogProps {
@@ -29,7 +29,10 @@ export function LeaveListDialog({
 	const handleLeave = async () => {
 		try {
 			setIsLeaving(true);
-			await watchlistAPI.leaveWatchlist(watchlistId);
+			const res = await client.watchlists[':id'].leave.$post({
+				param: { id: watchlistId },
+			});
+			if (!res.ok) throw new Error("Failed to leave watchlist");
 			toast.success(
 				content.watchlists.collaborators?.leaveSuccess ||
 					"Vous avez quitté la liste",

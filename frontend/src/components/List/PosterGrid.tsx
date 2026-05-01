@@ -1,7 +1,7 @@
 import { Film } from 'lucide-react'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { WatchlistItem } from '@/lib/api-client'
+import type { WatchlistItem } from '@/api'
 
 interface PosterGridProps {
   items: WatchlistItem[]

@@ -8,8 +8,8 @@ import { useLanguageStore } from '@/store/language';
 interface UserProfileHeaderProps {
   user: {
     id: string;
-    username: string;
-    avatarUrl?: string;
+    username: string | null;
+    avatarUrl?: string | null;
   };
   totalPublicWatchlists: number;
   hasWatchlists: boolean;

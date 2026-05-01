@@ -50,7 +50,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { Watchlist, WatchlistItem } from '@/lib/api-client';
+import type { Watchlist, WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlists } from '@/lib/localStorageHelpers';
 import { getTMDBImageUrl } from '@/lib/utils';
@@ -576,7 +576,7 @@ export function ListItemsTableOffline({
                   <>
                     <PosterImage
                       src={getTMDBImageUrl(item.posterPath, 'w92') || ''}
-                      alt={item.title}
+                      alt={item.title ?? ''}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover/cell:opacity-100">
                       <Eye className="h-5 w-5 text-white" />
@@ -705,7 +705,7 @@ export function ListItemsTableOffline({
           }
 
           return (
-            <span className="text-muted-foreground text-sm">{formatRuntime(item.runtime)}</span>
+            <span className="text-muted-foreground text-sm">{formatRuntime(item.runtime ?? undefined)}</span>
           );
         },
         size: 150,
@@ -838,8 +838,8 @@ export function ListItemsTableOffline({
             }
           }}
           tmdbId={selectedItem.tmdbId.toString()}
-          type={selectedItem.mediaType}
-          platforms={selectedItem.platformList}
+          type={selectedItem.mediaType as 'movie' | 'tv'}
+          platforms={selectedItem.platformList ?? undefined}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < displayItems.length - 1 ? handleNavigateNext : undefined}
         />

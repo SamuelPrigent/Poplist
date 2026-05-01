@@ -1,10 +1,11 @@
 import { serve } from '@hono/node-server';
+import { sql } from 'drizzle-orm';
 import app from './app.js';
 import { env } from './env.js';
-import prisma from './lib/prisma.js';
+import { db, client } from './db/index.js';
 
 async function main() {
-  await prisma.$connect();
+  await db.execute(sql`SELECT 1`);
 
   // Parse DATABASE_URL to display connection info
   const dbUrl = new URL(env.DATABASE_URL);
@@ -13,7 +14,7 @@ async function main() {
   const isLocal = dbHost === 'localhost' || dbHost === '127.0.0.1';
   console.log(`Connected to PostgreSQL (${dbName}@${dbHost} (${isLocal ? 'local' : 'remote'}))`);
 
-  const server = serve({
+  serve({
     fetch: app.fetch,
     port: env.PORT,
   });
@@ -23,7 +24,7 @@ async function main() {
 
   const shutdown = async () => {
     console.log('Shutting down...');
-    await prisma.$disconnect();
+    await client.end();
     process.exit(0);
   };
 

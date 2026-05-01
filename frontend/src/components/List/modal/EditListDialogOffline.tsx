@@ -7,7 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Watchlist } from '@/lib/api-client';
+import type { Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 interface EditListDialogOfflineProps {

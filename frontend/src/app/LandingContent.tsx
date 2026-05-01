@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/accordion';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useAuth } from '@/context/auth-context';
-import { tmdbAPI } from '@/lib/api-client';
+import { honoAPI } from '@/api';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useLanguageStore } from '@/store/language';
 
@@ -21,9 +21,9 @@ interface TrendingItem {
   id: number;
   title?: string;
   name?: string;
-  poster_path?: string;
-  backdrop_path?: string;
-  media_type: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  media_type?: 'movie' | 'tv';
 }
 
 const STAR_KEYS = ['star-1', 'star-2', 'star-3', 'star-4', 'star-5'];
@@ -44,7 +44,7 @@ function LandingPageInner() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const trendingData = await tmdbAPI.getTrending('day');
+        const trendingData = await honoAPI.tmdb.getTrending('day');
         setTrending(trendingData.results || []);
       } catch (error) {
         console.error('Failed to fetch trending:', error);

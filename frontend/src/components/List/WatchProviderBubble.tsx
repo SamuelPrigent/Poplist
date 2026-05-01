@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { getWatchProviderLogo } from "@/lib/api-client";
+import { getWatchProviderLogo } from "@/api";
 import {
 	Tooltip,
 	TooltipContent,

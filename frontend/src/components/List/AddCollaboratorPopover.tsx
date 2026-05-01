@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { type Collaborator, watchlistAPI } from '@/lib/api-client';
+import { client } from '@/api';
+import type { Collaborator } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import Image from 'next/image';
 
@@ -70,10 +71,15 @@ export function AddCollaboratorPopover({
 
     try {
       setIsAdding(true);
-      const { collaborators: updated } = await watchlistAPI.addCollaborator(
-        watchlistId,
-        username.trim()
-      );
+      const res = await client.watchlists[':id'].collaborators.$post({
+        param: { id: watchlistId },
+        json: { username: username.trim() },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Failed to add collaborator' }));
+        throw new Error((err as { error?: string }).error || 'Failed to add collaborator');
+      }
+      const { collaborators: updated } = await res.json();
       toast.success(
         content.watchlists.collaborators?.addSuccess || `${username} ajouté comme collaborateur`
       );
@@ -94,10 +100,14 @@ export function AddCollaboratorPopover({
 
   const handleRemoveCollaborator = async (collaboratorId: string, collaboratorUsername: string) => {
     try {
-      const { collaborators: updated } = await watchlistAPI.removeCollaborator(
-        watchlistId,
-        collaboratorId
-      );
+      const res = await client.watchlists[':id'].collaborators[':collaboratorId'].$delete({
+        param: { id: watchlistId, collaboratorId },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Failed to remove collaborator' }));
+        throw new Error((err as { error?: string }).error || 'Failed to remove collaborator');
+      }
+      const { collaborators: updated } = await res.json();
       toast.success(
         content.watchlists.collaborators?.removeSuccess || `${collaboratorUsername} retiré`
       );
@@ -208,7 +218,7 @@ export function AddCollaboratorPopover({
                     <button
                       type="button"
                       onClick={() =>
-                        handleRemoveCollaborator(collaborator.id, collaborator.username)
+                        handleRemoveCollaborator(collaborator.id, collaborator.username ?? '')
                       }
                       className="text-muted-foreground cursor-pointer rounded transition-colors hover:text-red-500"
                       title={content.watchlists.collaborators?.remove || 'Retirer'}

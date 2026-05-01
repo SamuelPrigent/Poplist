@@ -13,8 +13,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { Watchlist } from '@/lib/api-client';
-import { userAPI } from '@/lib/api-client';
+import type { Watchlist } from '@/api';
+import { honoAPI } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 // Skeleton components
@@ -51,8 +51,8 @@ function UserProfilePageInner() {
 
   const [user, setUser] = useState<{
     id: string;
-    username: string;
-    avatarUrl?: string;
+    username: string | null;
+    avatarUrl?: string | null;
   } | null>(null);
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [totalPublicWatchlists, setTotalPublicWatchlists] = useState(0);
@@ -69,7 +69,7 @@ function UserProfilePageInner() {
       setLoading(true);
       setNotFound(false);
 
-      const data = await userAPI.getUserProfileByUsername(username);
+      const data = await honoAPI.users.getByUsername(username);
       setUser(data.user);
       setWatchlists(data.watchlists);
       setTotalPublicWatchlists(data.totalPublicWatchlists);
@@ -89,10 +89,10 @@ function UserProfilePageInner() {
     return (
       <div className="bg-background min-h-screen pb-24">
         <ProfileHeaderSkeleton />
-        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8 pt-10 pb-16">
+        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8 pt-10 pb-16">
           <div className="bg-muted/50 mb-7 h-7 w-40 rounded" />
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 xl:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
+          <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
           </div>
@@ -166,7 +166,7 @@ function UserProfilePageInner() {
           {content.userProfile?.publicWatchlists || 'Listes publiques'}
         </h2>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {watchlists.map(watchlist => (
             <ListCard
               key={watchlist.id}

@@ -43,6 +43,10 @@ export function Navbar() {
     // For other pages, no redirect needed (stays on current page)
   };
 
+  const isHomeActive = pathname === '/home';
+  const isExploreActive = pathname === '/explore';
+  const isMyListsActive = pathname === '/account/lists' || pathname === '/local/lists';
+
   return (
     <>
       <header className="border-border bg-background relative z-50 border-b">
@@ -56,13 +60,17 @@ export function Navbar() {
             </div>
             <Link
               href="/home"
-              className="text-muted-foreground rounded p-1 text-sm font-medium transition-colors hover:text-white"
+              className={`rounded p-1 text-sm font-medium transition-colors hover:text-white ${
+                isHomeActive ? 'text-white' : 'text-muted-foreground'
+              }`}
             >
               {content.header.home}
             </Link>
             <Link
               href="/explore"
-              className="text-muted-foreground rounded p-1 text-sm font-medium transition-colors hover:text-white"
+              className={`rounded p-1 text-sm font-medium transition-colors hover:text-white ${
+                isExploreActive ? 'text-white' : 'text-muted-foreground'
+              }`}
             >
               {content.header.explore}
             </Link>
@@ -75,9 +83,13 @@ export function Navbar() {
                 <Link
                   href={isAuthenticated ? '/account/lists' : '/local/lists'}
                   aria-label={content.header.myLists}
-                  className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md px-3.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
+                  className={`hover:bg-accent inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md px-3.5 text-sm font-medium whitespace-nowrap transition-colors hover:text-white focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none ${
+                    isMyListsActive ? 'text-white' : 'text-foreground/90'
+                  }`}
                 >
-                  <Bookmark className={`h-5 w-5 ${isAuthenticated ? 'fill-white' : ''}`} />
+                  <Bookmark
+                    className={`h-5 w-5 text-white ${isAuthenticated ? 'fill-white' : ''}`}
+                  />
                   {content.header.myLists}
                 </Link>
 

@@ -56,3 +56,23 @@ export const reorderItemsSchema = z.object({
 export const reorderWatchlistsSchema = z.object({
   orderedWatchlistIds: z.array(z.string()),
 });
+
+export const uploadCoverSchema = z.object({
+  imageData: z.string().startsWith('data:image/'),
+});
+
+// Query schemas
+export const limitQuerySchema = z.object({
+  limit: z.string().optional(),
+});
+
+export const tmdbSearchQuerySchema = z.object({
+  query: z.string(),
+  language: z.string().optional(),
+  region: z.string().optional(),
+  page: z.string().optional(),
+});
+
+export const languageQuerySchema = z.object({
+  language: z.string().optional(),
+});

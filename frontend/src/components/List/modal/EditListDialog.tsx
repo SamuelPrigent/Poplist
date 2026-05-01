@@ -7,7 +7,8 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { type Watchlist, watchlistAPI } from '@/lib/api-client';
+import { client } from '@/api';
+import type { Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, type GenreCategory, getCategoryInfo } from '@/types/categories';
 
@@ -54,7 +55,7 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
       if (open && watchlist) {
         setName(watchlist.name);
         setDescription(watchlist.description || '');
-        setIsPublic(watchlist.isPublic);
+        setIsPublic(watchlist.isPublic ?? false);
 
         // Parse genres from watchlist
         setGenreCategories((watchlist.genres || []) as GenreCategory[]);
@@ -159,15 +160,22 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
             updates.genres = genresData;
           }
 
-          await watchlistAPI.update(watchlist.id, updates);
+          const updateRes = await client.watchlists[':id'].$put({
+            param: { id: watchlist.id },
+            json: updates,
+          });
+          if (!updateRes.ok) throw new Error('Failed to update watchlist');
 
           // Handle image changes
           if (imagePreview === null && watchlist.imageUrl) {
             // User removed the image - delete from Cloudinary
-            await watchlistAPI.deleteCover(watchlist.id);
+            await client.watchlists[':id'].cover.$delete({ param: { id: watchlist.id } });
           } else if (imageFile && imagePreview && imagePreview !== watchlist.imageUrl) {
             // User uploaded a new image (old one will be auto-deleted by backend)
-            await watchlistAPI.uploadCover(watchlist.id, imagePreview);
+            await client.watchlists[':id']['upload-cover'].$post({
+              param: { id: watchlist.id },
+              json: { imageData: imagePreview },
+            });
           }
 
           onSuccess();

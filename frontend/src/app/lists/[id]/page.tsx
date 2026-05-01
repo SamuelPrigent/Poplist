@@ -24,7 +24,7 @@ const LeaveListDialog = dynamic(() => import('@/components/List/modal/LeaveListD
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
-import { type Collaborator, type Watchlist, watchlistAPI } from '@/lib/api-client';
+import { honoAPI, type Collaborator, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 export default function ListDetailPage() {
@@ -68,7 +68,7 @@ export default function ListDetailPage() {
 
       let data: Watchlist;
       if (authenticated) {
-        const response = await watchlistAPI.getById(id);
+        const response = await honoAPI.watchlists.getById(id);
         data = response.watchlist;
 
         const ownerEmail = data.owner?.email || null;
@@ -77,7 +77,7 @@ export default function ListDetailPage() {
         setIsCollaborator(response.isCollaborator || false);
         setIsSaved(response.isSaved || false);
       } else {
-        const response = await watchlistAPI.getPublic(id);
+        const response = await honoAPI.watchlists.getPublic(id);
         data = response.watchlist;
         setIsOwner(false);
         setIsCollaborator(false);
@@ -221,10 +221,10 @@ export default function ListDetailPage() {
       setWatchlist(updatedWatchlist as Watchlist);
 
       if (previousIsSaved) {
-        await watchlistAPI.unsaveWatchlist(id);
+        await honoAPI.watchlists.unsave(id);
         toast.success(content.watchlists.toasts?.listUnsaved || 'List removed');
       } else {
-        await watchlistAPI.saveWatchlist(id);
+        await honoAPI.watchlists.save(id);
         toast.success(content.watchlists.toasts?.listSaved || 'List added');
       }
       mutate('/watchlists/mine');
@@ -246,13 +246,15 @@ export default function ListDetailPage() {
     const loadingToast = toast.loading(content.watchlists.toasts?.duplicating || 'Duplicating...');
 
     try {
-      const { watchlist: duplicatedWatchlist } = await watchlistAPI.duplicateWatchlist(id);
+      const { watchlist: duplicatedWatchlist } = await honoAPI.watchlists.duplicate(id);
 
       toast.success(content.watchlists.toasts?.listDuplicated || 'List duplicated', {
         id: loadingToast,
       });
       mutate('/watchlists/mine');
-      router.push(`/lists/${duplicatedWatchlist.id}`);
+      if (duplicatedWatchlist) {
+        router.push(`/lists/${duplicatedWatchlist.id}`);
+      }
     } catch (error) {
       console.error('Failed to duplicate watchlist:', error);
       toast.error(content.watchlists.toasts?.duplicateError || 'Failed to duplicate list', {
