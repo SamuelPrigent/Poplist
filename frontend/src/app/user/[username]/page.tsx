@@ -30,7 +30,7 @@ const ListCardSkeleton = () => (
 
 const ProfileHeaderSkeleton = () => (
   <div className="relative h-[200px] w-full overflow-hidden bg-muted/20">
-    <div className="container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) items-end px-4 pb-6">
+    <div className="container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) items-end px-12 pb-6">
       <div className="flex items-center gap-4">
         <div className="bg-muted/50 h-20 w-20 rounded-full" />
         <div className="space-y-2">
@@ -87,7 +87,7 @@ function UserProfilePageInner() {
 
   if (loading) {
     return (
-      <div className="bg-background min-h-screen pb-24">
+      <div className="bg-background min-h-screen pb-24 w-(--sectionWidth) max-w-(--maxWidth) px-12">
         <ProfileHeaderSkeleton />
         <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8 pt-10 pb-16">
           <div className="bg-muted/50 mb-7 h-7 w-40 rounded" />
@@ -103,7 +103,7 @@ function UserProfilePageInner() {
 
   if (notFound || !user) {
     return (
-      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
+      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8">
         <Empty>
           <EmptyHeader>
             <EmptyMedia />
@@ -131,7 +131,7 @@ function UserProfilePageInner() {
           hasWatchlists={false}
         />
 
-        <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-12">
+        <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-12 py-12">
           <Empty>
             <EmptyHeader>
               <EmptyMedia />
@@ -161,7 +161,7 @@ function UserProfilePageInner() {
         hasWatchlists={true}
       />
 
-      <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8 pt-10 pb-16">
+      <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8 pt-10 pb-16">
         <h2 className="mb-7 text-2xl font-semibold text-white">
           {content.userProfile?.publicWatchlists || 'Listes publiques'}
         </h2>

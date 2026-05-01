@@ -341,19 +341,6 @@ function HomeContentInner() {
     }
   };
 
-  // Featured categories (V1 — 5 first)
-  //   const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 5).map(categoryId => {
-  //     const categoryInfo = getCategoryInfo(categoryId, content);
-  //     return {
-  //       id: categoryId,
-  //       name: categoryInfo.name,
-  //       description: categoryInfo.description,
-  //       gradient: categoryInfo.cardGradient,
-  //       itemCount: categoryCounts[categoryId] || 0,
-  //       username: 'Poplist',
-  //     };
-  //   });
-
   // Featured categories — 6 first
   const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 6).map(categoryId => {
     const categoryInfo = getCategoryInfo(categoryId, content);
@@ -444,73 +431,6 @@ function HomeContentInner() {
       )}
 
       {/* Categories Section */}
-      {/* <Section>
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-white">{content.home.categories.title}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">{content.home.categories.subtitle}</p>
-          </div>
-          <Link
-            href="/categories"
-            className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-          >
-            {content.home.categories.seeMore}
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          {categories.map((category, index) => {
-            const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
-            const placeholderItems: WatchlistItem[] = Array.from(
-              { length: category.itemCount },
-              (_, idx) =>
-                createPlaceholderItem({
-                  tmdbId: idx,
-                  title: category.name,
-                  mediaType: 'movie',
-                  addedAt: placeholderTimestamp,
-                })
-            );
-
-            const mockWatchlist: Watchlist = {
-              id: category.id,
-              ownerId: 'featured',
-              owner: {
-                id: 'featured',
-                email: 'featured@poplist.app',
-                username: category.username,
-                avatarUrl: null,
-              },
-              name: category.name,
-              description: category.description,
-              imageUrl: null,
-              thumbnailUrl: null,
-              dominantColor: null,
-              isPublic: true,
-              genres: [],
-              position: 0,
-              collaborators: [],
-              items: placeholderItems,
-              createdAt: placeholderTimestamp,
-              updatedAt: placeholderTimestamp,
-              likedBy: [],
-            };
-
-            return (
-              <ListCardGenre
-                key={category.id}
-                watchlist={mockWatchlist}
-                content={content}
-                href={`/categories/${category.id}`}
-                genreId={category.id}
-                index={index}
-              />
-            );
-          })}
-        </div>
-      </Section> */}
-
-      {/* Categories Section —  (Custom mix palette) */}
       <Section className="">
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -688,7 +608,7 @@ function HomeContentInner() {
               {content.home.creators.seeMore}
             </Link>
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+          <div className="grid grid-cols-3 gap-[13px] sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             {trending.map((item, index) => (
               <MoviePoster
                 key={item.id}

@@ -129,9 +129,14 @@ function UsersContentInner() {
           </div>
         ) : creators.length > 0 ? (
           <>
-            <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-3 gap-[11px] md:grid-cols-4 lg:grid-cols-6">
               {paginatedCreators.map(creator => (
-                <UserCard key={creator.id} user={creator} listCount={creator.listCount} content={content} />
+                <UserCard
+                  key={creator.id}
+                  user={creator}
+                  listCount={creator.listCount}
+                  content={content}
+                />
               ))}
             </div>
 
@@ -152,9 +157,7 @@ function UsersContentInner() {
             )}
           </>
         ) : (
-          <div className="text-muted-foreground py-12 text-center">
-            Aucun créateur trouvé
-          </div>
+          <div className="text-muted-foreground py-12 text-center">Aucun créateur trouvé</div>
         )}
       </Section>
     </div>

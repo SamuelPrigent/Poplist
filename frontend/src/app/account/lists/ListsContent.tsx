@@ -308,7 +308,7 @@ function ListsContentInner() {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={filteredWatchlists.map(w => w.id)} strategy={rectSortingStrategy}>
             {/* Grid */}
-            <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid gap-[4px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filteredWatchlists.map((watchlist, index) => (
                 <SortableWatchlistCard
                   key={watchlist.id}

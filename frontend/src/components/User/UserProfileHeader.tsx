@@ -41,7 +41,7 @@ export function UserProfileHeader({
         }}
       />
 
-      <div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-6">
+      <div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-12 pt-6">
         {/* Back Button */}
         <div className="mb-3">
           <button
