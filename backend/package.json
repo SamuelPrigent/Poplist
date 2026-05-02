@@ -6,10 +6,11 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "db:pull": "drizzle-kit pull",
-    "db:generate": "drizzle-kit generate"
+    "db-push": "drizzle-kit push",
+    "db-push-prod": "dotenv-cli -e .env.prod -- drizzle-kit push",
+    "db-studio": "drizzle-kit studio",
+    "db-pull": "drizzle-kit pull",
+    "db-generate": "drizzle-kit generate"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",
