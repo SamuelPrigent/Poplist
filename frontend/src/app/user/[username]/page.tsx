@@ -14,7 +14,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import type { Watchlist } from '@/api';
-import { honoAPI } from '@/api';
+import { users as usersApi } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 // Skeleton components
@@ -69,7 +69,7 @@ function UserProfilePageInner() {
       setLoading(true);
       setNotFound(false);
 
-      const data = await honoAPI.users.getByUsername(username);
+      const data = await usersApi.getByUsername(username);
       setUser(data.user);
       setWatchlists(data.watchlists);
       setTotalPublicWatchlists(data.totalPublicWatchlists);

@@ -51,7 +51,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useAuth } from '@/context/auth-context';
-import { client } from '@/api';
+import { watchlists as watchlistsApi } from '@/api';
 import { createPlaceholderItem, type Watchlist, type WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
@@ -371,14 +371,8 @@ export function ListItemsTable({
   // Fetch user watchlists if authenticated, or load from localStorage if not
   const loadWatchlists = useCallback(() => {
     if (isAuthenticated) {
-      client.watchlists.mine
-        .$get()
-        .then(async res => {
-          if (res.ok) {
-            const data = await res.json();
-            setWatchlists(data.watchlists);
-          }
-        })
+      watchlistsApi.getMine()
+        .then(data => setWatchlists(data.watchlists))
         .catch(console.error);
     } else {
       const localWatchlists = getLocalWatchlistsWithOwnership();
@@ -443,16 +437,12 @@ export function ListItemsTable({
   const handleAddToWatchlist = async (watchlistId: string, item: WatchlistItem) => {
     try {
       setAddingTo(item.tmdbId);
-      const res = await client.watchlists[':id'].items.$post({
-        param: { id: watchlistId },
-        json: {
-          tmdbId: item.tmdbId.toString(),
-          mediaType: item.mediaType as 'movie' | 'tv',
-          language: tmdbLanguage,
-          region: tmdbRegion,
-        },
+      await watchlistsApi.addItem(watchlistId, {
+        tmdbId: item.tmdbId.toString(),
+        mediaType: item.mediaType as 'movie' | 'tv',
+        language: tmdbLanguage,
+        region: tmdbRegion,
       });
-      if (!res.ok) throw new Error('Failed to add item');
       mutate('/watchlists/mine');
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
@@ -486,16 +476,12 @@ export function ListItemsTable({
       );
     }
     try {
-      const res = await client.watchlists[':id'].items.$post({
-        param: { id: watchlistId },
-        json: {
-          tmdbId,
-          mediaType,
-          language: tmdbLanguage,
-          region: tmdbRegion,
-        },
+      await watchlistsApi.addItem(watchlistId, {
+        tmdbId,
+        mediaType,
+        language: tmdbLanguage,
+        region: tmdbRegion,
       });
-      if (!res.ok) throw new Error('Failed to add item');
       mutate('/watchlists/mine');
       if (watchlistId === watchlist.id) {
         onUpdate();
@@ -529,10 +515,7 @@ export function ListItemsTable({
       setItems(prev => prev.filter(it => it.tmdbId !== idNum));
     }
     try {
-      const res = await client.watchlists[':id'].items[':tmdbId'].$delete({
-        param: { id: watchlistId, tmdbId },
-      });
-      if (!res.ok) throw new Error('Failed to remove item');
+      await watchlistsApi.removeItem(watchlistId, tmdbId);
       mutate('/watchlists/mine');
       if (watchlistId === watchlist.id) {
         onUpdate();
@@ -561,10 +544,7 @@ export function ListItemsTable({
       const newItems = items.filter(item => item.tmdbId !== tmdbId);
       setItems(newItems);
 
-      const res = await client.watchlists[':id'].items[':tmdbId'].$delete({
-        param: { id: watchlist.id, tmdbId: tmdbId.toString() },
-      });
-      if (!res.ok) throw new Error('Failed to remove item');
+      await watchlistsApi.removeItem(watchlist.id, tmdbId.toString());
 
       // Notify parent with updated watchlist (no loading flicker)
       onUpdate({ ...watchlist, items: newItems });
@@ -592,11 +572,7 @@ export function ListItemsTable({
       }
       setItems(newItems);
 
-      const res = await client.watchlists[':id'].items[':tmdbId'].position.$put({
-        param: { id: watchlist.id, tmdbId: tmdbId.toString() },
-        json: { position },
-      });
-      if (!res.ok) throw new Error('Failed to move item');
+      await watchlistsApi.moveItem(watchlist.id, tmdbId.toString(), position);
 
       // Notify parent with updated watchlist (no loading flicker)
       onUpdate({ ...watchlist, items: newItems });
@@ -621,11 +597,7 @@ export function ListItemsTable({
 
       try {
         const orderedTmdbIds = newItems.map(item => item.tmdbId.toString());
-        const res = await client.watchlists[':id'].items.reorder.$put({
-          param: { id: watchlist.id },
-          json: { orderedTmdbIds },
-        });
-        if (!res.ok) throw new Error('Failed to reorder items');
+        await watchlistsApi.reorderItems(watchlist.id, orderedTmdbIds);
 
         // Notify parent with updated watchlist (no loading flicker)
         onUpdate({ ...watchlist, items: newItems });

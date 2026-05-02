@@ -1,5 +1,5 @@
-import { client } from "./client";
-import type { Platform } from "./types";
+import type { Platform } from "@poplist/shared";
+import { apiFetch } from "./client";
 
 export interface ProviderLogo {
 	path: string;
@@ -30,14 +30,10 @@ export async function fetchTMDBProviders(
 	region: string = "FR",
 ): Promise<Platform[]> {
 	try {
-		const res = await client.tmdb[":type"][":id"].providers.$get({
-			param: { type, id: tmdbId },
-			query: { region },
-		});
-		if (!res.ok) {
-			return [{ name: "Inconnu", logoPath: "" }];
-		}
-		const data = (await res.json()) as unknown as TMDBProvidersResponse;
+		const data = await apiFetch<TMDBProvidersResponse>(
+			`/tmdb/${type}/${tmdbId}/providers`,
+			{ query: { region } }
+		);
 
 		const regionData = data.results[region];
 		if (!regionData) {

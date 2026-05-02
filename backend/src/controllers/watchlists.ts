@@ -1,5 +1,10 @@
 import type { Context } from 'hono';
 import { and, asc, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
+import type {
+  Watchlist as SharedWatchlist,
+  WatchlistItem as SharedWatchlistItem,
+  WatchlistsAPI,
+} from '@poplist/shared';
 import { db } from '../db/index.js';
 import {
   savedWatchlists,
@@ -75,25 +80,6 @@ type DBWatchlistItem = typeof watchlistItems.$inferSelect;
 
 type FormattedUser = Pick<DBUser, 'id' | 'email' | 'username' | 'avatarUrl'>;
 
-type FormattedWatchlist = {
-  id: DBWatchlist['id'];
-  ownerId: DBWatchlist['ownerId'];
-  name: DBWatchlist['name'];
-  description: DBWatchlist['description'];
-  imageUrl: DBWatchlist['imageUrl'];
-  thumbnailUrl: DBWatchlist['thumbnailUrl'];
-  dominantColor: DBWatchlist['dominantColor'];
-  isPublic: DBWatchlist['isPublic'];
-  genres: DBWatchlist['genres'];
-  position: DBWatchlist['position'];
-  createdAt: DBWatchlist['createdAt'];
-  updatedAt: DBWatchlist['updatedAt'];
-  owner?: FormattedUser;
-  collaborators: FormattedUser[];
-  items: DBWatchlistItem[];
-  likedBy?: FormattedUser[];
-};
-
 type WatchlistWithRelations = DBWatchlist & {
   owner?: FormattedUser | null;
   collaborators?: Array<{ user: FormattedUser }>;
@@ -101,7 +87,47 @@ type WatchlistWithRelations = DBWatchlist & {
   likedBy?: Array<{ user: FormattedUser }>;
 };
 
-export function formatWatchlistWithRelations(watchlist: WatchlistWithRelations): FormattedWatchlist {
+/**
+ * Convertit un WatchlistItem Drizzle (avec Date) vers le shape JSON-ready (strings ISO).
+ * Utilisé par le formatter pour produire le shape attendu par le contrat shared.
+ */
+function formatItem(item: DBWatchlistItem): SharedWatchlistItem {
+  return {
+    id: item.id,
+    watchlistId: item.watchlistId,
+    tmdbId: item.tmdbId,
+    mediaType: item.mediaType,
+    title: item.title,
+    posterPath: item.posterPath,
+    backdropPath: item.backdropPath,
+    overview: item.overview,
+    releaseDate: item.releaseDate,
+    voteAverage: item.voteAverage,
+    runtime: item.runtime,
+    numberOfSeasons: item.numberOfSeasons,
+    numberOfEpisodes: item.numberOfEpisodes,
+    platformList: item.platformList,
+    position: item.position,
+    addedAt: item.addedAt?.toISOString() ?? null,
+  };
+}
+
+/**
+ * Formatte une watchlist Drizzle (sans relations chargées) + ses items en shape JSON-ready.
+ * Utilisé par les endpoints de mutation qui ne rechargent pas owner/collaborators/likedBy.
+ */
+function formatWatchlistRowWithItems(
+  row: DBWatchlist,
+  items: DBWatchlistItem[]
+): SharedWatchlist {
+  return formatWatchlistWithRelations({ ...row, items, collaborators: [], owner: null });
+}
+
+/**
+ * Formatte une watchlist Drizzle + ses relations en shape JSON-ready (strings ISO).
+ * Le retour matche le contrat shared.Watchlist (consommé directement par le frontend).
+ */
+export function formatWatchlistWithRelations(watchlist: WatchlistWithRelations): SharedWatchlist {
   return {
     id: watchlist.id,
     ownerId: watchlist.ownerId,
@@ -113,8 +139,8 @@ export function formatWatchlistWithRelations(watchlist: WatchlistWithRelations):
     isPublic: watchlist.isPublic,
     genres: watchlist.genres,
     position: watchlist.position,
-    createdAt: watchlist.createdAt,
-    updatedAt: watchlist.updatedAt,
+    createdAt: watchlist.createdAt?.toISOString() ?? null,
+    updatedAt: watchlist.updatedAt?.toISOString() ?? null,
     owner: watchlist.owner
       ? {
           id: watchlist.owner.id,
@@ -129,7 +155,7 @@ export function formatWatchlistWithRelations(watchlist: WatchlistWithRelations):
       username: c.user.username,
       avatarUrl: c.user.avatarUrl,
     })),
-    items: watchlist.items ?? [],
+    items: (watchlist.items ?? []).map(formatItem),
     likedBy: watchlist.likedBy?.map(l => ({
       id: l.user.id,
       email: l.user.email,
@@ -295,10 +321,10 @@ export const getPublicFeatured = async (c: C) => {
       isSaved: savedIdsSet.has(w.id),
     }));
 
-    return c.json({ watchlists: watchlistsWithFlags });
+    return c.json({ watchlists: watchlistsWithFlags } satisfies WatchlistsAPI.GetPublicFeaturedResponse);
   }
 
-  return c.json({ watchlists: sortedWatchlists });
+  return c.json({ watchlists: sortedWatchlists } satisfies WatchlistsAPI.GetPublicFeaturedResponse);
 };
 
 export const getPublicWatchlist = async (c: C) => {
@@ -318,7 +344,7 @@ export const getPublicWatchlist = async (c: C) => {
     return c.json({ error: 'This watchlist is private' }, 403);
   }
 
-  return c.json({ watchlist: formatWatchlistWithRelations(watchlist) });
+  return c.json({ watchlist: formatWatchlistWithRelations(watchlist) } satisfies WatchlistsAPI.GetPublicWatchlistResponse);
 };
 
 export const getWatchlistsByGenre = async (c: C) => {
@@ -336,7 +362,7 @@ export const getWatchlistsByGenre = async (c: C) => {
 
   const enriched = await loadWatchlistRelations(baseWatchlists, { withLikedBy: true });
 
-  return c.json({ watchlists: enriched.map(formatWatchlistWithRelations) });
+  return c.json({ watchlists: enriched.map(formatWatchlistWithRelations) } satisfies WatchlistsAPI.GetWatchlistsByGenreResponse);
 };
 
 export const getWatchlistCountByGenre = async (c: C) => {
@@ -351,7 +377,7 @@ export const getWatchlistCountByGenre = async (c: C) => {
     .from(watchlists)
     .where(and(eq(watchlists.isPublic, true), sql`${genre} = ANY(${watchlists.genres})`));
 
-  return c.json({ genre, count: result[0]?.count ?? 0 });
+  return c.json({ genre, count: result[0]?.count ?? 0 } satisfies WatchlistsAPI.GetWatchlistCountByGenreResponse);
 };
 
 export const searchTMDB = async (c: C) => {
@@ -456,7 +482,7 @@ export const getMyWatchlists = async (c: C) => {
   const allEnriched = await loadWatchlistRelations(Array.from(allBaseMap.values()));
   const enrichedMap = new Map(allEnriched.map(w => [w.id, w]));
 
-  type MyWatchlist = FormattedWatchlist & {
+  type MyWatchlist = SharedWatchlist & {
     isOwner: boolean;
     isCollaborator: boolean;
     isSaved: boolean;
@@ -508,7 +534,7 @@ export const getMyWatchlists = async (c: C) => {
     (a, b) => (a.libraryPosition ?? 9999) - (b.libraryPosition ?? 9999)
   );
 
-  return c.json({ watchlists: result });
+  return c.json({ watchlists: result } satisfies WatchlistsAPI.GetMyWatchlistsResponse);
 };
 
 export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
@@ -591,7 +617,7 @@ export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
     return c.json({ error: 'Watchlist creation failed' }, 500);
   }
 
-  return c.json({ watchlist: formatWatchlistWithRelations(fullWatchlist) }, 201);
+  return c.json({ watchlist: formatWatchlistWithRelations(fullWatchlist) } satisfies WatchlistsAPI.CreateWatchlistResponse, 201);
 };
 
 export const reorderWatchlists = async (c: C, data: ReorderWatchlistsInput) => {
@@ -609,7 +635,7 @@ export const reorderWatchlists = async (c: C, data: ReorderWatchlistsInput) => {
       );
   }
 
-  return c.json({ message: 'Watchlists reordered successfully' });
+  return c.json({ message: 'Watchlists reordered successfully' } satisfies WatchlistsAPI.ReorderWatchlistsResponse);
 };
 
 export const getWatchlistById = async (c: C) => {
@@ -646,7 +672,7 @@ export const getWatchlistById = async (c: C) => {
     isSaved,
     isOwner,
     isCollaborator,
-  });
+  } satisfies WatchlistsAPI.GetWatchlistByIdResponse);
 };
 
 export const updateWatchlist = async (c: C, data: UpdateWatchlistInput) => {
@@ -735,7 +761,7 @@ export const updateWatchlist = async (c: C, data: UpdateWatchlistInput) => {
     .where(eq(watchlistItems.watchlistId, id))
     .orderBy(asc(watchlistItems.position));
 
-  return c.json({ watchlist: { ...updated, items } });
+  return c.json({ watchlist: formatWatchlistRowWithItems(updated, items) } satisfies WatchlistsAPI.UpdateWatchlistResponse);
 };
 
 export const deleteWatchlist = async (c: C) => {
@@ -790,7 +816,7 @@ export const deleteWatchlist = async (c: C) => {
 
   await db.delete(watchlists).where(eq(watchlists.id, id));
 
-  return c.json({ message: 'Watchlist deleted successfully' });
+  return c.json({ message: 'Watchlist deleted successfully' } satisfies WatchlistsAPI.DeleteWatchlistResponse);
 };
 
 export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
@@ -906,7 +932,7 @@ export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
       email: r.email,
       avatarUrl: r.avatarUrl || null,
     })),
-  });
+  } satisfies WatchlistsAPI.AddCollaboratorResponse);
 };
 
 export const removeCollaborator = async (c: C) => {
@@ -994,7 +1020,7 @@ export const removeCollaborator = async (c: C) => {
       email: r.email,
       avatarUrl: r.avatarUrl || null,
     })),
-  });
+  } satisfies WatchlistsAPI.RemoveCollaboratorResponse);
 };
 
 export const leaveWatchlist = async (c: C) => {
@@ -1047,7 +1073,7 @@ export const leaveWatchlist = async (c: C) => {
       );
   }
 
-  return c.json({ message: 'Left watchlist successfully' });
+  return c.json({ message: 'Left watchlist successfully' } satisfies WatchlistsAPI.LeaveWatchlistResponse);
 };
 
 export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
@@ -1151,7 +1177,7 @@ export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
     }
   }
 
-  return c.json({ watchlist: { ...updatedWatchlistRow, items: updatedItems } });
+  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.AddItemResponse);
 };
 
 export const removeItemFromWatchlist = async (c: C) => {
@@ -1233,7 +1259,7 @@ export const removeItemFromWatchlist = async (c: C) => {
     }
   }
 
-  return c.json({ watchlist: { ...updatedWatchlistRow, items: updatedItems } });
+  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.RemoveItemResponse);
 };
 
 export const moveItemPosition = async (c: C, data: MoveItemInput) => {
@@ -1337,7 +1363,7 @@ export const moveItemPosition = async (c: C, data: MoveItemInput) => {
     }
   }
 
-  return c.json({ watchlist: { ...updatedWatchlistRow, items: updatedItems } });
+  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.MoveItemResponse);
 };
 
 export const reorderItems = async (c: C, data: ReorderItemsInput) => {
@@ -1429,7 +1455,7 @@ export const reorderItems = async (c: C, data: ReorderItemsInput) => {
     }
   }
 
-  return c.json({ watchlist: { ...updatedWatchlistRow, items: updatedItems } });
+  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.ReorderItemsResponse);
 };
 
 export const uploadCover = async (c: C, data: UploadCoverInput) => {
@@ -1472,7 +1498,16 @@ export const uploadCover = async (c: C, data: UploadCoverInput) => {
       .where(eq(watchlists.id, id))
       .returning();
 
-    return c.json({ watchlist: updated, imageUrl: result.secure_url });
+    const updatedItems = await db
+      .select()
+      .from(watchlistItems)
+      .where(eq(watchlistItems.watchlistId, id))
+      .orderBy(asc(watchlistItems.position));
+
+    return c.json({
+      watchlist: formatWatchlistRowWithItems(updated, updatedItems),
+      imageUrl: result.secure_url,
+    } satisfies WatchlistsAPI.UploadCoverResponse);
   } catch (error) {
     return c.json({ msg: 'Failed to upload image to Cloudinary', error }, 500);
   }
@@ -1524,7 +1559,16 @@ export const deleteCover = async (c: C) => {
     .where(eq(watchlists.id, id))
     .returning();
 
-  return c.json({ message: 'Cover image deleted successfully', watchlist: updated });
+  const updatedItems = await db
+    .select()
+    .from(watchlistItems)
+    .where(eq(watchlistItems.watchlistId, id))
+    .orderBy(asc(watchlistItems.position));
+
+  return c.json({
+    message: 'Cover image deleted successfully',
+    watchlist: formatWatchlistRowWithItems(updated, updatedItems),
+  } satisfies WatchlistsAPI.DeleteCoverResponse);
 };
 
 export const generateWatchlistThumbnail = async (c: C) => {
@@ -1577,7 +1621,7 @@ export const generateWatchlistThumbnail = async (c: C) => {
 
   await db.update(watchlists).set({ thumbnailUrl }).where(eq(watchlists.id, id));
 
-  return c.json({ thumbnailUrl });
+  return c.json({ thumbnailUrl } satisfies WatchlistsAPI.GenerateThumbnailResponse);
 };
 
 export const saveWatchlist = async (c: C) => {
@@ -1636,7 +1680,7 @@ export const saveWatchlist = async (c: C) => {
 
   await db.insert(userWatchlistPositions).values({ userId, watchlistId: id, position: 0 });
 
-  return c.json({ message: 'Watchlist saved successfully' });
+  return c.json({ message: 'Watchlist saved successfully' } satisfies WatchlistsAPI.SaveWatchlistResponse);
 };
 
 export const unsaveWatchlist = async (c: C) => {
@@ -1687,7 +1731,7 @@ export const unsaveWatchlist = async (c: C) => {
       );
   }
 
-  return c.json({ message: 'Watchlist removed from library' });
+  return c.json({ message: 'Watchlist removed from library' } satisfies WatchlistsAPI.UnsaveWatchlistResponse);
 };
 
 export const duplicateWatchlist = async (c: C) => {
@@ -1793,7 +1837,9 @@ export const duplicateWatchlist = async (c: C) => {
   }
 
   return c.json(
-    { watchlist: { ...duplicatedWatchlist, items: fullDuplicatedItems } },
+    {
+      watchlist: formatWatchlistRowWithItems(duplicatedWatchlist, fullDuplicatedItems),
+    } satisfies WatchlistsAPI.DuplicateWatchlistResponse,
     201
   );
 };

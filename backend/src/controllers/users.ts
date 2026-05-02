@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 import type { z } from 'zod';
 import { and, asc, eq } from 'drizzle-orm';
+import type { UsersAPI } from '@poplist/shared';
 import { db } from '../db/index.js';
 import { users, watchlists } from '../db/schema.js';
 import { cloudinary, deleteFromCloudinary } from '../services/cloudinary.js';
@@ -27,9 +28,9 @@ export const getProfile = async (c: C) => {
       username: fullUser.username,
       avatarUrl: fullUser.avatarUrl,
       language: fullUser.language,
-      createdAt: fullUser.createdAt,
+      createdAt: fullUser.createdAt?.toISOString() ?? null,
     },
-  });
+  } satisfies UsersAPI.GetProfileResponse);
 };
 
 export const getUserProfileByUsername = async (c: C) => {
@@ -62,7 +63,7 @@ export const getUserProfileByUsername = async (c: C) => {
     },
     watchlists: formattedWatchlists,
     totalPublicWatchlists: formattedWatchlists.length,
-  });
+  } satisfies UsersAPI.GetUserProfileByUsernameResponse);
 };
 
 export const uploadAvatar = async (c: C, data: UploadAvatarInput) => {
@@ -106,7 +107,7 @@ export const uploadAvatar = async (c: C, data: UploadAvatarInput) => {
         language: updated.language,
       },
       avatarUrl: result.secure_url,
-    });
+    } satisfies UsersAPI.UploadAvatarResponse);
   } catch (error) {
     console.error('Cloudinary upload error:', error);
     return c.json({ error: 'Failed to upload avatar to Cloudinary' }, 500);
@@ -146,5 +147,5 @@ export const deleteAvatar = async (c: C) => {
       avatarUrl: updated.avatarUrl,
       language: updated.language,
     },
-  });
+  } satisfies UsersAPI.DeleteAvatarResponse);
 };

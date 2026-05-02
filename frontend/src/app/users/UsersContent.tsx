@@ -8,7 +8,7 @@ import { Section } from '@/components/layout/Section';
 import { Pagination } from '@/components/ui/pagination';
 import { UserCard } from '@/components/User/UserCard';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { honoAPI, type Watchlist } from '@/api';
+import { watchlists as watchlistsApi, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 40;
@@ -44,13 +44,13 @@ function UsersContentInner() {
   const fetchCreators = useCallback(async () => {
     try {
       // Get public watchlists with higher limit to aggregate creators
-      const publicData = await honoAPI.watchlists.getPublicFeatured(500);
-      const watchlists: Watchlist[] = publicData.watchlists || [];
+      const publicData = await watchlistsApi.getPublicFeatured(500);
+      const allPublicWatchlists: Watchlist[] = publicData.watchlists || [];
 
       // Aggregate by owner
       const creatorsMap = new Map<string, Creator>();
 
-      for (const watchlist of watchlists) {
+      for (const watchlist of allPublicWatchlists) {
         if (watchlist.owner) {
           const ownerId = watchlist.owner.id;
           const existing = creatorsMap.get(ownerId);

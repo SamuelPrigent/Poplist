@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { honoAPI, type Watchlist } from '@/api';
+import { watchlists as watchlistsApi, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 30; // 6 rows of 5 cards
@@ -54,7 +54,7 @@ function CommunityListsPageInner() {
   const fetchWatchlists = useCallback(async () => {
     try {
       // Fetch all public watchlists with higher limit for community page
-      const data = await honoAPI.watchlists.getPublicFeatured(1000);
+      const data = await watchlistsApi.getPublicFeatured(1000);
       setWatchlists(data.watchlists || []);
     } catch (error) {
       console.error('Failed to fetch community watchlists:', error);
@@ -71,7 +71,7 @@ function CommunityListsPageInner() {
       // Fetch user's watchlists if authenticated
       if (user) {
         try {
-          const userData = await honoAPI.watchlists.getMine();
+          const userData = await watchlistsApi.getMine();
           setUserWatchlists(userData.watchlists || []);
         } catch (error) {
           console.error('Failed to fetch user watchlists:', error);

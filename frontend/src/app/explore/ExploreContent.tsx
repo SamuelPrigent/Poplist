@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
-import { createPlaceholderItem, fetchTMDBProviders, honoAPI, type Watchlist, type WatchlistItem } from '@/api';
+import { createPlaceholderItem, fetchTMDBProviders, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
@@ -277,7 +277,7 @@ export function ExploreContent() {
   // Fetch user watchlists (authenticated or offline)
   useEffect(() => {
     if (isAuthenticated) {
-      honoAPI.watchlists
+      watchlistsApi
         .getMine()
         .then(data => {
           setWatchlists(data.watchlists);
@@ -371,7 +371,7 @@ export function ExploreContent() {
       const itemType: 'movie' | 'tv' = mediaItem.title ? 'movie' : 'tv';
 
       if (isAuthenticated) {
-        await honoAPI.watchlists.addItem(watchlistId, {
+        await watchlistsApi.addItem(watchlistId, {
           tmdbId: mediaItem.id.toString(),
           mediaType: itemType,
           language: tmdbLanguage,
@@ -391,7 +391,7 @@ export function ExploreContent() {
             if (!itemExists) {
               const [platformList, mediaDetails] = await Promise.all([
                 fetchTMDBProviders(mediaItem.id.toString(), itemType, tmdbRegion),
-                honoAPI.watchlists.getItemDetails(mediaItem.id.toString(), itemType, tmdbLanguage),
+                watchlistsApi.getItemDetails(mediaItem.id.toString(), itemType, tmdbLanguage),
               ]);
 
               const newItem = createPlaceholderItem({
@@ -440,7 +440,7 @@ export function ExploreContent() {
       )
     );
     try {
-      await honoAPI.watchlists.addItem(watchlistId, {
+      await watchlistsApi.addItem(watchlistId, {
         tmdbId,
         mediaType,
         language: tmdbLanguage,
@@ -469,7 +469,7 @@ export function ExploreContent() {
       })
     );
     try {
-      await honoAPI.watchlists.removeItem(watchlistId, tmdbId);
+      await watchlistsApi.removeItem(watchlistId, tmdbId);
     } catch (error) {
       console.error('Failed to remove from watchlist:', error);
       if (removed) {

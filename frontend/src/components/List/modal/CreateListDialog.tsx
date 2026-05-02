@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { client } from '@/api';
+import { watchlists as watchlistsApi } from '@/api';
 import type { Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, type GenreCategory, getCategoryInfo } from '@/types/categories';
@@ -122,17 +122,12 @@ export function CreateListDialog({
         onOpenChange(false);
       } else {
         // Online mode: create via API
-        const createRes = await client.watchlists.$post({
-          json: {
-            name: name.trim(),
-            description: description.trim() || undefined,
-            isPublic,
-            genres: genresData,
-          },
+        const created = await watchlistsApi.create({
+          name: name.trim(),
+          description: description.trim() || undefined,
+          isPublic,
+          genres: genresData,
         });
-        if (!createRes.ok) throw new Error('Failed to create watchlist');
-        const created = await createRes.json();
-        if (!created.watchlist) throw new Error('Watchlist creation failed');
         let watchlist: Watchlist = {
           ...created.watchlist,
           collaborators: [],
@@ -140,12 +135,7 @@ export function CreateListDialog({
 
         // Upload cover image if provided and update watchlist with imageUrl
         if (imagePreview) {
-          const uploadRes = await client.watchlists[':id']['upload-cover'].$post({
-            param: { id: watchlist.id },
-            json: { imageData: imagePreview },
-          });
-          if (!uploadRes.ok) throw new Error('Failed to upload cover');
-          const uploadResult = await uploadRes.json();
+          const uploadResult = await watchlistsApi.uploadCover(watchlist.id, imagePreview);
           if (uploadResult.watchlist) {
             watchlist = { ...watchlist, ...uploadResult.watchlist };
           }

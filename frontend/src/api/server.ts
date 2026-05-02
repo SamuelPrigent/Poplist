@@ -3,11 +3,10 @@
  * Uses fetch with Next.js caching and revalidation
  */
 
-import type {
-	FullMediaDetails,
-	UserProfileResponse,
-	Watchlist,
-} from "./types";
+import type { FullMediaDetails, Watchlist } from "@poplist/shared";
+import type { UsersAPI } from "@poplist/shared";
+
+type UserProfileResponse = UsersAPI.GetUserProfileByUsernameResponse;
 
 // Pour les Server Components, on utilise l'URL backend directement
 // car les rewrites ne s'appliquent qu'aux requêtes côté client

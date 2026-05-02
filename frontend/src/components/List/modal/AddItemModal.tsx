@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
-import { client, createPlaceholderItem } from '@/api';
+import { createPlaceholderItem, watchlists as watchlistsApi } from '@/api';
 import type { FullMediaDetails, Watchlist, WatchlistItem } from '@/api';
 import { fetchTMDBProviders } from '@/api';
 import { getLocalWatchlists } from '@/lib/localStorageHelpers';
@@ -76,11 +76,8 @@ export function AddItemModal({
             setFreshWatchlistItems(freshWatchlist.items);
           }
         } else {
-          const res = await client.watchlists[':id'].$get({ param: { id: watchlist.id } });
-          if (res.ok) {
-            const { watchlist: freshWatchlist } = await res.json();
-            setFreshWatchlistItems(freshWatchlist.items);
-          }
+          const { watchlist: freshWatchlist } = await watchlistsApi.getById(watchlist.id);
+          setFreshWatchlistItems(freshWatchlist.items);
         }
       } catch (error) {
         console.error('Failed to fetch fresh watchlist items:', error);
@@ -120,11 +117,11 @@ export function AddItemModal({
 
       setLoading(true);
       try {
-        const res = await client.watchlists.search.tmdb.$get({
-          query: { query: query.trim(), language: languageCode, region },
-        });
-        if (!res.ok) throw new Error('Search failed');
-        const data = await res.json() as { results: SearchResult[] };
+        const data = (await watchlistsApi.searchTMDB({
+          query: query.trim(),
+          language: languageCode,
+          region,
+        })) as { results: SearchResult[] };
         setSearchResults(data.results);
       } catch (error) {
         console.error('Search error:', error);
@@ -173,12 +170,11 @@ export function AddItemModal({
     setItemDetails(null);
 
     try {
-      const res = await client.watchlists.items[':tmdbId'][':type'].details.$get({
-        param: { tmdbId: item.id.toString(), type: item.media_type },
-        query: { language: languageCode },
-      });
-      if (!res.ok) throw new Error('Failed to fetch item details');
-      const { details } = await res.json();
+      const { details } = await watchlistsApi.getItemDetails(
+        item.id.toString(),
+        item.media_type,
+        languageCode
+      );
       setItemDetails(details);
     } catch (error) {
       console.error('Error fetching details:', error);
@@ -221,15 +217,10 @@ export function AddItemModal({
 
         if (watchlistIndex === -1) return;
 
-        const [platformList, detailsRes] = await Promise.all([
+        const [platformList, mediaDetails] = await Promise.all([
           fetchTMDBProviders(item.id.toString(), item.media_type, region),
-          client.watchlists.items[':tmdbId'][':type'].details.$get({
-            param: { tmdbId: item.id.toString(), type: item.media_type },
-            query: { language: languageCode },
-          }),
+          watchlistsApi.getItemDetails(item.id.toString(), item.media_type, languageCode),
         ]);
-        if (!detailsRes.ok) throw new Error('Failed to fetch item details');
-        const mediaDetails = await detailsRes.json();
 
         const newItem = createPlaceholderItem({
           tmdbId: item.id,
@@ -243,16 +234,12 @@ export function AddItemModal({
         watchlists[watchlistIndex].items.push(newItem);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
       } else {
-        const res = await client.watchlists[':id'].items.$post({
-          param: { id: watchlist.id },
-          json: {
-            tmdbId: item.id.toString(),
-            mediaType: item.media_type,
-            language: languageCode,
-            region,
-          },
+        await watchlistsApi.addItem(watchlist.id, {
+          tmdbId: item.id.toString(),
+          mediaType: item.media_type,
+          language: languageCode,
+          region,
         });
-        if (!res.ok) throw new Error('Failed to add item');
       }
 
       setAddedItemIds(prev => new Set(prev).add(item.id));
@@ -283,10 +270,7 @@ export function AddItemModal({
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
       } else {
-        const res = await client.watchlists[':id'].items[':tmdbId'].$delete({
-          param: { id: watchlist.id, tmdbId: item.id.toString() },
-        });
-        if (!res.ok) throw new Error('Failed to remove item');
+        await watchlistsApi.removeItem(watchlist.id, item.id.toString());
       }
 
       setRemovedItemIds(prev => new Set(prev).add(item.id));

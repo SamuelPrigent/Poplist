@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+import type { TMDBAPI } from '@poplist/shared'
 import * as tmdb from '../services/tmdb.js'
 import type { AppEnv } from '../app.js'
 
@@ -6,44 +7,6 @@ type C = Context<AppEnv>
 
 function param(c: C, name: string): string {
   return c.req.param(name) as string
-}
-
-// Common TMDB response shapes (used to type controller returns for RPC)
-export type TMDBMediaItem = {
-  id: number
-  media_type?: 'movie' | 'tv'
-  title?: string
-  name?: string
-  poster_path?: string | null
-  backdrop_path?: string | null
-  overview?: string
-  vote_average?: number
-  vote_count?: number
-  release_date?: string
-  first_air_date?: string
-  genre_ids?: number[]
-  runtime?: number
-}
-
-export type TMDBListResponse = {
-  results: TMDBMediaItem[]
-  page: number
-  total_pages: number
-  total_results: number
-}
-
-export type TMDBGenresResponse = {
-  genres: Array<{ id: number; name: string }>
-}
-
-export type TMDBProvidersResponse = {
-  id?: number
-  results: Record<string, {
-    link: string
-    flatrate?: Array<{ logo_path: string; provider_id: number; provider_name: string; display_priority: number }>
-    buy?: Array<{ logo_path: string; provider_id: number; provider_name: string; display_priority: number }>
-    rent?: Array<{ logo_path: string; provider_id: number; provider_name: string; display_priority: number }>
-  }>
 }
 
 export const getTrending = async (c: C) => {
@@ -54,12 +17,12 @@ export const getTrending = async (c: C) => {
   }
 
   try {
-    const data = await tmdb.getTrending(
+    const data = (await tmdb.getTrending(
       timeWindow,
       c.req.query('language') || 'fr-FR',
       c.req.query('page') || '1'
-    )
-    return c.json(data as TMDBListResponse)
+    )) as TMDBAPI.TrendingResponse
+    return c.json(data satisfies TMDBAPI.TrendingResponse)
   } catch (error) {
     console.error('Error fetching trending:', error)
     return c.json({ error: 'Failed to fetch trending content' }, 500)
@@ -99,8 +62,8 @@ export const discover = async (c: C) => {
       if (firstAirDateLte) fetchParams['first_air_date.lte'] = firstAirDateLte
     }
 
-    const data = await tmdb.discover(type, fetchParams)
-    return c.json(data as TMDBListResponse)
+    const data = (await tmdb.discover(type, fetchParams)) as TMDBAPI.DiscoverResponse
+    return c.json(data satisfies TMDBAPI.DiscoverResponse)
   } catch (error) {
     console.error('Error discovering content:', error)
     return c.json({ error: 'Failed to discover content' }, 500)
@@ -115,8 +78,11 @@ export const getGenres = async (c: C) => {
   }
 
   try {
-    const data = await tmdb.getGenres(type, c.req.query('language') || 'fr-FR')
-    return c.json(data as TMDBGenresResponse)
+    const data = (await tmdb.getGenres(
+      type,
+      c.req.query('language') || 'fr-FR'
+    )) as TMDBAPI.GenresResponse
+    return c.json(data satisfies TMDBAPI.GenresResponse)
   } catch (error) {
     console.error('Error fetching genres:', error)
     return c.json({ error: 'Failed to fetch genres' }, 500)
@@ -131,13 +97,13 @@ export const getPopular = async (c: C) => {
   }
 
   try {
-    const data = await tmdb.getPopular(
+    const data = (await tmdb.getPopular(
       type,
       c.req.query('language') || 'fr-FR',
       c.req.query('page') || '1',
       c.req.query('region') || 'FR'
-    )
-    return c.json(data as TMDBListResponse)
+    )) as TMDBAPI.PopularResponse
+    return c.json(data satisfies TMDBAPI.PopularResponse)
   } catch (error) {
     console.error('Error fetching popular:', error)
     return c.json({ error: 'Failed to fetch popular content' }, 500)
@@ -152,13 +118,13 @@ export const getTopRated = async (c: C) => {
   }
 
   try {
-    const data = await tmdb.getTopRated(
+    const data = (await tmdb.getTopRated(
       type,
       c.req.query('language') || 'fr-FR',
       c.req.query('page') || '1',
       c.req.query('region') || 'FR'
-    )
-    return c.json(data as TMDBListResponse)
+    )) as TMDBAPI.TopRatedResponse
+    return c.json(data satisfies TMDBAPI.TopRatedResponse)
   } catch (error) {
     console.error('Error fetching top rated:', error)
     return c.json({ error: 'Failed to fetch top rated content' }, 500)
@@ -174,8 +140,8 @@ export const getProviders = async (c: C) => {
   }
 
   try {
-    const data = await tmdb.getProviders(type, id)
-    return c.json(data as TMDBProvidersResponse)
+    const data = (await tmdb.getProviders(type, id)) as TMDBAPI.ProvidersResponse
+    return c.json(data satisfies TMDBAPI.ProvidersResponse)
   } catch (error) {
     console.error('Error fetching watch providers:', error)
     return c.json({ error: 'Failed to fetch watch providers' }, 500)
@@ -191,13 +157,13 @@ export const getSimilar = async (c: C) => {
   }
 
   try {
-    const data = await tmdb.getSimilar(
+    const data = (await tmdb.getSimilar(
       type,
       id,
       c.req.query('language') || 'fr-FR',
       c.req.query('page') || '1'
-    )
-    return c.json(data as TMDBListResponse)
+    )) as TMDBAPI.SimilarResponse
+    return c.json(data satisfies TMDBAPI.SimilarResponse)
   } catch (error) {
     console.error('Error fetching similar:', error)
     return c.json({ error: 'Failed to fetch similar content' }, 500)

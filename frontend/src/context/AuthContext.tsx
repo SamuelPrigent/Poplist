@@ -1,21 +1,9 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { mergeLocalWatchlistsToDB } from "@/features/watchlists/localStorage";
-import { client, setAuthErrorHandler } from "@/api";
+import { auth, setAuthErrorHandler } from "@/api";
 import { type Language, useLanguageStore } from "@/store/language";
 import { AuthContext, type AuthContextValue, type User } from "./auth-context";
-
-async function jsonOrThrow<T>(res: Response): Promise<T> {
-	if (!res.ok) {
-		const err = await res
-			.json()
-			.catch(() => ({ error: `Request failed: ${res.status}` }));
-		throw new Error(
-			(err as { error?: string }).error || `Request failed: ${res.status}`,
-		);
-	}
-	return res.json() as Promise<T>;
-}
 
 // Clé localStorage pour l'état d'auth optimiste
 const AUTH_STORAGE_KEY = "poplist_auth";
@@ -79,11 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	const fetchUser = useCallback(async () => {
 		try {
-			const res = await client.auth.me.$get();
-			if (!res.ok) {
-				throw new Error("Unauthenticated");
-			}
-			const { user: fetchedUser } = await res.json();
+			const { user: fetchedUser } = await auth.me();
 			setUser(fetchedUser);
 			setOptimisticAuth(true);
 			setStoredAuthState(true, fetchedUser);
@@ -104,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		console.log("🚪 Auto-logout: Refresh token expired, cleaning up...");
 		// Call the real logout to clean cookies on backend
 		try {
-			await client.auth.logout.$post();
+			await auth.logout();
 		} catch {
 			// Ignore errors - just clean up local state
 			console.log(
@@ -124,16 +108,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, [fetchUser, handleAutoLogout]);
 
 	const login = async (email: string, password: string) => {
-		const res = await client.auth.login.$post({ json: { email, password } });
-		const { user: loggedInUser } = await jsonOrThrow<{ user: User }>(res);
+		const { user: loggedInUser } = await auth.login(email, password);
 		setUser(loggedInUser);
 		setOptimisticAuth(true);
 		setStoredAuthState(true, loggedInUser);
 	};
 
 	const signup = async (email: string, password: string) => {
-		const res = await client.auth.signup.$post({ json: { email, password } });
-		const { user: signedUpUser } = await jsonOrThrow<{ user: User }>(res);
+		const { user: signedUpUser } = await auth.signup(email, password);
 		setUser(signedUpUser);
 		setOptimisticAuth(true);
 		setStoredAuthState(true, signedUpUser);
@@ -148,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	};
 
 	const logout = async () => {
-		await client.auth.logout.$post();
+		await auth.logout();
 		setUser(null);
 		setOptimisticAuth(false);
 		setStoredAuthState(false, null);
@@ -159,29 +141,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	};
 
 	const updateUsername = async (username: string) => {
-		const res = await client.auth.profile.username.$put({ json: { username } });
-		const { user: updatedUser } = await jsonOrThrow<{ user: User }>(res);
+		const { user: updatedUser } = await auth.updateUsername(username);
 		setUser(updatedUser);
 	};
 
 	const changePassword = async (oldPassword: string, newPassword: string) => {
-		const res = await client.auth.profile.password.$put({
-			json: { oldPassword, newPassword },
-		});
-		if (!res.ok) {
-			const err = await res.json().catch(() => ({ error: "Failed to change password" }));
-			throw new Error((err as { error?: string }).error || "Failed to change password");
-		}
+		await auth.changePassword(oldPassword, newPassword);
 	};
 
 	const deleteAccount = async (confirmation: string) => {
-		const res = await client.auth.profile.account.$delete({
-			json: { confirmation: confirmation as "confirmer" },
-		});
-		if (!res.ok) {
-			const err = await res.json().catch(() => ({ error: "Failed to delete account" }));
-			throw new Error((err as { error?: string }).error || "Failed to delete account");
-		}
+		await auth.deleteAccount(confirmation as "confirmer");
 		setUser(null);
 	};
 

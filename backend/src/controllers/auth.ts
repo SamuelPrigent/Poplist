@@ -2,6 +2,7 @@ import type { Context } from 'hono'
 import { getCookie } from 'hono/cookie'
 import bcrypt from 'bcrypt'
 import { and, asc, eq, inArray, lt, or } from 'drizzle-orm'
+import type { AuthAPI } from '@poplist/shared'
 import { db } from '../db/index.js'
 import { refreshTokens, savedWatchlists, userWatchlistPositions, users, watchlistLikes, watchlists } from '../db/schema.js'
 import {
@@ -104,7 +105,7 @@ export const signup = async (c: C, data: SignupInput) => {
         avatarUrl: user.avatarUrl,
         hasPassword: !!user.passwordHash,
       },
-    },
+    } satisfies AuthAPI.SignupResponse,
     201
   )
 }
@@ -146,7 +147,7 @@ export const login = async (c: C, data: LoginInput) => {
       avatarUrl: user.avatarUrl,
       hasPassword: !!user.passwordHash,
     },
-  })
+  } satisfies AuthAPI.LoginResponse)
 }
 
 export const googleAuth = (c: C) => {
@@ -309,7 +310,7 @@ export const refresh = async (c: C) => {
     setAccessTokenCookie(c, newAccessToken)
     setRefreshTokenCookie(c, newRefreshToken)
 
-    return c.json({ message: 'Tokens refreshed' })
+    return c.json({ message: 'Tokens refreshed' } satisfies AuthAPI.RefreshResponse)
   } catch {
     return c.json({ error: 'Invalid or expired refresh token' }, 401)
   }
@@ -331,14 +332,14 @@ export const logout = async (c: C) => {
   }
 
   clearAuthCookies(c)
-  return c.json({ message: 'Logged out successfully' })
+  return c.json({ message: 'Logged out successfully' } satisfies AuthAPI.LogoutResponse)
 }
 
 export const setTokens = async (c: C, data: SetTokensInput) => {
   setAccessTokenCookie(c, data.accessToken)
   setRefreshTokenCookie(c, data.refreshToken)
 
-  return c.json({ message: 'Tokens set successfully' })
+  return c.json({ message: 'Tokens set successfully' } satisfies AuthAPI.SetTokensResponse)
 }
 
 export const checkUsernameAvailability = async (c: C) => {
@@ -358,7 +359,7 @@ export const checkUsernameAvailability = async (c: C) => {
     .where(eq(users.username, username))
     .limit(1)
 
-  return c.json({ available: !existingUser, username })
+  return c.json({ available: !existingUser, username } satisfies AuthAPI.CheckUsernameResponse)
 }
 
 export const me = async (c: C) => {
@@ -376,10 +377,10 @@ export const me = async (c: C) => {
       username: fullUser.username,
       language: fullUser.language || 'fr',
       avatarUrl: fullUser.avatarUrl,
-      createdAt: fullUser.createdAt,
+      createdAt: fullUser.createdAt?.toISOString() ?? null,
       hasPassword: !!fullUser.passwordHash,
     },
-  })
+  } satisfies AuthAPI.MeResponse)
 }
 
 export const updateUsername = async (c: C, data: UpdateUsernameInput) => {
@@ -418,7 +419,7 @@ export const updateUsername = async (c: C, data: UpdateUsernameInput) => {
       avatarUrl: updated.avatarUrl,
       hasPassword: !!updated.passwordHash,
     },
-  })
+  } satisfies AuthAPI.UpdateUsernameResponse)
 }
 
 export const changePassword = async (c: C, data: ChangePasswordInput) => {
@@ -445,7 +446,7 @@ export const changePassword = async (c: C, data: ChangePasswordInput) => {
   const newHash = await bcrypt.hash(data.newPassword, 10)
   await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.sub))
 
-  return c.json({ message: 'Password changed successfully' })
+  return c.json({ message: 'Password changed successfully' } satisfies AuthAPI.ChangePasswordResponse)
 }
 
 export const updateLanguage = async (c: C, data: UpdateLanguageInput) => {
@@ -466,7 +467,7 @@ export const updateLanguage = async (c: C, data: UpdateLanguageInput) => {
       avatarUrl: updated.avatarUrl,
       hasPassword: !!updated.passwordHash,
     },
-  })
+  } satisfies AuthAPI.UpdateLanguageResponse)
 }
 
 export const deleteAccount = async (c: C, _data: DeleteAccountInput) => {
@@ -495,5 +496,5 @@ export const deleteAccount = async (c: C, _data: DeleteAccountInput) => {
 
   await db.delete(users).where(eq(users.id, userId))
 
-  return c.json({ message: 'Account deleted successfully' })
+  return c.json({ message: 'Account deleted successfully' } satisfies AuthAPI.DeleteAccountResponse)
 }

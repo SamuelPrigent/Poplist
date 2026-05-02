@@ -36,7 +36,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { honoAPI, type Watchlist } from '@/api';
+import { watchlists as watchlistsApi, type Watchlist } from '@/api';
 import { useMyWatchlists } from '@/hooks/swr';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { useLanguageStore } from '@/store/language';
@@ -174,7 +174,7 @@ function ListsContentInner() {
       // Persist to backend
       try {
         const allWatchlistIds = newWatchlists.map(w => w.id);
-        await honoAPI.watchlists.reorderWatchlists(allWatchlistIds);
+        await watchlistsApi.reorderWatchlists(allWatchlistIds);
       } catch (error) {
         console.error('Failed to reorder watchlists:', error);
         // Revert on error

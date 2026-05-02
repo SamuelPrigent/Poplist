@@ -1,6 +1,7 @@
 import type { Context } from 'hono'
 import bcrypt from 'bcrypt'
 import { and, asc, eq, lt, or } from 'drizzle-orm'
+import type { AuthMobileAPI } from '@poplist/shared'
 import { db } from '../db/index.js'
 import { refreshTokens, users } from '../db/schema.js'
 import {
@@ -106,7 +107,7 @@ export const googleAuthMobile = async (c: C) => {
         avatarUrl: user.avatarUrl,
         hasPassword: !!user.passwordHash,
       },
-    })
+    } satisfies AuthMobileAPI.GoogleAuthMobileResponse)
   } catch (error) {
     console.error('Google OAuth mobile error:', error)
     return c.json({ error: 'Authentication failed' }, 401)
@@ -154,7 +155,10 @@ export const refreshMobile = async (c: C) => {
       userAgent: c.req.header('user-agent') || null,
     })
 
-    return c.json({ accessToken: newAccessToken, refreshToken: newRefreshToken })
+    return c.json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    } satisfies AuthMobileAPI.RefreshMobileResponse)
   } catch {
     return c.json({ error: 'Invalid or expired refresh token' }, 401)
   }
@@ -165,7 +169,7 @@ export const logoutMobile = async (c: C) => {
     const body = await c.req.json()
     const parsed = refreshMobileSchema.safeParse(body)
     if (!parsed.success) {
-      return c.json({ message: 'Logged out' })
+      return c.json({ message: 'Logged out' } satisfies AuthMobileAPI.LogoutMobileResponse)
     }
 
     const { refreshToken } = parsed.data
@@ -180,9 +184,9 @@ export const logoutMobile = async (c: C) => {
       // Token invalid or expired, continue with logout
     }
 
-    return c.json({ message: 'Logged out successfully' })
+    return c.json({ message: 'Logged out successfully' } satisfies AuthMobileAPI.LogoutMobileResponse)
   } catch {
-    return c.json({ message: 'Logged out' })
+    return c.json({ message: 'Logged out' } satisfies AuthMobileAPI.LogoutMobileResponse)
   }
 }
 
@@ -227,7 +231,7 @@ export const loginMobile = async (c: C) => {
       avatarUrl: user.avatarUrl,
       hasPassword: !!user.passwordHash,
     },
-  })
+  } satisfies AuthMobileAPI.LoginMobileResponse)
 }
 
 export const signupMobile = async (c: C) => {
@@ -273,7 +277,7 @@ export const signupMobile = async (c: C) => {
         avatarUrl: user.avatarUrl,
         hasPassword: !!user.passwordHash,
       },
-    },
+    } satisfies AuthMobileAPI.SignupMobileResponse,
     201
   )
 }

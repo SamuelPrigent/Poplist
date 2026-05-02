@@ -8,7 +8,7 @@ import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
-import { client } from '@/api';
+import { watchlists as watchlistsApi } from '@/api';
 import type { FullMediaDetails, Watchlist } from '@/api';
 import { fetchTMDBProviders } from '@/api';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
@@ -90,10 +90,7 @@ export function ItemDetailsModal({
     const fetchDetails = async () => {
       setError(null);
       try {
-        const detailsPromise = client.watchlists.items[':tmdbId'][':type'].details.$get({
-          param: { tmdbId, type },
-          query: { language: languageCode },
-        });
+        const detailsPromise = watchlistsApi.getItemDetails(tmdbId, type, languageCode);
         const providersPromise =
           platforms.length === 0
             ? fetchTMDBProviders(tmdbId, type, region)
@@ -103,8 +100,7 @@ export function ItemDetailsModal({
           detailsPromise,
           providersPromise,
         ]);
-        if (!detailsRes.ok) throw new Error('Failed to fetch item details');
-        const { details: data } = await detailsRes.json();
+        const { details: data } = detailsRes;
         setDetails(data);
         if (providersRes.length > 0) setFetchedPlatforms(providersRes);
         hasLoadedRef.current = true;

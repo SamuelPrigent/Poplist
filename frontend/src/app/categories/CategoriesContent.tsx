@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { createPlaceholderItem, honoAPI, type Watchlist, type WatchlistItem } from '@/api';
+import { createPlaceholderItem, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, getCategoryInfo } from '@/types/categories';
 
@@ -27,7 +27,7 @@ function CategoriesPageInner() {
         await Promise.all(
           genreIds.map(async genreId => {
             try {
-              const data = await honoAPI.watchlists.getByGenre(genreId);
+              const data = await watchlistsApi.getByGenre(genreId);
               counts[genreId] = data.watchlists?.length || 0;
             } catch (error) {
               console.error(`Failed to fetch count for ${genreId}:`, error);

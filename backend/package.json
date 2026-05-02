@@ -15,6 +15,7 @@
   "dependencies": {
     "@hono/node-server": "^1.19.9",
     "@hono/zod-validator": "^0.7.6",
+    "@poplist/shared": "*",
     "bcrypt": "^6.0.0",
     "bottleneck": "^2.19.5",
     "cloudinary": "^2.9.0",

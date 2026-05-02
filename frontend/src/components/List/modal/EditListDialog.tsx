@@ -7,7 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { client } from '@/api';
+import { watchlists as watchlistsApi } from '@/api';
 import type { Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, type GenreCategory, getCategoryInfo } from '@/types/categories';
@@ -160,22 +160,15 @@ export const EditListDialog = forwardRef<EditListDialogRef, EditListDialogProps>
             updates.genres = genresData;
           }
 
-          const updateRes = await client.watchlists[':id'].$put({
-            param: { id: watchlist.id },
-            json: updates,
-          });
-          if (!updateRes.ok) throw new Error('Failed to update watchlist');
+          await watchlistsApi.update(watchlist.id, updates);
 
           // Handle image changes
           if (imagePreview === null && watchlist.imageUrl) {
             // User removed the image - delete from Cloudinary
-            await client.watchlists[':id'].cover.$delete({ param: { id: watchlist.id } });
+            await watchlistsApi.deleteCover(watchlist.id);
           } else if (imageFile && imagePreview && imagePreview !== watchlist.imageUrl) {
             // User uploaded a new image (old one will be auto-deleted by backend)
-            await client.watchlists[':id']['upload-cover'].$post({
-              param: { id: watchlist.id },
-              json: { imageData: imagePreview },
-            });
+            await watchlistsApi.uploadCover(watchlist.id, imagePreview);
           }
 
           onSuccess();

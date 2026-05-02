@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/accordion';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useAuth } from '@/context/auth-context';
-import { honoAPI } from '@/api';
+import { tmdb as tmdbApi } from '@/api';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useLanguageStore } from '@/store/language';
 
@@ -44,7 +44,7 @@ function LandingPageInner() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const trendingData = await honoAPI.tmdb.getTrending('day');
+        const trendingData = await tmdbApi.getTrending('day');
         setTrending(trendingData.results || []);
       } catch (error) {
         console.error('Failed to fetch trending:', error);

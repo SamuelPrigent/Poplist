@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { ListCard } from "@/components/List/ListCard";
 import { useAuth } from "@/context/auth-context";
 import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
-import { honoAPI, type Watchlist } from "@/api";
+import { watchlists as watchlistsApi, type Watchlist } from "@/api";
 import { useLanguageStore } from "@/store/language";
 import { type GenreCategory, getCategoryInfo } from "@/types/categories";
 
@@ -46,7 +46,7 @@ function CategoryDetailPageInner() {
 
          try {
             // Fetch genre watchlists
-            const data = await honoAPI.watchlists.getByGenre(id);
+            const data = await watchlistsApi.getByGenre(id);
             const sorted = (data.watchlists || []).sort(
                (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
             );
@@ -55,7 +55,7 @@ function CategoryDetailPageInner() {
             // Fetch user's watchlists if authenticated
             if (user) {
                try {
-                  const userData = await honoAPI.watchlists.getMine();
+                  const userData = await watchlistsApi.getMine();
                   setUserWatchlists(userData.watchlists || []);
                } catch (error) {
                   console.error("Failed to fetch user watchlists:", error);

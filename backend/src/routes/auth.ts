@@ -44,5 +44,4 @@ const authRoutes = new Hono<AppEnv>()
     AuthController.deleteAccount(c, c.req.valid('json'))
   );
 
-export type AuthRoutes = typeof authRoutes;
 export default authRoutes;

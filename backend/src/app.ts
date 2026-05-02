@@ -36,10 +36,7 @@ const app = new Hono<AppEnv>()
   .route('/tmdb', tmdbRoutes)
   .route('/watchlists', watchlistRoutes);
 
-export type AppType = typeof app;
-//   ↑ Ne contient QUE les routes web utilisées par le client RPC
-
-// Routes mountées au runtime mais HORS AppType (invisibles côté RPC)
+// Mobile mountée au runtime (séparée car consommée par l'app Android, pas le frontend web)
 app.route('/auth/mobile', authMobileRoutes);
 
 // Health check

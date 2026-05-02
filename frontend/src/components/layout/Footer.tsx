@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ChevronDown, Coffee } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/auth-context';
-import { client } from '@/api';
+import { auth } from '@/api';
 import { type Language, useLanguageStore } from '@/store/language';
 import 'flag-icons/css/flag-icons.min.css';
 
@@ -48,7 +48,7 @@ export function Footer() {
     // Save to database if user is authenticated
     if (isAuthenticated) {
       try {
-        await client.auth.profile.language.$put({ json: { language: lang } });
+        await auth.updateLanguage(lang);
       } catch (error) {
         console.error('Failed to update language in database:', error);
         // Continue with local change even if DB update fails

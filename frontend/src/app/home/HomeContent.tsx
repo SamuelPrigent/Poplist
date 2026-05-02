@@ -16,7 +16,7 @@ import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
-import { createPlaceholderItem, honoAPI, type Watchlist, type WatchlistItem } from '@/api';
+import { createPlaceholderItem, watchlists as watchlistsApi, tmdb as tmdbApi, type Watchlist, type WatchlistItem } from '@/api';
 // import { getTMDBImageUrl } from '@/lib/utils';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
@@ -88,7 +88,7 @@ function HomeContentInner() {
 
   const fetchPublicWatchlists = useCallback(async () => {
     try {
-      const publicData = await honoAPI.watchlists.getPublicFeatured(50);
+      const publicData = await watchlistsApi.getPublicFeatured(50);
       const sorted = (publicData.watchlists || []).sort(
         (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
       );
@@ -101,13 +101,13 @@ function HomeContentInner() {
   const fetchCreators = useCallback(async () => {
     try {
       // Get public watchlists with higher limit to aggregate creators
-      const publicData = await honoAPI.watchlists.getPublicFeatured(100);
-      const watchlists = publicData.watchlists || [];
+      const publicData = await watchlistsApi.getPublicFeatured(100);
+      const allPublicWatchlists = publicData.watchlists || [];
 
       // Aggregate by owner
       const creatorsMap = new Map<string, Creator>();
 
-      for (const watchlist of watchlists) {
+      for (const watchlist of allPublicWatchlists) {
         if (watchlist.owner) {
           const ownerId = watchlist.owner.id;
           const existing = creatorsMap.get(ownerId);
@@ -146,7 +146,7 @@ function HomeContentInner() {
 
         let userWatchlistsData: Watchlist[] = [];
         if (user) {
-          const userData = await honoAPI.watchlists.getMine();
+          const userData = await watchlistsApi.getMine();
           userWatchlistsData = userData.watchlists || [];
           setUserWatchlists(userWatchlistsData);
         } else {
@@ -159,14 +159,14 @@ function HomeContentInner() {
         const randomPage = Math.floor(Math.random() * 5) + 1;
 
         const [movieData, tvData] = await Promise.all([
-          honoAPI.tmdb.discover('movie', {
+          tmdbApi.discover('movie', {
             page: randomPage,
             language: tmdbLanguage,
             voteCountGte: 100,
             voteAverageGte: 5.0,
             releaseDateGte: '2015-01-01',
           }),
-          honoAPI.tmdb.discover('tv', {
+          tmdbApi.discover('tv', {
             page: randomPage,
             language: tmdbLanguage,
             voteCountGte: 100,
@@ -217,7 +217,7 @@ function HomeContentInner() {
         await Promise.all(
           genreIds.map(async genreId => {
             try {
-              const data = await honoAPI.watchlists.getByGenre(genreId);
+              const data = await watchlistsApi.getByGenre(genreId);
               counts[genreId] = data.watchlists?.length || 0;
             } catch (error) {
               console.error(`Failed to fetch count for ${genreId}:`, error);
@@ -229,7 +229,7 @@ function HomeContentInner() {
 
         // Fetch trending
         try {
-          const trendingData = await honoAPI.tmdb.getTrending('day');
+          const trendingData = await tmdbApi.getTrending('day');
           setTrending(
             (trendingData.results || [])
               .filter((r: DiscoverItem) => r.poster_path)
@@ -278,7 +278,7 @@ function HomeContentInner() {
       )
     );
     try {
-      await honoAPI.watchlists.addItem(watchlistId, {
+      await watchlistsApi.addItem(watchlistId, {
         tmdbId,
         mediaType,
         language: tmdbLanguage,
@@ -305,7 +305,7 @@ function HomeContentInner() {
       })
     );
     try {
-      await honoAPI.watchlists.removeItem(watchlistId, tmdbId);
+      await watchlistsApi.removeItem(watchlistId, tmdbId);
       toast.success('Retiré de la liste');
     } catch {
       if (removed) {
