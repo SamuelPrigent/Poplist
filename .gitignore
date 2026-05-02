@@ -8,12 +8,6 @@ archives
 private
 .agents
 .turbo
-turbo
-
-# Turbo/monorepo files at root only (not in subdirectories)
-/package.json
-/package-lock.json
-/turbo.json
 claude.md
 backend/prisma/data
 -design
