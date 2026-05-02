@@ -2,25 +2,31 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 /**
- * Préférence de pagination des items dans une watchlist.
- * - `30` ou `60` : nombre d'items par page
- * - `'all'`      : afficher tous les items (pas de pagination)
+ * Préférence de pagination, valeurs `number` ou `'all'` pour "tout afficher".
  *
- * La préférence est globale (partagée entre toutes les listes consultées) et
- * persistée en localStorage pour survivre aux reloads.
+ * Deux préférences distinctes :
+ * - `itemsPerPage`      : items à l'intérieur d'une watchlist (30 / 60 / all)
+ * - `watchlistsPerPage` : watchlists du catalogue communautaire (50 / 100 / all)
+ *
+ * Persistées globalement en localStorage pour survivre aux reloads.
  */
 export type ItemsPerPagePreference = number | "all";
 
 interface ListPaginationState {
 	itemsPerPage: ItemsPerPagePreference;
+	watchlistsPerPage: ItemsPerPagePreference;
 	setItemsPerPage: (value: ItemsPerPagePreference) => void;
+	setWatchlistsPerPage: (value: ItemsPerPagePreference) => void;
 }
 
 export const useListPaginationStore = create<ListPaginationState>()(
 	persist(
 		(set) => ({
 			itemsPerPage: "all",
+			watchlistsPerPage: 50,
 			setItemsPerPage: (value: ItemsPerPagePreference) => set({ itemsPerPage: value }),
+			setWatchlistsPerPage: (value: ItemsPerPagePreference) =>
+				set({ watchlistsPerPage: value }),
 		}),
 		{
 			name: "list-pagination-storage",

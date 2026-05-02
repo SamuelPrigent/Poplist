@@ -11,8 +11,10 @@ import { useAuth } from '@/context/auth-context';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { watchlists as watchlistsApi, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
+import { useListPaginationStore } from '@/store/listPagination';
 
-const ITEMS_PER_PAGE_DEFAULT = 30; // 6 rows of 5 cards
+const PAGINATION_OPTIONS = [50, 100];
+const SHOW_PAGINATION_THRESHOLD = PAGINATION_OPTIONS[0]; // pas de selecteur si <= 50
 
 // Skeleton component
 const ListCardSkeleton = () => (
@@ -34,9 +36,10 @@ function CommunityListsPageInner() {
   const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Pagination states
+  // Pagination — préférence persistée globalement (50, 100, ou 'all')
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE_DEFAULT);
+  const { watchlistsPerPage: watchlistsPerPagePref, setWatchlistsPerPage: setWatchlistsPerPagePref } =
+    useListPaginationStore();
 
   useScrollToTopOnMount();
 
@@ -82,14 +85,22 @@ function CommunityListsPageInner() {
     fetchData();
   }, [user, fetchWatchlists]);
 
+  // Convertit la pref ('all' | number) en valeur exploitable, bornée au total.
+  // Bornage au total → "Tout" highlighté quand pref >= total.
+  const effectiveWatchlistsPerPage = useMemo(() => {
+    const prefAsNumber =
+      watchlistsPerPagePref === 'all' ? Number.POSITIVE_INFINITY : watchlistsPerPagePref;
+    return Math.min(prefAsNumber, watchlists.length);
+  }, [watchlistsPerPagePref, watchlists.length]);
+
   // Paginated watchlists
   const paginatedWatchlists = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+    const startIndex = (currentPage - 1) * effectiveWatchlistsPerPage;
+    const endIndex = startIndex + effectiveWatchlistsPerPage;
     return watchlists.slice(startIndex, endIndex);
-  }, [watchlists, currentPage, itemsPerPage]);
+  }, [watchlists, currentPage, effectiveWatchlistsPerPage]);
 
-  const totalPages = Math.ceil(watchlists.length / itemsPerPage);
+  const totalPages = Math.ceil(watchlists.length / effectiveWatchlistsPerPage);
 
   return (
     <div className="bg-background min-h-screen pb-20">
@@ -139,20 +150,25 @@ function CommunityListsPageInner() {
               })}
             </div>
 
-            {/* Pagination - only show if more than 30 items */}
-            {watchlists.length > ITEMS_PER_PAGE_DEFAULT && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                itemsPerPage={itemsPerPage}
-                totalItems={watchlists.length}
-                onItemsPerPageChange={newItemsPerPage => {
-                  setItemsPerPage(newItemsPerPage);
-                  setCurrentPage(1);
-                }}
-                itemsPerPageOptions={[30, 60]}
-              />
+            {/* Pagination - only show if more than threshold items */}
+            {watchlists.length > SHOW_PAGINATION_THRESHOLD && (
+              <div className="mt-[30px]">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  itemsPerPage={effectiveWatchlistsPerPage}
+                  totalItems={watchlists.length}
+                  onItemsPerPageChange={newItemsPerPage => {
+                    // Click sur "Tout" → on stocke 'all' pour préserver la sémantique
+                    setWatchlistsPerPagePref(
+                      newItemsPerPage === watchlists.length ? 'all' : newItemsPerPage
+                    );
+                    setCurrentPage(1);
+                  }}
+                  itemsPerPageOptions={PAGINATION_OPTIONS}
+                />
+              </div>
             )}
           </>
         ) : (
