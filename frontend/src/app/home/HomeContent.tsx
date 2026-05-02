@@ -92,7 +92,7 @@ function HomeContentInner() {
       const sorted = (publicData.watchlists || []).sort(
         (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
       );
-      setPublicWatchlists(sorted.slice(0, 10));
+      setPublicWatchlists(sorted.slice(0, 12));
     } catch (error) {
       console.error('Failed to fetch public watchlists:', error);
     }
@@ -125,10 +125,10 @@ function HomeContentInner() {
         }
       }
 
-      // Sort by list count (descending) and take top 10
+      // Sort by list count (descending) and take top 12 (2 rows × 6 cols)
       const sortedCreators = Array.from(creatorsMap.values())
         .sort((a, b) => b.listCount - a.listCount)
-        .slice(0, 10);
+        .slice(0, 12);
 
       setCreators(sortedCreators);
     } catch (error) {
