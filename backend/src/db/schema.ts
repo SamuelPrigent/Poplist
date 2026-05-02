@@ -72,7 +72,6 @@ export const watchlists = pgTable(
     dominantColor: text('dominant_color'),
     isPublic: boolean('is_public').default(false),
     genres: text('genres').array(),
-    position: integer('position').default(0),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow(),
   },

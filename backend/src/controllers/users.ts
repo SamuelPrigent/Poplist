@@ -1,9 +1,9 @@
 import type { Context } from 'hono';
 import type { z } from 'zod';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import type { UsersAPI } from '@poplist/shared';
 import { db } from '../db/index.js';
-import { users, watchlists } from '../db/schema.js';
+import { userWatchlistPositions, users, watchlists } from '../db/schema.js';
 import { cloudinary, deleteFromCloudinary } from '../services/cloudinary.js';
 import { uploadAvatarSchema } from '../validators/users.js';
 import { formatWatchlistWithRelations, loadWatchlistRelations } from './watchlists.js';
@@ -45,11 +45,20 @@ export const getUserProfileByUsername = async (c: C) => {
     return c.json({ error: 'User not found' }, 404);
   }
 
+  // Tri : ordre choisi par le owner dans sa library (user_watchlist_positions),
+  // fallback sur createdAt pour les listes sans ligne (ordre déterministe).
   const baseWatchlists = await db
-    .select()
+    .select(getTableColumns(watchlists))
     .from(watchlists)
+    .leftJoin(
+      userWatchlistPositions,
+      and(
+        eq(userWatchlistPositions.watchlistId, watchlists.id),
+        eq(userWatchlistPositions.userId, foundUser.id)
+      )
+    )
     .where(and(eq(watchlists.ownerId, foundUser.id), eq(watchlists.isPublic, true)))
-    .orderBy(asc(watchlists.position));
+    .orderBy(asc(userWatchlistPositions.position), asc(watchlists.createdAt));
 
   const enriched = await loadWatchlistRelations(baseWatchlists);
 

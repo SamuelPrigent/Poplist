@@ -68,7 +68,6 @@ export interface Watchlist {
   dominantColor: string | null;
   isPublic: boolean | null;
   genres: string[] | null;
-  position: number | null;
   createdAt: string | null;
   updatedAt: string | null;
   owner?: WatchlistOwner;

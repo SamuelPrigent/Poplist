@@ -99,7 +99,6 @@ function CategoriesPageInner() {
                   thumbnailUrl: null,
                   dominantColor: null,
                   genres: [],
-                  position: 0,
                   imageUrl: null,
                   owner: {
                     id: 'featured',

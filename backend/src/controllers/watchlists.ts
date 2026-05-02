@@ -138,7 +138,6 @@ export function formatWatchlistWithRelations(watchlist: WatchlistWithRelations):
     dominantColor: watchlist.dominantColor,
     isPublic: watchlist.isPublic,
     genres: watchlist.genres,
-    position: watchlist.position,
     createdAt: watchlist.createdAt?.toISOString() ?? null,
     updatedAt: watchlist.updatedAt?.toISOString() ?? null,
     owner: watchlist.owner
@@ -559,7 +558,6 @@ export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
       description: data.description,
       isPublic: data.isPublic || false,
       genres: data.genres || [],
-      position: 0,
     })
     .returning();
 
@@ -623,16 +621,22 @@ export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
 export const reorderWatchlists = async (c: C, data: ReorderWatchlistsInput) => {
   const userId = c.get('user')!.sub;
 
+  // Upsert : crée la ligne si elle n'existe pas (cas typique : watchlist
+  // importée externe sans ligne user_watchlist_positions), ou met à jour la
+  // position existante. Frontend envoie toutes les watchlists dans l'ordre,
+  // donc une passe régularise tout.
   for (let i = 0; i < data.orderedWatchlistIds.length; i++) {
     await db
-      .update(userWatchlistPositions)
-      .set({ position: i })
-      .where(
-        and(
-          eq(userWatchlistPositions.userId, userId),
-          eq(userWatchlistPositions.watchlistId, data.orderedWatchlistIds[i])
-        )
-      );
+      .insert(userWatchlistPositions)
+      .values({
+        userId,
+        watchlistId: data.orderedWatchlistIds[i],
+        position: i,
+      })
+      .onConflictDoUpdate({
+        target: [userWatchlistPositions.userId, userWatchlistPositions.watchlistId],
+        set: { position: i },
+      });
   }
 
   return c.json({ message: 'Watchlists reordered successfully' } satisfies WatchlistsAPI.ReorderWatchlistsResponse);
@@ -1783,7 +1787,6 @@ export const duplicateWatchlist = async (c: C) => {
       isPublic: false,
       genres: originalWatchlist.genres,
       thumbnailUrl: originalWatchlist.thumbnailUrl,
-      position: 0,
     })
     .returning();
 

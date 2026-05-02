@@ -475,7 +475,6 @@ function HomeContentInner() {
               dominantColor: null,
               isPublic: true,
               genres: [],
-              position: 0,
               collaborators: [],
               items: placeholderItems,
               createdAt: placeholderTimestamp,

@@ -103,7 +103,6 @@ export function CreateListDialog({
           dominantColor: null,
           isPublic: false,
           genres: [],
-          position: 0,
           collaborators: [],
           items: [],
           likedBy: [],
