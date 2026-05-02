@@ -17,6 +17,7 @@ import { PosterGrid } from "@/components/List/PosterGrid";
 import type { Watchlist } from "@/api";
 import { getLocalWatchlists } from "@/lib/localStorageHelpers";
 import { useLanguageStore } from "@/store/language";
+import { useListPaginationStore } from "@/store/listPagination";
 
 export default function LocalListDetailPage() {
    const params = useParams();
@@ -30,13 +31,14 @@ export default function LocalListDetailPage() {
    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
    const editDialogRef = useRef<EditListDialogOfflineRef>(null);
 
-   // Pagination states
+   // Pagination — préférence persistée globalement via Zustand (30, 60, ou 'all').
    const [currentPage, setCurrentPage] = useState(1);
-   const [itemsPerPage, setItemsPerPage] = useState(15);
+   const { itemsPerPage: itemsPerPagePref, setItemsPerPage: setItemsPerPagePref } =
+      useListPaginationStore();
 
    const id = params.id as string;
 
-   // Scroll to top when page changes
+   // Scroll to top when page changes (utile uniquement en mode paginé)
    useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
    }, [currentPage]);
@@ -258,27 +260,39 @@ export default function LocalListDetailPage() {
          </div>
 
          <div className="container mx-auto mt-4 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-            <ListItemsTableOffline
-               watchlist={watchlist}
-               onUpdate={handleWatchlistUpdate}
-               currentPage={currentPage}
-               itemsPerPage={itemsPerPage}
-            />
+            {(() => {
+               const totalItems = watchlist.items.length;
+               const prefAsNumber =
+                  itemsPerPagePref === "all" ? Number.POSITIVE_INFINITY : itemsPerPagePref;
+               const effectiveItemsPerPage = Math.min(prefAsNumber, totalItems);
 
-            {/* Pagination component */}
-            {watchlist.items.length > 0 && (
-               <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(watchlist.items.length / itemsPerPage)}
-                  onPageChange={setCurrentPage}
-                  itemsPerPage={itemsPerPage}
-                  totalItems={watchlist.items.length}
-                  onItemsPerPageChange={(newItemsPerPage) => {
-                     setItemsPerPage(newItemsPerPage);
-                     setCurrentPage(1);
-                  }}
-               />
-            )}
+               return (
+                  <>
+                     <ListItemsTableOffline
+                        watchlist={watchlist}
+                        onUpdate={handleWatchlistUpdate}
+                        currentPage={currentPage}
+                        itemsPerPage={effectiveItemsPerPage}
+                     />
+
+                     {totalItems > 0 && (
+                        <Pagination
+                           currentPage={currentPage}
+                           totalPages={Math.ceil(totalItems / effectiveItemsPerPage)}
+                           onPageChange={setCurrentPage}
+                           itemsPerPage={effectiveItemsPerPage}
+                           totalItems={totalItems}
+                           onItemsPerPageChange={(newItemsPerPage) => {
+                              setItemsPerPagePref(
+                                 newItemsPerPage === totalItems ? "all" : newItemsPerPage
+                              );
+                              setCurrentPage(1);
+                           }}
+                        />
+                     )}
+                  </>
+               );
+            })()}
          </div>
 
          {/* Add Item Modal */}

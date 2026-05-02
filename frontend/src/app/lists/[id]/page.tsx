@@ -26,6 +26,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
 import { watchlists as watchlistsApi, type Collaborator, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
+import { useListPaginationStore } from '@/store/listPagination';
 
 export default function ListDetailPage() {
   const params = useParams();
@@ -45,13 +46,15 @@ export default function ListDetailPage() {
   const [isSaved, setIsSaved] = useState(false);
   const editDialogRef = useRef<EditListDialogRef>(null);
 
-  // Pagination states
+  // Pagination — préférence persistée globalement via Zustand (30, 60, ou 'all').
+  // L'effective items-per-page est borné au total → "Tout" highlighté quand pref >= total.
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(15);
+  const { itemsPerPage: itemsPerPagePref, setItemsPerPage: setItemsPerPagePref } =
+    useListPaginationStore();
 
   const id = params.id as string;
 
-  // Scroll to top when page changes
+  // Scroll to top when page changes (utile uniquement en mode paginé)
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
@@ -376,28 +379,43 @@ export default function ListDetailPage() {
       />
 
       <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-        <ListItemsTable
-          watchlist={watchlist}
-          onUpdate={handleWatchlistUpdate}
-          isOwner={isOwner}
-          isCollaborator={isCollaborator}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-        />
+        {(() => {
+          const totalItems = watchlist.items.length;
+          // Convertit la pref ('all' | number) en valeur exploitable, bornée au total.
+          // Bornage au total → "Tout" est highlighté quand la pref est >= total.
+          const prefAsNumber =
+            itemsPerPagePref === 'all' ? Number.POSITIVE_INFINITY : itemsPerPagePref;
+          const effectiveItemsPerPage = Math.min(prefAsNumber, totalItems);
 
-        {watchlist.items.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={Math.ceil(watchlist.items.length / itemsPerPage)}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={watchlist.items.length}
-            onItemsPerPageChange={newItemsPerPage => {
-              setItemsPerPage(newItemsPerPage);
-              setCurrentPage(1);
-            }}
-          />
-        )}
+          return (
+            <>
+              <ListItemsTable
+                watchlist={watchlist}
+                onUpdate={handleWatchlistUpdate}
+                isOwner={isOwner}
+                isCollaborator={isCollaborator}
+                currentPage={currentPage}
+                itemsPerPage={effectiveItemsPerPage}
+              />
+
+              {totalItems > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(totalItems / effectiveItemsPerPage)}
+                  onPageChange={setCurrentPage}
+                  itemsPerPage={effectiveItemsPerPage}
+                  totalItems={totalItems}
+                  onItemsPerPageChange={newItemsPerPage => {
+                    // Click sur "Tout" → Pagination renvoie totalItems → on stocke 'all'
+                    // pour préserver la sémantique sur les futures listes consultées.
+                    setItemsPerPagePref(newItemsPerPage === totalItems ? 'all' : newItemsPerPage);
+                    setCurrentPage(1);
+                  }}
+                />
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {(isOwner || isCollaborator) && (

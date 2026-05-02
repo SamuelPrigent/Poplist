@@ -125,13 +125,13 @@ function CategoryDetailPageInner() {
             <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4">
                {/* Watchlists Grid */}
                {loading ? (
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-                     {Array.from({ length: 5 }).map((_, i) => (
+                  <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                     {Array.from({ length: 10 }).map((_, i) => (
                         <ListCardSkeleton key={i} />
                      ))}
                   </div>
                ) : watchlists.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                  <div className="grid gap-[4px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                      {watchlists.map((watchlist) => {
                         // Calculate isOwner by comparing user email with watchlist owner email
                         const ownerEmail = watchlist.owner?.email || null;

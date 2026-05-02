@@ -18,7 +18,7 @@ function ListsLoading() {
         </div>
         <div className="bg-muted/50 h-9 w-36 animate-pulse rounded-2xl" />
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="bg-muted/30 rounded-lg p-2">
             <div className="bg-muted/50 aspect-square w-full animate-pulse rounded-md" />

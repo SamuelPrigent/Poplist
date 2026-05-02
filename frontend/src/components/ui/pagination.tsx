@@ -11,7 +11,7 @@ interface PaginationProps {
 	itemsPerPage: number;
 	totalItems: number;
 	onItemsPerPageChange: (items: number) => void;
-	/** Custom base options for items per page selector (default: [15, 30]) */
+	/** Custom base options for items per page selector (default: [30, 60]) */
 	itemsPerPageOptions?: number[];
 }
 
@@ -22,7 +22,7 @@ export function Pagination({
 	itemsPerPage,
 	totalItems,
 	onItemsPerPageChange,
-	itemsPerPageOptions = [15, 30],
+	itemsPerPageOptions = [30, 60],
 }: PaginationProps) {
 	// Build display options based on total items and custom options
 	const getDisplayOptions = () => {
