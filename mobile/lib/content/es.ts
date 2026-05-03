@@ -274,6 +274,10 @@ export const es: Content = {
         name: 'Juvenil',
         description: 'Películas y series para adolescentes y adultos jóvenes',
       },
+      sci_fi: {
+        name: 'Sci-Fi',
+        description: 'Películas y series de ciencia ficción',
+      },
     },
   },
 

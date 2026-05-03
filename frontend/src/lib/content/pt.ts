@@ -275,58 +275,6 @@ export const pt: Content = {
       title: 'Listas por categoria',
       subtitle: 'Seleção Poplist',
       seeMore: 'Ver mais',
-      items: {
-        // Linha 1 - Por tipo e plataforma
-        movies: {
-          title: 'Filmes',
-          description: 'Seleção de filmes',
-        },
-        series: {
-          title: 'Séries',
-          description: 'Seleção de séries',
-        },
-        netflix: {
-          title: 'Netflix only',
-          description: 'Exclusivamente na Netflix',
-        },
-        primeVideo: {
-          title: 'Prime Video only',
-          description: 'Exclusivamente no Prime Video',
-        },
-        disneyPlus: {
-          title: 'Disney+ only',
-          description: 'Exclusivamente no Disney+',
-        },
-        crunchyroll: {
-          title: 'Crunchyroll only',
-          description: 'Exclusivamente no Crunchyroll',
-        },
-        // Linha 2 - Por género e tema
-        netflixChill: {
-          title: 'Netflix & Chill',
-          description: 'Filmes populares para ver juntos',
-        },
-        films2010s: {
-          title: 'Filmes 2010–2020',
-          description: 'Imperdíveis modernos',
-        },
-        childhood: {
-          title: 'Clássicos da infância',
-          description: 'Filmes juvenis e nostalgia',
-        },
-        comedy: {
-          title: 'Comédia',
-          description: 'Para rir e relaxar',
-        },
-        action: {
-          title: 'Ação',
-          description: 'Filmes de ação e blockbusters',
-        },
-        anime: {
-          title: 'Anime',
-          description: 'Séries animadas japonesas',
-        },
-      },
     },
     platformsSection: {
       title: 'Listas por plataforma',
@@ -449,55 +397,9 @@ export const pt: Content = {
     list: {
       movies: { name: 'Filmes', description: 'Os melhores filmes do momento' },
       series: { name: 'Séries', description: 'Séries imperdíveis' },
-      netflix: { name: 'Netflix', description: 'Pérolas da Netflix' },
-      'prime-video': {
-        name: 'Prime Video',
-        description: 'Exclusivos Amazon Prime',
-      },
-      'disney-plus': {
-        name: 'Disney+',
-        description: 'O universo Disney, Pixar, Marvel e Star Wars',
-      },
-      'apple-tv': {
-        name: 'Apple TV+',
-        description: 'Produções originais Apple TV+',
-      },
-      crunchyroll: {
-        name: 'Crunchyroll',
-        description: 'Os melhores animes em streaming',
-      },
-      'hbo-max': {
-        name: 'HBO Max',
-        description: 'Séries e filmes HBO',
-      },
-      youtube: {
-        name: 'YouTube',
-        description: 'Filmes e séries disponíveis no YouTube',
-      },
-      'canal-plus': {
-        name: 'Canal+',
-        description: 'Programas Canal+',
-      },
-      ocs: {
-        name: 'OCS',
-        description: 'O melhor do cinema e das séries',
-      },
-      'paramount-plus': {
-        name: 'Paramount+',
-        description: 'Produções Paramount+',
-      },
-      'rakuten-tv': {
-        name: 'Rakuten TV',
-        description: 'Filmes e séries no Rakuten TV',
-      },
-      anime: {
+      animation: {
         name: 'Animação',
-        description: 'As melhores séries animadas e filmes de mangá adaptados',
-      },
-      action: { name: 'Ação', description: 'Clássicos e novos filmes de ação' },
-      documentaries: {
-        name: 'Documentários',
-        description: 'Documentários cativantes e educativos',
+        description: 'As melhores séries e filmes de animação',
       },
       enfant: {
         name: 'Infantil',
@@ -506,6 +408,15 @@ export const pt: Content = {
       jeunesse: {
         name: 'Jovens',
         description: 'Filmes e séries para adolescentes e jovens adultos',
+      },
+      documentaries: {
+        name: 'Documentários',
+        description: 'Documentários cativantes e educativos',
+      },
+      action: { name: 'Ação', description: 'Clássicos e novos filmes de ação' },
+      anime: {
+        name: 'Anime',
+        description: 'Anime japonês e mangá adaptado',
       },
     },
   },

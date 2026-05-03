@@ -275,58 +275,6 @@ export const fr: Content = {
       title: 'Listes par catégorie',
       subtitle: 'Catégorie Poplist',
       seeMore: 'Voir tout',
-      items: {
-        // Ligne 1 - Par type et plateforme
-        movies: {
-          title: 'Films',
-          description: 'Sélection de films',
-        },
-        series: {
-          title: 'Séries',
-          description: 'Sélection de séries',
-        },
-        netflix: {
-          title: 'Netflix only',
-          description: 'Exclusivement sur Netflix',
-        },
-        primeVideo: {
-          title: 'Prime Video only',
-          description: 'Exclusivement sur Prime Video',
-        },
-        disneyPlus: {
-          title: 'Disney+ only',
-          description: 'Exclusivement sur Disney+',
-        },
-        crunchyroll: {
-          title: 'Crunchyroll only',
-          description: 'Exclusivement sur Crunchyroll',
-        },
-        // Ligne 2 - Par genre et thème
-        netflixChill: {
-          title: 'Netflix & Chill',
-          description: 'Films populaires à voir à deux',
-        },
-        films2010s: {
-          title: 'Films 2010–2020',
-          description: 'Les incontournables modernes',
-        },
-        childhood: {
-          title: "Classiques d'enfance",
-          description: 'Films jeunesse et nostalgie',
-        },
-        comedy: {
-          title: 'Comédie',
-          description: 'Pour rire et se détendre',
-        },
-        action: {
-          title: 'Action',
-          description: "Films d'action et blockbusters",
-        },
-        anime: {
-          title: 'Anime',
-          description: 'Séries animées japonaises',
-        },
-      },
     },
     platformsSection: {
       title: 'Listes par plateformes',
@@ -449,67 +397,15 @@ export const fr: Content = {
     list: {
       movies: {
         name: 'Films',
-        description: 'Les meilleurs films du moment',
+        description: 'Les films à ne pas manquer',
       },
       series: {
         name: 'Séries',
         description: 'Les séries à ne pas manquer',
       },
-      netflix: {
-        name: 'Netflix',
-        description: 'Les pépites Netflix',
-      },
-      'prime-video': {
-        name: 'Prime Video',
-        description: 'Exclusivités Amazon Prime',
-      },
-      'disney-plus': {
-        name: 'Disney+',
-        description: "L'univers Disney, Pixar, Marvel et Star Wars",
-      },
-      'apple-tv': {
-        name: 'Apple TV+',
-        description: 'Les productions originales Apple TV+',
-      },
-      crunchyroll: {
-        name: 'Crunchyroll',
-        description: 'Les meilleurs animes en streaming',
-      },
-      'hbo-max': {
-        name: 'HBO Max',
-        description: 'Les séries et films HBO',
-      },
-      youtube: {
-        name: 'YouTube',
-        description: 'Films et séries disponibles sur YouTube',
-      },
-      'canal-plus': {
-        name: 'Canal+',
-        description: 'Les programmes Canal+',
-      },
-      ocs: {
-        name: 'OCS',
-        description: 'Le meilleur du cinéma et des séries',
-      },
-      'paramount-plus': {
-        name: 'Paramount+',
-        description: 'Les productions Paramount+',
-      },
-      'rakuten-tv': {
-        name: 'Rakuten TV',
-        description: 'Films et séries sur Rakuten TV',
-      },
-      anime: {
+      animation: {
         name: 'Animation',
-        description: "Les meilleurs séries et films d'animation et manga adaptés",
-      },
-      action: {
-        name: 'Action',
-        description: "Classiques et nouveautés films d'actions",
-      },
-      documentaries: {
-        name: 'Documentaires',
-        description: 'Documentaires captivants et éducatifs',
+        description: "Les meilleurs séries et films d'animation",
       },
       enfant: {
         name: 'Enfant',
@@ -518,6 +414,18 @@ export const fr: Content = {
       jeunesse: {
         name: 'Jeunesse',
         description: 'Films et séries adolescent et adulte',
+      },
+      documentaries: {
+        name: 'Documentaires',
+        description: 'Documentaires captivants et éducatifs',
+      },
+      action: {
+        name: 'Action',
+        description: "Classiques et nouveautés films d'actions",
+      },
+      anime: {
+        name: 'Anime',
+        description: 'Animes japonais et mangas adaptés',
       },
     },
   },

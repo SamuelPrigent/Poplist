@@ -25,11 +25,12 @@ interface CategoryVisuals {
 const CATEGORY_VISUALS: Record<string, CategoryVisuals> = {
   movies: { vivid: '#005ef4', deep: '#24a7cf', cutout: '/categories/avatar.webp' },
   series: { vivid: '#ffb700', deep: '#e5e22a', cutout: '/categories/friends.webp' },
-  anime: { vivid: '#ff0c49', deep: '#e02076', cutout: '/categories/spider.webp' },
+  animation: { vivid: '#ff0c49', deep: '#e02076', cutout: '/categories/spider.webp' },
   enfant: { vivid: '#0b6dff', deep: '#0e8dc8', cutout: '/categories/yeti.webp' },
   jeunesse: { vivid: '#00d0ff', deep: '#33a261', cutout: '/categories/brian.webp' },
   documentaries: { vivid: '#0055FF', deep: '#076498', cutout: '/categories/perroquet.webp' },
-  action: { vivid: '#11ff00', deep: '#3fa43a', cutout: '/categories/neo.webp' },
+  anime: { vivid: '#451ee5', deep: '#ba5df0', cutout: '/categories/solo.webp' },
+  action: { vivid: '#00ba28', deep: '#32e058', cutout: '/categories/action.webp' },
 };
 
 const DEFAULT_VISUALS: CategoryVisuals = CATEGORY_VISUALS.movies;

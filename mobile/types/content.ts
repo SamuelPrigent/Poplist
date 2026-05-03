@@ -210,6 +210,7 @@ export interface Content {
 			documentaries: { name: string; description: string };
 			enfant: { name: string; description: string };
 			jeunesse: { name: string; description: string };
+			sci_fi: { name: string; description: string };
 		};
 	};
 	footer: {

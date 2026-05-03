@@ -275,58 +275,6 @@ export const it: Content = {
       title: 'Liste per categoria',
       subtitle: 'Selezione Poplist',
       seeMore: 'Vedi altro',
-      items: {
-        // Riga 1 - Per tipo e piattaforma
-        movies: {
-          title: 'Film',
-          description: 'Selezione di film',
-        },
-        series: {
-          title: 'Serie',
-          description: 'Selezione di serie',
-        },
-        netflix: {
-          title: 'Netflix only',
-          description: 'Esclusivamente su Netflix',
-        },
-        primeVideo: {
-          title: 'Prime Video only',
-          description: 'Esclusivamente su Prime Video',
-        },
-        disneyPlus: {
-          title: 'Disney+ only',
-          description: 'Esclusivamente su Disney+',
-        },
-        crunchyroll: {
-          title: 'Crunchyroll only',
-          description: 'Esclusivamente su Crunchyroll',
-        },
-        // Riga 2 - Per genere e tema
-        netflixChill: {
-          title: 'Netflix & Chill',
-          description: 'Film popolari da guardare insieme',
-        },
-        films2010s: {
-          title: 'Film 2010–2020',
-          description: 'Imperdibili moderni',
-        },
-        childhood: {
-          title: "Classici dell'infanzia",
-          description: 'Film per ragazzi e nostalgia',
-        },
-        comedy: {
-          title: 'Commedia',
-          description: 'Per ridere e rilassarsi',
-        },
-        action: {
-          title: 'Azione',
-          description: "Film d'azione e blockbuster",
-        },
-        anime: {
-          title: 'Anime',
-          description: 'Serie animate giapponesi',
-        },
-      },
     },
     platformsSection: {
       title: 'Liste per piattaforma',
@@ -449,60 +397,23 @@ export const it: Content = {
     list: {
       movies: { name: 'Film', description: 'I migliori film del momento' },
       series: { name: 'Serie', description: 'Serie da non perdere' },
-      netflix: { name: 'Netflix', description: 'Perle di Netflix' },
-      'prime-video': {
-        name: 'Prime Video',
-        description: 'Esclusive Amazon Prime',
-      },
-      'disney-plus': {
-        name: 'Disney+',
-        description: "L'universo Disney, Pixar, Marvel e Star Wars",
-      },
-      'apple-tv': {
-        name: 'Apple TV+',
-        description: 'Produzioni originali Apple TV+',
-      },
-      crunchyroll: {
-        name: 'Crunchyroll',
-        description: 'I migliori anime in streaming',
-      },
-      'hbo-max': {
-        name: 'HBO Max',
-        description: 'Serie e film HBO',
-      },
-      youtube: {
-        name: 'YouTube',
-        description: 'Film e serie disponibili su YouTube',
-      },
-      'canal-plus': {
-        name: 'Canal+',
-        description: 'Programmi Canal+',
-      },
-      ocs: {
-        name: 'OCS',
-        description: 'Il meglio del cinema e delle serie',
-      },
-      'paramount-plus': {
-        name: 'Paramount+',
-        description: 'Produzioni Paramount+',
-      },
-      'rakuten-tv': {
-        name: 'Rakuten TV',
-        description: 'Film e serie su Rakuten TV',
-      },
-      anime: {
+      animation: {
         name: 'Animazione',
-        description: 'Le migliori serie animate e film manga adattati',
-      },
-      action: { name: 'Azione', description: "Classici e nuovi film d'azione" },
-      documentaries: {
-        name: 'Documentari',
-        description: 'Documentari accattivanti ed educativi',
+        description: 'Le migliori serie animate e film di animazione',
       },
       enfant: { name: 'Bambini', description: 'Film e serie per bambini' },
       jeunesse: {
         name: 'Giovani',
         description: 'Film e serie per adolescenti e giovani adulti',
+      },
+      documentaries: {
+        name: 'Documentari',
+        description: 'Documentari accattivanti ed educativi',
+      },
+      action: { name: 'Azione', description: "Classici e nuovi film d'azione" },
+      anime: {
+        name: 'Anime',
+        description: 'Anime giapponesi e manga adattati',
       },
     },
   },

@@ -141,7 +141,7 @@ export const en: Content = {
     },
     collaborators: {
       addTitle: 'Add Collaborator',
-      addDescription: 'Enter the collaborator\'s username',
+      addDescription: "Enter the collaborator's username",
       usernamePlaceholder: 'Username',
       add: 'Add',
       adding: 'Adding...',
@@ -274,58 +274,6 @@ export const en: Content = {
       title: 'Lists by category',
       subtitle: 'Poplist selection',
       seeMore: 'See more',
-      items: {
-        // Line 1 - By type and platform
-        movies: {
-          title: 'Movies',
-          description: 'Movie selection',
-        },
-        series: {
-          title: 'Series',
-          description: 'Series selection',
-        },
-        netflix: {
-          title: 'Netflix only',
-          description: 'Exclusively on Netflix',
-        },
-        primeVideo: {
-          title: 'Prime Video only',
-          description: 'Exclusively on Prime Video',
-        },
-        disneyPlus: {
-          title: 'Disney+ only',
-          description: 'Exclusively on Disney+',
-        },
-        crunchyroll: {
-          title: 'Crunchyroll only',
-          description: 'Exclusively on Crunchyroll',
-        },
-        // Line 2 - By genre and theme
-        netflixChill: {
-          title: 'Netflix & Chill',
-          description: 'Popular movies to watch together',
-        },
-        films2010s: {
-          title: 'Films 2010–2020',
-          description: 'Modern must-sees',
-        },
-        childhood: {
-          title: 'Childhood Classics',
-          description: 'Youth films and nostalgia',
-        },
-        comedy: {
-          title: 'Comedy',
-          description: 'Laugh and relax',
-        },
-        action: {
-          title: 'Action',
-          description: 'Action films and blockbusters',
-        },
-        anime: {
-          title: 'Anime',
-          description: 'Japanese animated series',
-        },
-      },
     },
     platformsSection: {
       title: 'Lists by platform',
@@ -448,60 +396,23 @@ export const en: Content = {
     list: {
       movies: { name: 'Movies', description: 'The best movies of the moment' },
       series: { name: 'Series', description: 'Series not to be missed' },
-      netflix: { name: 'Netflix', description: 'Netflix gems' },
-      'prime-video': {
-        name: 'Prime Video',
-        description: 'Amazon Prime exclusives',
-      },
-      'disney-plus': {
-        name: 'Disney+',
-        description: 'The Disney, Pixar, Marvel and Star Wars universe',
-      },
-      'apple-tv': {
-        name: 'Apple TV+',
-        description: 'Apple TV+ original productions',
-      },
-      crunchyroll: {
-        name: 'Crunchyroll',
-        description: 'The best anime streaming',
-      },
-      'hbo-max': {
-        name: 'HBO Max',
-        description: 'HBO series and films',
-      },
-      youtube: {
-        name: 'YouTube',
-        description: 'Films and series available on YouTube',
-      },
-      'canal-plus': {
-        name: 'Canal+',
-        description: 'Canal+ programs',
-      },
-      ocs: {
-        name: 'OCS',
-        description: 'The best of cinema and series',
-      },
-      'paramount-plus': {
-        name: 'Paramount+',
-        description: 'Paramount+ productions',
-      },
-      'rakuten-tv': {
-        name: 'Rakuten TV',
-        description: 'Films and series on Rakuten TV',
-      },
-      anime: {
+      animation: {
         name: 'Animation',
-        description: 'The best animated series and adapted manga films',
-      },
-      action: { name: 'Action', description: 'Classics and new action films' },
-      documentaries: {
-        name: 'Documentaries',
-        description: 'Captivating and educational documentaries',
+        description: 'The best animated series and films',
       },
       enfant: { name: 'Kids', description: 'Movies and series for children' },
       jeunesse: {
         name: 'Youth',
         description: 'Movies and series for teens and young adults',
+      },
+      documentaries: {
+        name: 'Documentaries',
+        description: 'Captivating and educational documentaries',
+      },
+      action: { name: 'Action', description: 'Classics and new action films' },
+      anime: {
+        name: 'Anime',
+        description: 'Japanese anime and adapted manga',
       },
     },
   },

@@ -265,6 +265,10 @@ export const it: Content = {
         name: 'Giovani',
         description: 'Film e serie per adolescenti e giovani adulti',
       },
+      sci_fi: {
+        name: 'Sci-Fi',
+        description: 'Film e serie di fantascienza',
+      },
     },
   },
 

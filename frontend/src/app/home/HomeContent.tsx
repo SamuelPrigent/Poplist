@@ -202,20 +202,11 @@ function HomeContentInner() {
         const selectedRecommendations = filtered.slice(randomOffset, randomOffset + 5);
         setRecommendations(selectedRecommendations);
 
-        // Fetch category counts
-        const genreIds = [
-          'movies',
-          'series',
-          'anime',
-          'action',
-          'enfant',
-          'documentaries',
-          'jeunesse',
-        ];
-
+        // Fetch category counts — itère sur GENRE_CATEGORIES (source of truth)
+        // pour rester en phase avec ce qui est rendu plus bas (slice 0..6)
         const counts: Record<string, number> = {};
         await Promise.all(
-          genreIds.map(async genreId => {
+          GENRE_CATEGORIES.map(async genreId => {
             try {
               const data = await watchlistsApi.getByGenre(genreId);
               counts[genreId] = data.watchlists?.length || 0;

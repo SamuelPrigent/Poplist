@@ -6,7 +6,12 @@ import { useEffect, useState } from 'react';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { createPlaceholderItem, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
+import {
+  createPlaceholderItem,
+  watchlists as watchlistsApi,
+  type Watchlist,
+  type WatchlistItem,
+} from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, getCategoryInfo } from '@/types/categories';
 

@@ -280,6 +280,10 @@ export const fr: Content = {
             name: "Jeunesse",
             description: "Films et séries adolescent et adulte",
          },
+         sci_fi: {
+            name: "Sci-Fi",
+            description: "Films et séries de Science-Fiction",
+         },
       },
    },
 
