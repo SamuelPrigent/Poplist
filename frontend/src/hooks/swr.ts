@@ -1,21 +1,14 @@
 import useSWR, { type SWRConfiguration } from 'swr'
-import type { Watchlist } from '@/api'
+import { apiFetch, type Watchlist } from '@/api'
 
 /**
- * SWR fetcher compatible with the api-client cookie-based auth.
- * Uses the same /api proxy as the rest of the app.
+ * SWR fetcher branché sur apiFetch — bénéficie ainsi du refresh automatique
+ * sur 401 et de la déduplication des refresh parallèles (refreshPromise singleton
+ * dans api/client.ts). Sans ça, SWR retomberait dans son retry exponentiel
+ * (5s, 10s, 20s…) en attendant qu'AuthContext rafraîchisse le cookie de son côté.
  */
 async function fetcher<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`/api${endpoint}`, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`)
-  }
-
-  return response.json()
+  return apiFetch<T>(endpoint)
 }
 
 /**
