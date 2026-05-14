@@ -11,11 +11,13 @@ const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:3456';
 export const getPublicWatchlistForMeta = createServerFn({ method: 'GET' })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }): Promise<WatchlistsAPI.GetPublicWatchlistResponse | null> => {
+    console.log('[server-fn] getPublicWatchlistForMeta called', data.id, 'BACKEND_URL=', BACKEND_URL);
     try {
       const res = await fetch(`${BACKEND_URL}/watchlists/public/${data.id}`);
       if (!res.ok) return null;
       return (await res.json()) as WatchlistsAPI.GetPublicWatchlistResponse;
-    } catch {
+    } catch (err) {
+      console.error('[server-fn] getPublicWatchlistForMeta error', err);
       return null;
     }
   });
@@ -32,6 +34,7 @@ export const getPublicWatchlistForMeta = createServerFn({ method: 'GET' })
 export const getAuthWatchlistForMeta = createServerFn({ method: 'GET' })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }): Promise<WatchlistsAPI.GetWatchlistByIdResponse | null> => {
+    console.log('[server-fn] getAuthWatchlistForMeta called', data.id);
     const cookie = getRequestHeader('cookie') ?? '';
     if (!cookie) return null;
     try {
@@ -40,7 +43,8 @@ export const getAuthWatchlistForMeta = createServerFn({ method: 'GET' })
       });
       if (!res.ok) return null;
       return (await res.json()) as WatchlistsAPI.GetWatchlistByIdResponse;
-    } catch {
+    } catch (err) {
+      console.error('[server-fn] getAuthWatchlistForMeta error', err);
       return null;
     }
   });

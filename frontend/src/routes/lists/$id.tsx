@@ -9,10 +9,13 @@ export const Route = createFileRoute('/lists/$id')({
   // `isAuthenticated` de manière déterministe SSR + client (même cookie, même
   // valeur). On évite la divergence localStorage qu'on avait avec `useAuth()`.
   beforeLoad: async () => {
+    if (typeof window === 'undefined') console.log('[SSR] route /lists/$id beforeLoad START');
     const { isAuthenticated } = await getAuthStatus();
+    if (typeof window === 'undefined') console.log('[SSR] route /lists/$id beforeLoad END', { isAuthenticated });
     return { isAuthenticated };
   },
   loader: async ({ params, context: { queryClient, isAuthenticated } }) => {
+    if (typeof window === 'undefined') console.log('[SSR] route /lists/$id loader START', { id: params.id, isAuthenticated });
     // Une seule query selon l'auth state → pas de 2e render quand l'autre
     // query résout. Le composant lit la même via `useQuery` depuis le cache.
     if (isAuthenticated) {

@@ -47,6 +47,7 @@ function parseSearch(searchStr: string): Record<string, string> {
 }
 
 export function getRouter() {
+  if (typeof window === 'undefined') console.log('[SSR] getRouter called');
   const queryClient = getQueryClient();
   const router = createTanStackRouter({
     routeTree,

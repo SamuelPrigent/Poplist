@@ -45,6 +45,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootDocument() {
+  if (typeof window === 'undefined') {
+    console.log('[SSR render] __root RootDocument');
+  }
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
