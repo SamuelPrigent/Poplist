@@ -1,5 +1,5 @@
 {
-  "name": "frontend-tanstack",
+  "name": "frontend",
   "private": true,
   "type": "module",
   "imports": {
