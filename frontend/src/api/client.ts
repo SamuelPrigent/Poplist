@@ -9,10 +9,21 @@
 // SSR (Node) : pas de proxy ; on appelle l'URL absolue du backend directement.
 // Le SSR n'a pas de cookies user → les endpoints protégés retourneront 401,
 // puis le client refetch après hydration avec les vrais cookies.
-const API_BASE =
-  typeof window === 'undefined'
-    ? import.meta.env.VITE_BACKEND_URL || 'http://localhost:3456'
-    : '/api';
+//
+// On lit la var via process.env ET import.meta.env :
+// - process.env : lu au runtime, fiable sur Vercel Function (toutes les env vars
+//   du projet sont propagées au runtime).
+// - import.meta.env : inliné au build par Vite, plus rapide mais peut être undefined
+//   si la var n'était pas dispo au moment du build.
+//
+// On combine les deux comme fallback, et si rien → localhost (dev only).
+const SSR_BACKEND_URL =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (typeof process !== 'undefined' && (process as any)?.env?.VITE_BACKEND_URL) ||
+  import.meta.env.VITE_BACKEND_URL ||
+  'http://localhost:3456';
+
+const API_BASE = typeof window === 'undefined' ? SSR_BACKEND_URL : '/api';
 
 // ========================================
 // Auth refresh + logout handler
