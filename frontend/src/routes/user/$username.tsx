@@ -5,9 +5,7 @@ import { getUserProfileForMeta } from '@/server/users';
 
 export const Route = createFileRoute('/user/$username')({
   loader: async ({ params, context: { queryClient } }) => {
-    if (typeof window === 'undefined') console.log('[SSR] route /user/$username loader START', params.username);
     const result = await getUserProfileForMeta({ data: { username: params.username } });
-    if (typeof window === 'undefined') console.log('[SSR] route /user/$username loader END');
     if (result) {
       queryClient.setQueryData(
         usersQueries.byUsername(params.username).queryKey,

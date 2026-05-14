@@ -4,10 +4,10 @@ import { getAuthStatus } from '@/server/auth';
 
 export const Route = createFileRoute('/local/lists')({
   beforeLoad: async () => {
-    if (typeof window === 'undefined') console.log('[SSR] route /local/lists beforeLoad START');
     const { isAuthenticated } = await getAuthStatus();
-    if (typeof window === 'undefined') console.log('[SSR] route /local/lists beforeLoad END', { isAuthenticated });
     if (isAuthenticated) {
+      // Auth → bascule sur la library serveur (les listes locales seraient
+      // proposées en migration via le flow features/watchlists/localStorage)
       throw redirect({ to: '/account/lists' });
     }
   },

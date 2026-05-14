@@ -3,26 +3,16 @@ import { useLanguageStore } from '@/store/language';
 import { privacyContent } from '@/app/privacy/content';
 
 export const Route = createFileRoute('/privacy')({
-  beforeLoad: () => {
-    if (typeof window === 'undefined') console.log('[SSR] route /privacy beforeLoad');
-  },
-  loader: () => {
-    if (typeof window === 'undefined') console.log('[SSR] route /privacy loader');
-  },
-  head: () => {
-    if (typeof window === 'undefined') console.log('[SSR] route /privacy head');
-    return {
-      meta: [
-        { title: 'Confidentialité | Poplist' },
-        { name: 'description', content: 'Politique de confidentialité de Poplist' },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: 'Confidentialité | Poplist' },
+      { name: 'description', content: 'Politique de confidentialité de Poplist' },
+    ],
+  }),
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
-  if (typeof window === 'undefined') console.log('[SSR render] PrivacyPage');
   const { language } = useLanguageStore();
   const t = privacyContent[language] || privacyContent.fr;
   const email = 'contact@samuelprigent.com';

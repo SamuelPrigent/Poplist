@@ -46,7 +46,6 @@ function setStoredAuthState(isAuthenticated: boolean, user: User | null) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-	if (typeof window === 'undefined') console.log('[SSR render] AuthProvider');
 	const queryClient = useQueryClient();
 	const meKey = authQueries.me().queryKey;
 	const { setLanguage } = useLanguageStore();

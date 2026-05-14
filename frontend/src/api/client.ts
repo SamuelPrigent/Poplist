@@ -23,17 +23,6 @@ const SSR_BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ||
   'http://localhost:3456';
 
-if (typeof window === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fromProcess = typeof process !== 'undefined' && (process as any)?.env?.VITE_BACKEND_URL;
-  const fromImportMeta = import.meta.env.VITE_BACKEND_URL;
-  console.log('[SSR client.ts module init]', {
-    SSR_BACKEND_URL,
-    fromProcess,
-    fromImportMeta,
-  });
-}
-
 const API_BASE = typeof window === 'undefined' ? SSR_BACKEND_URL : '/api';
 
 // ========================================
@@ -104,11 +93,6 @@ export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Pro
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   };
-
-  // [DEBUG 508] Log toutes les requêtes SSR pour repérer une cascade
-  if (typeof window === 'undefined') {
-    console.log(`[SSR apiFetch] ${init.method ?? 'GET'} ${url}`);
-  }
 
   const doFetch = async () => fetch(url, init);
 

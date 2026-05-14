@@ -14,7 +14,6 @@ import { getRequestHeader } from '@tanstack/react-start/server';
  * appeler le backend `/auth/me` et passer le cookie.
  */
 export const getAuthStatus = createServerFn({ method: 'GET' }).handler(async () => {
-  console.log('[server-fn] getAuthStatus called', new Date().toISOString());
   const cookieHeader = getRequestHeader('cookie') ?? '';
   const hasAccessToken = /(?:^|; )accessToken=/.test(cookieHeader);
   const hasRefreshToken = /(?:^|; )refreshToken=/.test(cookieHeader);

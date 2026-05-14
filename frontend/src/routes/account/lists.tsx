@@ -4,9 +4,7 @@ import { getAuthStatus } from '@/server/auth';
 
 export const Route = createFileRoute('/account/lists')({
   beforeLoad: async () => {
-    if (typeof window === 'undefined') console.log('[SSR] route /account/lists beforeLoad START');
     const { isAuthenticated } = await getAuthStatus();
-    if (typeof window === 'undefined') console.log('[SSR] route /account/lists beforeLoad END', { isAuthenticated });
     if (!isAuthenticated) {
       // Pas auth → bascule sur l'équivalent localStorage
       throw redirect({ to: '/local/lists' });
