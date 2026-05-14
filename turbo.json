@@ -6,7 +6,8 @@
       "persistent": true
     },
     "build": {
-      "outputs": [".next/**", "dist/**"]
+      "outputs": ["dist/**", ".vercel/output/**", ".nitro/**", ".output/**"],
+      "env": ["VITE_BACKEND_URL", "VERCEL", "VERCEL_ENV"]
     },
     "lint": {
       "cache": true

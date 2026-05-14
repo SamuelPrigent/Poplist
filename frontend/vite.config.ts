@@ -29,7 +29,11 @@ export default defineConfig(({ mode, command }) => {
       devtools(),
       tailwindcss(),
       tanstackStart({
-        pages: [{ path: '/privacy', prerender: { enabled: true } }],
+        // Prerender désactivé : incompatible avec le preset Nitro Vercel
+        // (le preview server cherche dist/server/server.js mais nitro l'écrit
+        // dans .vercel/output/functions/__fallback.func/). Toutes les pages
+        // passent donc en SSR runtime via Vercel Functions.
+        pages: [],
       }),
       viteReact(),
       // Nitro uniquement en build (Vercel preset auto-détecté via VERCEL=1).
