@@ -1,8 +1,8 @@
 'use client';
 
 import { ArrowLeft, User } from 'lucide-react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { Img as Image } from '@/components/ui/Img';
+import { useNavigate } from '@tanstack/react-router';
 import { useLanguageStore } from '@/store/language';
 
 interface UserProfileHeaderProps {
@@ -20,14 +20,14 @@ export function UserProfileHeader({
   totalPublicWatchlists,
   hasWatchlists,
 }: UserProfileHeaderProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { content } = useLanguageStore();
 
   const handleBack = () => {
     if (hasWatchlists) {
-      router.back();
+      window.history.back();
     } else {
-      router.push('/home');
+      navigate({ to: '/home' as never });
     }
   };
 

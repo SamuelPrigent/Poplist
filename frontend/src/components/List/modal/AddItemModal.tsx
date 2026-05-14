@@ -3,7 +3,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ArrowLeft, Calendar, Check, Eye, Search, Star, X } from 'lucide-react';
-import Image from 'next/image';
+import { Img as Image } from '@/components/ui/Img';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -41,7 +41,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import Image from 'next/image';
+import { Img as Image } from '@/components/ui/Img';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Empty,
@@ -778,7 +778,12 @@ export function ListItemsTableOffline({
   return (
     <>
       <div className="mb-2 overflow-hidden">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+          id={`dnd-watchlist-offline-${watchlist.id}`}
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
           <table className="w-full table-fixed">
             <thead>
               {table.getHeaderGroups().map(headerGroup => (

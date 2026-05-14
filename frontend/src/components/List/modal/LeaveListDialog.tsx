@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export function LeaveListDialog({
 	open,
 	onOpenChange,
 }: LeaveListDialogProps) {
-	const router = useRouter();
+	const navigate = useNavigate();
 	const { content } = useLanguageStore();
 	const [isLeaving, setIsLeaving] = useState(false);
 
@@ -35,7 +35,7 @@ export function LeaveListDialog({
 					"Vous avez quitté la liste",
 			);
 			onOpenChange(false);
-			router.push("/account/lists");
+			navigate({ to: "/account/lists" as never });
 		} catch (error) {
 			console.error("Failed to leave watchlist:", error);
 			toast.error(

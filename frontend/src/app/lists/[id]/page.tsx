@@ -1,13 +1,16 @@
 'use client';
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { Route as ListDetailRoute } from '@/routes/lists/$id';
 import { Pencil, Plus, Trash2, UserPlus, Users } from 'lucide-react';
-import Image from 'next/image';
-import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { ClientOnly } from '@/components/ui/ClientOnly';
 import { toast } from 'sonner';
-import { mutate } from 'swr';
-import dynamic from 'next/dynamic';
+
+import { watchlists as watchlistsApi, type Collaborator, type Watchlist } from '@/api';
+import { watchlistsQueries } from '@/api/queries';
 import { AddCollaboratorPopover } from '@/components/List/AddCollaboratorPopover';
 import {
   LIST_HEADER_BUTTON_CLASS,
@@ -16,35 +19,66 @@ import {
 } from '@/components/List/ListHeader';
 import { ListItemsTable } from '@/components/List/ListItemsTable';
 import type { EditListDialogRef } from '@/components/List/modal/EditListDialog';
-
-const AddItemModal = dynamic(() => import('@/components/List/modal/AddItemModal').then(m => m.AddItemModal), { ssr: false });
-const DeleteListDialog = dynamic(() => import('@/components/List/modal/DeleteListDialog').then(m => m.DeleteListDialog), { ssr: false });
-const EditListDialog = dynamic(() => import('@/components/List/modal/EditListDialog').then(m => m.EditListDialog), { ssr: false });
-const LeaveListDialog = dynamic(() => import('@/components/List/modal/LeaveListDialog').then(m => m.LeaveListDialog), { ssr: false });
+import { Img as Image } from '@/components/ui/Img';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
-import { watchlists as watchlistsApi, type Collaborator, type Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
 import { useListPaginationStore } from '@/store/listPagination';
 
-export default function ListDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { content } = useLanguageStore();
-  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+// Lazy : ces modals ne sont rendus que lorsque ouverts. Pas de SSR (par défaut
+// de React.lazy, ils chargent côté client uniquement quand le composant tente
+// de se rendre).
+const AddItemModal = lazy(() => import('@/components/List/modal/AddItemModal').then(m => ({ default: m.AddItemModal })));
+const DeleteListDialog = lazy(() => import('@/components/List/modal/DeleteListDialog').then(m => ({ default: m.DeleteListDialog })));
+const EditListDialog = lazy(() => import('@/components/List/modal/EditListDialog').then(m => ({ default: m.EditListDialog })));
+const LeaveListDialog = lazy(() => import('@/components/List/modal/LeaveListDialog').then(m => ({ default: m.LeaveListDialog })));
 
-  const [watchlist, setWatchlist] = useState<Watchlist | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
-  const [isCollaborator, setIsCollaborator] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const editDialogRef = useRef<EditListDialogRef>(null);
+export default function ListDetailPage() {
+  const params = useParams({ strict: false }) as { id: string };
+  const id = params.id;
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { content } = useLanguageStore();
+  const { user } = useAuth();
+
+  // `isAuthenticated` est déterminé côté serveur via cookie (beforeLoad), donc
+  // cohérent entre SSR et client. Plus de dépendance au localStorage/useEffect.
+  const { isAuthenticated } = ListDetailRoute.useRouteContext();
+
+  // UNE seule query selon l'auth state. Le loader a déjà setQueryData pour la
+  // bonne clé. Référence stable, plus de 2e render quand l'autre query résout.
+  // Cast `as never` car le type union (byId | publicById) ne plait pas au
+  // checker statique de useQuery — runtime parfaitement OK car queryFn et
+  // queryKey sont cohérents par branche.
+  const activeQueryOptions = isAuthenticated
+    ? watchlistsQueries.byId(id)
+    : watchlistsQueries.publicById(id);
+  const { data, isPending, isError } = useQuery({
+    ...activeQueryOptions,
+    enabled: !!id,
+    retry: false,
+  } as never) as {
+    data: { watchlist: Watchlist; isOwner?: boolean; isCollaborator?: boolean; isSaved?: boolean } | undefined;
+    isPending: boolean;
+    isError: boolean;
+  };
+
+  const watchlist: Watchlist | null = data?.watchlist ?? null;
+  const isOwner = data?.isOwner ?? false;
+  const isCollaborator = data?.isCollaborator ?? false;
+  const isSaved = data?.isSaved ?? false;
+
+  // États de chargement et erreur dérivés (simplifiés : une seule query)
+  const stillPending = isPending;
+  const isMissing = !watchlist && !stillPending && (isError || !data);
+
+  // Redirection vers /home si non-auth et liste introuvable / privée
+  useEffect(() => {
+    if (!isAuthenticated && (isError || (!isPending && !watchlist))) {
+      navigate({ to: '/home' as never, replace: true });
+    }
+  }, [isAuthenticated, isError, isPending, watchlist, navigate]);
 
   // Pagination — préférence persistée globalement via Zustand (30, 60, ou 'all').
   // L'effective items-per-page est borné au total → "Tout" highlighté quand pref >= total.
@@ -52,86 +86,53 @@ export default function ListDetailPage() {
   const { itemsPerPage: itemsPerPagePref, setItemsPerPage: setItemsPerPagePref } =
     useListPaginationStore();
 
-  const id = params.id as string;
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const editDialogRef = useRef<EditListDialogRef>(null);
 
   // Scroll to top when page changes (utile uniquement en mode paginé)
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  const fetchWatchlist = useCallback(async (authenticated: boolean) => {
-    if (!id) {
-      router.replace('/account/lists');
-      return;
-    }
+  // Helper pour invalider les deux queries après mutation
+  const invalidateWatchlist = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['watchlists', id] });
+    queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+  }, [queryClient, id]);
 
-    try {
-      setLoading(true);
-      setNotFound(false);
-
-      let data: Watchlist;
-      if (authenticated) {
-        const response = await watchlistsApi.getById(id);
-        data = response.watchlist;
-
-        const ownerEmail = data.owner?.email || null;
-        const isUserOwner = user?.email === ownerEmail;
-        setIsOwner(isUserOwner);
-        setIsCollaborator(response.isCollaborator || false);
-        setIsSaved(response.isSaved || false);
-      } else {
-        const response = await watchlistsApi.getPublic(id);
-        data = response.watchlist;
-        setIsOwner(false);
-        setIsCollaborator(false);
-        setIsSaved(false);
+  // Helper pour update direct du cache TQ (après edit/add item/etc.)
+  const setCachedWatchlist = useCallback(
+    (updated: Watchlist) => {
+      const publicKey = watchlistsQueries.publicById(id).queryKey;
+      const authKey = watchlistsQueries.byId(id).queryKey;
+      const currentPublic = queryClient.getQueryData(publicKey);
+      if (currentPublic) {
+        queryClient.setQueryData(publicKey, { ...currentPublic, watchlist: updated });
       }
-
-      setWatchlist(data);
-    } catch (err) {
-      console.error('Failed to fetch watchlist:', err);
-      const errorMessage = err instanceof Error ? err.message : '';
-
-      if (!authenticated) {
-        router.replace('/home');
-        return;
+      const currentAuth = queryClient.getQueryData(authKey);
+      if (currentAuth) {
+        queryClient.setQueryData(authKey, { ...currentAuth, watchlist: updated });
       }
+    },
+    [queryClient, id]
+  );
 
-      if (
-        errorMessage.includes('not found') ||
-        errorMessage.includes('Forbidden') ||
-        errorMessage.includes('Unauthorized')
-      ) {
-        router.replace('/home');
-        return;
-      }
-
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [id, router, user]);
-
-  // Handle watchlist updates - accepts optional updated watchlist for direct state updates
   const handleWatchlistUpdate = useCallback(
     (updatedWatchlist?: Watchlist) => {
       if (updatedWatchlist) {
-        setWatchlist(updatedWatchlist);
+        setCachedWatchlist(updatedWatchlist);
       } else {
-        fetchWatchlist(isAuthenticated);
+        invalidateWatchlist();
       }
-      mutate('/watchlists/mine');
+      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
     },
-    [fetchWatchlist, isAuthenticated]
+    [setCachedWatchlist, invalidateWatchlist]
   );
 
-  useEffect(() => {
-    if (!authLoading) {
-      fetchWatchlist(isAuthenticated);
-    }
-  }, [authLoading, isAuthenticated, fetchWatchlist]);
-
-  if (loading) {
+  if (stillPending) {
     return (
       <div className="from-background via-background/95 to-background mb-16 min-h-screen bg-linear-to-b">
         <div className="bg-muted/20 h-[340px] w-full animate-pulse" />
@@ -146,7 +147,7 @@ export default function ListDetailPage() {
     );
   }
 
-  if (notFound || !watchlist) {
+  if (isMissing || !watchlist) {
     return (
       <div className="container mx-auto mb-32 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
@@ -173,7 +174,7 @@ export default function ListDetailPage() {
               Cette watchlist n&apos;existe pas ou a été supprimée.
             </p>
           </div>
-          <Button onClick={() => router.push('/lists')}>Retour aux listes</Button>
+          <Button onClick={() => navigate({ to: '/lists' as never })}>Retour aux listes</Button>
         </div>
       </div>
     );
@@ -188,9 +189,7 @@ export default function ListDetailPage() {
 
   const handleShare = async () => {
     if (!id) return;
-
     const url = `${window.location.origin}/lists/${id}`;
-
     try {
       await navigator.clipboard.writeText(url);
       toast.success(content.watchlists.toasts?.linkCopied || 'Link copied');
@@ -201,28 +200,41 @@ export default function ListDetailPage() {
   };
 
   const handleToggleSave = async () => {
-    if (!id || !isAuthenticated || isOwner || !watchlist) return;
+    if (!id || !isAuthenticated || isOwner) return;
 
+    const authKey = watchlistsQueries.byId(id).queryKey;
+    const previousAuth = queryClient.getQueryData(authKey);
     const previousIsSaved = isSaved;
     const previousLikedBy = watchlist.likedBy;
-    const previousWatchlist = { ...watchlist };
+
+    const newIsSaved = !isSaved;
+    const currentLikedBy = watchlist.likedBy || [];
+    const updatedWatchlist = {
+      ...watchlist,
+      likedBy: newIsSaved
+        ? [
+            ...currentLikedBy,
+            {
+              id: user?.id || '',
+              email: user?.email || '',
+              username: user?.username || '',
+              avatarUrl: user?.avatarUrl ?? null,
+            },
+          ]
+        : currentLikedBy.filter(u => u.id !== user?.id),
+    };
+
+    // Optimistic update du cache
+    if (previousAuth) {
+      queryClient.setQueryData(authKey, {
+        ...previousAuth,
+        watchlist: updatedWatchlist,
+        isSaved: newIsSaved,
+      });
+    }
+    setCachedWatchlist(updatedWatchlist as Watchlist);
 
     try {
-      const newIsSaved = !isSaved;
-      setIsSaved(newIsSaved);
-
-      const currentLikedBy = watchlist.likedBy || [];
-      const updatedWatchlist = {
-        ...watchlist,
-        likedBy: newIsSaved
-          ? [
-              ...currentLikedBy,
-              { id: user?.id || '', email: user?.email || '', username: user?.username || '' },
-            ]
-          : currentLikedBy.filter(u => u.id !== user?.id),
-      };
-      setWatchlist(updatedWatchlist as Watchlist);
-
       if (previousIsSaved) {
         await watchlistsApi.unsave(id);
         toast.success(content.watchlists.toasts?.listUnsaved || 'List removed');
@@ -230,33 +242,29 @@ export default function ListDetailPage() {
         await watchlistsApi.save(id);
         toast.success(content.watchlists.toasts?.listSaved || 'List added');
       }
-      mutate('/watchlists/mine');
+      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
     } catch (error) {
       console.error('Failed to toggle save watchlist:', error);
       toast.error(content.watchlists.toasts?.listSaveError || 'Failed to update list');
-
-      setIsSaved(previousIsSaved);
-      setWatchlist({
-        ...previousWatchlist,
-        likedBy: previousLikedBy,
-      });
+      // Rollback
+      if (previousAuth) {
+        queryClient.setQueryData(authKey, previousAuth);
+      }
+      setCachedWatchlist({ ...watchlist, likedBy: previousLikedBy });
     }
   };
 
   const handleDuplicate = async () => {
     if (!id || !isAuthenticated || isOwner) return;
-
     const loadingToast = toast.loading(content.watchlists.toasts?.duplicating || 'Duplicating...');
-
     try {
       const { watchlist: duplicatedWatchlist } = await watchlistsApi.duplicate(id);
-
       toast.success(content.watchlists.toasts?.listDuplicated || 'List duplicated', {
         id: loadingToast,
       });
-      mutate('/watchlists/mine');
+      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
       if (duplicatedWatchlist) {
-        router.push(`/lists/${duplicatedWatchlist.id}`);
+        navigate({ to: `/lists/${duplicatedWatchlist.id}` as never });
       }
     } catch (error) {
       console.error('Failed to duplicate watchlist:', error);
@@ -343,8 +351,8 @@ export default function ListDetailPage() {
               watchlistId={id}
               collaborators={getCollaborators()}
               onCollaboratorsChange={collaborators => {
-                setWatchlist(prev => (prev ? { ...prev, collaborators } : null));
-                mutate('/watchlists/mine');
+                setCachedWatchlist({ ...watchlist, collaborators });
+                queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
               }}
             >
               <button
@@ -418,44 +426,72 @@ export default function ListDetailPage() {
         })()}
       </div>
 
+      {/*
+        Modaux lazy isolés dans `<ClientOnly>` + `<Suspense fallback={null}>`.
+        ClientOnly = équivalent du `dynamic(..., { ssr: false })` de Next :
+        le composant n'est PAS rendu côté serveur ni en first paint client,
+        seulement après le mount. Ça évite que le chargement du chunk lazy
+        suspende la page parente (ce qui causait le "disparait → réapparait"
+        à T+2s qu'on a vu sur cette page).
+      */}
       {(isOwner || isCollaborator) && (
-        <AddItemModal
-          open={addModalOpen}
-          onOpenChange={setAddModalOpen}
-          watchlist={watchlist}
-          onSuccess={() => { fetchWatchlist(isAuthenticated); mutate('/watchlists/mine'); }}
-          offline={false}
-        />
+        <ClientOnly>
+          <Suspense fallback={null}>
+            <AddItemModal
+              open={addModalOpen}
+              onOpenChange={setAddModalOpen}
+              watchlist={watchlist}
+              onSuccess={() => { invalidateWatchlist(); }}
+              offline={false}
+            />
+          </Suspense>
+        </ClientOnly>
       )}
 
       {isOwner && (
-        <EditListDialog
-          ref={editDialogRef}
-          open={editModalOpen}
-          onOpenChange={setEditModalOpen}
-          onSuccess={() => { fetchWatchlist(isAuthenticated); mutate('/watchlists/mine'); }}
-          watchlist={watchlist}
-          offline={false}
-        />
+        <ClientOnly>
+          <Suspense fallback={null}>
+            <EditListDialog
+              ref={editDialogRef}
+              open={editModalOpen}
+              onOpenChange={setEditModalOpen}
+              onSuccess={() => { invalidateWatchlist(); }}
+              watchlist={watchlist}
+              offline={false}
+            />
+          </Suspense>
+        </ClientOnly>
       )}
 
       {isOwner && (
-        <DeleteListDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          watchlist={watchlist}
-          onSuccess={() => { mutate('/watchlists/mine'); router.push('/account/lists'); }}
-          offline={false}
-        />
+        <ClientOnly>
+          <Suspense fallback={null}>
+            <DeleteListDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              watchlist={watchlist}
+              onSuccess={() => {
+                queryClient.removeQueries({ queryKey: ['watchlists', id] });
+                queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+                navigate({ to: '/account/lists' as never });
+              }}
+              offline={false}
+            />
+          </Suspense>
+        </ClientOnly>
       )}
 
       {isCollaborator && !isOwner && id !== undefined && (
-        <LeaveListDialog
-          open={leaveDialogOpen}
-          onOpenChange={setLeaveDialogOpen}
-          watchlistId={id}
-          watchlistName={watchlist.name}
-        />
+        <ClientOnly>
+          <Suspense fallback={null}>
+            <LeaveListDialog
+              open={leaveDialogOpen}
+              onOpenChange={setLeaveDialogOpen}
+              watchlistId={id}
+              watchlistName={watchlist.name}
+            />
+          </Suspense>
+        </ClientOnly>
       )}
     </div>
   );

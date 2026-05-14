@@ -1,58 +1,48 @@
 'use client';
 
+import { useQueries } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import {
   createPlaceholderItem,
-  watchlists as watchlistsApi,
   type Watchlist,
   type WatchlistItem,
 } from '@/api';
+import { watchlistsQueries } from '@/api/queries';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, getCategoryInfo } from '@/types/categories';
 
 function CategoriesPageInner() {
   const { content } = useLanguageStore();
-  const router = useRouter();
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useScrollToTopOnMount();
 
-  useEffect(() => {
-    const fetchCategoryCounts = async () => {
-      try {
-        const genreIds = [...GENRE_CATEGORIES];
-
-        const counts: Record<string, number> = {};
-        await Promise.all(
-          genreIds.map(async genreId => {
-            try {
-              const data = await watchlistsApi.getByGenre(genreId);
-              counts[genreId] = data.watchlists?.length || 0;
-            } catch (error) {
-              console.error(`Failed to fetch count for ${genreId}:`, error);
-              counts[genreId] = 0;
-            }
-          })
-        );
-        setCategoryCounts(counts);
-      } catch (error) {
-        console.error('Failed to fetch category counts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategoryCounts();
-  }, []);
+  // N queries en parallèle via useQueries. Cache 5 min, partagé avec /home
+  // (mêmes queryOptions byGenre).
+  const countQueries = useQueries({
+    queries: GENRE_CATEGORIES.map(genreId => ({
+      ...watchlistsQueries.byGenre(genreId),
+      select: (data: { watchlists: Watchlist[] }) => data.watchlists?.length ?? 0,
+    })),
+  });
+  const loading = countQueries.some(q => q.isPending);
+  const categoryCounts = useMemo<Record<string, number>>(() => {
+    return GENRE_CATEGORIES.reduce(
+      (acc, genreId, i) => {
+        acc[genreId] = countQueries[i]?.data ?? 0;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  }, [countQueries]);
 
   const handleBackClick = () => {
-    router.push('/home');
+    navigate({ to: '/home' as never });
   };
 
   return (

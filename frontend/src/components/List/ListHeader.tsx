@@ -1,8 +1,8 @@
 'use client';
 
-import { ArrowLeft, Check, Copy, Film, Pencil, Share2, User } from 'lucide-react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { ArrowLeft, Check, Copy, Film, Pencil, Share, User } from 'lucide-react';
+import { Img as Image } from '@/components/ui/Img';
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { PosterGrid } from '@/components/List/PosterGrid';
 import type { Collaborator, Watchlist } from '@/api';
@@ -42,7 +42,7 @@ export function ListHeader({
   showDuplicateButton = false,
   collaboratorButton,
 }: ListHeaderProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { content } = useLanguageStore();
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const [showShareConfirm, setShowShareConfirm] = useState(false);
@@ -66,7 +66,7 @@ export function ListHeader({
         <div className="mb-8">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => window.history.back()}
             className="text-muted-foreground flex cursor-pointer items-center gap-2 rounded text-sm transition-colors hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -190,7 +190,7 @@ export function ListHeader({
                         </div>
                         <button
                           type="button"
-                          onClick={() => router.push(`/user/${ownerUsername}`)}
+                          onClick={() => navigate({ to: `/user/${ownerUsername}` as never })}
                           className="cursor-pointer rounded-lg font-semibold text-white capitalize hover:underline"
                         >
                           {ownerUsername}
@@ -364,7 +364,7 @@ export function ListHeader({
                           <Check strokeWidth={2} className="h-[24px] w-[24px] text-green-500" />
                         </div>
                       ) : (
-                        <Share2 className={`${LIST_HEADER_ICON_CLASS} text-white`} />
+                        <Share className={`${LIST_HEADER_ICON_CLASS} text-white`} />
                       )}
                     </button>
                   )}

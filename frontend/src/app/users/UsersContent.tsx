@@ -1,14 +1,14 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Section } from '@/components/layout/Section';
 import { Pagination } from '@/components/ui/pagination';
 import { UserCard } from '@/components/User/UserCard';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { watchlists as watchlistsApi, type Watchlist } from '@/api';
+import { watchlistsQueries } from '@/api/queries';
 import { useLanguageStore } from '@/store/language';
 
 const ITEMS_PER_PAGE_DEFAULT = 40;
@@ -31,9 +31,6 @@ interface Creator {
 
 function UsersContentInner() {
   const { content } = useLanguageStore();
-  const router = useRouter();
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,49 +38,29 @@ function UsersContentInner() {
 
   useScrollToTopOnMount();
 
-  const fetchCreators = useCallback(async () => {
-    try {
-      // Get public watchlists with higher limit to aggregate creators
-      const publicData = await watchlistsApi.getPublicFeatured(500);
-      const allPublicWatchlists: Watchlist[] = publicData.watchlists || [];
+  // Cache 5 min, partagé avec /home et /landing (mêmes queryOptions).
+  const publicQuery = useQuery(watchlistsQueries.publicFeatured(500));
+  const loading = publicQuery.isPending;
 
-      // Aggregate by owner
-      const creatorsMap = new Map<string, Creator>();
-
-      for (const watchlist of allPublicWatchlists) {
-        if (watchlist.owner) {
-          const ownerId = watchlist.owner.id;
-          const existing = creatorsMap.get(ownerId);
-
-          if (existing) {
-            existing.listCount += 1;
-          } else {
-            creatorsMap.set(ownerId, {
-              id: ownerId,
-              username: watchlist.owner.username || 'Utilisateur',
-              avatarUrl: watchlist.owner.avatarUrl ?? undefined,
-              listCount: 1,
-            });
-          }
-        }
+  const creators = useMemo<Creator[]>(() => {
+    const creatorsMap = new Map<string, Creator>();
+    for (const wl of publicQuery.data?.watchlists ?? []) {
+      if (!wl.owner) continue;
+      const ownerId = wl.owner.id;
+      const existing = creatorsMap.get(ownerId);
+      if (existing) {
+        existing.listCount += 1;
+      } else {
+        creatorsMap.set(ownerId, {
+          id: ownerId,
+          username: wl.owner.username || 'Utilisateur',
+          avatarUrl: wl.owner.avatarUrl ?? undefined,
+          listCount: 1,
+        });
       }
-
-      // Sort by list count (descending)
-      const sortedCreators = Array.from(creatorsMap.values()).sort(
-        (a, b) => b.listCount - a.listCount
-      );
-
-      setCreators(sortedCreators);
-    } catch (error) {
-      console.error('Failed to fetch creators:', error);
-    } finally {
-      setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchCreators();
-  }, [fetchCreators]);
+    return Array.from(creatorsMap.values()).sort((a, b) => b.listCount - a.listCount);
+  }, [publicQuery.data]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -107,7 +84,7 @@ function UsersContentInner() {
         {/* Back button */}
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => window.history.back()}
           className="text-muted-foreground mb-6 flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />

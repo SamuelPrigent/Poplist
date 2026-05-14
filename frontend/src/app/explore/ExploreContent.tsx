@@ -1,11 +1,15 @@
 'use client';
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, Eye, Plus, Star } from 'lucide-react';
 import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
-import Image from 'next/image';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { Img as Image } from '@/components/ui/Img';
+import { tmdbQueries, watchlistsQueries } from '@/api/queries';
+import { useSearchParamsCompat as useSearchParams } from '@/hooks/useSearchParamsCompat';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
 import { WatchlistPickerMenu } from '@/components/List/WatchlistPickerMenu';
 import { Button } from '@/components/ui/button';
@@ -19,7 +23,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
-import { createPlaceholderItem, fetchTMDBProviders, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
+import { createPlaceholderItem, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
@@ -41,7 +45,10 @@ interface MediaItem {
 // Generate years from 2026 to 1895 (first film)
 const YEARS = Array.from({ length: 2026 - 1895 + 1 }, (_, i) => 2026 - i);
 
-// Function to get genres with translated names
+// Function to get genres with translated names.
+// Note: `drama` (id 18) volontairement retiré — 90% des contenus softcore/
+// "indécence" non flaggués `adult: true` côté TMDB sont catégorisés `Drame`.
+// Le user fait remonter trop d'items inappropriés via ce filtre.
 const getGenres = (content: Content) => ({
   movie: [
     { id: 28, name: content.explore.genres.action },
@@ -50,7 +57,6 @@ const getGenres = (content: Content) => ({
     { id: 35, name: content.explore.genres.comedy },
     { id: 80, name: content.explore.genres.crime },
     { id: 99, name: content.explore.genres.documentary },
-    { id: 18, name: content.explore.genres.drama },
     { id: 10751, name: content.explore.genres.family },
     { id: 14, name: content.explore.genres.fantasy },
     { id: 27, name: content.explore.genres.horror },
@@ -63,7 +69,6 @@ const getGenres = (content: Content) => ({
     { id: 35, name: content.explore.genres.comedy },
     { id: 80, name: content.explore.genres.crime },
     { id: 99, name: content.explore.genres.documentary },
-    { id: 18, name: content.explore.genres.drama },
     { id: 10751, name: content.explore.genres.family },
     { id: 10765, name: content.explore.genres.fantasy },
     { id: 10762, name: content.explore.genres.kids },
@@ -78,8 +83,7 @@ export function ExploreContent() {
   const { isAuthenticated } = useAuth();
   const tmdbLanguage = getTMDBLanguage(language);
   const tmdbRegion = getTMDBRegion(language);
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
 
   // Track active grid column count (matches Tailwind breakpoints on the grid below)
@@ -98,20 +102,34 @@ export function ExploreContent() {
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // Helper to update URL params
+  // Helper to update URL params via TanStack Router idiom : on passe une
+  // fonction `search` qui reçoit l'ancien search en argument et renvoie le
+  // nouveau. C'est la forme attendue par TanStack pour éviter les bugs de
+  // sérialisation (l'ancienne approche `to: pathname + search: { ...new }`
+  // produisait `e?page=2` au lieu de `?page=2` selon le user — sans doute un
+  // pb de cast `as never` qui faisait passer la string pathname pour un
+  // search-string).
   const updateSearchParams = useCallback(
     (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null) {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      }
-      router.push(`${pathname}?${params.toString()}`);
+      navigate({
+        to: '/explore',
+        search: (prev: Record<string, unknown>) => {
+          const next: Record<string, string> = {};
+          for (const [key, value] of Object.entries(prev ?? {})) {
+            if (value !== undefined && value !== null) next[key] = String(value);
+          }
+          for (const [key, value] of Object.entries(updates)) {
+            if (value === null) {
+              delete next[key];
+            } else {
+              next[key] = value;
+            }
+          }
+          return next;
+        },
+      });
     },
-    [searchParams, router, pathname]
+    [navigate]
   );
 
   // Use useMemo to memoize derived values from searchParams
@@ -142,11 +160,8 @@ export function ExploreContent() {
 
   const page = useMemo(() => Number(searchParams.get('page')) || 1, [searchParams]);
 
-  const [media, setMedia] = useState<MediaItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-  const [addingTo, setAddingTo] = useState<number | null>(null);
-  const [totalPages, setTotalPages] = useState(1);
+  const [addingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     tmdbId: string;
@@ -274,151 +289,56 @@ export function ExploreContent() {
     }
   }, [page]);
 
-  // Fetch user watchlists (authenticated or offline)
+  // Mes watchlists côté auth via TQ (partagé avec /home, /account/lists, etc.)
+  // Côté non-auth, on lit le localStorage.
+  const myWatchlistsQuery = useQuery({
+    ...watchlistsQueries.mine(),
+    enabled: isAuthenticated,
+  });
   useEffect(() => {
     if (isAuthenticated) {
-      watchlistsApi
-        .getMine()
-        .then(data => {
-          setWatchlists(data.watchlists);
-        })
-        .catch(console.error);
+      if (myWatchlistsQuery.data) setWatchlists(myWatchlistsQuery.data.watchlists);
     } else {
-      const localWatchlists = getLocalWatchlistsWithOwnership();
-      setWatchlists(localWatchlists);
+      setWatchlists(getLocalWatchlistsWithOwnership());
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, myWatchlistsQuery.data]);
 
-  // Fetch media based on filters using discover API
-  useEffect(() => {
-    const fetchMedia = async () => {
-      setLoading(true);
-      try {
-        const itemsPerDisplayPage = 60; // 6 columns × 10 rows = exactly 3 TMDB pages
-        const pagesNeeded = 3; // 60 items / 20 per TMDB page = 3 pages exactly
-        const startTMDBPage = (page - 1) * pagesNeeded + 1;
+  // Fetch media discover via 3 queries TQ en parallèle. Le cache TQ partage
+  // les résultats avec d'autres pages (Home) si mêmes paramètres. TQ gère
+  // l'abort automatique des queries obsolètes (plus besoin d'AbortController
+  // manuel).
+  const startTMDBPage = (page - 1) * 3 + 1;
+  const sortBy = filterType === 'top_rated' ? 'vote_average.desc' : 'popularity.desc';
+  const dateFrom = yearFrom ? `${yearFrom}-01-01` : '';
+  const dateTo = yearTo ? `${yearTo}-12-31` : '';
+  const releaseDateGte = dateFrom || undefined;
+  const releaseDateLte = dateTo || undefined;
+  const withGenres = selectedGenres.length > 0 ? selectedGenres.join('|') : undefined;
 
-        let allResults: MediaItem[] = [];
-        let fetchedTotalPages = 1;
+  const discoverQueries = useQueries({
+    queries: [0, 1, 2].map(i => ({
+      ...tmdbQueries.discover(mediaType, {
+        page: startTMDBPage + i,
+        language: tmdbLanguage,
+        sortBy,
+        voteCountGte: 100,
+        voteAverageGte: 5.0,
+        releaseDateGte,
+        releaseDateLte,
+        ...(withGenres ? { with_genres: withGenres } : {}),
+      }),
+    })),
+  });
 
-        for (let i = 0; i < pagesNeeded; i++) {
-          const currentTMDBPage = startTMDBPage + i;
-          const params = new URLSearchParams({
-            language: tmdbLanguage,
-            page: currentTMDBPage.toString(),
-          });
-
-          // Always use discover endpoint
-          const sortBy = filterType === 'top_rated' ? 'vote_average.desc' : 'popularity.desc';
-          params.append('sort_by', sortBy);
-
-          // Always add minimum vote count and rating to avoid absurd results
-          params.append('vote_count.gte', '100');
-          params.append('vote_average.gte', '5.0');
-
-          // Add genre filter (OR logic with pipe separator)
-          if (selectedGenres.length > 0) {
-            params.append('with_genres', selectedGenres.join('|'));
-          }
-
-          // Add date filters (year transformed to YYYY-01-01 and YYYY-12-31)
-          const dateFrom = yearFrom ? `${yearFrom}-01-01` : '';
-          const dateTo = yearTo ? `${yearTo}-12-31` : '';
-
-          // Use correct date field based on media type
-          // Movies: primary_release_date | TV Shows: first_air_date
-          const dateField = mediaType === 'movie' ? 'primary_release_date' : 'first_air_date';
-
-          if (dateFrom) {
-            params.append(`${dateField}.gte`, dateFrom);
-          }
-          if (dateTo) {
-            params.append(`${dateField}.lte`, dateTo);
-          }
-
-          const url = `/api/tmdb/discover/${mediaType}?${params.toString()}`;
-
-          const response = await fetch(url);
-          const data = await response.json();
-
-          allResults = [...allResults, ...(data.results || [])];
-          fetchedTotalPages = data.total_pages || 1;
-        }
-
-        // Take exactly 60 items for this page
-        const displayResults = allResults.slice(0, itemsPerDisplayPage);
-
-        setMedia(displayResults);
-
-        // Each display page = 3 TMDB pages, so divide by 3
-        const totalDisplayPages = Math.floor(fetchedTotalPages / pagesNeeded);
-        setTotalPages(Math.min(totalDisplayPages, 166)); // 166 * 3 = 498 TMDB pages (under 500 limit)
-      } catch (error) {
-        console.error('Failed to fetch media:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMedia();
-  }, [mediaType, filterType, selectedGenres, page, yearFrom, yearTo, tmdbLanguage]);
-
-  const handleAddToWatchlist = async (watchlistId: string, mediaItem: MediaItem) => {
-    try {
-      setAddingTo(mediaItem.id);
-
-      // Determine media type for this item
-      const itemType: 'movie' | 'tv' = mediaItem.title ? 'movie' : 'tv';
-
-      if (isAuthenticated) {
-        await watchlistsApi.addItem(watchlistId, {
-          tmdbId: mediaItem.id.toString(),
-          mediaType: itemType,
-          language: tmdbLanguage,
-          region: tmdbRegion,
-        });
-      } else {
-        const localWatchlists = localStorage.getItem('watchlists');
-        if (localWatchlists) {
-          const watchlistsData: Watchlist[] = JSON.parse(localWatchlists);
-          const watchlistIndex = watchlistsData.findIndex(w => w.id === watchlistId);
-
-          if (watchlistIndex !== -1) {
-            const itemExists = watchlistsData[watchlistIndex].items.some(
-              item => item.tmdbId === mediaItem.id
-            );
-
-            if (!itemExists) {
-              const [platformList, mediaDetails] = await Promise.all([
-                fetchTMDBProviders(mediaItem.id.toString(), itemType, tmdbRegion),
-                watchlistsApi.getItemDetails(mediaItem.id.toString(), itemType, tmdbLanguage),
-              ]);
-
-              const newItem = createPlaceholderItem({
-                tmdbId: mediaItem.id,
-                title: mediaItem.title || mediaItem.name || '',
-                posterPath: mediaItem.poster_path || null,
-                mediaType: itemType,
-                platformList,
-                runtime: mediaDetails.details.runtime,
-              });
-
-              watchlistsData[watchlistIndex].items.push(newItem);
-              watchlistsData[watchlistIndex].updatedAt = new Date().toISOString();
-              localStorage.setItem('watchlists', JSON.stringify(watchlistsData));
-
-              const updatedWatchlists = getLocalWatchlistsWithOwnership();
-              setWatchlists(updatedWatchlists);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to add to watchlist:', error);
-    } finally {
-      setAddingTo(null);
-    }
-  };
+  const loading = discoverQueries.some(q => q.isPending);
+  const media = useMemo<MediaItem[]>(() => {
+    const all = discoverQueries.flatMap(q => (q.data?.results ?? []) as MediaItem[]);
+    return all.slice(0, 60);
+  }, [discoverQueries]);
+  const totalPages = useMemo(() => {
+    const first = discoverQueries[0]?.data?.total_pages ?? 1;
+    return Math.min(Math.floor(first / 3), 166);
+  }, [discoverQueries]);
 
   const handleAddFromDetails = async (
     watchlistId: string,
@@ -439,6 +359,7 @@ export function ExploreContent() {
           : wl
       )
     );
+    console.log('[explore] handleAddFromDetails called', { watchlistId, tmdbId, mediaType });
     try {
       await watchlistsApi.addItem(watchlistId, {
         tmdbId,
@@ -446,8 +367,10 @@ export function ExploreContent() {
         language: tmdbLanguage,
         region: tmdbRegion,
       });
+      console.log('[explore] addItem success, firing toast');
+      toast.success('Ajouté à la liste');
     } catch (error) {
-      console.error('Failed to add to watchlist:', error);
+      console.error('[explore] Failed to add to watchlist:', error);
       setWatchlists(prev =>
         prev.map(wl =>
           wl.id === watchlistId
@@ -455,6 +378,7 @@ export function ExploreContent() {
             : wl
         )
       );
+      toast.error("Erreur lors de l'ajout");
     }
   };
 
@@ -470,6 +394,7 @@ export function ExploreContent() {
     );
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
+      toast.success('Retiré de la liste');
     } catch (error) {
       console.error('Failed to remove from watchlist:', error);
       if (removed) {
@@ -480,6 +405,7 @@ export function ExploreContent() {
           )
         );
       }
+      toast.error('Erreur lors du retrait');
     }
   };
 

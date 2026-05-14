@@ -2,7 +2,7 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Image as ImageIcon, Pencil, X } from 'lucide-react';
-import Image from 'next/image';
+import { Img as Image } from '@/components/ui/Img';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

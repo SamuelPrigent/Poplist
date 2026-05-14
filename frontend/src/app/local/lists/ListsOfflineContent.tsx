@@ -21,8 +21,8 @@ import { CSS } from '@dnd-kit/utilities';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronRight, Database, Edit, Film, MoreVertical, Plus, Trash2 } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { Img as Image } from '@/components/ui/Img';
+import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CreateListDialog } from '@/components/List/modal/CreateListDialog';
 import { DeleteListDialog } from '@/components/List/modal/DeleteListDialog';
@@ -67,7 +67,7 @@ function WatchlistCardOffline({
   draggableProps,
 }: WatchlistCardOfflineProps) {
   const { content } = useLanguageStore();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   return (
     <div
@@ -79,7 +79,7 @@ function WatchlistCardOffline({
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          router.push(`/local/list/${watchlist.id}`);
+          navigate({ to: `/local/list/${watchlist.id}` as never });
         }
       }}
       className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
@@ -87,7 +87,7 @@ function WatchlistCardOffline({
       {/* Cover Image */}
       <button
         type="button"
-        onClick={() => router.push(`/local/list/${watchlist.id}`)}
+        onClick={() => navigate({ to: `/local/list/${watchlist.id}` as never })}
         tabIndex={-1}
         className="bg-muted relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-md"
       >
@@ -112,7 +112,7 @@ function WatchlistCardOffline({
       {/* Text Info */}
       <button
         type="button"
-        onClick={() => router.push(`/local/list/${watchlist.id}`)}
+        onClick={() => navigate({ to: `/local/list/${watchlist.id}` as never })}
         tabIndex={-1}
         className="line-clamp-2 w-full text-left text-sm font-semibold text-white"
       >
@@ -122,7 +122,7 @@ function WatchlistCardOffline({
       <div className="mt-2 text-xs">
         <button
           type="button"
-          onClick={() => router.push(`/local/list/${watchlist.id}`)}
+          onClick={() => navigate({ to: `/local/list/${watchlist.id}` as never })}
           tabIndex={-1}
           className="text-muted-foreground"
         >
@@ -133,7 +133,7 @@ function WatchlistCardOffline({
       <div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
         <button
           type="button"
-          onClick={() => router.push(`/local/list/${watchlist.id}`)}
+          onClick={() => navigate({ to: `/local/list/${watchlist.id}` as never })}
           tabIndex={-1}
         >
           {watchlist.items.length}{' '}
@@ -230,7 +230,7 @@ const ListCardSkeleton = () => (
 function ListsOfflineContentInner() {
   const { content } = useLanguageStore();
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -246,9 +246,9 @@ function ListsOfflineContentInner() {
   // Redirect to account lists if authenticated
   useEffect(() => {
     if (user) {
-      router.push('/account/lists');
+      navigate({ to: '/account/lists' as never });
     }
-  }, [user, router]);
+  }, [user, navigate]);
 
   // Handle popover hover with delay
   const handlePopoverEnter = () => {
@@ -493,7 +493,7 @@ function ListsOfflineContentInner() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id="dnd-local-lists" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={watchlists.map(w => w.id)} strategy={rectSortingStrategy}>
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {watchlists.map(watchlist => (

@@ -41,8 +41,9 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Img as Image } from '@/components/ui/Img';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import {
   Empty,
   EmptyDescription,
@@ -56,7 +57,7 @@ import { createPlaceholderItem, type Watchlist, type WatchlistItem } from '@/api
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
-import { mutate } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
 import { ItemDetailsModal } from './modal/ItemDetailsModal';
@@ -157,7 +158,11 @@ interface DraggableRowProps {
   currentWatchlist: Watchlist;
 }
 
-function DraggableRow({
+// `memo` : pendant le drag, dnd-kit force re-render des rows pour appliquer
+// les transforms. Les rows non-bougées n'ont pas besoin de re-render leur
+// contenu (poster, providers, tooltips Radix lourdes). Memo + props stables
+// = on évite ~5x le re-render coût.
+const DraggableRow = memo(function DraggableRow({
   item,
   index,
   row,
@@ -335,7 +340,7 @@ function DraggableRow({
       })}
     </tr>
   );
-}
+});
 
 export function ListItemsTable({
   watchlist,
@@ -348,6 +353,7 @@ export function ListItemsTable({
   const { content, language } = useLanguageStore();
   const tmdbLanguage = getTMDBLanguage(language);
   const tmdbRegion = getTMDBRegion(language);
+  const queryClient = useQueryClient();
 
   // Both owners and collaborators can edit
   const canEdit = isOwner || isCollaborator;
@@ -360,7 +366,9 @@ export function ListItemsTable({
   const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-  const [addingTo, setAddingTo] = useState<number | null>(null);
+  // setter retiré : setAddingTo n'était appelé que par handleAddToWatchlist
+  // (dead code supprimé). Le getter reste utilisé pour disabled state.
+  const [addingTo] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<WatchlistItem | null>(null);
 
   // Sync with parent when watchlist changes
@@ -434,23 +442,6 @@ export function ListItemsTable({
     return mins > 0 ? `${hours}h ${mins} min` : `${hours}h`;
   }, []);
 
-  const handleAddToWatchlist = async (watchlistId: string, item: WatchlistItem) => {
-    try {
-      setAddingTo(item.tmdbId);
-      await watchlistsApi.addItem(watchlistId, {
-        tmdbId: item.tmdbId.toString(),
-        mediaType: item.mediaType as 'movie' | 'tv',
-        language: tmdbLanguage,
-        region: tmdbRegion,
-      });
-      mutate('/watchlists/mine');
-    } catch (error) {
-      console.error('Failed to add to watchlist:', error);
-    } finally {
-      setAddingTo(null);
-    }
-  };
-
   const handleAddFromDetails = async (
     watchlistId: string,
     tmdbId: string,
@@ -482,10 +473,11 @@ export function ListItemsTable({
         language: tmdbLanguage,
         region: tmdbRegion,
       });
-      mutate('/watchlists/mine');
+      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
       if (watchlistId === watchlist.id) {
         onUpdate();
       }
+      toast.success('Ajouté à la liste');
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
       setWatchlists(prev =>
@@ -498,6 +490,7 @@ export function ListItemsTable({
       if (watchlistId === watchlist.id) {
         setItems(prev => prev.filter(it => it.tmdbId !== idNum));
       }
+      toast.error("Erreur lors de l'ajout");
     }
   };
 
@@ -516,12 +509,14 @@ export function ListItemsTable({
     }
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
-      mutate('/watchlists/mine');
+      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
       if (watchlistId === watchlist.id) {
         onUpdate();
       }
+      toast.success('Retiré de la liste');
     } catch (error) {
       console.error('Failed to remove from watchlist:', error);
+      toast.error('Erreur lors du retrait');
       if (removed) {
         const restored = removed;
         setWatchlists(prev =>
@@ -874,7 +869,12 @@ export function ListItemsTable({
   return (
     <>
       <div className="mb-2 overflow-hidden">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+          id={`dnd-watchlist-${watchlist.id}`}
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
           <table className="w-full table-fixed">
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
@@ -945,11 +945,18 @@ export function ListItemsTable({
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < displayItems.length - 1 ? handleNavigateNext : undefined}
           watchlists={(() => {
-            const currentMerged: Watchlist = { ...watchlist, items };
+            // N'inclut la watchlist courante dans le picker QUE si l'user
+            // peut y ajouter des items (owner ou collab). Sinon (cas d'une
+            // liste juste sauvegardée/suivie), on ne la montre pas — afficher
+            // une liste qu'on ne peut pas éditer est trompeur.
             const others = watchlists.filter(
               w => w.id !== watchlist.id && (w.isOwner || w.isCollaborator)
             );
-            return [currentMerged, ...others];
+            if (isOwner || isCollaborator) {
+              const currentMerged: Watchlist = { ...watchlist, items };
+              return [currentMerged, ...others];
+            }
+            return others;
           })()}
           isAuthenticated={isAuthenticated}
           onAddToWatchlist={watchlistId =>

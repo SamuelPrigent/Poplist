@@ -4,9 +4,9 @@
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Edit, Film, MoreVertical, Trash2, UsersRound } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Img as Image } from '@/components/ui/Img';
+import { Link } from '@/components/ui/Link';
+import { useNavigate } from '@tanstack/react-router';
 import { useRef } from 'react';
 import { PosterGrid } from '@/components/List/PosterGrid';
 import type { Watchlist } from '@/api';
@@ -48,7 +48,7 @@ export function ListCard({
   priority = false,
   draggableProps,
 }: ListCardProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const editButtonRef = useRef<HTMLDivElement>(null);
   const deleteButtonRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +57,7 @@ export function ListCard({
   const handleClick = draggableProps
     ? (e: React.MouseEvent) => {
         e.stopPropagation();
-        window.location.href = href;
+        navigate({ to: href as never });
       }
     : undefined;
 
@@ -195,7 +195,7 @@ export function ListCard({
               onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
-                router.push(`/user/${watchlist.owner!.username}`);
+                navigate({ to: `/user/${watchlist.owner!.username}` as never });
               }}
               className="cursor-pointer rounded-md text-white capitalize hover:underline"
             >
@@ -324,7 +324,7 @@ export function ListCard({
             // Only navigate if Enter was pressed directly on the card, not on a child element
             if (e.target !== e.currentTarget) return;
             e.preventDefault();
-            window.location.href = href;
+            navigate({ to: href as never });
           }
         }}
         className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
@@ -336,7 +336,7 @@ export function ListCard({
 
   return (
     <Link
-      href={href}
+      to={href}
       className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
     >
       {cardContent}

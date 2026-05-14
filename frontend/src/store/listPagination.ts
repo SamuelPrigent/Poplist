@@ -30,6 +30,7 @@ export const useListPaginationStore = create<ListPaginationState>()(
 		}),
 		{
 			name: "list-pagination-storage",
+			skipHydration: true,
 		},
 	),
 );

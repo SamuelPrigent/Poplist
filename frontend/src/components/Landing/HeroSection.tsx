@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
+import { Img as Image } from '@/components/ui/Img';
+import { Link } from '@/components/ui/Link';
 import type { Content } from '@/types/content';
 
 interface TrendingItem {
@@ -18,18 +18,18 @@ interface HeroSectionProps {
   trending: TrendingItem[];
   watchlistsUrl: string;
 }
-import saw from '../../../public/landing/movies/saw3.webp';
-import pdc from '../../../public/landing/movies/pdc2.webp';
-import jinx from '../../../public/landing/movies/jinx.webp';
-import doa from '../../../public/landing/movies/DOA.webp';
-import blade2 from '../../../public/landing/movies/blade2.webp';
-import kb from '../../../public/landing/movies/kb.webp';
-import oceans from '../../../public/landing/movies/oceans.webp';
-import jake from '../../../public/landing/movies/jake.webp';
-import passion from '../../../public/landing/movies/passion.webp';
-import theFifth2 from '../../../public/landing/movies/theFifth2.webp';
-import joker from '../../../public/landing/movies/joker.webp';
-import fenetre from '../../../public/landing/movies/fenetre.webp';
+const saw = '/landing/movies/saw3.webp';
+const pdc = '/landing/movies/pdc2.webp';
+const jinx = '/landing/movies/jinx.webp';
+const doa = '/landing/movies/DOA.webp';
+const blade2 = '/landing/movies/blade2.webp';
+const kb = '/landing/movies/kb.webp';
+const oceans = '/landing/movies/oceans.webp';
+const jake = '/landing/movies/jake.webp';
+const passion = '/landing/movies/passion.webp';
+const theFifth2 = '/landing/movies/theFifth2.webp';
+const joker = '/landing/movies/joker.webp';
+const fenetre = '/landing/movies/fenetre.webp';
 
 const FAMOUS_MOVIES = [
   // === COLONNE 1 (gauche) ===
@@ -172,7 +172,7 @@ const renderSubtitleWithUnderline = (subtitle: string) => {
   });
 };
 
-export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
+export function HeroSection({ content, watchlistsUrl: _watchlistsUrl }: HeroSectionProps) {
   const handleScrollToFeatures = () => {
     const featuresSection = document.querySelector('#ensavoirplus');
     featuresSection?.scrollIntoView({
@@ -205,7 +205,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
             <div className="flex gap-4 md:gap-7">
               {/* Column 1 - hidden on very small screens */}
               <div className="hidden sm:flex flex-col gap-3 md:gap-5">
-                {col1.map((movie, index) => (
+                {col1.map((movie, _index) => (
                   <div
                     key={movie.id}
                     className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)]"
@@ -224,7 +224,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
 
               {/* Column 2 - offset up, always visible */}
               <div className="flex flex-col gap-3 md:gap-5 -mt-16">
-                {col2.map((movie, index) => (
+                {col2.map((movie, _index) => (
                   <div
                     key={movie.id}
                     className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
@@ -243,7 +243,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
 
               {/* Column 3 - offset down, hidden on small screens */}
               <div className="hidden md:flex flex-col gap-3 md:gap-5 mt-8">
-                {col3.map((movie, index) => (
+                {col3.map((movie, _index) => (
                   <div
                     key={movie.id}
                     className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
@@ -279,7 +279,7 @@ export function HeroSection({ content, watchlistsUrl }: HeroSectionProps) {
             {/* CTA Buttons */}
             <div className="flex flex-wrap justify-center gap-4 mt-3 md:justify-start">
               <Link
-                href="/home"
+                to="/home"
                 className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
               >
                 {content.home.hero.cta}

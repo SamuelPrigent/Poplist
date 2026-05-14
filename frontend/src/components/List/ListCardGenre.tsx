@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
-import Link from 'next/link';
+import { Link } from '@/components/ui/Link';
 import { useState, type CSSProperties } from 'react';
 import type { Watchlist } from '@/api';
 import type { Content } from '@/types/content';
@@ -36,7 +36,7 @@ const CATEGORY_VISUALS: Record<string, CategoryVisuals> = {
 const DEFAULT_VISUALS: CategoryVisuals = CATEGORY_VISUALS.movies;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardGenreProps) {
+export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: ListCardGenreProps) {
   const visuals = (genreId && CATEGORY_VISUALS[genreId]) || DEFAULT_VISUALS;
   const itemCount = watchlist.items.length;
   const [hover, setHover] = useState(false);
@@ -61,7 +61,7 @@ export function ListCardGenre({ watchlist, href, genreId, index = 0 }: ListCardG
 
   return (
     <Link
-      href={href}
+      to={href}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       className="group block cursor-pointer"

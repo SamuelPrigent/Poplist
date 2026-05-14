@@ -1,8 +1,8 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { UserProfileHeader } from '@/components/User/UserProfileHeader';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { Watchlist } from '@/api';
-import { users as usersApi } from '@/api';
+import { usersQueries } from '@/api/queries';
 import { useLanguageStore } from '@/store/language';
 
 // Skeleton components
@@ -43,49 +42,25 @@ const ProfileHeaderSkeleton = () => (
 );
 
 function UserProfilePageInner() {
-  const params = useParams();
-  const router = useRouter();
+  const params = useParams({ strict: false }) as { username: string };
+  const navigate = useNavigate();
   const { content } = useLanguageStore();
 
   const username = params.username as string;
 
-  const [user, setUser] = useState<{
-    id: string;
-    username: string | null;
-    avatarUrl?: string | null;
-  } | null>(null);
-  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-  const [totalPublicWatchlists, setTotalPublicWatchlists] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  // Query hydratée depuis le cache TQ par le loader SSR (setQueryData) puis
+  // sérialisée via le dehydrate/hydrate du router → zéro flicker.
+  const { data, isPending, isError } = useQuery({
+    ...usersQueries.byUsername(username),
+    enabled: !!username,
+    retry: false,
+  });
 
-  const fetchUserProfile = useCallback(async () => {
-    if (!username) {
-      router.replace('/home');
-      return;
-    }
+  const user = data?.user ?? null;
+  const watchlists = data?.watchlists ?? [];
+  const totalPublicWatchlists = data?.totalPublicWatchlists ?? 0;
 
-    try {
-      setLoading(true);
-      setNotFound(false);
-
-      const data = await usersApi.getByUsername(username);
-      setUser(data.user);
-      setWatchlists(data.watchlists);
-      setTotalPublicWatchlists(data.totalPublicWatchlists);
-    } catch (err) {
-      console.error('Failed to fetch user profile:', err);
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [username, router]);
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
-
-  if (loading) {
+  if (isPending) {
     return (
       <div className="bg-background min-h-screen pb-24 w-(--sectionWidth) max-w-(--maxWidth) px-12">
         <ProfileHeaderSkeleton />
@@ -101,7 +76,7 @@ function UserProfilePageInner() {
     );
   }
 
-  if (notFound || !user) {
+  if (isError || !user) {
     return (
       <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8">
         <Empty>
@@ -113,7 +88,7 @@ function UserProfilePageInner() {
                 "Cet utilisateur n'existe pas ou a été supprimé."}
             </EmptyDescription>
           </EmptyHeader>
-          <Button onClick={() => router.push('/home')}>
+          <Button onClick={() => navigate({ to: '/home' as never })}>
             {content.userProfile?.backToHome || "Retour à l'accueil"}
           </Button>
         </Empty>
@@ -143,7 +118,7 @@ function UserProfilePageInner() {
                   "Cet utilisateur n'a pas encore de liste publique."}
               </EmptyDescription>
             </EmptyHeader>
-            <Button onClick={() => router.push('/home')}>
+            <Button onClick={() => navigate({ to: '/home' as never })}>
               {content.userProfile?.backToHome || "Retour à l'accueil"}
             </Button>
           </Empty>

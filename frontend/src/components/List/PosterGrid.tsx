@@ -1,7 +1,8 @@
 import { Film } from 'lucide-react'
-import Image from 'next/image'
+import { Img as Image } from '@/components/ui/Img'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { WatchlistItem } from '@/api'
+import { getTMDBImageUrl } from '@/lib/utils'
 
 interface PosterGridProps {
   items: WatchlistItem[]
@@ -52,7 +53,7 @@ export function PosterGrid({ items, alt, priority = false, imageSize = 'w154' }:
         <div key={index} className="relative overflow-hidden bg-[#27272a]">
           {posterPath ? (
             <Image
-              src={`https://image.tmdb.org/t/p/${imageSize}${posterPath}`}
+              src={getTMDBImageUrl(posterPath, imageSize) ?? ''}
               alt={`${alt} poster ${index + 1}`}
               fill
               sizes="(max-width: 768px) 25vw, 12vw"

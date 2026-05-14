@@ -22,6 +22,7 @@ export const useListFiltersStore = create<WatchlistFiltersState>()(
 		}),
 		{
 			name: "watchlist-filters-storage",
+			skipHydration: true,
 		},
 	),
 );

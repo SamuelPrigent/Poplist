@@ -3,7 +3,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Calendar, Clock, Star, X } from 'lucide-react';
-import Image from 'next/image';
+import { Img as Image } from '@/components/ui/Img';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';

@@ -420,7 +420,17 @@ export async function getTopRated(
 }
 
 export async function discover(type: 'movie' | 'tv', params: Record<string, string>) {
-  return fetchWithCache(`/discover/${type}`, params, CACHE_TTL.DISCOVER);
+  // Force des filtres côté TMDB :
+  // - `include_adult=false` : exclut le porno hardcore (flag `adult: true`)
+  // - `without_genres=18` : exclut le genre Drama (id 18). 90% du softcore
+  //   non flaggué adult tombe dans cette catégorie. Les drames classiques
+  //   restent accessibles via les listes publiques / catégories, juste pas
+  //   dans l'explore TMDB direct.
+  return fetchWithCache(
+    `/discover/${type}`,
+    { ...params, include_adult: 'false', without_genres: '18' },
+    CACHE_TTL.DISCOVER
+  );
 }
 
 export async function getGenres(type: 'movie' | 'tv', language: string) {

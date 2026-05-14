@@ -1,8 +1,8 @@
 'use client';
 
 import { User } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Img as Image } from '@/components/ui/Img';
+import { Link } from '@/components/ui/Link';
 
 interface UserCardProps {
   user: {
@@ -22,7 +22,7 @@ interface UserCardProps {
 export function UserCard({ user, listCount, content }: UserCardProps) {
   return (
     <Link
-      href={`/user/${user.username}`}
+      to={`/user/${user.username}`}
       className="group flex flex-col items-center gap-3 rounded-lg bg-muted/30 p-5 transition-colors hover:bg-muted/50"
     >
       {/* Avatar */}

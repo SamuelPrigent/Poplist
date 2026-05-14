@@ -64,17 +64,29 @@ export function resizeTMDBPoster(url: string, size: string): string {
 }
 
 /**
- * Build a full TMDB image URL from a path
- * @param path - The image path (e.g., "/abc123.jpg")
- * @param size - The desired size (w92, w154, w185, w342, w500, w780, original)
- * @returns The full TMDB image URL or null if path is null/undefined
+ * Build a full TMDB image URL from a path (or substitute the size of an
+ * existing URL).
+ *
+ * @param path - Le path TMDB (`/abc.jpg`) OU une URL TMDB déjà complète
+ *               (`https://image.tmdb.org/t/p/w500/abc.jpg`). Le backend stocke
+ *               souvent la version full-URL (héritage), il faut la
+ *               réécrire à la bonne taille pour éviter de charger des images
+ *               10× trop lourdes (genre w500 pour un thumbnail de 36×36).
+ * @param size - Taille souhaitée (w92 / w154 / w185 / w342 / w500 / etc.)
+ * @returns L'URL TMDB avec la taille demandée, ou null si `path` est vide.
  */
 export function getTMDBImageUrl(
 	path: string | null | undefined,
 	size: "w45" | "w92" | "w154" | "w185" | "w300" | "w342" | "w500" | "w780" | "w1280" | "h632" | "original" = "w342"
 ): string | null {
 	if (!path) return null;
-	// If it's already a full URL, return as-is
+	// URL TMDB complète : on remplace le segment de taille (w154, w500, etc.).
+	const tmdbUrlMatch = path.match(/^https?:\/\/image\.tmdb\.org\/t\/p\/[^/]+(\/.+)$/);
+	if (tmdbUrlMatch) {
+		return `https://image.tmdb.org/t/p/${size}${tmdbUrlMatch[1]}`;
+	}
+	// Autre URL externe (avatar Cloudinary, etc.) : on touche pas.
 	if (path.startsWith("http")) return path;
+	// Path brut TMDB : on construit l'URL.
 	return `https://image.tmdb.org/t/p/${size}${path}`;
 }

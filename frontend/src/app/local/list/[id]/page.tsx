@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeft, Film, Pencil, Plus } from "lucide-react";
-import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { Img as Image } from "@/components/ui/Img";
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ListItemsTableOffline } from "@/components/List/ListItemsTableOffline";
 import { AddItemModal } from "@/components/List/modal/AddItemModal";
@@ -20,8 +20,8 @@ import { useLanguageStore } from "@/store/language";
 import { useListPaginationStore } from "@/store/listPagination";
 
 export default function LocalListDetailPage() {
-   const params = useParams();
-   const router = useRouter();
+   const params = useParams({ strict: false }) as { id: string };
+   const navigate = useNavigate();
    const { content } = useLanguageStore();
    const [watchlist, setWatchlist] = useState<Watchlist | null>(null);
    const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ export default function LocalListDetailPage() {
 
    const fetchWatchlist = useCallback(() => {
       if (!id) {
-         router.replace("/local/lists");
+         navigate({ to: "/local/lists" as never, replace: true });
          return;
       }
 
@@ -66,7 +66,7 @@ export default function LocalListDetailPage() {
       } finally {
          setLoading(false);
       }
-   }, [id, router]);
+   }, [id, navigate]);
 
    // Handle watchlist updates - accepts optional updated watchlist for direct state updates
    const handleWatchlistUpdate = useCallback(
@@ -133,7 +133,7 @@ export default function LocalListDetailPage() {
                      Cette watchlist n&apos;existe pas ou a été supprimée.
                   </p>
                </div>
-               <Button onClick={() => router.push("/local/lists")}>Retour à mes listes</Button>
+               <Button onClick={() => navigate({ to: "/local/lists" as never })}>Retour à mes listes</Button>
             </div>
          </div>
       );
@@ -156,7 +156,7 @@ export default function LocalListDetailPage() {
                <div className="mb-8">
                   <button
                      type="button"
-                     onClick={() => router.back()}
+                     onClick={() => window.history.back()}
                      className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
                   >
                      <ArrowLeft className="h-4 w-4" />
@@ -318,7 +318,7 @@ export default function LocalListDetailPage() {
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
             watchlist={watchlist}
-            onSuccess={() => router.push("/local/lists")}
+            onSuccess={() => navigate({ to: "/local/lists" as never })}
             offline={true}
          />
       </div>

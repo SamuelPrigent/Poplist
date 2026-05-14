@@ -18,9 +18,10 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { Film, Plus } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { useAuth } from '@/context/auth-context';
@@ -37,7 +38,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { watchlists as watchlistsApi, type Watchlist } from '@/api';
-import { useMyWatchlists } from '@/hooks/swr';
+import { watchlistsQueries } from '@/api/queries';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { useLanguageStore } from '@/store/language';
 import { useListFiltersStore } from '@/store/listFilters';
@@ -110,10 +111,13 @@ function SortableWatchlistCard({
 function ListsContentInner() {
   const { content } = useLanguageStore();
   const { user, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { showOwned, showSaved, toggleOwned, toggleSaved } = useListFiltersStore();
 
-  const { data, isLoading: loading, mutate } = useMyWatchlists();
+  const queryClient = useQueryClient();
+  const mineKey = watchlistsQueries.mine().queryKey;
+
+  const { data, isPending: loading, refetch } = useQuery(watchlistsQueries.mine());
   const watchlists = data?.watchlists ?? [];
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -126,20 +130,20 @@ function ListsContentInner() {
   // Redirect to local lists if not authenticated (wait for auth to load first)
   useEffect(() => {
     if (!authLoading && user === null) {
-      router.push('/local/lists');
+      navigate({ to: '/local/lists' as never });
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, navigate]);
 
-  // Revalidate SWR cache when page is restored from bfcache (browser back)
+  // Refetch when page is restored from bfcache (browser back)
   useEffect(() => {
     const handlePageShow = (e: PageTransitionEvent) => {
       if (e.persisted) {
-        mutate();
+        refetch();
       }
     };
     window.addEventListener('pageshow', handlePageShow);
     return () => window.removeEventListener('pageshow', handlePageShow);
-  }, [mutate]);
+  }, [refetch]);
 
   // Setup drag sensors
   const sensors = useSensors(
@@ -167,28 +171,30 @@ function ListsContentInner() {
       const newIndex = watchlists.findIndex(w => w.id === over.id);
 
       const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
+      const previous = queryClient.getQueryData(mineKey);
 
-      // Optimistic update
-      mutate({ watchlists: newWatchlists }, { revalidate: false });
+      // Optimistic update du cache TQ
+      queryClient.setQueryData(mineKey, { watchlists: newWatchlists });
 
-      // Persist to backend
       try {
         const allWatchlistIds = newWatchlists.map(w => w.id);
         await watchlistsApi.reorderWatchlists(allWatchlistIds);
       } catch (error) {
         console.error('Failed to reorder watchlists:', error);
-        // Revert on error
-        mutate();
+        // Rollback
+        if (previous) queryClient.setQueryData(mineKey, previous);
+        queryClient.invalidateQueries({ queryKey: mineKey });
       }
     }
   };
 
   const handleCreateSuccess = async (newWatchlist?: Watchlist) => {
     if (newWatchlist) {
-      // Optimistic update + revalidate in background
-      mutate({ watchlists: [newWatchlist, ...watchlists] }, { revalidate: true });
+      // Optimistic prepend + refetch en background
+      queryClient.setQueryData(mineKey, { watchlists: [newWatchlist, ...watchlists] });
+      queryClient.invalidateQueries({ queryKey: mineKey });
     } else {
-      mutate();
+      queryClient.invalidateQueries({ queryKey: mineKey });
     }
   };
 
@@ -266,13 +272,13 @@ function ListsContentInner() {
           <EditListDialog
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
-            onSuccess={() => mutate()}
+            onSuccess={() => queryClient.invalidateQueries({ queryKey: mineKey })}
             watchlist={selectedWatchlist}
           />
           <DeleteListDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
-            onSuccess={() => mutate()}
+            onSuccess={() => queryClient.invalidateQueries({ queryKey: mineKey })}
             watchlist={selectedWatchlist}
           />
         </>
@@ -305,7 +311,7 @@ function ListsContentInner() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id="dnd-account-lists" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={filteredWatchlists.map(w => w.id)} strategy={rectSortingStrategy}>
             {/* Grid */}
             <div className="grid gap-[4px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

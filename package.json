@@ -10,10 +10,24 @@
   "scripts": {
     "dev": "concurrently -n \"hono,next\" -c \"green,blue\" \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
     "build": "turbo build",
-    "lint": "turbo lint"
+    "lint": "turbo lint",
+    "test": "npm run test:back && npm run test:e2e",
+    "test:back": "npm --workspace=backend run test",
+    "test:back:unit": "npm --workspace=backend run test:unit",
+    "test:back:integration": "npm --workspace=backend run test:integration",
+    "test:back:watch": "npm --workspace=backend run test:watch",
+    "test:back:server": "npm --workspace=backend run test:server",
+    "test:front:server": "cross-env VITE_BACKEND_URL=http://localhost:3457 npm --workspace=frontend run dev -- --port 3002 --strictPort",
+    "test:e2e": "concurrently -n \"hono-test,front-test,e2e\" -c \"green,blue,yellow\" --kill-others --kill-signal SIGKILL --success first \"npm run test:back:server\" \"npm run test:front:server\" \"npm run test:e2e:wait\"",
+    "test:e2e:wait": "wait-on http://localhost:3457/health tcp:3002 && npm --workspace=frontend run test:e2e",
+    "test:e2e:headed": "concurrently -n \"hono-test,front-test,e2e\" -c \"green,blue,yellow\" --kill-others --kill-signal SIGKILL --success first \"npm run test:back:server\" \"npm run test:front:server\" \"wait-on http://localhost:3457/health tcp:3002 && npm --workspace=frontend run test:e2e:headed\"",
+    "test:e2e:ui": "concurrently -n \"hono-test,front-test\" -c \"green,blue\" --kill-others --kill-signal SIGKILL \"npm run test:back:server\" \"npm run test:front:server\" \"wait-on http://localhost:3457/health tcp:3002 && npm --workspace=frontend run test:e2e:ui\"",
+    "db-push-test": "npm --workspace=backend run db-push-test"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "turbo": "^2"
+    "cross-env": "^10.1.0",
+    "turbo": "^2",
+    "wait-on": "^9.0.10"
   }
 }

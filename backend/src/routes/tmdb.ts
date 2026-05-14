@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import * as TmdbController from '../controllers/tmdb.js';
 import {
@@ -12,7 +13,15 @@ import {
 } from '../validators/tmdb.js';
 import type { AppEnv } from '../app.js';
 
+// TMDB data changes slowly: cache aggressively at CDN/browser level.
+// 10 min fresh, 1 h shared, 24 h stale-while-revalidate.
+const tmdbCacheHeaders = async (c: Context<AppEnv>, next: () => Promise<void>) => {
+  await next();
+  c.header('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
+};
+
 const tmdbRoutes = new Hono<AppEnv>()
+  .use('*', tmdbCacheHeaders)
   .get('/trending/:timeWindow', zValidator('query', trendingQuerySchema), c =>
     TmdbController.getTrending(c)
   )

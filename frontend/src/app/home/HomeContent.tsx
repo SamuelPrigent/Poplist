@@ -1,13 +1,15 @@
 'use client';
 
 // import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import {
   Film,
   // Plus
 } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from '@/components/ui/Link';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { ListCardSmall } from '@/components/List/ListCardSmall';
@@ -16,8 +18,8 @@ import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
-import { createPlaceholderItem, watchlists as watchlistsApi, tmdb as tmdbApi, type Watchlist, type WatchlistItem } from '@/api';
-// import { getTMDBImageUrl } from '@/lib/utils';
+import { createPlaceholderItem, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
+import { tmdbQueries, watchlistsQueries } from '@/api/queries';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
@@ -63,22 +65,23 @@ function HomeContentInner() {
   const { content, language } = useLanguageStore();
   const { user, isAuthenticated } = useAuth();
   const tmdbLanguage = getTMDBLanguage(language);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const mounted = useIsMounted();
-  const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
-  const [publicWatchlists, setPublicWatchlists] = useState<Watchlist[]>([]);
-  const [recommendations, setRecommendations] = useState<DiscoverItem[]>([]);
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [trending, setTrending] = useState<DiscoverItem[]>([]);
+
+  // Page TMDB stable durant la session (sinon chaque re-render = nouveau cache).
+  const [randomPage] = useState(() => Math.floor(Math.random() * 5) + 1);
+
+  // Local watchlists pour les utilisateurs non-auth (localStorage)
+  const [localWatchlists, setLocalWatchlists] = useState<Watchlist[]>([]);
+
   const [selectedTrendingItem, setSelectedTrendingItem] = useState<{
     tmdbId: string;
     type: 'movie' | 'tv';
   } | null>(null);
   const [selectedTrendingIndex, setSelectedTrendingIndex] = useState<number>(-1);
   const [trendingModalOpen, setTrendingModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  //   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     tmdbId: string;
@@ -86,159 +89,126 @@ function HomeContentInner() {
   } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
-  const fetchPublicWatchlists = useCallback(async () => {
-    try {
-      const publicData = await watchlistsApi.getPublicFeatured(50);
-      const sorted = (publicData.watchlists || []).sort(
-        (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
-      );
-      setPublicWatchlists(sorted.slice(0, 12));
-    } catch (error) {
-      console.error('Failed to fetch public watchlists:', error);
-    }
-  }, []);
-
-  const fetchCreators = useCallback(async () => {
-    try {
-      // Get public watchlists with higher limit to aggregate creators
-      const publicData = await watchlistsApi.getPublicFeatured(100);
-      const allPublicWatchlists = publicData.watchlists || [];
-
-      // Aggregate by owner
-      const creatorsMap = new Map<string, Creator>();
-
-      for (const watchlist of allPublicWatchlists) {
-        if (watchlist.owner) {
-          const ownerId = watchlist.owner.id;
-          const existing = creatorsMap.get(ownerId);
-
-          if (existing) {
-            existing.listCount += 1;
-          } else {
-            creatorsMap.set(ownerId, {
-              id: ownerId,
-              username: watchlist.owner.username || 'Utilisateur',
-              avatarUrl: watchlist.owner.avatarUrl ?? undefined,
-              listCount: 1,
-            });
-          }
-        }
-      }
-
-      // Sort by list count (descending) and take top 12 (2 rows × 6 cols)
-      const sortedCreators = Array.from(creatorsMap.values())
-        .sort((a, b) => b.listCount - a.listCount)
-        .slice(0, 12);
-
-      setCreators(sortedCreators);
-    } catch (error) {
-      console.error('Failed to fetch creators:', error);
-    }
-  }, []);
-
   useScrollToTopOnMount();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch public watchlists and creators in parallel
-        await Promise.allSettled([fetchPublicWatchlists(), fetchCreators()]);
+  // Featured publics : on fetch 100 d'un coup (sert pour la grille + les creators),
+  // évite 2 fetches identiques côté backend.
+  const publicQuery = useQuery(watchlistsQueries.publicFeatured(100));
+  const allPublic = useMemo(() => publicQuery.data?.watchlists ?? [], [publicQuery.data]);
 
-        let userWatchlistsData: Watchlist[] = [];
-        if (user) {
-          const userData = await watchlistsApi.getMine();
-          userWatchlistsData = userData.watchlists || [];
-          setUserWatchlists(userWatchlistsData);
-        } else {
-          userWatchlistsData = getLocalWatchlistsWithOwnership();
-          setUserWatchlists(userWatchlistsData);
-        }
+  const publicWatchlists = useMemo(() => {
+    return [...allPublic]
+      .sort((a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0))
+      .slice(0, 12);
+  }, [allPublic]);
 
-        // Use Discover API instead of Trending for better quality results
-        const tmdbLanguage = getTMDBLanguage(language);
-        const randomPage = Math.floor(Math.random() * 5) + 1;
-
-        const [movieData, tvData] = await Promise.all([
-          tmdbApi.discover('movie', {
-            page: randomPage,
-            language: tmdbLanguage,
-            voteCountGte: 100,
-            voteAverageGte: 5.0,
-            releaseDateGte: '2015-01-01',
-          }),
-          tmdbApi.discover('tv', {
-            page: randomPage,
-            language: tmdbLanguage,
-            voteCountGte: 100,
-            voteAverageGte: 5.0,
-            releaseDateGte: '2015-01-01',
-          }),
-        ]);
-
-        // Combine and alternate between movies and TV shows
-        const movieResults = (movieData.results || []).map(item => ({
-          ...item,
-          media_type: 'movie' as const,
-        }));
-        const tvResults = (tvData.results || []).map(item => ({
-          ...item,
-          media_type: 'tv' as const,
-        }));
-
-        const combined: DiscoverItem[] = [];
-        const maxLen = Math.max(movieResults.length, tvResults.length);
-        for (let i = 0; i < maxLen; i++) {
-          if (movieResults[i]) combined.push(movieResults[i]);
-          if (tvResults[i]) combined.push(tvResults[i]);
-        }
-
-        // Filter and select random 5 items
-        const filtered = combined.filter(
-          item => item.poster_path && item.vote_average && item.vote_average >= 5
-        );
-
-        const maxOffset = Math.max(0, filtered.length - 5);
-        const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
-        const selectedRecommendations = filtered.slice(randomOffset, randomOffset + 5);
-        setRecommendations(selectedRecommendations);
-
-        // Fetch category counts — itère sur GENRE_CATEGORIES (source of truth)
-        // pour rester en phase avec ce qui est rendu plus bas (slice 0..6)
-        const counts: Record<string, number> = {};
-        await Promise.all(
-          GENRE_CATEGORIES.map(async genreId => {
-            try {
-              const data = await watchlistsApi.getByGenre(genreId);
-              counts[genreId] = data.watchlists?.length || 0;
-            } catch (error) {
-              console.error(`Failed to fetch count for ${genreId}:`, error);
-              counts[genreId] = 0;
-            }
-          })
-        );
-        setCategoryCounts(counts);
-
-        // Fetch trending
-        try {
-          const trendingData = await tmdbApi.getTrending('day');
-          setTrending(
-            (trendingData.results || [])
-              .filter((r: DiscoverItem) => r.poster_path)
-              .slice(0, 6)
-              .map((r: DiscoverItem) => ({ ...r, media_type: r.media_type || 'movie' }))
-          );
-        } catch {
-          // Non-blocking
-        }
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      } finally {
-        setLoading(false);
+  const creators = useMemo<Creator[]>(() => {
+    const creatorsMap = new Map<string, Creator>();
+    for (const wl of allPublic) {
+      if (!wl.owner) continue;
+      const ownerId = wl.owner.id;
+      const existing = creatorsMap.get(ownerId);
+      if (existing) {
+        existing.listCount += 1;
+      } else {
+        creatorsMap.set(ownerId, {
+          id: ownerId,
+          username: wl.owner.username || 'Utilisateur',
+          avatarUrl: wl.owner.avatarUrl ?? undefined,
+          listCount: 1,
+        });
       }
-    };
+    }
+    return Array.from(creatorsMap.values())
+      .sort((a, b) => b.listCount - a.listCount)
+      .slice(0, 12);
+  }, [allPublic]);
 
-    fetchData();
-  }, [user, fetchPublicWatchlists, fetchCreators, language]);
+  // Mes watchlists côté auth (TQ) ou localStorage côté non-auth
+  const myWatchlistsQuery = useQuery({
+    ...watchlistsQueries.mine(),
+    enabled: !!user,
+  });
+  useEffect(() => {
+    if (!user) {
+      setLocalWatchlists(getLocalWatchlistsWithOwnership());
+    }
+  }, [user]);
+  const userWatchlists: Watchlist[] = user
+    ? myWatchlistsQuery.data?.watchlists ?? []
+    : localWatchlists;
+
+  // Discover movies + TV en parallèle (1h staleTime, partagé inter-pages)
+  const movieDiscoverQuery = useQuery(
+    tmdbQueries.discover('movie', {
+      page: randomPage,
+      language: tmdbLanguage,
+      voteCountGte: 100,
+      voteAverageGte: 5.0,
+      releaseDateGte: '2015-01-01',
+    })
+  );
+  const tvDiscoverQuery = useQuery(
+    tmdbQueries.discover('tv', {
+      page: randomPage,
+      language: tmdbLanguage,
+      voteCountGte: 100,
+      voteAverageGte: 5.0,
+      releaseDateGte: '2015-01-01',
+    })
+  );
+
+  const recommendations = useMemo<DiscoverItem[]>(() => {
+    const movieResults = (movieDiscoverQuery.data?.results ?? []).map(item => ({
+      ...item,
+      media_type: 'movie' as const,
+    }));
+    const tvResults = (tvDiscoverQuery.data?.results ?? []).map(item => ({
+      ...item,
+      media_type: 'tv' as const,
+    }));
+    const combined: DiscoverItem[] = [];
+    const maxLen = Math.max(movieResults.length, tvResults.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (movieResults[i]) combined.push(movieResults[i]);
+      if (tvResults[i]) combined.push(tvResults[i]);
+    }
+    return combined.filter(
+      item => item.poster_path && item.vote_average && item.vote_average >= 5
+    );
+  }, [movieDiscoverQuery.data, tvDiscoverQuery.data]);
+
+  // Comptage par catégorie : N queries en parallèle via useQueries
+  const categoryCountQueries = useQueries({
+    queries: GENRE_CATEGORIES.map(genreId => ({
+      ...watchlistsQueries.byGenre(genreId),
+      select: (data: { watchlists: Watchlist[] }) => data.watchlists?.length ?? 0,
+    })),
+  });
+  const categoryCounts = useMemo<Record<string, number>>(() => {
+    return GENRE_CATEGORIES.reduce(
+      (acc, genreId, i) => {
+        acc[genreId] = categoryCountQueries[i]?.data ?? 0;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  }, [categoryCountQueries]);
+
+  // Trending (cache 1h, partagé avec Landing)
+  const trendingQuery = useQuery(tmdbQueries.trending('day'));
+  const trending = useMemo<DiscoverItem[]>(() => {
+    return ((trendingQuery.data?.results ?? []) as DiscoverItem[])
+      .filter(r => r.poster_path)
+      .slice(0, 6)
+      .map(r => ({ ...r, media_type: r.media_type || 'movie' }));
+  }, [trendingQuery.data]);
+
+  const loading =
+    publicQuery.isPending ||
+    movieDiscoverQuery.isPending ||
+    tvDiscoverQuery.isPending ||
+    (!!user && myWatchlistsQuery.isPending);
 
   const handleOpenTrending = (item: DiscoverItem, index: number) => {
     setSelectedTrendingItem({
@@ -247,6 +217,56 @@ function HomeContentInner() {
     });
     setSelectedTrendingIndex(index);
     setTrendingModalOpen(true);
+  };
+
+  const mineKey = watchlistsQueries.mine().queryKey;
+
+  const optimisticAdd = (watchlistId: string, item: WatchlistItem) => {
+    if (user) {
+      queryClient.setQueryData(mineKey, (old: { watchlists: Watchlist[] } | undefined) => {
+        if (!old) return old;
+        return {
+          watchlists: old.watchlists.map(wl =>
+            wl.id === watchlistId && !wl.items.some(it => it.tmdbId === item.tmdbId)
+              ? { ...wl, items: [...wl.items, item] }
+              : wl
+          ),
+        };
+      });
+    } else {
+      setLocalWatchlists(prev =>
+        prev.map(wl =>
+          wl.id === watchlistId && !wl.items.some(it => it.tmdbId === item.tmdbId)
+            ? { ...wl, items: [...wl.items, item] }
+            : wl
+        )
+      );
+    }
+  };
+
+  const optimisticRemove = (watchlistId: string, tmdbId: number): WatchlistItem | undefined => {
+    let removed: WatchlistItem | undefined;
+    if (user) {
+      queryClient.setQueryData(mineKey, (old: { watchlists: Watchlist[] } | undefined) => {
+        if (!old) return old;
+        return {
+          watchlists: old.watchlists.map(wl => {
+            if (wl.id !== watchlistId) return wl;
+            removed = wl.items.find(it => it.tmdbId === tmdbId);
+            return { ...wl, items: wl.items.filter(it => it.tmdbId !== tmdbId) };
+          }),
+        };
+      });
+    } else {
+      setLocalWatchlists(prev =>
+        prev.map(wl => {
+          if (wl.id !== watchlistId) return wl;
+          removed = wl.items.find(it => it.tmdbId === tmdbId);
+          return { ...wl, items: wl.items.filter(it => it.tmdbId !== tmdbId) };
+        })
+      );
+    }
+    return removed;
   };
 
   const handleAddToWatchlist = async (
@@ -261,13 +281,7 @@ function HomeContentInner() {
       posterPath: null,
       mediaType,
     });
-    setUserWatchlists(prev =>
-      prev.map(wl =>
-        wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
-          ? { ...wl, items: [...wl.items, placeholder] }
-          : wl
-      )
-    );
+    optimisticAdd(watchlistId, placeholder);
     try {
       await watchlistsApi.addItem(watchlistId, {
         tmdbId,
@@ -275,36 +289,22 @@ function HomeContentInner() {
         language: tmdbLanguage,
       });
       toast.success('Ajouté à la liste');
+      queryClient.invalidateQueries({ queryKey: mineKey });
     } catch {
-      setUserWatchlists(prev =>
-        prev.map(wl =>
-          wl.id === watchlistId ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) } : wl
-        )
-      );
+      optimisticRemove(watchlistId, idNum);
       toast.error("Erreur lors de l'ajout");
     }
   };
 
   const handleRemoveFromWatchlist = async (watchlistId: string, tmdbId: string) => {
     const idNum = Number(tmdbId);
-    let removed: WatchlistItem | undefined;
-    setUserWatchlists(prev =>
-      prev.map(wl => {
-        if (wl.id !== watchlistId) return wl;
-        removed = wl.items.find(it => it.tmdbId === idNum);
-        return { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) };
-      })
-    );
+    const removed = optimisticRemove(watchlistId, idNum);
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
       toast.success('Retiré de la liste');
+      queryClient.invalidateQueries({ queryKey: mineKey });
     } catch {
-      if (removed) {
-        const restored = removed;
-        setUserWatchlists(prev =>
-          prev.map(wl => (wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl))
-        );
-      }
+      if (removed) optimisticAdd(watchlistId, removed);
       toast.error('Erreur lors du retrait');
     }
   };
@@ -390,7 +390,7 @@ function HomeContentInner() {
               <p className="text-muted-foreground mt-1 text-sm">{content.home.library.subtitle}</p>
             </div>
             <Link
-              href={listsUrl}
+              to={listsUrl}
               className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
             >
               {content.home.library.seeAll}
@@ -410,9 +410,11 @@ function HomeContentInner() {
                   key={watchlist.id}
                   watchlist={watchlist}
                   onClick={() => {
-                    window.location.href = user
-                      ? `/lists/${watchlist.id}`
-                      : `/local/list/${watchlist.id}`;
+                    navigate({
+                      to: (user
+                        ? `/lists/${watchlist.id}`
+                        : `/local/list/${watchlist.id}`) as never,
+                    });
                   }}
                 />
               ))}
@@ -429,7 +431,7 @@ function HomeContentInner() {
             <p className="text-muted-foreground mt-1 text-sm">{content.home.categories.subtitle}</p>
           </div>
           <Link
-            href="/categories"
+            to="/categories"
             className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
           >
             {content.home.categories.seeMore}
@@ -499,7 +501,7 @@ function HomeContentInner() {
             </p>
           </div>
           <Link
-            href="/lists"
+            to="/lists"
             className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
           >
             {content.home.popularWatchlists.seeMore}
@@ -556,7 +558,7 @@ function HomeContentInner() {
             <p className="text-muted-foreground mt-1 text-sm">{content.home.creators.subtitle}</p>
           </div>
           <Link
-            href="/users"
+            to="/users"
             className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
           >
             {content.home.creators.seeMore}
@@ -592,7 +594,7 @@ function HomeContentInner() {
               <p className="text-muted-foreground mt-1 text-sm">{content.home.trending.subtitle}</p>
             </div>
             <Link
-              href="/explore"
+              to="/explore"
               className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
             >
               {content.home.creators.seeMore}

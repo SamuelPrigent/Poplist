@@ -2,7 +2,7 @@
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Film } from 'lucide-react';
-import Image from 'next/image';
+import { Img as Image } from '@/components/ui/Img';
 import type { ReactNode } from 'react';
 import { PosterGrid } from '@/components/List/PosterGrid';
 import type { Watchlist } from '@/api';

@@ -1,124 +1,118 @@
-"use client";
+import { useLocation, useNavigate } from '@tanstack/react-router';
+import { useEffect, useRef } from 'react';
+import { useAuth } from '@/context/auth-context';
 
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { useAuth } from "@/context/auth-context";
+// NOTE — Les `as never` sur les paths de `navigate({ to: ... })` sont temporaires.
+// TanStack Router type strictement les paths via le routeTree généré ; tant que
+// les routes de la migration ne sont pas toutes posées, on contourne le check.
+// À retirer une fois `/home`, `/account/lists`, `/local/lists` migrées.
 
 /**
- * Hook pour gérer les redirections lors des changements d'état auth
+ * Hook pour gérer les redirections lors des changements d'état auth.
  *
- * Cas d'usage: l'utilisateur est sur une page protégée et se déconnecte
- * Le middleware ne peut pas intercepter ce cas car la page est déjà chargée
+ * Cas d'usage: l'utilisateur est sur une page protégée et se déconnecte.
+ * Le `beforeLoad` des routes ne peut pas intercepter ce cas car la page est déjà chargée.
  *
- * Ce hook surveille les changements d'état et redirige en conséquence
+ * Ce hook surveille les changements d'état et redirige en conséquence.
  */
 export function useAuthRedirect() {
-	const { isAuthenticated, isLoading } = useAuth();
-	const router = useRouter();
-	const pathname = usePathname();
-	const wasAuthenticated = useRef<boolean | null>(null);
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const pathname = useLocation({ select: (l) => l.pathname });
+  const wasAuthenticated = useRef<boolean | null>(null);
 
-	useEffect(() => {
-		// Attendre que le chargement initial soit terminé
-		if (isLoading) return;
+  useEffect(() => {
+    if (isLoading) return;
 
-		// Premier rendu: stocker l'état initial
-		if (wasAuthenticated.current === null) {
-			wasAuthenticated.current = isAuthenticated;
-			return;
-		}
+    // Premier rendu: stocker l'état initial
+    if (wasAuthenticated.current === null) {
+      wasAuthenticated.current = isAuthenticated;
+      return;
+    }
 
-		// Détecter un logout (était auth, ne l'est plus)
-		if (wasAuthenticated.current && !isAuthenticated) {
-			handleLogoutRedirect(pathname, router);
-		}
+    // Logout (était auth, ne l'est plus)
+    if (wasAuthenticated.current && !isAuthenticated) {
+      handleLogoutRedirect(pathname, navigate);
+    }
 
-		// Détecter un login (n'était pas auth, l'est maintenant)
-		if (!wasAuthenticated.current && isAuthenticated) {
-			handleLoginRedirect(pathname, router);
-		}
+    // Login (n'était pas auth, l'est maintenant)
+    if (!wasAuthenticated.current && isAuthenticated) {
+      handleLoginRedirect(pathname, navigate);
+    }
 
-		// Mettre à jour l'état précédent
-		wasAuthenticated.current = isAuthenticated;
-	}, [isAuthenticated, isLoading, pathname, router]);
+    wasAuthenticated.current = isAuthenticated;
+  }, [isAuthenticated, isLoading, pathname, navigate]);
 }
 
-function handleLogoutRedirect(
-	pathname: string,
-	router: ReturnType<typeof useRouter>,
-) {
-	// Sur /account/lists → aller vers /local/lists
-	if (pathname === "/account/lists") {
-		router.push("/local/lists");
-		return;
-	}
+type Navigate = ReturnType<typeof useNavigate>;
 
-	// Sur /lists/[id] → aller vers /home
-	// (idéalement on vérifierait si la liste est publique, mais pour simplifier)
-	if (pathname.startsWith("/lists/")) {
-		router.push("/home");
-		return;
-	}
+function handleLogoutRedirect(pathname: string, navigate: Navigate) {
+  // Sur /account/lists → /local/lists
+  if (pathname === '/account/lists') {
+    navigate({ to: '/local/lists' as never });
+    return;
+  }
 
-	// Sur /account (settings) → aller vers /home
-	if (pathname.startsWith("/account")) {
-		router.push("/home");
-		return;
-	}
+  // Sur /lists/[id] → /home
+  if (pathname.startsWith('/lists/')) {
+    navigate({ to: '/home' as never });
+    return;
+  }
 
-	// Autres pages protégées → home
-	router.push("/home");
+  // Sur /account (settings) → /home
+  if (pathname.startsWith('/account')) {
+    navigate({ to: '/home' as never });
+    return;
+  }
+
+  navigate({ to: '/home' as never });
 }
 
-function handleLoginRedirect(
-	pathname: string,
-	router: ReturnType<typeof useRouter>,
-) {
-	// Sur /local/lists → aller vers /account/lists
-	if (pathname === "/local/lists") {
-		router.push("/account/lists");
-		return;
-	}
+function handleLoginRedirect(pathname: string, navigate: Navigate) {
+  // Sur /local/lists → /account/lists
+  if (pathname === '/local/lists') {
+    navigate({ to: '/account/lists' as never });
+    return;
+  }
 
-	// Sur /local/list/[id] → rester (les listes locales existent toujours)
-	// L'utilisateur peut choisir de les migrer
+  // Sur /local/list/[id] → rester (les listes locales existent toujours)
 }
 
 /**
- * Hook pour protéger une page - affiche loading pendant la vérification
- * et redirige si non autorisé
+ * Hook pour protéger une page - redirige si non authentifié.
+ * Préférer le `beforeLoad` de la route pour intercepter avant le render,
+ * ce hook est un filet de sécurité côté composant.
  */
 export function useRequireAuth() {
-	const { isAuthenticated, isLoading } = useAuth();
-	const router = useRouter();
-	const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const pathname = useLocation({ select: (l) => l.pathname });
 
-	useEffect(() => {
-		if (!isLoading && !isAuthenticated) {
-			// Redirection selon la page actuelle
-			if (pathname.startsWith("/lists/")) {
-				router.replace("/local/lists");
-			} else {
-				router.replace("/home");
-			}
-		}
-	}, [isAuthenticated, isLoading, pathname, router]);
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      if (pathname.startsWith('/lists/')) {
+        navigate({ to: '/local/lists' as never, replace: true });
+      } else {
+        navigate({ to: '/home' as never, replace: true });
+      }
+    }
+  }, [isAuthenticated, isLoading, pathname, navigate]);
 
-	return { isAuthenticated, isLoading };
+  return { isAuthenticated, isLoading };
 }
 
 /**
- * Hook pour les pages réservées aux non-authentifiés
+ * Hook pour les pages réservées aux non-authentifiés.
  */
 export function useRequireGuest() {
-	const { isAuthenticated, isLoading } = useAuth();
-	const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
 
-	useEffect(() => {
-		if (!isLoading && isAuthenticated) {
-			router.replace("/account/lists");
-		}
-	}, [isAuthenticated, isLoading, router]);
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate({ to: '/account/lists' as never, replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
-	return { isAuthenticated, isLoading };
+  return { isAuthenticated, isLoading };
 }

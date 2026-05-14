@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Share2, Users } from 'lucide-react';
+import { Plus, Share, Users } from 'lucide-react';
 
 // Schéma collaborateurs - popover compact (largeur réduite)
 function CollaboratorsSchema() {
@@ -71,7 +71,7 @@ function ShareSchema() {
           </div>
           {/* Share button - highlighted */}
           <div className="h-7 w-7 rounded-lg bg-emerald-500/20 flex items-center justify-center ring-2 ring-emerald-500/50">
-            <Share2 className="h-3.5 w-3.5 text-emerald-400" />
+            <Share className="h-3.5 w-3.5 text-emerald-400" />
           </div>
           {/* Menu button */}
           <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center">
@@ -104,7 +104,7 @@ export function FeatureSectionAlternating() {
       schema: <CollaboratorsSchema />,
     },
     {
-      icon: Share2,
+      icon: Share,
       color: 'emerald',
       title: 'Partagez facilement',
       description: 'Un',
@@ -190,7 +190,7 @@ export function FeatureSectionCompact() {
       {/* Partage - tout vertical */}
       <div className="flex flex-col items-center text-center">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20">
-          <Share2 className="h-5 w-5 text-emerald-400" />
+          <Share className="h-5 w-5 text-emerald-400" />
         </div>
         <h3 className="mt-3 text-lg font-bold text-white">Partagez facilement</h3>
         <p className="mt-1.5 text-sm text-gray-400">

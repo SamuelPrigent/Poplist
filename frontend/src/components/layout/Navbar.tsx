@@ -1,9 +1,9 @@
 'use client';
 
 import { Bookmark, LogOut, User as UserIcon } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Img as Image } from '@/components/ui/Img';
+import { Link } from '@/components/ui/Link';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
@@ -14,8 +14,8 @@ import { useLanguageStore } from '@/store/language';
 export function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const { content } = useLanguageStore();
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const pathname = useLocation({ select: (l) => l.pathname });
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   // Évite le mismatch SSR/client - on render l'UI auth seulement après mount
@@ -36,9 +36,9 @@ export function Navbar() {
 
     // Smart redirect based on current route
     if (pathname === '/account/lists') {
-      router.push('/local/lists');
+      navigate({ to: '/local/lists' as never });
     } else if (pathname.startsWith('/account/')) {
-      router.push('/home');
+      navigate({ to: '/home' as never });
     }
     // For other pages, no redirect needed (stays on current page)
   };
@@ -54,12 +54,12 @@ export function Navbar() {
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <Image src="/play.png" width={16} height={16} alt="" className="h-4 w-4" />
-              <Link href="/" className="rounded text-xl font-bold text-white">
+              <Link to="/" className="rounded text-xl font-bold text-white">
                 {content.header.appName}
               </Link>
             </div>
             <Link
-              href="/home"
+              to="/home"
               className={`rounded p-1 text-sm font-medium transition-colors hover:text-white ${
                 isHomeActive ? 'text-white' : 'text-muted-foreground'
               }`}
@@ -67,7 +67,7 @@ export function Navbar() {
               {content.header.home}
             </Link>
             <Link
-              href="/explore"
+              to="/explore"
               className={`rounded p-1 text-sm font-medium transition-colors hover:text-white ${
                 isExploreActive ? 'text-white' : 'text-muted-foreground'
               }`}
@@ -81,7 +81,7 @@ export function Navbar() {
             {mounted && (
               <>
                 <Link
-                  href={isAuthenticated ? '/account/lists' : '/local/lists'}
+                  to={isAuthenticated ? '/account/lists' : '/local/lists'}
                   aria-label={content.header.myLists}
                   className={`hover:bg-accent inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md px-3.5 text-sm font-medium whitespace-nowrap transition-colors hover:text-white focus-visible:border-white focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none ${
                     isMyListsActive ? 'text-white' : 'text-foreground/90'
@@ -97,7 +97,7 @@ export function Navbar() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => router.push('/account')}
+                      onClick={() => navigate({ to: '/account' as never })}
                       className="bg-muted/50 hover:bg-muted flex cursor-pointer items-center gap-2 rounded-full px-4 py-1.5 transition-colors"
                     >
                       <div className="bg-muted flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">

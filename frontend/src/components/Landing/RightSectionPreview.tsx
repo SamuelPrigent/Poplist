@@ -1,7 +1,7 @@
 'use client';
 
 import { Film, Plus } from 'lucide-react';
-import Image from 'next/image';
+import { Img as Image } from '@/components/ui/Img';
 
 // URLs TMDB pour films connus (w154 = suffisant pour l'affichage ~80px)
 const TMDB_BASE = 'https://image.tmdb.org/t/p/w154';

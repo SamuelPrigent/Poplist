@@ -9,7 +9,7 @@ import Animated, {
   Extrapolation,
   type SharedValue,
 } from 'react-native-reanimated';
-import { User, UserPlus, Users, Share2, EllipsisVertical, Copy, LogOut } from 'lucide-react-native';
+import { User, UserPlus, Users, Share, EllipsisVertical, Copy, LogOut } from 'lucide-react-native';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
 import { useLanguageStore } from '../store/language';
 import type { Watchlist, Collaborator } from '../types';
@@ -218,7 +218,7 @@ export default function ListHeader({
               )}
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Share2 size={26} color={colors.foreground} strokeWidth={1.8} />
+              <Share size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onMenu}>
               <EllipsisVertical size={26} color={colors.foreground} strokeWidth={1.8} />
@@ -231,7 +231,7 @@ export default function ListHeader({
               <Copy size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Share2 size={26} color={colors.foreground} strokeWidth={1.8} />
+              <Share size={26} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             {isCollaborator && (
               <Pressable style={styles.actionBtn} onPress={onLeave}>

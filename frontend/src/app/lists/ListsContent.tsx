@@ -1,15 +1,16 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { Film } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { watchlists as watchlistsApi, type Watchlist } from '@/api';
+import { watchlistsQueries } from '@/api/queries';
 import { useLanguageStore } from '@/store/language';
 import { useListPaginationStore } from '@/store/listPagination';
 
@@ -30,11 +31,7 @@ const ListCardSkeleton = () => (
 function CommunityListsPageInner() {
   const { content } = useLanguageStore();
   const { user } = useAuth();
-  const router = useRouter();
-
-  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-  const [userWatchlists, setUserWatchlists] = useState<Watchlist[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Pagination — préférence persistée globalement (50, 100, ou 'all')
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,39 +48,20 @@ function CommunityListsPageInner() {
   }, [currentPage]);
 
   const handleBackClick = () => {
-    router.push('/home');
+    navigate({ to: '/home' as never });
   };
 
-  const fetchWatchlists = useCallback(async () => {
-    try {
-      // Fetch all public watchlists with higher limit for community page
-      const data = await watchlistsApi.getPublicFeatured(1000);
-      setWatchlists(data.watchlists || []);
-    } catch (error) {
-      console.error('Failed to fetch community watchlists:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Featured public (cache 5 min)
+  const publicQuery = useQuery(watchlistsQueries.publicFeatured(1000));
+  const watchlists = publicQuery.data?.watchlists ?? [];
+  const loading = publicQuery.isPending;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // Fetch public watchlists
-      await fetchWatchlists();
-
-      // Fetch user's watchlists if authenticated
-      if (user) {
-        try {
-          const userData = await watchlistsApi.getMine();
-          setUserWatchlists(userData.watchlists || []);
-        } catch (error) {
-          console.error('Failed to fetch user watchlists:', error);
-        }
-      }
-    };
-
-    fetchData();
-  }, [user, fetchWatchlists]);
+  // Mes watchlists si auth (mêmes queryKey que /home, /account/lists → cache partagé)
+  const myWatchlistsQuery = useQuery({
+    ...watchlistsQueries.mine(),
+    enabled: !!user,
+  });
+  const userWatchlists = myWatchlistsQuery.data?.watchlists ?? [];
 
   // Convertit la pref ('all' | number) en valeur exploitable, bornée au total.
   // Bornage au total → "Tout" highlighté quand pref >= total.

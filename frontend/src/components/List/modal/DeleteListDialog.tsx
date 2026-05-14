@@ -2,7 +2,7 @@
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AlertTriangle, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { watchlists as watchlistsApi } from "@/api";
@@ -25,7 +25,7 @@ export function DeleteListDialog({
 	offline = false,
 }: DeleteListDialogProps) {
 	const { content } = useLanguageStore();
-	const router = useRouter();
+	const navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +49,7 @@ export function DeleteListDialog({
 					onSuccess();
 				} else {
 					// If no onSuccess callback, navigate back to lists page
-					router.push("/local/lists");
+					navigate({ to: "/local/lists" as never });
 				}
 			} else {
 				// Online mode: delete via API
@@ -60,7 +60,7 @@ export function DeleteListDialog({
 					onSuccess();
 				} else {
 					// If no onSuccess callback, navigate back to lists page
-					router.push("/account/lists");
+					navigate({ to: "/account/lists" as never });
 				}
 			}
 		} catch (err) {

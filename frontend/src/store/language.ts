@@ -38,6 +38,12 @@ export const useLanguageStore = create<LanguageState>()(
 		}),
 		{
 			name: "language-storage",
+			// Évite l'hydratation auto à la première lecture côté client : sans ça
+			// le SSR rend en `fr` (default) et le client switche immédiatement
+			// vers la langue stockée (`en`, etc.), ce qui produit un mismatch
+			// d'hydratation sur tout le texte traduit. On rehydrate à la main
+			// dans `Providers` après le mount.
+			skipHydration: true,
 		},
 	),
 );

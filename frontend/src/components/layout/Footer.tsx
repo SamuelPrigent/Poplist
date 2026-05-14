@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/components/ui/Link';
 import { ChevronDown, Coffee } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/auth-context';
@@ -72,7 +72,7 @@ export function Footer() {
             <span className="hidden sm:inline">Buy me a coffee</span>
           </a>
           <Link
-            href="/privacy"
+            to="/privacy"
             className="text-muted-foreground hover:text-foreground text-sm transition-colors"
           >
             Privacy

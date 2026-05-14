@@ -1,9 +1,10 @@
 'use client';
 
-import { ChevronRight, Compass, Film, ListPlus, Share2, Star, UserPlus } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronRight, Compass, Film, ListPlus, Share, Star, UserPlus } from 'lucide-react';
+import { domAnimation, LazyMotion, m } from 'motion/react';
+import { Img as Image } from '@/components/ui/Img';
+import { Link } from '@/components/ui/Link';
 import { HeroSection, RightSectionPreviewV2 } from '@/components/Landing';
 import {
   Accordion,
@@ -11,9 +12,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { tmdbQueries } from '@/api/queries';
 import { useAuth } from '@/context/auth-context';
-import { tmdb as tmdbApi } from '@/api';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useLanguageStore } from '@/store/language';
 
@@ -33,26 +33,16 @@ const STAR_KEYS = ['star-1', 'star-2', 'star-3', 'star-4', 'star-5'];
 function LandingPageInner() {
   const { content } = useLanguageStore();
   const { isAuthenticated } = useAuth();
-  const [trending, setTrending] = useState<TrendingItem[]>([]);
   const mounted = useIsMounted();
 
   // Determine the lists URL based on authentication status
   // Utilise /local/lists par défaut côté SSR pour éviter hydration mismatch
   const watchlistsUrl = mounted && isAuthenticated ? '/account/lists' : '/local/lists';
 
-  // Fetch trending in background - doesn't block page reveal
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const trendingData = await tmdbApi.getTrending('day');
-        setTrending(trendingData.results || []);
-      } catch (error) {
-        console.error('Failed to fetch trending:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  // Trending TMDB en arrière-plan. Cache partagé avec /home (mêmes queryKey)
+  // → la nav landing → home → landing ne refetch pas. staleTime 1h.
+  const { data: trendingData } = useQuery(tmdbQueries.trending('day'));
+  const trending: TrendingItem[] = (trendingData?.results as TrendingItem[]) ?? [];
 
   return (
     <div className="bg-background min-h-screen overflow-hidden">
@@ -109,7 +99,7 @@ function LandingPageInner() {
               <div className="flex gap-4">
                 <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                    <Share2 strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
+                    <Share strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
                   </div>
                 </div>
                 <div>
@@ -228,7 +218,7 @@ function LandingPageInner() {
                 Étape 3
               </span>
               <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
-                <Share2 strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
+                <Share strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
               </div>
               <h3 className="relative mb-2 text-lg font-semibold text-white">
                 {content.landing.startInSeconds.step3.title}
@@ -448,7 +438,7 @@ function LandingPageInner() {
           </h2>
           <p className="mb-10 text-xl text-gray-400">{content.landing.finalCta.subtitle}</p>
           <Link
-            href={watchlistsUrl}
+            to={watchlistsUrl}
             className="corner-squircle inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-7 py-5 text-base font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"
           >
             {content.landing.finalCta.button}

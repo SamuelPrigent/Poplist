@@ -4,7 +4,15 @@
  * - Throw on error : retourne directement le payload typé si OK, lève sinon.
  */
 
-const API_BASE = '/api';
+// Browser : `/api` → proxy Vite (dev) ou rewrite vercel.json (prod) qui forward
+// vers le backend en stripant `/api`.
+// SSR (Node) : pas de proxy ; on appelle l'URL absolue du backend directement.
+// Le SSR n'a pas de cookies user → les endpoints protégés retourneront 401,
+// puis le client refetch après hydration avec les vrais cookies.
+const API_BASE =
+  typeof window === 'undefined'
+    ? import.meta.env.VITE_BACKEND_URL || 'http://localhost:3456'
+    : '/api';
 
 // ========================================
 // Auth refresh + logout handler

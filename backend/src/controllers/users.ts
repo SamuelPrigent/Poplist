@@ -1,24 +1,24 @@
-import type { Context } from 'hono';
-import type { z } from 'zod';
-import { and, asc, eq, getTableColumns } from 'drizzle-orm';
-import type { UsersAPI } from '@poplist/shared';
-import { db } from '../db/index.js';
-import { userWatchlistPositions, users, watchlists } from '../db/schema.js';
-import { cloudinary, deleteFromCloudinary } from '../services/cloudinary.js';
-import { uploadAvatarSchema } from '../validators/users.js';
-import { formatWatchlistWithRelations, loadWatchlistRelations } from './watchlists.js';
-import type { AppEnv } from '../app.js';
+import type { Context } from "hono";
+import type { z } from "zod";
+import { and, asc, eq, getTableColumns } from "drizzle-orm";
+import type { UsersAPI } from "@poplist/shared";
+import { db } from "../db/index.js";
+import { userWatchlistPositions, users, watchlists } from "../db/schema.js";
+import { cloudinary, deleteFromCloudinary } from "../services/cloudinary.js";
+import { uploadAvatarSchema } from "../validators/users.js";
+import { formatWatchlistWithRelations, loadWatchlistRelations } from "./watchlists.js";
+import type { AppEnv } from "../app.js";
 
 type C = Context<AppEnv>;
 
 export type UploadAvatarInput = z.infer<typeof uploadAvatarSchema>;
 
 export const getProfile = async (c: C) => {
-  const user = c.get('user')!;
+  const user = c.get("user")!;
 
   const [fullUser] = await db.select().from(users).where(eq(users.id, user.sub)).limit(1);
   if (!fullUser) {
-    return c.json({ error: 'User not found' }, 404);
+    return c.json({ error: "User not found" }, 404);
   }
 
   return c.json({
@@ -34,15 +34,19 @@ export const getProfile = async (c: C) => {
 };
 
 export const getUserProfileByUsername = async (c: C) => {
-  const username = c.req.param('username') as string;
+  const username = c.req.param("username") as string;
 
   const [foundUser] = await db
-    .select({ id: users.id, username: users.username, avatarUrl: users.avatarUrl })
+    .select({
+      id: users.id,
+      username: users.username,
+      avatarUrl: users.avatarUrl,
+    })
     .from(users)
     .where(eq(users.username, username))
     .limit(1);
   if (!foundUser) {
-    return c.json({ error: 'User not found' }, 404);
+    return c.json({ error: "User not found" }, 404);
   }
 
   // Tri : ordre choisi par le owner dans sa library (user_watchlist_positions),
@@ -54,15 +58,15 @@ export const getUserProfileByUsername = async (c: C) => {
       userWatchlistPositions,
       and(
         eq(userWatchlistPositions.watchlistId, watchlists.id),
-        eq(userWatchlistPositions.userId, foundUser.id)
-      )
+        eq(userWatchlistPositions.userId, foundUser.id),
+      ),
     )
     .where(and(eq(watchlists.ownerId, foundUser.id), eq(watchlists.isPublic, true)))
     .orderBy(asc(userWatchlistPositions.position), asc(watchlists.createdAt));
 
   const enriched = await loadWatchlistRelations(baseWatchlists);
 
-  const formattedWatchlists = enriched.map(w => formatWatchlistWithRelations(w));
+  const formattedWatchlists = enriched.map((w) => formatWatchlistWithRelations(w));
 
   return c.json({
     user: {
@@ -76,7 +80,7 @@ export const getUserProfileByUsername = async (c: C) => {
 };
 
 export const uploadAvatar = async (c: C, data: UploadAvatarInput) => {
-  const user = c.get('user')!;
+  const user = c.get("user")!;
 
   const [fullUser] = await db
     .select({ avatarUrl: users.avatarUrl })
@@ -84,7 +88,7 @@ export const uploadAvatar = async (c: C, data: UploadAvatarInput) => {
     .where(eq(users.id, user.sub))
     .limit(1);
   if (!fullUser) {
-    return c.json({ error: 'User not found' }, 404);
+    return c.json({ error: "User not found" }, 404);
   }
 
   try {
@@ -93,12 +97,12 @@ export const uploadAvatar = async (c: C, data: UploadAvatarInput) => {
     }
 
     const result = await cloudinary.uploader.upload(data.imageData, {
-      folder: 'avatars',
+      folder: "avatars",
       width: 200,
       height: 200,
-      crop: 'fill',
-      gravity: 'face',
-      resource_type: 'image',
+      crop: "fill",
+      gravity: "face",
+      resource_type: "image",
     });
 
     const [updated] = await db
@@ -106,6 +110,10 @@ export const uploadAvatar = async (c: C, data: UploadAvatarInput) => {
       .set({ avatarUrl: result.secure_url })
       .where(eq(users.id, user.sub))
       .returning();
+
+    if (!updated) {
+      return c.json({ error: "User not found" }, 404);
+    }
 
     return c.json({
       user: {
@@ -118,13 +126,13 @@ export const uploadAvatar = async (c: C, data: UploadAvatarInput) => {
       avatarUrl: result.secure_url,
     } satisfies UsersAPI.UploadAvatarResponse);
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
-    return c.json({ error: 'Failed to upload avatar to Cloudinary' }, 500);
+    console.error("Cloudinary upload error:", error);
+    return c.json({ error: "Failed to upload avatar to Cloudinary" }, 500);
   }
 };
 
 export const deleteAvatar = async (c: C) => {
-  const user = c.get('user')!;
+  const user = c.get("user")!;
 
   const [fullUser] = await db
     .select({ avatarUrl: users.avatarUrl })
@@ -132,11 +140,11 @@ export const deleteAvatar = async (c: C) => {
     .where(eq(users.id, user.sub))
     .limit(1);
   if (!fullUser) {
-    return c.json({ error: 'User not found' }, 404);
+    return c.json({ error: "User not found" }, 404);
   }
 
   if (!fullUser.avatarUrl) {
-    return c.json({ error: 'No avatar to delete' }, 404);
+    return c.json({ error: "No avatar to delete" }, 404);
   }
 
   await deleteFromCloudinary(fullUser.avatarUrl);
@@ -147,8 +155,12 @@ export const deleteAvatar = async (c: C) => {
     .where(eq(users.id, user.sub))
     .returning();
 
+  if (!updated) {
+    return c.json({ error: "User not found" }, 404);
+  }
+
   return c.json({
-    message: 'Avatar deleted successfully',
+    message: "Avatar deleted successfully",
     user: {
       id: updated.id,
       email: updated.email,

@@ -2,10 +2,11 @@
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Eye, Film, Plus, Star } from "lucide-react";
-import Image from "next/image";
+import { Img as Image } from "@/components/ui/Img";
 import { useState } from "react";
 import type { Watchlist } from "@/api";
 import { WatchlistPickerMenu } from "@/components/List/WatchlistPickerMenu";
+import { getTMDBImageUrl } from "@/lib/utils";
 
 interface MoviePosterProps {
    id: number;
@@ -47,7 +48,7 @@ export function MoviePoster({
             {/* Image with zoom on hover/focus */}
             {posterPath && !imageError ? (
                <Image
-                  src={`https://image.tmdb.org/t/p/w342${posterPath}`}
+                  src={getTMDBImageUrl(posterPath, 'w342') ?? ''}
                   alt={displayTitle || "Movie poster"}
                   fill
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"

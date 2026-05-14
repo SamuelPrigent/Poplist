@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import { memo } from "react";
+import { Img as Image } from "@/components/ui/Img";
 import { getWatchProviderLogo } from "@/api";
 import {
 	Tooltip,
@@ -18,8 +19,14 @@ export interface WatchProviderBubbleProps {
 /**
  * Component to display a watch provider as a styled bubble/card
  * Uses local SVG when available, falls back to TMDB logo
+ *
+ * `memo` : ces bulles sont rendues par dizaines dans les tables et
+ * embarquent chacune un Tooltip Radix (portal + animations). Pendant le
+ * drag DnD ou tout re-render parent, on veut éviter de les re-rendre si
+ * les props ne changent pas — `providerName` et `logoPath` sont des
+ * primitives stables pour un item donné.
  */
-export function WatchProviderBubble({
+function WatchProviderBubbleInner({
 	providerName,
 	logoPath,
 	index = 0,
@@ -61,6 +68,8 @@ export function WatchProviderBubble({
 		</Tooltip>
 	);
 }
+
+export const WatchProviderBubble = memo(WatchProviderBubbleInner);
 
 /**
  * Normalize provider name to deduplicate variants (e.g. "Netflix Standard with Ads" → "netflix")

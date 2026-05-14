@@ -1,7 +1,5 @@
-"use client";
-
 import { Eye, EyeOff } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +15,7 @@ import { useLanguageStore } from "@/store/language";
 
 // URL backend pour la vérification d'origine OAuth (le popup s'ouvre sur le backend)
 const BACKEND_ORIGIN =
-	process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+	import.meta.env.VITE_BACKEND_URL || "http://localhost:3456";
 
 interface AuthDrawerProps {
 	open: boolean;
@@ -53,8 +51,8 @@ export function AuthDrawer({
 	initialMode = "login",
 }: AuthDrawerProps) {
 	const { content } = useLanguageStore();
-	const router = useRouter();
-	const pathname = usePathname();
+	const navigate = useNavigate();
+	const pathname = useLocation({ select: (l) => l.pathname });
 	const [mode, setMode] = useState<"login" | "signup">(initialMode);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -89,7 +87,7 @@ export function AuthDrawer({
 
 			// If user was on an offline list page, redirect to lists page
 			if (pathname.includes("/offline-")) {
-				router.push("/account/lists");
+				navigate({ to: "/account/lists" as never });
 			}
 
 			onClose();
@@ -142,7 +140,7 @@ export function AuthDrawer({
 
 					// If user was on an offline list page, redirect to lists page
 					if (pathname.includes("/offline-")) {
-						router.push("/account/lists");
+						navigate({ to: "/account/lists" as never });
 					}
 				} catch (err) {
 					console.error("Failed to set OAuth tokens:", err);

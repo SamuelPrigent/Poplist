@@ -1,7 +1,7 @@
 "use client";
 
 import { Film } from "lucide-react";
-import Image from "next/image";
+import { Img as Image } from "@/components/ui/Img";
 import { PosterGrid } from "@/components/List/PosterGrid";
 import type { Watchlist } from "@/api";
 import { useLanguageStore } from "@/store/language";

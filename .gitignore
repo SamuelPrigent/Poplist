@@ -13,3 +13,5 @@ backend/prisma/data
 -design
 -archives
 -data
+-frontend-next
+.playwright

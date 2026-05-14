@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { watchlists as watchlistsApi } from '@/api';
 import type { Collaborator } from '@/api';
 import { useLanguageStore } from '@/store/language';
-import Image from 'next/image';
+import { Img as Image } from '@/components/ui/Img';
 
 interface AddCollaboratorPopoverProps {
   watchlistId: string;

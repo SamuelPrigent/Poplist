@@ -1,7 +1,10 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
+
 import { mergeLocalWatchlistsToDB } from "@/features/watchlists/localStorage";
 import { auth, setAuthErrorHandler } from "@/api";
+import { authQueries } from "@/api/queries";
 import { type Language, useLanguageStore } from "@/store/language";
 import { AuthContext, type AuthContextValue, type User } from "./auth-context";
 
@@ -42,107 +45,120 @@ function setStoredAuthState(isAuthenticated: boolean, user: User | null) {
 	}
 }
 
-// Lazy initializer - lit localStorage immédiatement côté client
-function getInitialAuthState() {
-	if (typeof window === "undefined") {
-		// SSR: pas de localStorage
-		return { user: null, optimisticAuth: false, isLoading: true };
-	}
-	// Client: lire localStorage immédiatement
-	const { wasAuthenticated, cachedUser } = getStoredAuthState();
-	return {
-		user: cachedUser,
-		optimisticAuth: wasAuthenticated,
-		isLoading: false,
-	};
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-	// Lire localStorage dès le premier render côté client
-	const initial = getInitialAuthState();
-	const [user, setUser] = useState<User | null>(initial.user);
-	const [isLoading, setIsLoading] = useState(initial.isLoading);
-	const [optimisticAuth, setOptimisticAuth] = useState(initial.optimisticAuth);
+	const queryClient = useQueryClient();
+	const meKey = authQueries.me().queryKey;
 	const { setLanguage } = useLanguageStore();
 
-	const fetchUser = useCallback(async () => {
-		try {
-			const { user: fetchedUser } = await auth.me();
-			setUser(fetchedUser);
+	// État optimiste pour le rendu auth-conditionnel pendant la query pending.
+	// CRITIQUE : initialiser à `false` partout (SSR et client first paint).
+	// Lire `localStorage` dans l'initializer ferait diverger SSR (false) du
+	// client (true si déjà loggé) → hydration mismatch React #418 sur tout
+	// le rendu auth-conditionnel (boutons owner, save, menu). Le sync depuis
+	// localStorage se fait en effect post-mount, après l'hydratation.
+	const [optimisticAuth, setOptimisticAuth] = useState(false);
+	useEffect(() => {
+		if (getStoredAuthState().wasAuthenticated) {
 			setOptimisticAuth(true);
-			setStoredAuthState(true, fetchedUser);
-
-			// Set language from user profile if available
-			if (fetchedUser.language) {
-				setLanguage(fetchedUser.language as Language);
-			}
-		} catch {
-			// 401 is expected when user is not authenticated - silent fail
-			setUser(null);
-			setOptimisticAuth(false);
-			setStoredAuthState(false, null);
 		}
-	}, [setLanguage]);
+	}, []);
+
+	// Query auth/me : remplace le useState + useEffect manuel. Refetch
+	// silencieux selon staleTime (1 min). `retry: false` car 401 attendu si
+	// non connecté. `placeholderData` plutôt qu'initialData : on n'affecte
+	// pas le statut de la query (qui reste `pending` jusqu'au vrai fetch)
+	// tout en exposant la dernière donnée connue.
+	const query = useQuery({
+		...authQueries.me(),
+	});
+
+	const user = query.data?.user ?? null;
+	const isLoading = query.isPending;
+
+	// Sync localStorage et la langue user dès qu'on a la data
+	useEffect(() => {
+		if (query.isSuccess && query.data?.user) {
+			setStoredAuthState(true, query.data.user);
+			setOptimisticAuth(true);
+			if (query.data.user.language) {
+				setLanguage(query.data.user.language as Language);
+			}
+		} else if (query.isError) {
+			// 401 attendu si non auth — on clear le storage optimiste
+			setStoredAuthState(false, null);
+			setOptimisticAuth(false);
+		}
+	}, [query.isSuccess, query.isError, query.data, setLanguage]);
 
 	const handleAutoLogout = useCallback(async () => {
 		console.log("🚪 Auto-logout: Refresh token expired, cleaning up...");
-		// Call the real logout to clean cookies on backend
 		try {
 			await auth.logout();
 		} catch {
-			// Ignore errors - just clean up local state
 			console.log(
 				"Logout API call failed (expected if tokens expired), clearing local state",
 			);
 		}
-		setUser(null);
-		setOptimisticAuth(false);
+		// CRITIQUE : on REMOVE les queries au lieu de les invalider. Une
+		// `invalidateQueries({ queryKey: ['auth', 'me'] })` déclencherait un
+		// refetch immédiat → /auth/me 401 → handleAutoLogout → boucle infinie.
+		// `removeQueries` vire la query du cache sans refetch.
+		queryClient.removeQueries({ queryKey: ['auth', 'me'] });
+		queryClient.removeQueries({ queryKey: ['watchlists'] });
+		queryClient.removeQueries({ queryKey: ['users'] });
 		setStoredAuthState(false, null);
-	}, []);
+		setOptimisticAuth(false);
+	}, [queryClient]);
 
 	useEffect(() => {
-		fetchUser();
-
-		// Register the auth error handler for automatic logout when refresh fails
 		setAuthErrorHandler(handleAutoLogout);
-	}, [fetchUser, handleAutoLogout]);
+	}, [handleAutoLogout]);
 
 	const login = async (email: string, password: string) => {
 		const { user: loggedInUser } = await auth.login(email, password);
-		setUser(loggedInUser);
-		setOptimisticAuth(true);
+		queryClient.setQueryData(meKey, { user: loggedInUser });
 		setStoredAuthState(true, loggedInUser);
+		setOptimisticAuth(true);
+		// Invalide les queries user-scopées (mes watchlists, etc.) — elles
+		// seront refetch quand un composant les lira.
+		queryClient.invalidateQueries({ queryKey: ['watchlists'] });
 	};
 
 	const signup = async (email: string, password: string) => {
 		const { user: signedUpUser } = await auth.signup(email, password);
-		setUser(signedUpUser);
-		setOptimisticAuth(true);
+		queryClient.setQueryData(meKey, { user: signedUpUser });
 		setStoredAuthState(true, signedUpUser);
+		setOptimisticAuth(true);
 
-		// Merge local watchlists to database after successful signup
 		try {
 			await mergeLocalWatchlistsToDB();
 		} catch (error) {
 			console.error("Failed to merge local watchlists after signup:", error);
-			// Don't throw - signup was successful, just log the error
 		}
+		queryClient.invalidateQueries({ queryKey: ['watchlists'] });
 	};
 
 	const logout = async () => {
 		await auth.logout();
-		setUser(null);
-		setOptimisticAuth(false);
+		// `removeQueries` au lieu de `invalidateQueries` pour éviter une boucle
+		// avec auth.me qui refetch puis échoue avec 401.
+		queryClient.removeQueries({ queryKey: ['auth', 'me'] });
+		queryClient.removeQueries({ queryKey: ['watchlists'] });
+		queryClient.removeQueries({ queryKey: ['users'] });
 		setStoredAuthState(false, null);
+		setOptimisticAuth(false);
 	};
 
 	const refetch = async () => {
-		await fetchUser();
+		await query.refetch();
 	};
 
 	const updateUsername = async (username: string) => {
 		const { user: updatedUser } = await auth.updateUsername(username);
-		setUser(updatedUser);
+		queryClient.setQueryData(meKey, { user: updatedUser });
+		setStoredAuthState(true, updatedUser);
+		// Le profil public (/user/<username>) peut avoir changé d'URL → invalider
+		queryClient.invalidateQueries({ queryKey: ['users'] });
 	};
 
 	const changePassword = async (oldPassword: string, newPassword: string) => {
@@ -151,11 +167,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	const deleteAccount = async (confirmation: string) => {
 		await auth.deleteAccount(confirmation as "confirmer");
-		setUser(null);
+		queryClient.removeQueries({ queryKey: ['auth', 'me'] });
+		queryClient.removeQueries({ queryKey: ['watchlists'] });
+		queryClient.removeQueries({ queryKey: ['users'] });
+		setStoredAuthState(false, null);
+		setOptimisticAuth(false);
 	};
 
-	// isAuthenticated utilise l'état optimiste pendant le chargement pour éviter le flicker
-	// Une fois le chargement terminé, on utilise l'état réel
+	// isAuthenticated utilise l'état optimiste pendant le chargement pour éviter
+	// le flicker auth. Une fois la query résolue, on utilise l'état réel.
 	const isAuthenticated = isLoading ? (optimisticAuth ?? false) : !!user;
 
 	const value: AuthContextValue = {
