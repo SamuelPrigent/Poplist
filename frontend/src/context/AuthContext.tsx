@@ -104,8 +104,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		// refetch immédiat → /auth/me 401 → handleAutoLogout → boucle infinie.
 		// `removeQueries` vire la query du cache sans refetch.
 		queryClient.removeQueries({ queryKey: ['auth', 'me'] });
-		queryClient.removeQueries({ queryKey: ['watchlists'] });
-		queryClient.removeQueries({ queryKey: ['users'] });
+		queryClient.removeQueries({
+			predicate: (query) => {
+				const key = query.queryKey;
+				// Watchlists auth-only : 'mine' et variantes 'auth' par id.
+				// Les queries publiques ('public', 'featured', 'genre', etc.) restent
+				// en cache car elles n'ont pas de contexte user et sont valides quelle
+				// que soit la session.
+				if (key[0] === 'watchlists' && (key[1] === 'mine' || key[2] === 'auth')) return true;
+				// Users auth-only : 'profile' (byUsername reste public).
+				if (key[0] === 'users' && key[1] === 'profile') return true;
+				return false;
+			},
+		});
 		setStoredAuthState(false, null);
 		setOptimisticAuth(false);
 	}, [queryClient]);
@@ -143,8 +154,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		// `removeQueries` au lieu de `invalidateQueries` pour éviter une boucle
 		// avec auth.me qui refetch puis échoue avec 401.
 		queryClient.removeQueries({ queryKey: ['auth', 'me'] });
-		queryClient.removeQueries({ queryKey: ['watchlists'] });
-		queryClient.removeQueries({ queryKey: ['users'] });
+		queryClient.removeQueries({
+			predicate: (query) => {
+				const key = query.queryKey;
+				// Watchlists auth-only : 'mine' et variantes 'auth' par id.
+				// Les queries publiques ('public', 'featured', 'genre', etc.) restent
+				// en cache car elles n'ont pas de contexte user et sont valides quelle
+				// que soit la session.
+				if (key[0] === 'watchlists' && (key[1] === 'mine' || key[2] === 'auth')) return true;
+				// Users auth-only : 'profile' (byUsername reste public).
+				if (key[0] === 'users' && key[1] === 'profile') return true;
+				return false;
+			},
+		});
 		setStoredAuthState(false, null);
 		setOptimisticAuth(false);
 	};
@@ -168,8 +190,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const deleteAccount = async (confirmation: string) => {
 		await auth.deleteAccount(confirmation as "confirmer");
 		queryClient.removeQueries({ queryKey: ['auth', 'me'] });
-		queryClient.removeQueries({ queryKey: ['watchlists'] });
-		queryClient.removeQueries({ queryKey: ['users'] });
+		queryClient.removeQueries({
+			predicate: (query) => {
+				const key = query.queryKey;
+				// Watchlists auth-only : 'mine' et variantes 'auth' par id.
+				// Les queries publiques ('public', 'featured', 'genre', etc.) restent
+				// en cache car elles n'ont pas de contexte user et sont valides quelle
+				// que soit la session.
+				if (key[0] === 'watchlists' && (key[1] === 'mine' || key[2] === 'auth')) return true;
+				// Users auth-only : 'profile' (byUsername reste public).
+				if (key[0] === 'users' && key[1] === 'profile') return true;
+				return false;
+			},
+		});
 		setStoredAuthState(false, null);
 		setOptimisticAuth(false);
 	};

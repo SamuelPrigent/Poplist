@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { ListsContent } from '@/app/account/lists/ListsContent';
 import { watchlistsQueries } from '@/api/queries';
 import { getAuthStatus } from '@/server/auth';
+import { getMineForSSR } from '@/server/watchlists';
 
 export const Route = createFileRoute('/account/lists')({
   beforeLoad: async () => {
@@ -11,10 +12,13 @@ export const Route = createFileRoute('/account/lists')({
       throw redirect({ to: '/local/lists' });
     }
   },
-  loader: ({ context: { queryClient } }) => {
-    // À ce stade, beforeLoad a confirmé l'auth. Prefetch non-bloquant des
-    // watchlists de l'utilisateur courant.
-    queryClient.prefetchQuery(watchlistsQueries.mine());
+  loader: async ({ context: { queryClient } }) => {
+    // À ce stade, beforeLoad a confirmé l'auth. On prefetch `mine` via la
+    // server fn pour forwarder le cookie (sinon apiFetch côté SSR → 401).
+    const mine = await getMineForSSR();
+    if (mine) {
+      queryClient.setQueryData(watchlistsQueries.mine().queryKey, mine);
+    }
   },
   head: () => ({
     meta: [

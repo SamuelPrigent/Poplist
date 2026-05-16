@@ -4,12 +4,15 @@ import { watchlistsQueries } from '@/api/queries';
 import { GENRE_CATEGORIES } from '@/types/categories';
 
 export const Route = createFileRoute('/categories/')({
-  loader: ({ context: { queryClient } }) => {
-    // Prefetch non-bloquant des counts par genre (1 query par catégorie).
-    // staleTime 5 min sur byGenre → cache partagé avec /home et /categories/$id.
-    for (const genreId of GENRE_CATEGORIES) {
-      queryClient.prefetchQuery(watchlistsQueries.byGenre(genreId));
-    }
+  loader: async ({ context: { queryClient } }) => {
+    // N queries en parallèle (1 par catégorie). staleTime 5 min sur byGenre
+    // → cache partagé avec /home et /categories/$id. Await Promise.all pour
+    // que le dehydrate SSR capture toutes les counts au moment du render.
+    await Promise.all(
+      GENRE_CATEGORIES.map((genreId) =>
+        queryClient.ensureQueryData(watchlistsQueries.byGenre(genreId))
+      )
+    );
   },
   head: () => ({
     meta: [

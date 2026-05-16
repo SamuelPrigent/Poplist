@@ -44,3 +44,27 @@ export const getAuthWatchlistForMeta = createServerFn({ method: 'GET' })
       return null;
     }
   });
+
+/**
+ * Fetch les watchlists du user courant côté SSR en forwardant le cookie
+ * d'auth. Utilisé par les loaders qui prefetch `watchlistsQueries.mine()`.
+ *
+ * Le SDK client (`watchlists.getMine` via `apiFetch`) ne peut pas être appelé
+ * directement côté SSR car le cookie n'est pas transmis automatiquement,
+ * ce qui provoque un 401 et un dehydrate en erreur côté client.
+ */
+export const getMineForSSR = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<WatchlistsAPI.GetMyWatchlistsResponse | null> => {
+    const cookie = getRequestHeader('cookie') ?? '';
+    if (!cookie) return null;
+    try {
+      const res = await fetch(`${BACKEND_URL}/watchlists/mine`, {
+        headers: { cookie },
+      });
+      if (!res.ok) return null;
+      return (await res.json()) as WatchlistsAPI.GetMyWatchlistsResponse;
+    } catch {
+      return null;
+    }
+  }
+);

@@ -3,10 +3,11 @@ import CategoryDetailContent from '@/app/categories/[id]/CategoryDetailContent';
 import { watchlistsQueries } from '@/api/queries';
 
 export const Route = createFileRoute('/categories/$id')({
-  loader: ({ params, context: { queryClient } }) => {
-    // Prefetch non-bloquant : lance le fetch des watchlists du genre.
-    // Au hover (preload intent), la data sera en cache avant le click.
-    queryClient.prefetchQuery(watchlistsQueries.byGenre(params.id));
+  loader: async ({ params, context: { queryClient } }) => {
+    // Await ensureQueryData pour un dehydrate cohérent côté SSR.
+    // Sur la nav client→client, le preload `intent` lance le fetch pendant
+    // le hover → l'await au click résout immédiatement (cache hit).
+    await queryClient.ensureQueryData(watchlistsQueries.byGenre(params.id));
   },
   head: ({ params }) => ({
     meta: [

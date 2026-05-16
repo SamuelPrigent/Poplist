@@ -2,21 +2,29 @@ import { createFileRoute } from '@tanstack/react-router';
 import ListsContent from '@/app/lists/ListsContent';
 import { watchlistsQueries } from '@/api/queries';
 import { getAuthStatus } from '@/server/auth';
+import { getMineForSSR } from '@/server/watchlists';
 
 export const Route = createFileRoute('/lists/')({
-  // Lit le cookie d'auth côté serveur pour décider si on doit aussi prefetch
-  // `mine` (route mixed : accessible auth et anon).
   beforeLoad: async () => {
     const { isAuthenticated } = await getAuthStatus();
     return { isAuthenticated };
   },
-  loader: ({ context: { queryClient, isAuthenticated } }) => {
-    // Prefetch non-bloquant : watchlists publiques (toujours) + mes
-    // watchlists (si auth) pour les badges saved/collab.
-    queryClient.prefetchQuery(watchlistsQueries.publicFeatured(1000));
+  loader: async ({ context: { queryClient, isAuthenticated } }) => {
+    // Watchlists publiques (toujours) + mes watchlists (si auth) pour les
+    // badges saved/collab. Await pour garantir un dehydrate cohérent.
+    const tasks: Promise<unknown>[] = [
+      queryClient.ensureQueryData(watchlistsQueries.publicFeatured(1000)),
+    ];
+
     if (isAuthenticated) {
-      queryClient.prefetchQuery(watchlistsQueries.mine());
+      tasks.push(
+        getMineForSSR().then((mine) => {
+          if (mine) queryClient.setQueryData(watchlistsQueries.mine().queryKey, mine);
+        })
+      );
     }
+
+    await Promise.all(tasks);
   },
   head: () => ({
     meta: [
