@@ -17,20 +17,16 @@ test.describe('Page /explore', () => {
   test('charge la grid avec items TMDB mockés', async ({ page }) => {
     const tracker = setupConsoleErrorTracking(page);
 
-    let discoverHit = false;
-    page.on('response', res => {
-      if (res.url().includes('/api/tmdb/discover/') && res.status() === 200) {
-        discoverHit = true;
-      }
-    });
-
     await page.goto('/explore', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
-    // Vérifie qu'au moins une image de poster est présente (la page a fetché TMDB)
+    // La data discover est désormais fetchée côté SSR via le loader de la
+    // route (ensureQueryData → dehydrate → hydrate). Le browser ne voit donc
+    // pas systématiquement un appel `/api/tmdb/discover/` (cache hit après
+    // hydratation). On vérifie le résultat utilisateur final : un poster est
+    // affiché.
     const posterImages = page.locator('img[alt]');
     await expect(posterImages.first()).toBeVisible({ timeout: 8_000 });
-    expect(discoverHit, 'au moins un appel /tmdb/discover doit avoir réussi').toBe(true);
 
     tracker.assertNoErrors();
   });
