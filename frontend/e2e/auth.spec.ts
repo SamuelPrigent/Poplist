@@ -21,7 +21,6 @@ test.describe('Auth', () => {
   test('signup via API → user créé, cookies posés, /auth/me retourne le user', async ({
     page,
     context,
-    request,
   }) => {
     const tracker = setupConsoleErrorTracking(page);
     const user = freshUser('signup');
@@ -42,7 +41,6 @@ test.describe('Auth', () => {
 
   test('login via API d\'un user existant → 200 + cookies posés', async ({
     context,
-    request,
   }) => {
     const user = freshUser('relogin');
 
@@ -86,7 +84,6 @@ test.describe('Auth', () => {
 
   test('logout efface les cookies et /auth/me retourne 401', async ({
     context,
-    request,
   }) => {
     const user = freshUser('logout');
     await signupAndLogin(context, user);
@@ -122,7 +119,6 @@ test.describe('Auth', () => {
   test('persistance auth après reload : cookies restent valides', async ({
     page,
     context,
-    request,
   }) => {
     const tracker = setupConsoleErrorTracking(page);
     const user = freshUser('persist');

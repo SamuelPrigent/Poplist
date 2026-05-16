@@ -2,7 +2,6 @@
 
 // import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
 import {
   Film,
   // Plus
@@ -66,7 +65,6 @@ function HomeContentInner() {
   const { user, isAuthenticated } = useAuth();
   const tmdbLanguage = getTMDBLanguage(language);
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const mounted = useIsMounted();
 
@@ -409,13 +407,7 @@ function HomeContentInner() {
                 <ListCardSmall
                   key={watchlist.id}
                   watchlist={watchlist}
-                  onClick={() => {
-                    navigate({
-                      to: (user
-                        ? `/lists/${watchlist.id}`
-                        : `/local/list/${watchlist.id}`) as never,
-                    });
-                  }}
+                  to={user ? `/lists/${watchlist.id}` : `/local/list/${watchlist.id}`}
                 />
               ))}
             </div>

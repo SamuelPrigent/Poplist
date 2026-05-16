@@ -2,22 +2,22 @@
 
 import { Film } from "lucide-react";
 import { Img as Image } from "@/components/ui/Img";
+import { Link } from "@/components/ui/Link";
 import { PosterGrid } from "@/components/List/PosterGrid";
 import type { Watchlist } from "@/api";
 import { useLanguageStore } from "@/store/language";
 
 interface ListCardSmallProps {
    watchlist: Watchlist;
-   onClick?: () => void;
+   to: string;
 }
 
-export function ListCardSmall({ watchlist, onClick }: ListCardSmallProps) {
+export function ListCardSmall({ watchlist, to }: ListCardSmallProps) {
    const { content } = useLanguageStore();
 
    return (
-      <button
-         type="button"
-         onClick={onClick}
+      <Link
+         to={to}
          className="group bg-muted/30 hover:bg-muted/50 flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg p-3 text-left transition-all"
       >
          {/* Thumbnail - Square */}
@@ -49,6 +49,6 @@ export function ListCardSmall({ watchlist, onClick }: ListCardSmallProps) {
                {watchlist.items.length === 1 ? content.watchlists.item : content.watchlists.items}
             </p>
          </div>
-      </button>
+      </Link>
    );
 }

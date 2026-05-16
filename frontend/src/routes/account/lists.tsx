@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { ListsContent } from '@/app/account/lists/ListsContent';
+import { watchlistsQueries } from '@/api/queries';
 import { getAuthStatus } from '@/server/auth';
 
 export const Route = createFileRoute('/account/lists')({
@@ -9,6 +10,11 @@ export const Route = createFileRoute('/account/lists')({
       // Pas auth → bascule sur l'équivalent localStorage
       throw redirect({ to: '/local/lists' });
     }
+  },
+  loader: ({ context: { queryClient } }) => {
+    // À ce stade, beforeLoad a confirmé l'auth. Prefetch non-bloquant des
+    // watchlists de l'utilisateur courant.
+    queryClient.prefetchQuery(watchlistsQueries.mine());
   },
   head: () => ({
     meta: [
