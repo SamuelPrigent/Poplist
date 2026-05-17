@@ -13,6 +13,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { auth, tmdb, users, watchlists } from './';
 
 type DiscoverOptions = Parameters<typeof tmdb.discover>[1];
+type SearchOptions = Parameters<typeof tmdb.search>[1];
 
 export const watchlistsQueries = {
   mine: () =>
@@ -110,6 +111,15 @@ export const tmdbQueries = {
       queryKey: ['tmdb', 'similar', type, id] as const,
       queryFn: () => tmdb.getSimilar(type, id),
       staleTime: 60 * 60_000,
+    }),
+  searchExplore: (type: 'movie' | 'tv', options: SearchOptions) =>
+    queryOptions({
+      queryKey: ['tmdb', 'search-explore', type, options] as const,
+      queryFn: () => tmdb.search(type, options),
+      staleTime: 60_000,
+      // Active uniquement quand on a une vraie recherche (cohérent avec
+      // le seuil >3 caractères côté composant).
+      enabled: options.query.length > 3,
     }),
 };
 

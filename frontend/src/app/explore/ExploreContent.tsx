@@ -3,7 +3,17 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, Eye, Plus, Star } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Eye,
+  Plus,
+  Search,
+  Star,
+  X,
+} from 'lucide-react';
 import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -21,9 +31,15 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
-import { createPlaceholderItem, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
+import {
+  createPlaceholderItem,
+  watchlists as watchlistsApi,
+  type Watchlist,
+  type WatchlistItem,
+} from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
@@ -160,6 +176,13 @@ export function ExploreContent() {
 
   const page = useMemo(() => Number(searchParams.get('page')) || 1, [searchParams]);
 
+  // Recherche textuelle. > 3 caractères = on bascule sur le endpoint
+  // /tmdb/search/:type (filtre genre/year/sort appliqués côté backend après
+  // réception). Sinon, mode discover habituel.
+  const queryFromParams = useMemo(() => searchParams.get('q') ?? '', [searchParams]);
+  const [searchInput, setSearchInput] = useState(queryFromParams);
+  const isSearching = queryFromParams.length > 3;
+
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [addingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -205,6 +228,25 @@ export function ExploreContent() {
       });
     }
   }, [yearFrom, yearTo, searchParams, updateSearchParams]);
+
+  // Debounce de la search bar → écrit `q` dans les search params (300ms).
+  // Reset `page` à 1 pour ne pas pointer sur une page n d'une recherche
+  // précédente qui n'aurait plus autant de résultats.
+  useEffect(() => {
+    if (searchInput === queryFromParams) return;
+    const t = window.setTimeout(() => {
+      updateSearchParams({
+        q: searchInput.trim() || null,
+        page: '1',
+      });
+    }, 300);
+    return () => window.clearTimeout(t);
+  }, [searchInput, queryFromParams, updateSearchParams]);
+
+  // Sync inverse : si l'URL change (back nav, paste link), garde l'input à jour.
+  useEffect(() => {
+    setSearchInput(queryFromParams);
+  }, [queryFromParams]);
 
   // Helper functions to update URL params
   const setMediaType = (type: 'movie' | 'tv') => {
@@ -327,18 +369,46 @@ export function ExploreContent() {
         releaseDateLte,
         ...(withGenres ? { with_genres: withGenres } : {}),
       }),
+      // Désactivé en mode search : le composant utilise searchExploreQuery
+      // à la place. On garde les keys dans le cache pour cache hit au retour
+      // (clear de la search).
+      enabled: !isSearching,
     })),
   });
 
-  const loading = discoverQueries.some(q => q.isPending);
+  // Recherche textuelle (> 3 caractères). Filtres genre/year/sort appliqués
+  // côté backend. 1 query = 1 round-trip qui agrège 3 pages TMDB.
+  const searchExploreQuery = useQuery(
+    tmdbQueries.searchExplore(mediaType, {
+      query: queryFromParams,
+      language: tmdbLanguage,
+      page,
+      withGenres: selectedGenres.length > 0 ? selectedGenres : undefined,
+      yearFrom: yearFromParam ? Number(yearFromParam) : undefined,
+      yearTo: yearToParam ? Number(yearToParam) : undefined,
+      sortBy: filterType === 'top_rated' ? 'vote_average' : 'popularity',
+    })
+  );
+
+  const loading = isSearching
+    ? searchExploreQuery.isPending
+    : discoverQueries.some(q => q.isPending);
+
   const media = useMemo<MediaItem[]>(() => {
+    if (isSearching) {
+      return (searchExploreQuery.data?.results ?? []) as MediaItem[];
+    }
     const all = discoverQueries.flatMap(q => (q.data?.results ?? []) as MediaItem[]);
     return all.slice(0, 60);
-  }, [discoverQueries]);
+  }, [isSearching, searchExploreQuery.data, discoverQueries]);
+
   const totalPages = useMemo(() => {
+    if (isSearching) {
+      return Math.max(1, searchExploreQuery.data?.total_pages ?? 1);
+    }
     const first = discoverQueries[0]?.data?.total_pages ?? 1;
     return Math.min(Math.floor(first / 3), 166);
-  }, [discoverQueries]);
+  }, [isSearching, searchExploreQuery.data, discoverQueries]);
 
   const handleAddFromDetails = async (
     watchlistId: string,
@@ -373,9 +443,7 @@ export function ExploreContent() {
       console.error('[explore] Failed to add to watchlist:', error);
       setWatchlists(prev =>
         prev.map(wl =>
-          wl.id === watchlistId
-            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) }
-            : wl
+          wl.id === watchlistId ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) } : wl
         )
       );
       toast.error("Erreur lors de l'ajout");
@@ -400,9 +468,7 @@ export function ExploreContent() {
       if (removed) {
         const restored = removed;
         setWatchlists(prev =>
-          prev.map(wl =>
-            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl
-          )
+          prev.map(wl => (wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl))
         );
       }
       toast.error('Erreur lors du retrait');
@@ -649,6 +715,31 @@ export function ExploreContent() {
                 )}
               </button>
             ))}
+          </div>
+
+          {/* Search Bar — bascule sur l'endpoint /tmdb/search/:type quand
+              la longueur de la recherche dépasse 3 caractères. Les filtres
+              actuels (genre, year, sort, type) restent appliqués via le
+              backend qui filtre les résultats TMDB après réception. */}
+          <div className="relative w-full max-w-[410px]">
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              type="text"
+              placeholder={content.explore.searchPlaceholder}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              className={cn('pl-10', searchInput ? 'pr-10' : '')}
+            />
+            {searchInput && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => setSearchInput('')}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 

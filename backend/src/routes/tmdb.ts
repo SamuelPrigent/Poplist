@@ -10,6 +10,7 @@ import {
   topRatedQuerySchema,
   providersQuerySchema,
   similarQuerySchema,
+  searchExploreQuerySchema,
 } from '../validators/tmdb.js';
 import type { AppEnv } from '../app.js';
 
@@ -26,6 +27,9 @@ const tmdbRoutes = new Hono<AppEnv>()
     TmdbController.getTrending(c)
   )
   .get('/discover/:type', zValidator('query', discoverQuerySchema), c => TmdbController.discover(c))
+  .get('/search/:type', zValidator('query', searchExploreQuerySchema), c =>
+    TmdbController.searchExplore(c)
+  )
   .get('/genre/:type/list', zValidator('query', genresQuerySchema), c =>
     TmdbController.getGenres(c)
   )

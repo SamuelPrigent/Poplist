@@ -29,6 +29,51 @@ export const getTrending = async (c: C) => {
   }
 }
 
+export const searchExplore = async (c: C) => {
+  const type = param(c, 'type')
+
+  if (type !== 'movie' && type !== 'tv') {
+    return c.json({ error: 'type must be "movie" or "tv"' }, 400)
+  }
+
+  const query = c.req.query('query') ?? ''
+  if (!query.trim()) {
+    return c.json({ error: 'query is required' }, 400)
+  }
+
+  const withGenresStr = c.req.query('with_genres') ?? ''
+  const withGenres = withGenresStr
+    ? withGenresStr
+        .split(',')
+        .map((s) => Number(s.trim()))
+        .filter((n) => Number.isFinite(n))
+    : []
+
+  const yearFromStr = c.req.query('year_from')
+  const yearToStr = c.req.query('year_to')
+  const yearFromNum = yearFromStr ? Number(yearFromStr) : undefined
+  const yearToNum = yearToStr ? Number(yearToStr) : undefined
+
+  const sortByParam = c.req.query('sort_by') as 'popularity' | 'vote_average' | undefined
+
+  try {
+    const data = await tmdb.searchExplore({
+      type,
+      query: query.trim(),
+      language: c.req.query('language') || 'fr-FR',
+      uiPage: Number(c.req.query('page') || '1') || 1,
+      withGenres,
+      yearFrom: Number.isFinite(yearFromNum) ? yearFromNum : undefined,
+      yearTo: Number.isFinite(yearToNum) ? yearToNum : undefined,
+      sortBy: sortByParam,
+    })
+    return c.json(data satisfies TMDBAPI.SearchExploreResponse)
+  } catch (error) {
+    console.error('Error searching explore:', error)
+    return c.json({ error: 'Failed to search content' }, 500)
+  }
+}
+
 export const discover = async (c: C) => {
   const type = param(c, 'type')
 

@@ -342,7 +342,7 @@ export const es: Content = {
   explore: {
     title: 'Explorar',
     subtitle: 'Descubre nuevas listas compartidas por la comunidad',
-    searchPlaceholder: 'Buscar una lista...',
+    searchPlaceholder: 'Buscar una película o serie...',
     filters: {
       all: 'Todas',
       movies: 'Películas',

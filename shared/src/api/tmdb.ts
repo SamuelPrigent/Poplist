@@ -50,6 +50,16 @@ export interface SimilarQuery {
   page?: string;
 }
 
+export interface SearchExploreQuery {
+  query: string;
+  language?: string;
+  page?: string;
+  with_genres?: string;        // CSV d'ids genre (filtre côté backend)
+  year_from?: string;          // ex "2015" (inclusif, filtre côté backend)
+  year_to?: string;            // ex "2024" (inclusif, filtre côté backend)
+  sort_by?: 'popularity' | 'vote_average';  // tri descendant côté backend
+}
+
 // ===== Responses (réutilisent les entities TMDB) =====
 
 export type TrendingResponse = TMDBListResponse;
@@ -59,3 +69,4 @@ export type PopularResponse = TMDBListResponse;
 export type TopRatedResponse = TMDBListResponse;
 export type ProvidersResponse = TMDBProvidersResponse;
 export type SimilarResponse = TMDBListResponse;
+export type SearchExploreResponse = TMDBListResponse;

@@ -346,7 +346,7 @@ export const de: Content = {
   explore: {
     title: 'Erkunden',
     subtitle: 'Entdecken Sie neue Listen, die von der Community geteilt werden',
-    searchPlaceholder: 'Nach einer Liste suchen...',
+    searchPlaceholder: 'Nach einem Film oder einer Serie suchen...',
     filters: {
       all: 'Alle',
       movies: 'Filme',

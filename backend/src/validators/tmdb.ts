@@ -43,3 +43,13 @@ export const similarQuerySchema = z.object({
   language: z.string().optional(),
   page: z.string().optional(),
 });
+
+export const searchExploreQuerySchema = z.object({
+  query: z.string().min(1),
+  language: z.string().optional(),
+  page: z.string().optional(),
+  with_genres: z.string().optional(),       // CSV d'ids, ex "28,12"
+  year_from: z.string().optional(),         // ex "2015"
+  year_to: z.string().optional(),           // ex "2024"
+  sort_by: z.enum(['popularity', 'vote_average']).optional(),
+});

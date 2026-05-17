@@ -49,4 +49,29 @@ export const tmdb = {
 
   getSimilar: (type: 'movie' | 'tv', id: string) =>
     apiFetch<TMDBAPI.SimilarResponse>(`/tmdb/${type}/${id}/similar`),
+
+  search: (
+    type: 'movie' | 'tv',
+    options: {
+      query: string;
+      language?: string;
+      page?: number | string;
+      withGenres?: number[];
+      yearFrom?: number;
+      yearTo?: number;
+      sortBy?: 'popularity' | 'vote_average';
+    }
+  ) => {
+    const query: Record<string, string> = { query: options.query };
+    if (options.language) query.language = options.language;
+    if (options.page !== undefined) query.page = String(options.page);
+    if (options.withGenres && options.withGenres.length > 0) {
+      query.with_genres = options.withGenres.join(',');
+    }
+    if (options.yearFrom !== undefined) query.year_from = String(options.yearFrom);
+    if (options.yearTo !== undefined) query.year_to = String(options.yearTo);
+    if (options.sortBy) query.sort_by = options.sortBy;
+
+    return apiFetch<TMDBAPI.SearchExploreResponse>(`/tmdb/search/${type}`, { query });
+  },
 };

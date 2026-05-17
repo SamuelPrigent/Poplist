@@ -341,7 +341,7 @@ export const en: Content = {
   explore: {
     title: 'Explore',
     subtitle: 'Discover new lists shared by the community',
-    searchPlaceholder: 'Search for a list...',
+    searchPlaceholder: 'Search for a movie or series...',
     filters: {
       all: 'All',
       movies: 'Movies',

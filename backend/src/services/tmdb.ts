@@ -433,6 +433,156 @@ export async function discover(type: 'movie' | 'tv', params: Record<string, stri
   );
 }
 
+interface TMDBSearchItem {
+  id: number;
+  adult?: boolean;
+  genre_ids?: number[];
+  release_date?: string;
+  first_air_date?: string;
+  popularity?: number;
+  vote_average?: number;
+  vote_count?: number;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  title?: string;
+  name?: string;
+  overview?: string;
+}
+
+interface TMDBSearchPage {
+  page: number;
+  results: TMDBSearchItem[];
+  total_pages: number;
+  total_results: number;
+}
+
+/**
+ * Recherche TMDB avec filtres custom côté backend ET pagination amortie.
+ *
+ * TMDB `/search/movie` et `/search/tv` ne supportent ni filtre genre, ni
+ * plage de dates, ni sort_by. Pour garantir 60 items par page UI malgré
+ * les filtres restrictifs, on fetch dynamiquement plusieurs pages TMDB
+ * jusqu'à atteindre `uiPage * 60` items filtrés, puis on slice.
+ *
+ * Cap à `MAX_TMDB_PAGES` (30 pages) pour éviter d'épuiser le rate limit
+ * TMDB sur des requêtes super restrictives ou très peu de résultats.
+ *
+ * Règles strictes :
+ * - `include_adult=false` côté requête TMDB + double-check `result.adult`
+ * - Exclusion des items sans `poster_path`
+ * - Exclusion du genre 18 (Drama) sauf si l'utilisateur l'a explicitement
+ *   sélectionné (cohérent avec `discover`)
+ *
+ * Le sort s'applique sur la slice de la page UI courante (pas global,
+ * car ça forcerait à scanner toutes les pages TMDB disponibles).
+ */
+export async function searchExplore(opts: {
+  type: 'movie' | 'tv';
+  query: string;
+  language?: string;
+  uiPage?: number;
+  withGenres?: number[];
+  yearFrom?: number;
+  yearTo?: number;
+  sortBy?: 'popularity' | 'vote_average';
+}): Promise<TMDBSearchPage> {
+  const {
+    type,
+    query,
+    language = 'fr-FR',
+    uiPage = 1,
+    withGenres,
+    yearFrom,
+    yearTo,
+    sortBy,
+  } = opts;
+
+  const userSelectedDrama = withGenres?.includes(18) ?? false;
+
+  const passesFilters = (item: TMDBSearchItem): boolean => {
+    if (item.adult === true) return false;
+    if (!item.poster_path) return false;
+    if (!userSelectedDrama && item.genre_ids?.includes(18)) return false;
+    if (withGenres && withGenres.length > 0) {
+      const itemGenres = item.genre_ids ?? [];
+      if (!itemGenres.some((g) => withGenres.includes(g))) return false;
+    }
+    if (yearFrom !== undefined || yearTo !== undefined) {
+      const dateStr = type === 'movie' ? item.release_date : item.first_air_date;
+      if (!dateStr) return false;
+      const year = Number(dateStr.slice(0, 4));
+      if (Number.isNaN(year)) return false;
+      if (yearFrom !== undefined && year < yearFrom) return false;
+      if (yearTo !== undefined && year > yearTo) return false;
+    }
+    return true;
+  };
+
+  const ITEMS_PER_UI_PAGE = 60;
+  const MAX_TMDB_PAGES = 30; // cap : ~600 items bruts max scrutés
+  const targetCount = uiPage * ITEMS_PER_UI_PAGE;
+
+  const collected: TMDBSearchItem[] = [];
+  let tmdbPage = 1;
+  let tmdbTotalPages = Number.POSITIVE_INFINITY;
+  let tmdbTotalResults = 0;
+
+  while (
+    collected.length < targetCount &&
+    tmdbPage <= tmdbTotalPages &&
+    tmdbPage <= MAX_TMDB_PAGES
+  ) {
+    const response = await fetchWithCache<TMDBSearchPage>(
+      `/search/${type}`,
+      {
+        query: encodeURIComponent(query),
+        language,
+        page: String(tmdbPage),
+        include_adult: 'false',
+      },
+      CACHE_TTL.SEARCH
+    );
+
+    if (tmdbPage === 1) {
+      tmdbTotalResults = response.total_results ?? 0;
+    }
+    tmdbTotalPages = response.total_pages ?? 1;
+
+    for (const item of response.results ?? []) {
+      if (passesFilters(item)) collected.push(item);
+    }
+    tmdbPage++;
+  }
+
+  // Slice pour la page UI courante.
+  const startIdx = (uiPage - 1) * ITEMS_PER_UI_PAGE;
+  const sliced = collected.slice(startIdx, startIdx + ITEMS_PER_UI_PAGE);
+
+  // Sort sur la slice uniquement (un sort global imposerait de scanner
+  // toutes les pages TMDB, trop coûteux).
+  let sorted = sliced;
+  if (sortBy === 'popularity') {
+    sorted = [...sliced].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+  } else if (sortBy === 'vote_average') {
+    sorted = [...sliced].sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0));
+  }
+
+  // total_pages : si on a atteint la cap ou exhausté TMDB sans avoir
+  // collecté assez d'items, on calcule depuis ce qu'on a. Sinon il y a
+  // au moins une page de plus.
+  const exhausted = tmdbPage > tmdbTotalPages || tmdbPage > MAX_TMDB_PAGES;
+  const uiTotalPages = exhausted
+    ? Math.max(1, Math.ceil(collected.length / ITEMS_PER_UI_PAGE))
+    : uiPage + 1;
+
+  return {
+    page: uiPage,
+    results: sorted,
+    total_pages: uiTotalPages,
+    total_results: tmdbTotalResults,
+  };
+}
+
 export async function getGenres(type: 'movie' | 'tv', language: string) {
   return fetchWithCache(`/genre/${type}/list`, { language }, CACHE_TTL.GENRES);
 }
