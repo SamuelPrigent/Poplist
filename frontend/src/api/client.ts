@@ -25,6 +25,14 @@ const SSR_BACKEND_URL =
 
 const API_BASE = typeof window === 'undefined' ? SSR_BACKEND_URL : '/api';
 
+// Version de build, injectée dans chaque requête API via `_v=...` pour
+// invalider le cache HTTP navigateur à chaque deploy (en particulier les
+// 404 négatifs cached pour les nouvelles routes qui n'existaient pas avant).
+// Source : `vite.config.ts` define → priorité VERCEL_GIT_COMMIT_SHA > .env > timestamp.
+// Le `_v` est silencieusement ignoré par les validators zod backend (mode strip).
+export const BUILD_VERSION =
+  (import.meta.env.VITE_BUILD_VERSION as string | undefined) ?? 'dev';
+
 // ========================================
 // Auth refresh + logout handler
 // ========================================
@@ -75,14 +83,18 @@ export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Pro
 
   // Construire l'URL avec query string si fournie
   let url = `${API_BASE}${path}`;
+  const params = new URLSearchParams();
   if (query) {
-    const params = new URLSearchParams();
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined) params.set(key, String(value));
     }
-    const qs = params.toString();
-    if (qs) url += `?${qs}`;
   }
+  // Cache buster : URL différente à chaque deploy → cache HTTP navigateur
+  // invalidé sans toucher le cache backend Redis (qui basé sur les params
+  // envoyés à TMDB, pas sur ceux reçus du frontend).
+  params.set('_v', BUILD_VERSION);
+  const qs = params.toString();
+  if (qs) url += `?${qs}`;
 
   const init: RequestInit = {
     ...rest,

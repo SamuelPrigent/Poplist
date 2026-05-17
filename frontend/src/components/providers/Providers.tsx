@@ -1,7 +1,9 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { BUILD_VERSION } from '@/api/client';
 import { Toaster } from '@/components/ui/sonner';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 import { AuthProvider } from '@/context/AuthContext';
@@ -41,14 +43,47 @@ function StorageVersionGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const BUILD_VERSION_KEY = 'app_build_version';
+
+/**
+ * Détecte un deploy en comparant le BUILD_VERSION du bundle courant à celui
+ * stocké en localStorage. Si différent → vide le cache TanStack Query pour
+ * éviter de servir des data hydratées au précédent build.
+ *
+ * Le cache HTTP navigateur est déjà invalidé en parallèle via `_v` dans
+ * chaque URL `apiFetch`. Ce gate complète en gérant les caches in-memory
+ * (TanStack Query) qui survivent à un soft reload (F5).
+ */
+function BuildVersionGate({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(BUILD_VERSION_KEY);
+      if (stored && stored !== BUILD_VERSION) {
+        queryClient.clear();
+        console.log(
+          `[BuildVersion] Cleared queryClient cache (was ${stored}, now ${BUILD_VERSION})`
+        );
+      }
+      localStorage.setItem(BUILD_VERSION_KEY, BUILD_VERSION);
+    } catch {
+      // localStorage inaccessible (private browsing, quota plein) — ignore
+    }
+  }, [queryClient]);
+  return <>{children}</>;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       <StorageVersionGate>
-        <AuthProvider>
-          <AuthRedirectHandler>{children}</AuthRedirectHandler>
-          <Toaster />
-        </AuthProvider>
+        <BuildVersionGate>
+          <AuthProvider>
+            <AuthRedirectHandler>{children}</AuthRedirectHandler>
+            <Toaster />
+          </AuthProvider>
+        </BuildVersionGate>
       </StorageVersionGate>
       {/* {import.meta.env.DEV && (
 				<ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />

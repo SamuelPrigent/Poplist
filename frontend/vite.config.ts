@@ -13,8 +13,23 @@ export default defineConfig(({ mode, command }) => {
   const backendUrl = env.VITE_BACKEND_URL || 'http://localhost:3456';
   const isBuild = command === 'build';
 
+  // Build version : injectée dans chaque requête API via `_v=...` pour
+  // invalider le cache HTTP navigateur (notamment les 404 négatifs cached)
+  // à chaque deploy. Priorité :
+  //   1. VERCEL_GIT_COMMIT_SHA : auto-fourni par Vercel à chaque build,
+  //      change à chaque commit déployé. Aucune config dashboard requise.
+  //   2. VITE_BUILD_VERSION du .env local (fallback dev).
+  //   3. Timestamp build comme dernier recours.
+  const buildVersion =
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    env.VITE_BUILD_VERSION ||
+    String(Date.now());
+
   return {
     resolve: { tsconfigPaths: true },
+    define: {
+      'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(buildVersion),
+    },
     server: {
       port: 3002,
       proxy: {

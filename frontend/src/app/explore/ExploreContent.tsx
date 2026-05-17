@@ -515,11 +515,11 @@ export function ExploreContent() {
         </div>
 
         {/* Filters */}
-        <div className="mb-8 space-y-4">
+        <div className="mb-8 space-y-[18px]">
           {/* Main Filters Row - Media Type + Sort Type */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Media Type Filter - Single select switch */}
-            <div className="bg-muted/50 rounded-md p-1">
+            <div className="bg-muted/50 rounded-md">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -549,7 +549,7 @@ export function ExploreContent() {
             </div>
 
             {/* Sort Filter - Single select in dark container */}
-            <div className="bg-muted/50 rounded-md p-1">
+            <div className="bg-muted/50 rounded-md">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -577,10 +577,7 @@ export function ExploreContent() {
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Year Filters Row */}
-          <div className="flex flex-wrap items-center gap-3">
             {/* Year From Picker - Combobox */}
             <Popover open={openYearFrom} onOpenChange={setOpenYearFrom}>
               <PopoverTrigger asChild>
