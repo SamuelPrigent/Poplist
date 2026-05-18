@@ -367,7 +367,7 @@ export function ExploreContent() {
         voteAverageGte: 5.0,
         releaseDateGte,
         releaseDateLte,
-        ...(withGenres ? { with_genres: withGenres } : {}),
+        withGenres,
       }),
       // Désactivé en mode search : le composant utilise searchExploreQuery
       // à la place. On garde les keys dans le cache pour cache hit au retour

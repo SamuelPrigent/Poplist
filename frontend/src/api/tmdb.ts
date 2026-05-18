@@ -18,6 +18,7 @@ export const tmdb = {
       voteAverageGte?: number | string;
       releaseDateGte?: string;
       releaseDateLte?: string;
+      withGenres?: string;
     } = {}
   ) => {
     const dateField = type === 'movie' ? 'primary_release_date' : 'first_air_date';
@@ -32,6 +33,7 @@ export const tmdb = {
       query['vote_average.gte'] = String(options.voteAverageGte);
     if (options.releaseDateGte) query[`${dateField}.gte`] = options.releaseDateGte;
     if (options.releaseDateLte) query[`${dateField}.lte`] = options.releaseDateLte;
+    if (options.withGenres) query.with_genres = options.withGenres;
 
     return apiFetch<TMDBAPI.DiscoverResponse>(`/tmdb/discover/${type}`, { query });
   },
