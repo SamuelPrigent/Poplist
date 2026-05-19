@@ -64,6 +64,30 @@ export function resizeTMDBPoster(url: string, size: string): string {
 }
 
 /**
+ * Génère un srcSet TMDB à partir d'un chemin poster pour permettre
+ * au browser de choisir la résolution adaptée au viewport.
+ *
+ * Exemple d'usage :
+ *   <img
+ *     src={`https://image.tmdb.org/t/p/w342${path}`}
+ *     srcSet={tmdbPosterSrcSet(path)}
+ *     sizes="(max-width: 640px) 50vw, 25vw"
+ *   />
+ *
+ * Retourne une chaîne vide si `path` est null/undefined, ce qui laisse
+ * le browser tomber sur l'attribut `src` natif.
+ */
+export function tmdbPosterSrcSet(
+	path: string | null | undefined,
+	widths: Array<"w185" | "w342" | "w500"> = ["w185", "w342", "w500"]
+): string {
+	if (!path) return "";
+	return widths
+		.map(w => `https://image.tmdb.org/t/p/${w}${path} ${Number(w.slice(1))}w`)
+		.join(", ");
+}
+
+/**
  * Build a full TMDB image URL from a path (or substitute the size of an
  * existing URL).
  *

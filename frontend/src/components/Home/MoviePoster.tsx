@@ -6,7 +6,7 @@ import { Img as Image } from "@/components/ui/Img";
 import { useState } from "react";
 import type { Watchlist } from "@/api";
 import { WatchlistPickerMenu } from "@/components/List/WatchlistPickerMenu";
-import { getTMDBImageUrl } from "@/lib/utils";
+import { getTMDBImageUrl, tmdbPosterSrcSet } from "@/lib/utils";
 
 interface MoviePosterProps {
    id: number;
@@ -49,9 +49,10 @@ export function MoviePoster({
             {posterPath && !imageError ? (
                <Image
                   src={getTMDBImageUrl(posterPath, 'w342') ?? ''}
+                  srcSet={tmdbPosterSrcSet(posterPath)}
                   alt={displayTitle || "Movie poster"}
                   fill
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                  sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105"
                   onError={() => setImageError(true)}
                   unoptimized

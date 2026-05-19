@@ -8,7 +8,8 @@ import { cn } from '@/lib/cn';
  * on rend juste un `<img>` natif avec quelques mappings de props :
  *  - `priority`  → `loading="eager"` + `fetchPriority="high"`
  *  - `fill`      → position absolute + object-fit cover sur tout le parent (parent doit être relative)
- *  - `sizes`     → ignoré (utile uniquement avec l'optim Next)
+ *  - `sizes`     → transmis tel quel au `<img>` natif (utilisé conjointement avec `srcSet`)
+ *  - `srcSet`    → pass-through, à composer côté appelant (ex : helper `tmdbPosterSrcSet`)
  *
  * Note : à terme, remplacer chaque usage par un `<img>` direct serait plus
  * propre. Le wrapper existe pour minimiser les diffs pendant la migration.
@@ -21,6 +22,7 @@ type ImgProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt'> & {
   priority?: boolean;
   fill?: boolean;
   sizes?: string;
+  srcSet?: string;
   // Props `next/image` héritées du frontend Next, ignorées ici (no-op).
   // Le frontend Next avait déjà `images.unoptimized: true`, donc pas de perte.
   unoptimized?: boolean;
@@ -34,7 +36,8 @@ export function Img({
   height,
   priority,
   fill,
-  sizes: _sizes,
+  sizes,
+  srcSet,
   unoptimized: _unoptimized,
   quality: _quality,
   className,
@@ -57,6 +60,8 @@ export function Img({
       alt={alt}
       width={fill ? undefined : width}
       height={fill ? undefined : height}
+      sizes={sizes}
+      srcSet={srcSet}
       loading={priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : 'auto'}
       decoding="async"

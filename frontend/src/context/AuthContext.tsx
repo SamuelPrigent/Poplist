@@ -57,9 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	// le rendu auth-conditionnel (boutons owner, save, menu). Le sync depuis
 	// localStorage se fait en effect post-mount, après l'hydratation.
 	const [optimisticAuth, setOptimisticAuth] = useState(false);
+
+	// Gate de la query `/auth/me`. Sans gate, un visiteur non auth déclenche
+	// un 401 console (Lighthouse Best Practices). Init à `false` côté SSR pour
+	// éviter une divergence d'hydratation, sync depuis localStorage post-mount.
+	const [hasLocalSession, setHasLocalSession] = useState(false);
 	useEffect(() => {
 		if (getStoredAuthState().wasAuthenticated) {
 			setOptimisticAuth(true);
+			setHasLocalSession(true);
 		}
 	}, []);
 
@@ -70,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	// tout en exposant la dernière donnée connue.
 	const query = useQuery({
 		...authQueries.me(),
+		enabled: hasLocalSession,
 	});
 
 	const user = query.data?.user ?? null;
@@ -119,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		});
 		setStoredAuthState(false, null);
 		setOptimisticAuth(false);
+		setHasLocalSession(false);
 	}, [queryClient]);
 
 	useEffect(() => {
@@ -130,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		queryClient.setQueryData(meKey, { user: loggedInUser });
 		setStoredAuthState(true, loggedInUser);
 		setOptimisticAuth(true);
+		setHasLocalSession(true);
 		// Invalide les queries user-scopées (mes watchlists, etc.) — elles
 		// seront refetch quand un composant les lira.
 		queryClient.invalidateQueries({ queryKey: ['watchlists'] });
@@ -140,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		queryClient.setQueryData(meKey, { user: signedUpUser });
 		setStoredAuthState(true, signedUpUser);
 		setOptimisticAuth(true);
+		setHasLocalSession(true);
 
 		try {
 			await mergeLocalWatchlistsToDB();
@@ -169,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		});
 		setStoredAuthState(false, null);
 		setOptimisticAuth(false);
+		setHasLocalSession(false);
 	};
 
 	const refetch = async () => {
@@ -205,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		});
 		setStoredAuthState(false, null);
 		setOptimisticAuth(false);
+		setHasLocalSession(false);
 	};
 
 	// isAuthenticated utilise l'état optimiste pendant le chargement pour éviter

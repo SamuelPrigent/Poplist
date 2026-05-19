@@ -42,7 +42,7 @@ import {
 } from '@/api';
 import { cn } from '@/lib/cn';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
-import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
+import { getTMDBLanguage, getTMDBRegion, tmdbPosterSrcSet } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
 
@@ -570,6 +570,7 @@ export function ExploreContent() {
                   variant="outline"
                   role="combobox"
                   aria-expanded={openYearFrom}
+                  aria-label={content.explore.filters.yearMin}
                   className="w-[200px] cursor-pointer justify-between"
                 >
                   {yearFromParam || content.explore.filters.yearMin}
@@ -618,6 +619,7 @@ export function ExploreContent() {
                   variant="outline"
                   role="combobox"
                   aria-expanded={openYearTo}
+                  aria-label={content.explore.filters.yearMax}
                   className="w-[200px] cursor-pointer justify-between"
                 >
                   {yearToParam || content.explore.filters.yearMax}
@@ -802,6 +804,7 @@ export function ExploreContent() {
                         {item.poster_path ? (
                           <Image
                             src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
+                            srcSet={tmdbPosterSrcSet(item.poster_path)}
                             alt={item.title || item.name || ''}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
@@ -883,6 +886,7 @@ export function ExploreContent() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Page précédente"
                       className="cursor-pointer"
                       onClick={() => updatePage(Math.max(1, page - 1))}
                       disabled={page === 1}
@@ -899,6 +903,7 @@ export function ExploreContent() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Page suivante"
                       className="cursor-pointer"
                       onClick={() => updatePage(Math.min(totalPages, page + 1))}
                       disabled={page === totalPages}

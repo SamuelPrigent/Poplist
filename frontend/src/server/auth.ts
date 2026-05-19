@@ -7,7 +7,7 @@ import { getRequestHeader } from '@tanstack/react-start/server';
  * Le backend Hono pose les cookies `accessToken` et `refreshToken` (httpOnly).
  * Comme on tourne sur le même domaine (`localhost` quelle que soit le port),
  * ces cookies sont envoyés automatiquement avec chaque requête vers le dev
- * server TanStack — donc accessibles dans les headers de la request.
+ * server TanStack, donc accessibles dans les headers de la request.
  *
  * Note : cette server function ne valide PAS la signature/expiration du JWT,
  * elle vérifie juste la présence du cookie. Pour un check fort, il faudrait
