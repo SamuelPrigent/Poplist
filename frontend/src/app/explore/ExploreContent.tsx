@@ -192,42 +192,27 @@ export function ExploreContent() {
   } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
-  // Year picker state
-  const [yearFrom, setYearFrom] = useState<string>(yearFromParam);
-  const [yearTo, setYearTo] = useState<string>(yearToParam);
+  // Year picker : `yearFromParam`/`yearToParam` (dérivés de l'URL) sont la
+  // seule source de vérité. Pas de state local + useEffect de sync ici :
+  // l'ancien pattern causait une race où le useEffect réécrivait l'URL vers
+  // `/explore` quand l'utilisateur cliquait sur un lien sortant (Accueil, Mes
+  // listes…), bloquant la navigation.
   const [openYearFrom, setOpenYearFrom] = useState(false);
   const [openYearTo, setOpenYearTo] = useState(false);
 
   // Filter yearTo list: can't be less than yearFrom
   const availableYearsTo = useMemo(() => {
-    if (!yearFrom) return YEARS;
-    const fromYear = Number.parseInt(yearFrom);
+    if (!yearFromParam) return YEARS;
+    const fromYear = Number.parseInt(yearFromParam);
     return YEARS.filter(year => year >= fromYear);
-  }, [yearFrom]);
+  }, [yearFromParam]);
 
   // Filter yearFrom list: can't be greater than yearTo
   const availableYearsFrom = useMemo(() => {
-    if (!yearTo) return YEARS;
-    const toYear = Number.parseInt(yearTo);
+    if (!yearToParam) return YEARS;
+    const toYear = Number.parseInt(yearToParam);
     return YEARS.filter(year => year <= toYear);
-  }, [yearTo]);
-
-  // Update URL when years change
-  useEffect(() => {
-    // Transform year to YYYY-01-01 format for API
-    const currentDateFrom = searchParams.get('dateFrom') || '';
-    const currentDateTo = searchParams.get('dateTo') || '';
-    const newDateFrom = yearFrom ? `${yearFrom}-01-01` : '';
-    const newDateTo = yearTo ? `${yearTo}-12-31` : '';
-
-    if (currentDateFrom !== newDateFrom || currentDateTo !== newDateTo) {
-      updateSearchParams({
-        dateFrom: yearFrom ? `${yearFrom}-01-01` : null,
-        dateTo: yearTo ? `${yearTo}-12-31` : null,
-        page: '1',
-      });
-    }
-  }, [yearFrom, yearTo, searchParams, updateSearchParams]);
+  }, [yearToParam]);
 
   // Debounce de la search bar → écrit `q` dans les search params (300ms).
   // Reset `page` à 1 pour ne pas pointer sur une page n d'une recherche
@@ -351,8 +336,8 @@ export function ExploreContent() {
   // manuel).
   const startTMDBPage = (page - 1) * 3 + 1;
   const sortBy = filterType === 'top_rated' ? 'vote_average.desc' : 'popularity.desc';
-  const dateFrom = yearFrom ? `${yearFrom}-01-01` : '';
-  const dateTo = yearTo ? `${yearTo}-12-31` : '';
+  const dateFrom = yearFromParam ? `${yearFromParam}-01-01` : '';
+  const dateTo = yearToParam ? `${yearToParam}-12-31` : '';
   const releaseDateGte = dateFrom || undefined;
   const releaseDateLte = dateTo || undefined;
   const withGenres = selectedGenres.length > 0 ? selectedGenres.join('|') : undefined;
@@ -587,7 +572,7 @@ export function ExploreContent() {
                   aria-expanded={openYearFrom}
                   className="w-[200px] cursor-pointer justify-between"
                 >
-                  {yearFrom || content.explore.filters.yearMin}
+                  {yearFromParam || content.explore.filters.yearMin}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -602,14 +587,19 @@ export function ExploreContent() {
                           key={year}
                           value={year.toString()}
                           onSelect={currentValue => {
-                            setYearFrom(currentValue === yearFrom ? '' : currentValue);
+                            const nextYear =
+                              currentValue === yearFromParam ? '' : currentValue;
+                            updateSearchParams({
+                              dateFrom: nextYear ? `${nextYear}-01-01` : null,
+                              page: '1',
+                            });
                             setOpenYearFrom(false);
                           }}
                         >
                           <Check
                             className={cn(
                               'mr-2 h-4 w-4',
-                              yearFrom === year.toString() ? 'opacity-100' : 'opacity-0'
+                              yearFromParam === year.toString() ? 'opacity-100' : 'opacity-0'
                             )}
                           />
                           {year}
@@ -630,7 +620,7 @@ export function ExploreContent() {
                   aria-expanded={openYearTo}
                   className="w-[200px] cursor-pointer justify-between"
                 >
-                  {yearTo || content.explore.filters.yearMax}
+                  {yearToParam || content.explore.filters.yearMax}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -645,14 +635,19 @@ export function ExploreContent() {
                           key={year}
                           value={year.toString()}
                           onSelect={currentValue => {
-                            setYearTo(currentValue === yearTo ? '' : currentValue);
+                            const nextYear =
+                              currentValue === yearToParam ? '' : currentValue;
+                            updateSearchParams({
+                              dateTo: nextYear ? `${nextYear}-12-31` : null,
+                              page: '1',
+                            });
                             setOpenYearTo(false);
                           }}
                         >
                           <Check
                             className={cn(
                               'mr-2 h-4 w-4',
-                              yearTo === year.toString() ? 'opacity-100' : 'opacity-0'
+                              yearToParam === year.toString() ? 'opacity-100' : 'opacity-0'
                             )}
                           />
                           {year}
@@ -665,14 +660,17 @@ export function ExploreContent() {
             </Popover>
 
             {/* Clear years button */}
-            {(yearFrom || yearTo) && (
+            {(yearFromParam || yearToParam) && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="cursor-pointer"
                 onClick={() => {
-                  setYearFrom('');
-                  setYearTo('');
+                  updateSearchParams({
+                    dateFrom: null,
+                    dateTo: null,
+                    page: '1',
+                  });
                 }}
               >
                 {content.explore.filters.clearYears}
@@ -756,7 +754,7 @@ export function ExploreContent() {
               />
             ) : (
               <m.div
-                key={`grid-${page}-${mediaType}-${filterType}-${selectedGenres.join('-')}-${yearFrom}-${yearTo}`}
+                key={`grid-${page}-${mediaType}-${filterType}-${selectedGenres.join('-')}-${yearFromParam}-${yearToParam}`}
                 ref={gridRef}
                 initial="hidden"
                 animate="visible"
