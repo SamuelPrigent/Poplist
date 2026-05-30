@@ -33,6 +33,10 @@ const watchlistRoutes = new Hono<AppEnv>()
   .get('/items/:tmdbId/:type/details', zValidator('query', languageQuerySchema), c =>
     WatchlistsController.getItemDetails(c)
   )
+  // Recommandations (public si liste publique, sinon owner/collaborateur)
+  .get('/:id/recommendations', optionalAuth, zValidator('query', languageQuerySchema), c =>
+    WatchlistsController.getWatchlistRecommendations(c)
+  )
   // ========================================
   // Protected routes
   // ========================================

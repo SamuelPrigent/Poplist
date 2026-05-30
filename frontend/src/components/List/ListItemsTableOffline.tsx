@@ -18,7 +18,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   type ColumnDef,
@@ -42,7 +41,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Img as Image } from '@/components/ui/Img';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Empty,
   EmptyDescription,
@@ -131,13 +130,15 @@ interface DraggableRowProps {
   loadingItem: number | null;
   hoveredRow: number | null;
   setHoveredRow: (id: number | null) => void;
-  onConfirmDelete: (item: WatchlistItem) => void;
+  onDelete: (tmdbId: number) => void;
   handleMoveItem: (tmdbId: number, position: 'first' | 'last') => void;
   handleAddToWatchlist: (tmdbId: number, targetWatchlistId: string) => void;
   otherWatchlists: Watchlist[];
   totalItems: number;
   isDragDisabled: boolean;
   canEdit: boolean;
+  isFocused: boolean;
+  onSelect: (tmdbId: number) => void;
   content: Content;
 }
 
@@ -148,13 +149,15 @@ function DraggableRow({
   loadingItem,
   hoveredRow,
   setHoveredRow,
-  onConfirmDelete,
+  onDelete,
   handleMoveItem,
   handleAddToWatchlist,
   otherWatchlists,
   totalItems,
   isDragDisabled,
   canEdit,
+  isFocused,
+  onSelect,
   content,
 }: DraggableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -174,9 +177,11 @@ function DraggableRow({
       style={style}
       onMouseEnter={() => setHoveredRow(item.tmdbId)}
       onMouseLeave={() => setHoveredRow(null)}
+      onClick={() => canEdit && onSelect(item.tmdbId)}
       className={cn(
         'group transition-colors duration-150 select-none',
-        hoveredRow === item.tmdbId && 'bg-muted/30'
+        isFocused && 'bg-muted/50',
+        !isFocused && hoveredRow === item.tmdbId && 'bg-muted/30'
       )}
     >
       {row.getVisibleCells().map((cell, cellIndex: number) => {
@@ -189,7 +194,9 @@ function DraggableRow({
               <div
                 className={cn(
                   'flex items-center gap-1 transition-opacity',
-                  hoveredRow === item.tmdbId ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  hoveredRow === item.tmdbId || isFocused
+                    ? 'opacity-100'
+                    : 'opacity-0 group-hover:opacity-100'
                 )}
               >
                 <DropdownMenu.Root
@@ -244,21 +251,6 @@ function DraggableRow({
                 </DropdownMenu.Root>
 
                 {canEdit && (
-                  <button
-                    type="button"
-                    className="cursor-pointer rounded p-2 text-red-500 transition-colors hover:bg-red-500/10"
-                    onClick={e => {
-                      e.stopPropagation();
-                      onConfirmDelete(item);
-                    }}
-                    disabled={loadingItem === item.tmdbId}
-                    title={content.watchlists.contextMenu.removeFromWatchlist}
-                  >
-                    <Trash2 className="h-[18px] w-[18px]" />
-                  </button>
-                )}
-
-                {canEdit && (
                   <DropdownMenu.Root
                     onOpenChange={open => {
                       if (!open) {
@@ -287,6 +279,14 @@ function DraggableRow({
                         className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
                         sideOffset={5}
                       >
+                        <DropdownMenu.Item
+                          className="relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm text-red-500 transition-colors outline-none select-none hover:bg-red-500/10 focus:bg-red-500/10"
+                          onSelect={() => onDelete(item.tmdbId)}
+                        >
+                          <Trash2 className="mr-2.5 h-4 w-4" />
+                          <span>{content.watchlists.contextMenu.removeFromWatchlist}</span>
+                        </DropdownMenu.Item>
+
                         <DropdownMenu.Item
                           className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
                           onSelect={() => handleMoveItem(item.tmdbId, 'first')}
@@ -342,13 +342,32 @@ export function ListItemsTableOffline({
   const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [otherWatchlists, setOtherWatchlists] = useState<Watchlist[]>([]);
-  const [itemToDelete, setItemToDelete] = useState<WatchlistItem | null>(null);
+  // Sélection de ligne (état visuel, pas un focus DOM) + pile d'undo en mémoire.
+  const [focusedRow, setFocusedRow] = useState<number | null>(null);
+  const [undoStack, setUndoStack] = useState<Array<{ item: WatchlistItem; index: number }>>([]);
 
   const canEdit = watchlist.ownerId === 'offline';
+
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const focusedRowRef = useRef(focusedRow);
+  focusedRowRef.current = focusedRow;
+  const undoStackRef = useRef(undoStack);
+  undoStackRef.current = undoStack;
+  const tableWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setItems(watchlist.items);
   }, [watchlist.items]);
+
+  useEffect(() => {
+    setFocusedRow(null);
+    setUndoStack([]);
+  }, [watchlist.id]);
+
+  useEffect(() => {
+    setFocusedRow(null);
+  }, [currentPage]);
 
   const loadOtherWatchlists = useCallback(() => {
     const allWatchlists = getLocalWatchlists();
@@ -407,37 +426,105 @@ export function ListItemsTableOffline({
 
   const STORAGE_KEY = 'watchlists';
 
-  const updateLocalStorage = async (updatedItems: WatchlistItem[]) => {
-    const localWatchlists = localStorage.getItem(STORAGE_KEY);
-    if (!localWatchlists) return;
+  const updateLocalStorage = useCallback(
+    async (updatedItems: WatchlistItem[]) => {
+      const localWatchlists = localStorage.getItem(STORAGE_KEY);
+      if (!localWatchlists) return;
 
-    const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-    const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
-    if (watchlistIndex === -1) return;
+      const watchlists: Watchlist[] = JSON.parse(localWatchlists);
+      const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
+      if (watchlistIndex === -1) return;
 
-    watchlists[watchlistIndex].items = updatedItems;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
+      watchlists[watchlistIndex].items = updatedItems;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
 
-    window.dispatchEvent(new Event('localStorageWatchlistsChanged'));
+      window.dispatchEvent(new Event('localStorageWatchlistsChanged'));
 
-    // Notify parent with updated watchlist (no loading flicker)
-    onUpdate?.({ ...watchlist, items: updatedItems });
-  };
+      onUpdate?.({ ...watchlist, items: updatedItems });
+    },
+    [watchlist, onUpdate]
+  );
 
-  const handleRemoveItem = async (tmdbId: number) => {
-    try {
-      setLoadingItem(tmdbId);
-      const newItems = items.filter(item => item.tmdbId !== tmdbId);
+  // Suppression (Backspace ou option « Supprimer ») d'un item de la liste
+  // courante : push undo + suppression optimiste + persistance localStorage.
+  const deleteFromCurrentList = useCallback(
+    async (tmdbId: number) => {
+      const currentItems = itemsRef.current;
+      const index = currentItems.findIndex(it => it.tmdbId === tmdbId);
+      if (index === -1) return;
+      const item = currentItems[index];
+      setUndoStack(prev => [...prev, { item, index }]);
+      const newItems = currentItems.filter(it => it.tmdbId !== tmdbId);
       setItems(newItems);
+      setFocusedRow(prev => (prev === tmdbId ? null : prev));
       await updateLocalStorage(newItems);
-    } catch (error) {
-      console.error('Failed to remove item:', error);
-      alert('Failed to remove item');
-      setItems(watchlist.items);
-    } finally {
-      setLoadingItem(null);
-    }
-  };
+    },
+    [updateLocalStorage]
+  );
+
+  // Annulation (Cmd/Ctrl+Z) : ré-insère à la position d'origine + persiste.
+  const undoLastDelete = useCallback(async () => {
+    const stack = undoStackRef.current;
+    if (stack.length === 0) return;
+    const { item, index } = stack[stack.length - 1];
+    setUndoStack(prev => prev.slice(0, -1));
+    const currentItems = itemsRef.current;
+    const insertAt = Math.min(index, currentItems.length);
+    const newItems = [...currentItems];
+    newItems.splice(insertAt, 0, item);
+    setItems(newItems);
+    await updateLocalStorage(newItems);
+  }, [updateLocalStorage]);
+
+  // Listener clavier global : Backspace/Delete, Cmd/Ctrl+Z, Escape. Gardé
+  // contre inputs / dialogs / menus ouverts.
+  useEffect(() => {
+    if (!canEdit) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      const isTyping =
+        active instanceof HTMLElement &&
+        (active.tagName === 'INPUT' ||
+          active.tagName === 'TEXTAREA' ||
+          active.isContentEditable);
+      if (isTyping) return;
+      if (
+        document.querySelector(
+          '[role="dialog"][data-state="open"], [role="menu"][data-state="open"]'
+        )
+      ) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) {
+        if (undoStackRef.current.length > 0) {
+          e.preventDefault();
+          void undoLastDelete();
+        }
+        return;
+      }
+      if ((e.key === 'Backspace' || e.key === 'Delete') && focusedRowRef.current != null) {
+        e.preventDefault();
+        void deleteFromCurrentList(focusedRowRef.current);
+        return;
+      }
+      if (e.key === 'Escape' && focusedRowRef.current != null) {
+        setFocusedRow(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [canEdit, deleteFromCurrentList, undoLastDelete]);
+
+  useEffect(() => {
+    if (!canEdit) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (tableWrapperRef.current && !tableWrapperRef.current.contains(e.target as Node)) {
+        setFocusedRow(null);
+      }
+    };
+    window.addEventListener('pointerdown', onPointerDown);
+    return () => window.removeEventListener('pointerdown', onPointerDown);
+  }, [canEdit]);
 
   const handleMoveItem = async (tmdbId: number, position: 'first' | 'last') => {
     try {
@@ -777,7 +864,7 @@ export function ListItemsTableOffline({
 
   return (
     <>
-      <div className="mb-2 overflow-hidden">
+      <div ref={tableWrapperRef} className="mb-2 overflow-hidden">
         <DndContext
           id={`dnd-watchlist-offline-${watchlist.id}`}
           sensors={sensors}
@@ -817,13 +904,15 @@ export function ListItemsTableOffline({
                     loadingItem={loadingItem}
                     hoveredRow={hoveredRow}
                     setHoveredRow={setHoveredRow}
-                    onConfirmDelete={setItemToDelete}
+                    onDelete={deleteFromCurrentList}
                     handleMoveItem={handleMoveItem}
                     handleAddToWatchlist={handleAddToWatchlist}
                     otherWatchlists={otherWatchlists}
                     totalItems={displayItems.length}
                     isDragDisabled={!isCustomOrder}
                     canEdit={canEdit}
+                    isFocused={focusedRow === row.original.tmdbId}
+                    onSelect={setFocusedRow}
                     content={content}
                   />
                 ))}
@@ -850,49 +939,6 @@ export function ListItemsTableOffline({
         />
       )}
 
-      <AlertDialog.Root
-        open={!!itemToDelete}
-        onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
-      >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay
-            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
-            onClick={() => setItemToDelete(null)}
-          />
-          <AlertDialog.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] rounded-lg border p-6 shadow-lg">
-            <AlertDialog.Title className="text-lg font-semibold">
-              Confirmer la suppression
-            </AlertDialog.Title>
-            <AlertDialog.Description className="text-muted-foreground mt-2 text-sm">
-              Voulez-vous vraiment supprimer « {itemToDelete?.title} » de cette watchlist ?
-            </AlertDialog.Description>
-            <div className="mt-6 flex justify-end gap-3">
-              <AlertDialog.Cancel asChild>
-                <button
-                  type="button"
-                  className="border-border hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium transition-colors"
-                >
-                  Annuler
-                </button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <button
-                  type="button"
-                  className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                  onClick={() => {
-                    if (itemToDelete) {
-                      handleRemoveItem(itemToDelete.tmdbId);
-                      setItemToDelete(null);
-                    }
-                  }}
-                >
-                  Supprimer
-                </button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
     </>
   );
 }

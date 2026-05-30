@@ -14,6 +14,7 @@ import {
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import type { RecommendedItem } from '@poplist/shared';
 import type { Platform } from '../types/index.js';
 
 // ========================================
@@ -224,5 +225,27 @@ export const apiCaches = pgTable(
     uniqueIndex('api_caches_request_url_key').on(t.requestUrl),
     index('idx_api_caches_expires').on(t.expiresAt),
     index('idx_api_caches_url').on(t.requestUrl),
+  ]
+);
+
+// ========================================
+// watchlist_recommendations
+// ========================================
+// Une ligne par watchlist (clé unique watchlist_id). `items` contient la liste
+// recommandée déjà enrichie (runtime/saisons/épisodes), prête à servir. La
+// fraîcheur est gérée à la lecture via `generated_at` (TTL 30 j).
+export const watchlistRecommendations = pgTable(
+  'watchlist_recommendations',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    watchlistId: uuid('watchlist_id')
+      .notNull()
+      .references(() => watchlists.id, { onDelete: 'cascade' }),
+    items: jsonb('items').$type<RecommendedItem[]>().notNull().default([]),
+    sourceItemIds: jsonb('source_item_ids').$type<number[]>().notNull().default([]),
+    generatedAt: timestamp('generated_at', { mode: 'date' }).defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('watchlist_recommendations_watchlist_id_key').on(t.watchlistId),
   ]
 );

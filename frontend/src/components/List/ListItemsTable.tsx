@@ -18,7 +18,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   type ColumnDef,
@@ -38,11 +37,10 @@ import {
   MoreVertical,
   MoveDown,
   MoveUp,
-  Plus,
   Trash2,
 } from 'lucide-react';
 import { Img as Image } from '@/components/ui/Img';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Empty,
@@ -55,7 +53,8 @@ import { useAuth } from '@/context/auth-context';
 import { watchlists as watchlistsApi } from '@/api';
 import { createPlaceholderItem, type Watchlist, type WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
-import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
+import { formatItemFormat } from '@/lib/format';
+import { buildPickerWatchlists, useMyWatchlists } from '@/hooks/useMyWatchlists';
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLanguageStore } from '@/store/language';
@@ -143,7 +142,7 @@ interface DraggableRowProps {
   loadingItem: number | null;
   hoveredRow: number | null;
   setHoveredRow: (id: number | null) => void;
-  onConfirmDelete: (item: WatchlistItem) => void;
+  onDelete: (tmdbId: number) => void;
   handleMoveItem: (tmdbId: number, position: 'first' | 'last') => void;
   totalItems: number;
   isDragDisabled: boolean;
@@ -153,7 +152,9 @@ interface DraggableRowProps {
   addingTo: number | null;
   handleAddFromRow: (watchlistId: string, tmdbId: string, mediaType: 'movie' | 'tv') => void;
   handleRemoveFromRow: (watchlistId: string, tmdbId: string) => void;
-  currentWatchlistId: string;
+  showCheck: boolean;
+  isFocused: boolean;
+  onSelect: (tmdbId: number) => void;
   currentWatchlistItems: WatchlistItem[];
   currentWatchlist: Watchlist;
 }
@@ -169,7 +170,7 @@ const DraggableRow = memo(function DraggableRow({
   loadingItem,
   hoveredRow,
   setHoveredRow,
-  onConfirmDelete,
+  onDelete,
   handleMoveItem,
   totalItems,
   isDragDisabled,
@@ -179,7 +180,9 @@ const DraggableRow = memo(function DraggableRow({
   addingTo,
   handleAddFromRow,
   handleRemoveFromRow,
-  currentWatchlistId,
+  showCheck,
+  isFocused,
+  onSelect,
   currentWatchlistItems,
   currentWatchlist,
 }: DraggableRowProps) {
@@ -194,13 +197,13 @@ const DraggableRow = memo(function DraggableRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // Build watchlists shown in the picker: current list first (with live items), then others
-  const pickerWatchlists: Watchlist[] = [
+  // Liste du picker via le helper partagé : la liste courante n'est incluse que
+  // si on peut l'éditer (corrige le bug d'inclusion d'une liste suivie).
+  const pickerWatchlists = buildPickerWatchlists(
+    watchlists,
     { ...currentWatchlist, items: currentWatchlistItems },
-    ...watchlists.filter(
-      w => w.id !== currentWatchlistId && (w.isOwner || w.isCollaborator)
-    ),
-  ];
+    canEdit
+  );
 
   return (
     <tr
@@ -208,9 +211,11 @@ const DraggableRow = memo(function DraggableRow({
       style={style}
       onMouseEnter={() => setHoveredRow(item.tmdbId)}
       onMouseLeave={() => setHoveredRow(null)}
+      onClick={() => canEdit && onSelect(item.tmdbId)}
       className={cn(
         'group transition-colors duration-150 select-none',
-        hoveredRow === item.tmdbId && 'bg-muted/30'
+        isFocused && 'bg-muted/50',
+        !isFocused && hoveredRow === item.tmdbId && 'bg-muted/30'
       )}
     >
       {row.getVisibleCells().map((cell, cellIndex: number) => {
@@ -224,7 +229,9 @@ const DraggableRow = memo(function DraggableRow({
               <div
                 className={cn(
                   'flex items-center gap-1 transition-opacity',
-                  hoveredRow === item.tmdbId ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  hoveredRow === item.tmdbId || isFocused
+                    ? 'opacity-100'
+                    : 'opacity-0 group-hover:opacity-100'
                 )}
               >
                 {/* Add to watchlist button */}
@@ -250,26 +257,26 @@ const DraggableRow = memo(function DraggableRow({
                       onClick={e => e.stopPropagation()}
                       title={content.watchlists.contextMenu.addToWatchlist}
                     >
-                      <Plus className="text-muted-foreground h-[18px] w-[18px]" />
+                      {showCheck ? (
+                        <Image
+                          src="/checkGreenFull.svg"
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="h-[18px] w-[18px]"
+                        />
+                      ) : (
+                        <Image
+                          src="/plus2.svg"
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="h-[18px] w-[18px] opacity-70 brightness-0 invert"
+                        />
+                      )}
                     </button>
                   </DropdownMenu.Trigger>
                 </WatchlistPickerMenu>
-
-                {/* Delete button - only for canEdit */}
-                {canEdit && (
-                  <button
-                    type="button"
-                    className="cursor-pointer rounded p-2 text-red-500 transition-colors hover:bg-red-500/10"
-                    onClick={e => {
-                      e.stopPropagation();
-                      onConfirmDelete(item);
-                    }}
-                    disabled={loadingItem === item.tmdbId}
-                    title={content.watchlists.contextMenu.removeFromWatchlist}
-                  >
-                    <Trash2 className="h-[18px] w-[18px]" />
-                  </button>
-                )}
 
                 {/* More options menu - only for canEdit */}
                 {canEdit && (
@@ -301,6 +308,14 @@ const DraggableRow = memo(function DraggableRow({
                         className="border-border bg-popover z-50 min-w-[180px] overflow-hidden rounded-xl border p-1.5 shadow-xl"
                         sideOffset={5}
                       >
+                        <DropdownMenu.Item
+                          className="relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm text-red-500 transition-colors outline-none select-none hover:bg-red-500/10 focus:bg-red-500/10"
+                          onSelect={() => onDelete(item.tmdbId)}
+                        >
+                          <Trash2 className="mr-2.5 h-4 w-4" />
+                          <span>{content.watchlists.contextMenu.removeFromWatchlist}</span>
+                        </DropdownMenu.Item>
+
                         <DropdownMenu.Item
                           className="hover:bg-accent focus:bg-accent relative flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
                           onSelect={() => handleMoveItem(item.tmdbId, 'first')}
@@ -365,56 +380,41 @@ export function ListItemsTable({
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
-  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
+  const { setMyWatchlists, editableWatchlists, isInAnyOfMyLists } = useMyWatchlists(watchlist.id);
   // setter retiré : setAddingTo n'était appelé que par handleAddToWatchlist
   // (dead code supprimé). Le getter reste utilisé pour disabled state.
   const [addingTo] = useState<number | null>(null);
-  const [itemToDelete, setItemToDelete] = useState<WatchlistItem | null>(null);
+  // Sélection de ligne (style Spotify) : fond persistant + suppression clavier.
+  // Ce n'est PAS un focus DOM (pas d'outline), juste un état visuel.
+  const [focusedRow, setFocusedRow] = useState<number | null>(null);
+  // Pile d'annulation des suppressions, propre à la liste en cours (en mémoire,
+  // vidée à l'unmount / changement de liste).
+  const [undoStack, setUndoStack] = useState<Array<{ item: WatchlistItem; index: number }>>([]);
+
+  // Refs pour le listener clavier global (évite les closures périmées).
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const focusedRowRef = useRef(focusedRow);
+  focusedRowRef.current = focusedRow;
+  const undoStackRef = useRef(undoStack);
+  undoStackRef.current = undoStack;
+  const tableWrapperRef = useRef<HTMLDivElement>(null);
 
   // Sync with parent when watchlist changes
   useEffect(() => {
     setItems(watchlist.items);
   }, [watchlist.items]);
 
-  // Fetch user watchlists if authenticated, or load from localStorage if not
-  const loadWatchlists = useCallback(() => {
-    if (isAuthenticated) {
-      watchlistsApi.getMine()
-        .then(data => setWatchlists(data.watchlists))
-        .catch(console.error);
-    } else {
-      const localWatchlists = getLocalWatchlistsWithOwnership();
-      const ownedWatchlists = localWatchlists.filter(wl => wl.isOwner && wl.id !== watchlist.id);
-      setWatchlists(ownedWatchlists);
-    }
-  }, [isAuthenticated, watchlist.id]);
+  // Reset sélection + undo quand on change de liste, et sélection quand on change
+  // de page de pagination.
+  useEffect(() => {
+    setFocusedRow(null);
+    setUndoStack([]);
+  }, [watchlist.id]);
 
   useEffect(() => {
-    loadWatchlists();
-  }, [loadWatchlists]);
-
-  // Listen for localStorage changes when not authenticated
-  useEffect(() => {
-    if (isAuthenticated) return;
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'watchlists') {
-        loadWatchlists();
-      }
-    };
-
-    const handleCustomStorageChange = () => {
-      loadWatchlists();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('localStorageWatchlistsChanged', handleCustomStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('localStorageWatchlistsChanged', handleCustomStorageChange);
-    };
-  }, [isAuthenticated, loadWatchlists]);
+    setFocusedRow(null);
+  }, [currentPage]);
 
   // Setup drag sensors
   const sensors = useSensors(
@@ -434,13 +434,141 @@ export function ListItemsTable({
     })
   );
 
-  const formatRuntime = useCallback((minutes: number | undefined) => {
-    if (!minutes) return '—';
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins} min` : `${hours}h`;
-  }, []);
+  // Suppression d'un item de la LISTE COURANTE (point d'entrée unique des 3
+  // chemins : touche Backspace, décochage du picker, option « Supprimer »).
+  // Push sur la pile d'undo + suppression optimiste + API.
+  const deleteFromCurrentList = useCallback(
+    async (tmdbId: number) => {
+      const currentItems = itemsRef.current;
+      const index = currentItems.findIndex(it => it.tmdbId === tmdbId);
+      if (index === -1) return;
+      const item = currentItems[index];
+
+      setUndoStack(prev => [...prev, { item, index }]);
+
+      const newItems = currentItems.filter(it => it.tmdbId !== tmdbId);
+      setItems(newItems);
+      setMyWatchlists(prev =>
+        prev.map(wl =>
+          wl.id === watchlist.id
+            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== tmdbId) }
+            : wl
+        )
+      );
+      setFocusedRow(prev => (prev === tmdbId ? null : prev));
+
+      try {
+        await watchlistsApi.removeItem(watchlist.id, String(tmdbId));
+        onUpdate({ ...watchlist, items: newItems });
+        queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      } catch (error) {
+        console.error('Failed to delete item:', error);
+        setItems(currentItems);
+        setMyWatchlists(prev =>
+          prev.map(wl =>
+            wl.id === watchlist.id && !wl.items.some(it => it.tmdbId === tmdbId)
+              ? { ...wl, items: [...wl.items, item] }
+              : wl
+          )
+        );
+        setUndoStack(prev => prev.slice(0, -1));
+        toast.error('Erreur lors de la suppression');
+      }
+    },
+    [watchlist, onUpdate, queryClient, setMyWatchlists]
+  );
+
+  // Annulation (Cmd/Ctrl+Z) : restaure le dernier item supprimé à sa position
+  // d'origine (insert optimiste + addItem puis reorderItems côté serveur).
+  const undoLastDelete = useCallback(async () => {
+    const stack = undoStackRef.current;
+    if (stack.length === 0) return;
+    const { item, index } = stack[stack.length - 1];
+    setUndoStack(prev => prev.slice(0, -1));
+
+    const currentItems = itemsRef.current;
+    const insertAt = Math.min(index, currentItems.length);
+    const newItems = [...currentItems];
+    newItems.splice(insertAt, 0, item);
+    setItems(newItems);
+    setMyWatchlists(prev =>
+      prev.map(wl =>
+        wl.id === watchlist.id && !wl.items.some(it => it.tmdbId === item.tmdbId)
+          ? { ...wl, items: [...wl.items, item] }
+          : wl
+      )
+    );
+
+    try {
+      await watchlistsApi.addItem(watchlist.id, {
+        tmdbId: String(item.tmdbId),
+        mediaType: item.mediaType as 'movie' | 'tv',
+        language: tmdbLanguage,
+        region: tmdbRegion,
+      });
+      await watchlistsApi.reorderItems(
+        watchlist.id,
+        newItems.map(it => String(it.tmdbId))
+      );
+      onUpdate({ ...watchlist, items: newItems });
+      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+    } catch (error) {
+      console.error('Failed to undo delete:', error);
+      setItems(currentItems);
+      toast.error("Erreur lors de l'annulation");
+    }
+  }, [watchlist, onUpdate, queryClient, tmdbLanguage, tmdbRegion, setMyWatchlists]);
+
+  // Listener clavier global : Backspace/Delete (suppr. ligne sélectionnée),
+  // Cmd/Ctrl+Z (undo), Escape (désélection). Gardé contre inputs/dialogs/menus.
+  useEffect(() => {
+    if (!canEdit) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      const isTyping =
+        active instanceof HTMLElement &&
+        (active.tagName === 'INPUT' ||
+          active.tagName === 'TEXTAREA' ||
+          active.isContentEditable);
+      if (isTyping) return;
+      if (
+        document.querySelector(
+          '[role="dialog"][data-state="open"], [role="menu"][data-state="open"]'
+        )
+      ) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) {
+        if (undoStackRef.current.length > 0) {
+          e.preventDefault();
+          void undoLastDelete();
+        }
+        return;
+      }
+      if ((e.key === 'Backspace' || e.key === 'Delete') && focusedRowRef.current != null) {
+        e.preventDefault();
+        void deleteFromCurrentList(focusedRowRef.current);
+        return;
+      }
+      if (e.key === 'Escape' && focusedRowRef.current != null) {
+        setFocusedRow(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [canEdit, deleteFromCurrentList, undoLastDelete]);
+
+  // Désélection au clic hors du tableau.
+  useEffect(() => {
+    if (!canEdit) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (tableWrapperRef.current && !tableWrapperRef.current.contains(e.target as Node)) {
+        setFocusedRow(null);
+      }
+    };
+    window.addEventListener('pointerdown', onPointerDown);
+    return () => window.removeEventListener('pointerdown', onPointerDown);
+  }, [canEdit]);
 
   const handleAddFromDetails = async (
     watchlistId: string,
@@ -454,7 +582,7 @@ export function ListItemsTable({
       posterPath: null,
       mediaType,
     });
-    setWatchlists(prev =>
+    setMyWatchlists(prev =>
       prev.map(wl =>
         wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
           ? { ...wl, items: [...wl.items, placeholder] }
@@ -480,7 +608,7 @@ export function ListItemsTable({
       toast.success('Ajouté à la liste');
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
-      setWatchlists(prev =>
+      setMyWatchlists(prev =>
         prev.map(wl =>
           wl.id === watchlistId
             ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) }
@@ -495,60 +623,36 @@ export function ListItemsTable({
   };
 
   const handleRemoveFromDetails = async (watchlistId: string, tmdbId: string) => {
+    // Décochage de la liste COURANTE → suppression annulable (undo).
+    if (watchlistId === watchlist.id) {
+      await deleteFromCurrentList(Number(tmdbId));
+      return;
+    }
+    // Retrait d'une AUTRE de mes listes (picker uniquement, non annulable).
     const idNum = Number(tmdbId);
     let removed: WatchlistItem | undefined;
-    setWatchlists(prev =>
+    setMyWatchlists(prev =>
       prev.map(wl => {
         if (wl.id !== watchlistId) return wl;
         removed = wl.items.find(it => it.tmdbId === idNum);
         return { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) };
       })
     );
-    if (watchlistId === watchlist.id) {
-      setItems(prev => prev.filter(it => it.tmdbId !== idNum));
-    }
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
       queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
-      if (watchlistId === watchlist.id) {
-        onUpdate();
-      }
       toast.success('Retiré de la liste');
     } catch (error) {
       console.error('Failed to remove from watchlist:', error);
       toast.error('Erreur lors du retrait');
       if (removed) {
         const restored = removed;
-        setWatchlists(prev =>
+        setMyWatchlists(prev =>
           prev.map(wl =>
             wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl
           )
         );
-        if (watchlistId === watchlist.id) {
-          setItems(prev =>
-            prev.some(it => it.tmdbId === idNum) ? prev : [...prev, restored]
-          );
-        }
       }
-    }
-  };
-
-  const handleRemoveItem = async (tmdbId: number) => {
-    try {
-      setLoadingItem(tmdbId);
-      const newItems = items.filter(item => item.tmdbId !== tmdbId);
-      setItems(newItems);
-
-      await watchlistsApi.removeItem(watchlist.id, tmdbId.toString());
-
-      // Notify parent with updated watchlist (no loading flicker)
-      onUpdate({ ...watchlist, items: newItems });
-    } catch (error) {
-      console.error('Failed to remove item:', error);
-      alert('Failed to remove item');
-      setItems(watchlist.items);
-    } finally {
-      setLoadingItem(null);
     }
   };
 
@@ -776,29 +880,11 @@ export function ListItemsTable({
           }
           return row.runtime || 0;
         },
-        cell: info => {
-          const item = info.row.original;
-
-          if (item.mediaType === 'tv') {
-            const seasons = item.numberOfSeasons;
-            const episodes = item.numberOfEpisodes;
-            if (seasons || episodes) {
-              const parts = [];
-              if (seasons) {
-                parts.push(`${seasons} ${seasons > 1 ? 'saisons' : 'saison'}`);
-              }
-              if (episodes) {
-                parts.push(`${episodes} ep`);
-              }
-              return <span className="text-muted-foreground text-sm">{parts.join(', ')}</span>;
-            }
-            return <span className="text-muted-foreground text-sm">—</span>;
-          }
-
-          return (
-            <span className="text-muted-foreground text-sm">{formatRuntime(item.runtime ?? undefined)}</span>
-          );
-        },
+        cell: info => (
+          <span className="text-muted-foreground text-sm">
+            {formatItemFormat(info.row.original)}
+          </span>
+        ),
         size: 150,
       },
       {
@@ -808,7 +894,7 @@ export function ListItemsTable({
         size: 120,
       },
     ],
-    [content, formatRuntime]
+    [content]
   );
 
   const isCustomOrder = sorting.length === 0;
@@ -868,7 +954,7 @@ export function ListItemsTable({
 
   return (
     <>
-      <div className="mb-2 overflow-hidden">
+      <div ref={tableWrapperRef} className="mb-2 overflow-hidden">
         <DndContext
           id={`dnd-watchlist-${watchlist.id}`}
           sensors={sensors}
@@ -908,17 +994,19 @@ export function ListItemsTable({
                     loadingItem={loadingItem}
                     hoveredRow={hoveredRow}
                     setHoveredRow={setHoveredRow}
-                    onConfirmDelete={setItemToDelete}
+                    onDelete={deleteFromCurrentList}
                     handleMoveItem={handleMoveItem}
                     totalItems={displayItems.length}
                     isDragDisabled={!isCustomOrder || !canEdit}
                     canEdit={canEdit}
                     content={content}
-                    watchlists={watchlists}
+                    watchlists={editableWatchlists}
                     addingTo={addingTo}
                     handleAddFromRow={handleAddFromDetails}
                     handleRemoveFromRow={handleRemoveFromDetails}
-                    currentWatchlistId={watchlist.id}
+                    showCheck={canEdit || isInAnyOfMyLists(row.original.tmdbId)}
+                    isFocused={focusedRow === row.original.tmdbId}
+                    onSelect={setFocusedRow}
                     currentWatchlistItems={items}
                     currentWatchlist={watchlist}
                   />
@@ -944,20 +1032,7 @@ export function ListItemsTable({
           platforms={selectedItem.platformList ?? undefined}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < displayItems.length - 1 ? handleNavigateNext : undefined}
-          watchlists={(() => {
-            // N'inclut la watchlist courante dans le picker QUE si l'user
-            // peut y ajouter des items (owner ou collab). Sinon (cas d'une
-            // liste juste sauvegardée/suivie), on ne la montre pas — afficher
-            // une liste qu'on ne peut pas éditer est trompeur.
-            const others = watchlists.filter(
-              w => w.id !== watchlist.id && (w.isOwner || w.isCollaborator)
-            );
-            if (isOwner || isCollaborator) {
-              const currentMerged: Watchlist = { ...watchlist, items };
-              return [currentMerged, ...others];
-            }
-            return others;
-          })()}
+          watchlists={buildPickerWatchlists(editableWatchlists, { ...watchlist, items }, canEdit)}
           isAuthenticated={isAuthenticated}
           onAddToWatchlist={watchlistId =>
             handleAddFromDetails(
@@ -972,50 +1047,6 @@ export function ListItemsTable({
         />
       )}
 
-      {/* Delete Confirmation Modal */}
-      <AlertDialog.Root
-        open={!!itemToDelete}
-        onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
-      >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay
-            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
-            onClick={() => setItemToDelete(null)}
-          />
-          <AlertDialog.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] rounded-lg border p-6 shadow-lg">
-            <AlertDialog.Title className="text-lg font-semibold">
-              Confirmer la suppression
-            </AlertDialog.Title>
-            <AlertDialog.Description className="text-muted-foreground mt-2 text-sm">
-              Voulez-vous vraiment supprimer « {itemToDelete?.title} » de cette watchlist ?
-            </AlertDialog.Description>
-            <div className="mt-6 flex justify-end gap-3">
-              <AlertDialog.Cancel asChild>
-                <button
-                  type="button"
-                  className="border-border hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium transition-colors"
-                >
-                  Annuler
-                </button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <button
-                  type="button"
-                  className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                  onClick={() => {
-                    if (itemToDelete) {
-                      handleRemoveItem(itemToDelete.tmdbId);
-                      setItemToDelete(null);
-                    }
-                  }}
-                >
-                  Supprimer
-                </button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
     </>
   );
 }

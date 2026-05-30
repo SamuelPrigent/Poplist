@@ -58,6 +58,12 @@ export const watchlistsQueries = {
       queryFn: () => watchlists.getItemDetails(tmdbId, type, language),
       staleTime: 60 * 60_000,
     }),
+  recommendations: (id: string, language?: string) =>
+    queryOptions({
+      queryKey: ['watchlists', id, 'recommendations', language] as const,
+      queryFn: () => watchlists.getRecommendations(id, language),
+      staleTime: 30 * 60_000,
+    }),
 };
 
 export const usersQueries = {

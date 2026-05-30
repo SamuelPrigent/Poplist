@@ -8,6 +8,7 @@ const CACHE_TTL = {
   TOP_RATED: 1,
   DISCOVER: 0.25,
   SIMILAR: 7,
+  RECOMMENDATIONS: 7,
   PROVIDERS: 7,
   DETAILS: 7,
   SEARCH: 1,
@@ -399,6 +400,59 @@ export async function getTrending(timeWindow: 'day' | 'week', language: string, 
 
 export async function getSimilar(type: 'movie' | 'tv', id: string, language: string, page: string) {
   return fetchWithCache(`/${type}/${id}/similar`, { language, page }, CACHE_TTL.SIMILAR);
+}
+
+export async function getRecommendations(
+  type: 'movie' | 'tv',
+  id: string,
+  language: string,
+  page: string
+) {
+  return fetchWithCache(`/${type}/${id}/recommendations`, { language, page }, CACHE_TTL.RECOMMENDATIONS);
+}
+
+interface TMDBRecommendationItem {
+  id: number;
+  poster_path?: string | null;
+}
+
+interface TMDBRecommendationsPage {
+  page: number;
+  results: TMDBRecommendationItem[];
+  total_pages: number;
+  total_results: number;
+}
+
+/**
+ * Récupère les recommandations TMDB d'un titre sur plusieurs pages (20 items/page).
+ * Ne retourne que les `tmdbId` ayant un poster (les items sans affiche sont
+ * écartés, comme dans `searchExplore`). L'enrichissement runtime/saisons/épisodes
+ * est fait ensuite par l'appelant via `getMovieDetails`/`getTVDetails`.
+ */
+export async function getRecommendationsMultiPage(
+  type: 'movie' | 'tv',
+  id: string,
+  language: string = 'fr-FR',
+  maxPages: number = 4
+): Promise<number[]> {
+  const ids: number[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= maxPages && page <= totalPages) {
+    const data = await fetchWithCache<TMDBRecommendationsPage>(
+      `/${type}/${id}/recommendations`,
+      { language, page: String(page) },
+      CACHE_TTL.RECOMMENDATIONS
+    );
+    totalPages = data.total_pages ?? 1;
+    for (const item of data.results ?? []) {
+      if (item.poster_path) ids.push(item.id);
+    }
+    page++;
+  }
+
+  return ids;
 }
 
 export async function getPopular(

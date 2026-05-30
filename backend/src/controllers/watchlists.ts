@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 import { and, asc, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
 import type {
+  RecommendedItem,
   Watchlist as SharedWatchlist,
   WatchlistItem as SharedWatchlistItem,
   WatchlistsAPI,
@@ -13,6 +14,7 @@ import {
   watchlistCollaborators,
   watchlistItems,
   watchlistLikes,
+  watchlistRecommendations,
   watchlists,
 } from '../db/schema.js';
 import { cloudinary, deleteFromCloudinary } from '../services/cloudinary.js';
@@ -22,7 +24,14 @@ import {
   regenerateThumbnail,
   uploadThumbnailToCloudinary,
 } from '../services/thumbnail.js';
-import { enrichMediaData, getFullMediaDetails, searchMedia } from '../services/tmdb.js';
+import {
+  enrichMediaData,
+  getFullMediaDetails,
+  getMovieDetails,
+  getRecommendationsMultiPage,
+  getTVDetails,
+  searchMedia,
+} from '../services/tmdb.js';
 import {
   extractDominantColorFromBase64,
   extractDominantColorFromUrl,
@@ -421,6 +430,155 @@ export const getItemDetails = async (c: C) => {
   await saveToCache(cacheKey, responseData, 7);
 
   return c.json(responseData);
+};
+
+// ========================================
+// Recommandations (GET /watchlists/:id/recommendations)
+// ========================================
+
+const RECO_CAP = 150; // taille max de la liste finale (cumul films + séries)
+const RECO_PER_TYPE = Math.ceil(RECO_CAP / 2); // ~75 candidats par type avant interleave
+const RECO_PAGES_PER_SEED = 4; // ~80 candidats bruts par graine (20/page TMDB)
+const RECO_TTL_MS = 30 * 24 * 60 * 60 * 1000; // fraîcheur 30 jours
+
+/**
+ * Fusion round-robin (zip) de deux listes + remainder : alterne 1 film / 1 série
+ * à chaque tour, puis concatène le reste de la liste la plus longue.
+ */
+export function interleaveRecommendations<T>(movies: T[], series: T[]): T[] {
+  const out: T[] = [];
+  const max = Math.max(movies.length, series.length);
+  for (let i = 0; i < max; i++) {
+    if (i < movies.length) out.push(movies[i]);
+    if (i < series.length) out.push(series[i]);
+  }
+  return out;
+}
+
+export const getWatchlistRecommendations = async (c: C) => {
+  const id = param(c, 'id');
+  const userId = c.get('user')?.sub;
+  const language = c.req.query('language') || 'fr-FR';
+
+  if (!isValidWatchlistId(id)) {
+    return c.json({ error: 'Watchlist not found' }, 404);
+  }
+
+  const watchlist = await loadOneWatchlistRelations(id);
+  if (!watchlist) {
+    return c.json({ error: 'Watchlist not found' }, 404);
+  }
+
+  // Accès : liste publique → tout le monde ; sinon owner ou collaborateur.
+  const isOwner = !!userId && watchlist.ownerId === userId;
+  const isCollaborator =
+    !!userId && (watchlist.collaborators?.some(col => col.user.id === userId) ?? false);
+  if (!watchlist.isPublic && !isOwner && !isCollaborator) {
+    return c.json({ error: 'Access denied' }, 403);
+  }
+
+  // 1. Cache DB — servi tel quel si frais (< 30 j)
+  const [existing] = await db
+    .select()
+    .from(watchlistRecommendations)
+    .where(eq(watchlistRecommendations.watchlistId, id))
+    .limit(1);
+
+  if (
+    existing?.generatedAt &&
+    Date.now() - existing.generatedAt.getTime() < RECO_TTL_MS
+  ) {
+    return c.json({
+      items: existing.items,
+      generatedAt: existing.generatedAt.toISOString(),
+    } satisfies WatchlistsAPI.GetWatchlistRecommendationsResponse);
+  }
+
+  // 2. Recalcul
+  const items = watchlist.items ?? [];
+  const movieSeeds = items.filter(it => it.mediaType === 'movie');
+  const tvSeeds = items.filter(it => it.mediaType === 'tv');
+  const ownedKeys = new Set(items.map(it => `${it.mediaType}:${it.tmdbId}`));
+  const usedSeedIds: number[] = [];
+
+  // Récupère des tmdbId candidats pour un type, avec repli si une graine renvoie 0.
+  const collectForType = async (
+    seeds: DBWatchlistItem[],
+    type: 'movie' | 'tv'
+  ): Promise<number[]> => {
+    const pool = [...seeds];
+    const collected = new Set<number>();
+    while (pool.length > 0 && collected.size === 0) {
+      const [seed] = pool.splice(Math.floor(Math.random() * pool.length), 1);
+      usedSeedIds.push(seed.tmdbId);
+      const recIds = await getRecommendationsMultiPage(
+        type,
+        String(seed.tmdbId),
+        language,
+        RECO_PAGES_PER_SEED
+      );
+      for (const recId of recIds) {
+        if (!ownedKeys.has(`${type}:${recId}`)) collected.add(recId);
+      }
+    }
+    return Array.from(collected).slice(0, RECO_PER_TYPE);
+  };
+
+  const [movieRecIds, tvRecIds] = await Promise.all([
+    collectForType(movieSeeds, 'movie'),
+    collectForType(tvSeeds, 'tv'),
+  ]);
+
+  // 3. Enrichissement (runtime / saisons / épisodes) — 1 appel détails par item
+  const enrichIds = async (ids: number[], type: 'movie' | 'tv'): Promise<RecommendedItem[]> => {
+    const results = await Promise.all(
+      ids.map(async recId => {
+        const details =
+          type === 'movie'
+            ? await getMovieDetails(String(recId), language)
+            : await getTVDetails(String(recId), language);
+        if (!details || !details.title) return null;
+        return {
+          tmdbId: recId,
+          mediaType: type,
+          title: details.title,
+          posterPath: details.posterPath,
+          runtime: details.runtime ?? null,
+          numberOfSeasons: details.numberOfSeasons ?? null,
+          numberOfEpisodes: details.numberOfEpisodes ?? null,
+        } satisfies RecommendedItem;
+      })
+    );
+    return results.filter((r): r is RecommendedItem => r !== null);
+  };
+
+  const [movieItems, tvItems] = await Promise.all([
+    enrichIds(movieRecIds, 'movie'),
+    enrichIds(tvRecIds, 'tv'),
+  ]);
+
+  // 4. Interleave films/séries + cap dur
+  const finalItems = interleaveRecommendations(movieItems, tvItems).slice(0, RECO_CAP);
+
+  // 5. Upsert (anti-race sur watchlist_id)
+  const now = new Date();
+  await db
+    .insert(watchlistRecommendations)
+    .values({
+      watchlistId: id,
+      items: finalItems,
+      sourceItemIds: usedSeedIds,
+      generatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: watchlistRecommendations.watchlistId,
+      set: { items: finalItems, sourceItemIds: usedSeedIds, generatedAt: now },
+    });
+
+  return c.json({
+    items: finalItems,
+    generatedAt: now.toISOString(),
+  } satisfies WatchlistsAPI.GetWatchlistRecommendationsResponse);
 };
 
 // ========================================

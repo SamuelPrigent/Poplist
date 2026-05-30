@@ -35,6 +35,12 @@ export const watchlists = {
       { query: { language } }
     ),
 
+  getRecommendations: (id: string, language?: string) =>
+    apiFetch<WatchlistsAPI.GetWatchlistRecommendationsResponse>(
+      `/watchlists/${encodeURIComponent(id)}/recommendations`,
+      { query: { language } }
+    ),
+
   // ============== Protected ==============
 
   getMine: () => apiFetch<WatchlistsAPI.GetMyWatchlistsResponse>('/watchlists/mine'),

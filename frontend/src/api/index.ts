@@ -28,6 +28,7 @@ export type {
   Collaborator,
   FullMediaDetails,
   Platform,
+  RecommendedItem,
   User,
   UserProfilePublic,
   Watchlist,

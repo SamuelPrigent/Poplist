@@ -91,6 +91,12 @@ export const es: Content = {
     add: 'Añadir',
     added: 'Añadido',
     inWatchlist: 'En la lista',
+    recommendations: {
+      title: 'Recomendados',
+      similarTitle: 'Contenido similar',
+      subtitle: 'Según el contenido de esta lista',
+      refresh: 'Actualizar',
+    },
     // Table headers
     tableHeaders: {
       number: '#',

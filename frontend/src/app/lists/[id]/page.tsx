@@ -18,6 +18,7 @@ import {
   ListHeader,
 } from '@/components/List/ListHeader';
 import { ListItemsTable } from '@/components/List/ListItemsTable';
+import { ListRecommendations } from '@/components/List/ListRecommendations';
 import type { EditListDialogRef } from '@/components/List/modal/EditListDialog';
 import { Img as Image } from '@/components/ui/Img';
 import { Button } from '@/components/ui/button';
@@ -424,6 +425,14 @@ export default function ListDetailPage() {
             </>
           );
         })()}
+
+        <ClientOnly>
+          <ListRecommendations
+            watchlist={watchlist}
+            isOwner={isOwner}
+            isCollaborator={isCollaborator}
+          />
+        </ClientOnly>
       </div>
 
       {/*

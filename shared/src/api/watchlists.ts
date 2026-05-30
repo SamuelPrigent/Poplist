@@ -1,7 +1,7 @@
 /**
  * Contracts API pour les routes /watchlists/*
  */
-import type { Collaborator, Platform, Watchlist } from '../entities/watchlist.js';
+import type { Collaborator, Platform, RecommendedItem, Watchlist } from '../entities/watchlist.js';
 import type { FullMediaDetails, TMDBListResponse } from '../entities/tmdb.js';
 
 // ===== Sub-types pour requests =====
@@ -178,6 +178,12 @@ export type SearchTMDBResponse = TMDBListResponse;
 
 export interface GetItemDetailsResponse {
   details: FullMediaDetails;
+}
+
+export interface GetWatchlistRecommendationsResponse {
+  items: RecommendedItem[];
+  /** ISO date du calcul des recommandations (TTL 30 j géré côté backend). */
+  generatedAt: string;
 }
 
 // Re-export Platform pour le SDK frontend

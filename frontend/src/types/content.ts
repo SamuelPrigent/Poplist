@@ -81,6 +81,12 @@ export interface Content {
     add: string;
     added: string;
     inWatchlist: string;
+    recommendations: {
+      title: string;
+      similarTitle: string;
+      subtitle: string;
+      refresh: string;
+    };
     tableHeaders: {
       number: string;
       title: string;

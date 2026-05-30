@@ -32,6 +32,22 @@ export interface WatchlistItem {
 }
 
 /**
+ * Item recommandé pour une watchlist — shape JSON servi par
+ * GET /watchlists/:id/recommendations. Enrichi (runtime/saisons/épisodes)
+ * au moment du calcul pour permettre l'affichage du « format » côté front
+ * sans appel supplémentaire.
+ */
+export interface RecommendedItem {
+  tmdbId: number;
+  mediaType: 'movie' | 'tv';
+  title: string;
+  posterPath: string | null;
+  runtime: number | null;
+  numberOfSeasons: number | null;
+  numberOfEpisodes: number | null;
+}
+
+/**
  * Sous-ensemble d'un User exposé comme owner / collaborator.
  */
 export interface WatchlistOwner {

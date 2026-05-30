@@ -12,6 +12,7 @@ export type { User, UserProfilePublic } from './entities/user.js';
 export type {
   Collaborator,
   Platform,
+  RecommendedItem,
   Watchlist,
   WatchlistItem,
   WatchlistOwner,
