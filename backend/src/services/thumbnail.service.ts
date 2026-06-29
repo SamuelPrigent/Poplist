@@ -1,5 +1,5 @@
 import sharp from 'sharp'
-import { cloudinary } from './cloudinary.js'
+import { cloudinary } from './cloudinary.service.js'
 
 const THUMBNAIL_SIZE = 500
 const POSTER_SIZE = 250

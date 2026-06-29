@@ -19,7 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ChevronRight, Database, Edit, Film, MoreVertical, Plus, Trash2 } from 'lucide-react';
+import { ChevronRight, Edit, Film, GlobeOff, MoreVertical, Plus, Trash2 } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { Img as Image } from '@/components/ui/Img';
 import { useNavigate } from '@tanstack/react-router';
@@ -76,7 +76,7 @@ function WatchlistCardOffline({
       {...(draggableProps?.attributes || {})}
       {...(draggableProps?.listeners || {})}
       tabIndex={0}
-      onKeyDown={e => {
+      onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           navigate({ to: `/local/list/${watchlist.id}` as never });
@@ -145,7 +145,7 @@ function WatchlistCardOffline({
           <DropdownMenu.Trigger asChild>
             <button
               type="button"
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all group-hover:opacity-100 hover:brightness-125 hover:backdrop-brightness-150 focus-visible:opacity-100"
             >
               <MoreVertical className="h-4 w-4" />
@@ -289,7 +289,7 @@ function ListsOfflineContentInner() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const fetchWatchlists = useCallback(() => {
@@ -297,7 +297,7 @@ function ListsOfflineContentInner() {
       setLoading(true);
       const localWatchlists = getLocalWatchlists();
       // Only show watchlists created locally (ownerId === "offline")
-      let ownedWatchlists = localWatchlists.filter(w => w.ownerId === 'offline');
+      let ownedWatchlists = localWatchlists.filter((w) => w.ownerId === 'offline');
 
       // Sort by order if it exists, otherwise by creation date (oldest first)
       ownedWatchlists = ownedWatchlists.sort((a, b) => {
@@ -325,8 +325,8 @@ function ListsOfflineContentInner() {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = watchlists.findIndex(w => w.id === active.id);
-      const newIndex = watchlists.findIndex(w => w.id === over.id);
+      const oldIndex = watchlists.findIndex((w) => w.id === active.id);
+      const newIndex = watchlists.findIndex((w) => w.id === over.id);
 
       const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
       setWatchlists(newWatchlists);
@@ -338,8 +338,8 @@ function ListsOfflineContentInner() {
           order: index,
         }));
 
-        const updatedAllWatchlists = allWatchlists.map(w => {
-          const reordered = watchlistsWithOrder.find(rw => rw.id === w.id);
+        const updatedAllWatchlists = allWatchlists.map((w) => {
+          const reordered = watchlistsWithOrder.find((rw) => rw.id === w.id);
           return reordered || w;
         });
 
@@ -430,7 +430,7 @@ function ListsOfflineContentInner() {
               onMouseEnter={handlePopoverEnter}
               onMouseLeave={handlePopoverLeave}
             >
-              <Database className="h-4 w-4 shrink-0 text-slate-400" />
+              <GlobeOff className="h-4 w-4 shrink-0 text-slate-400" />
               <span className="text-sm font-medium text-slate-300 select-none">
                 {content.watchlists.notLoggedInWarning}
               </span>
@@ -493,18 +493,23 @@ function ListsOfflineContentInner() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <DndContext id="dnd-local-lists" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={watchlists.map(w => w.id)} strategy={rectSortingStrategy}>
+        <DndContext
+          id="dnd-local-lists"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={watchlists.map((w) => w.id)} strategy={rectSortingStrategy}>
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {watchlists.map(watchlist => (
+              {watchlists.map((watchlist) => (
                 <SortableWatchlistCardOffline
                   key={watchlist.id}
                   watchlist={watchlist}
-                  onEdit={wl => {
+                  onEdit={(wl) => {
                     setSelectedWatchlist(wl);
                     setEditDialogOpen(true);
                   }}
-                  onDelete={wl => {
+                  onDelete={(wl) => {
                     setSelectedWatchlist(wl);
                     setDeleteDialogOpen(true);
                   }}

@@ -110,12 +110,20 @@ const tmdbHandlers = [
     return HttpResponse.json({ page: 1, results: [], total_pages: 0, total_results: 0 });
   }),
 
-  // Similar / recommendations (catch-all)
+  // Similar
   http.get(`${TMDB_BASE}/movie/:id/similar`, () =>
     HttpResponse.json({ page: 1, results: [], total_pages: 0 })
   ),
   http.get(`${TMDB_BASE}/tv/:id/similar`, () =>
     HttpResponse.json({ page: 1, results: [], total_pages: 0 })
+  ),
+
+  // Recommendations (vide par défaut ; un test peut surcharger via server.use)
+  http.get(`${TMDB_BASE}/movie/:id/recommendations`, () =>
+    HttpResponse.json({ page: 1, results: [], total_pages: 0, total_results: 0 })
+  ),
+  http.get(`${TMDB_BASE}/tv/:id/recommendations`, () =>
+    HttpResponse.json({ page: 1, results: [], total_pages: 0, total_results: 0 })
   ),
 ];
 
@@ -131,6 +139,9 @@ const cloudinaryHandlers = [
       height: 750,
       format: 'jpg',
     });
+  }),
+  http.post('https://api.cloudinary.com/v1_1/:account/image/destroy', () => {
+    return HttpResponse.json({ result: 'ok' });
   }),
 ];
 

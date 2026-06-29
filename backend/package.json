@@ -12,11 +12,12 @@
     "db-studio": "drizzle-kit studio",
     "db-pull": "drizzle-kit pull",
     "db-generate": "drizzle-kit generate",
-    "test": "dotenv -e .env.test -- vitest run",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "npm run typecheck && dotenv -e .env.test -- vitest run",
     "test:unit": "dotenv -e .env.test -- vitest run tests/unit",
     "test:integration": "dotenv -e .env.test -- vitest run tests/integration",
     "test:watch": "dotenv -e .env.test -- vitest",
-    "test:server": "tsx tests/server.ts"
+    "test:server": "dotenv -e .env.test -- tsx tests/server.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",

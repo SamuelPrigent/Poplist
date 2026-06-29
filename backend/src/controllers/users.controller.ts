@@ -4,9 +4,12 @@ import { and, asc, eq, getTableColumns } from "drizzle-orm";
 import type { UsersAPI } from "@poplist/shared";
 import { db } from "../db/index.js";
 import { userWatchlistPositions, users, watchlists } from "../db/schema.js";
-import { cloudinary, deleteFromCloudinary } from "../services/cloudinary.js";
-import { uploadAvatarSchema } from "../validators/users.js";
-import { formatWatchlistWithRelations, loadWatchlistRelations } from "./watchlists.js";
+import { cloudinary, deleteFromCloudinary } from "../services/cloudinary.service.js";
+import { uploadAvatarSchema } from "../validators/users.validator.js";
+import {
+  formatWatchlistWithRelations,
+  loadWatchlistRelations,
+} from "./watchlists.controller.js";
 import type { AppEnv } from "../app.js";
 
 type C = Context<AppEnv>;

@@ -16,7 +16,7 @@ import { users as usersApi } from '@/api';
 import { useLanguageStore } from '@/store/language';
 
 export default function AccountPage() {
-  const { user, isLoading, updateUsername, changePassword, deleteAccount, refetch } = useAuth();
+  const { user, updateUsername, changePassword, deleteAccount, refetch } = useAuth();
   const { content } = useLanguageStore();
   const navigate = useNavigate();
 
@@ -51,13 +51,6 @@ export default function AccountPage() {
 
   // Client-side mount state (for hydration consistency)
   const mounted = useIsMounted();
-
-  // Redirect to home if not authenticated (wait for auth to load first)
-  useEffect(() => {
-    if (!isLoading && user === null) {
-      navigate({ to: '/home' as never });
-    }
-  }, [user, isLoading, navigate]);
 
   // Update username when user changes
   useEffect(() => {

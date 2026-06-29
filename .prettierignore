@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+.next
+.output
+.nitro
+.turbo
+.playwright
+coverage
+-frontend-next
+-archives
+mobile
+package-lock.json
+pnpm-lock.yaml
+*.md

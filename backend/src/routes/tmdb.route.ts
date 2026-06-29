@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import * as TmdbController from '../controllers/tmdb.js';
+import * as TmdbController from '../controllers/tmdb.controller.js';
 import {
   trendingQuerySchema,
   discoverQuerySchema,
@@ -11,7 +11,7 @@ import {
   providersQuerySchema,
   similarQuerySchema,
   searchExploreQuerySchema,
-} from '../validators/tmdb.js';
+} from '../validators/tmdb.validator.js';
 import type { AppEnv } from '../app.js';
 
 // TMDB data changes slowly: cache aggressively at CDN/browser level.

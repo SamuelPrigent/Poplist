@@ -12,6 +12,8 @@
     "preview": "vite preview",
     "start": "node serve-prod.mjs",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:serve": "vite dev --port 3005 --strictPort",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",

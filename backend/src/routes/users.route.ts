@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { auth } from '../middleware/auth.js';
-import * as UsersController from '../controllers/users.js';
-import { uploadAvatarSchema } from '../validators/users.js';
+import { auth } from '../middleware/auth.middleware.js';
+import * as UsersController from '../controllers/users.controller.js';
+import { uploadAvatarSchema } from '../validators/users.validator.js';
 import type { AppEnv } from '../app.js';
 
 const userRoutes = new Hono<AppEnv>()

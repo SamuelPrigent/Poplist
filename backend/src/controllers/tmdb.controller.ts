@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { TMDBAPI } from '@poplist/shared'
-import * as tmdb from '../services/tmdb.js'
+import * as tmdb from '../services/tmdb.service.js'
 import type { AppEnv } from '../app.js'
 
 type C = Context<AppEnv>

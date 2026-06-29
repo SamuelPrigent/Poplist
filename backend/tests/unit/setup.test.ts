@@ -4,7 +4,7 @@ describe('Test environment setup', () => {
   it('loads .env.test variables', () => {
     expect(process.env.NODE_ENV).toBe('test');
     expect(process.env.DATABASE_URL).toContain('poplist-db-test');
-    expect(process.env.PORT).toBe('3457');
+    expect(process.env.PORT).toBe('4005');
   });
 
   it('uses safe test secrets (not the prod ones)', () => {

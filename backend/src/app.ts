@@ -1,13 +1,13 @@
-import { Hono } from 'hono';
+import { Hono, type MiddlewareHandler } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { HTTPException } from 'hono/http-exception';
 import { env } from './env.js';
-import authRoutes from './routes/auth.js';
-import authMobileRoutes from './routes/auth-mobile.js';
-import userRoutes from './routes/users.js';
-import tmdbRoutes from './routes/tmdb.js';
-import watchlistRoutes from './routes/watchlists.js';
+import authRoutes from './routes/auth.route.js';
+import authMobileRoutes from './routes/auth-mobile.route.js';
+import userRoutes from './routes/users.route.js';
+import tmdbRoutes from './routes/tmdb.route.js';
+import watchlistRoutes from './routes/watchlists.route.js';
 
 export type AppEnv = {
   Variables: {
@@ -18,8 +18,13 @@ export type AppEnv = {
   };
 };
 
+// En test, on coupe le logger Hono (sinon des centaines de lignes `<-- / -->`
+// polluent la sortie de `npm run test:api`).
+const requestLogger: MiddlewareHandler =
+  env.NODE_ENV === 'test' ? (_c, next) => next() : logger();
+
 const app = new Hono<AppEnv>()
-  .use('*', logger())
+  .use('*', requestLogger)
   .use(
     '*',
     cors({

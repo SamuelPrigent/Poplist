@@ -1,0 +1,10 @@
+{
+  // Type-check des tests (exclus du build src/ par tsconfig.json).
+  // rootDir "." pour autoriser tests/ à importer src/ ; noEmit (vérif seule).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}

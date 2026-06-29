@@ -22,13 +22,18 @@ export function useAuthRedirect() {
   const wasAuthenticated = useRef<boolean | null>(null);
 
   useEffect(() => {
-    if (isLoading) return;
-
-    // Premier rendu: stocker l'état initial
+    // Tant qu'on n'a pas de baseline, on attend que l'auth soit stabilisée
+    // (isLoading false) avant de l'enregistrer.
     if (wasAuthenticated.current === null) {
+      if (isLoading) return;
       wasAuthenticated.current = isAuthenticated;
       return;
     }
+
+    // IMPORTANT : ne PAS bailer sur `isLoading` après la baseline. Un logout fait
+    // repasser la query /auth/me en `pending` (removeQueries + query désactivée)
+    // → isLoading redevient true. Si on bailait, la transition logout serait
+    // masquée et la redirection ne se ferait jamais (bug historique sur /account).
 
     // Logout (était auth, ne l'est plus)
     if (wasAuthenticated.current && !isAuthenticated) {
@@ -47,25 +52,19 @@ export function useAuthRedirect() {
 type Navigate = ReturnType<typeof useNavigate>;
 
 function handleLogoutRedirect(pathname: string, navigate: Navigate) {
-  // Sur /account/lists → /local/lists
+  // On ne redirige QUE depuis les pages protégées (compte). Sur les pages
+  // publiques (/, /home, /explore, /lists/[id] public...) on reste sur place.
+
+  // /account/lists (mes listes) → /local/lists (les listes locales prennent le relais)
   if (pathname === '/account/lists') {
     navigate({ to: '/local/lists' as never });
     return;
   }
 
-  // Sur /lists/[id] → /home
-  if (pathname.startsWith('/lists/')) {
-    navigate({ to: '/home' as never });
-    return;
-  }
-
-  // Sur /account (settings) → /home
+  // /account (réglages) et sous-routes compte → landing publique
   if (pathname.startsWith('/account')) {
-    navigate({ to: '/home' as never });
-    return;
+    navigate({ to: '/' as never });
   }
-
-  navigate({ to: '/home' as never });
 }
 
 function handleLoginRedirect(pathname: string, navigate: Navigate) {

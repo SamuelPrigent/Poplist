@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import * as AuthMobileController from '../controllers/auth-mobile.js';
+import * as AuthMobileController from '../controllers/auth-mobile.controller.js';
 import type { AppEnv } from '../app.js';
 
 const authMobileRoutes = new Hono<AppEnv>();

@@ -8,7 +8,7 @@ import { resetDb } from './helpers/db';
  * - charger /home et /explore sans erreur console (hors 401 attendus)
  *
  * Si ce test passe, toute l'orchestration tourne :
- * back-test (3457) + front-test (3001) + Playwright + MSW + DB reset.
+ * back-test (4005) + front-test (3005) + Playwright + MSW + DB reset.
  */
 
 test.beforeEach(async ({ request }) => {

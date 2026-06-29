@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { setupConsoleErrorTracking } from './helpers/console-errors';
 import { freshUser, signupAndLogin } from './helpers/auth';
+import { FRONTEND_BASE } from './helpers/config';
 import { resetDb } from './helpers/db';
-
-const FRONTEND_BASE = 'http://localhost:3002';
 
 /**
  * Tests e2e watchlists : CRUD via API + assertions UI.

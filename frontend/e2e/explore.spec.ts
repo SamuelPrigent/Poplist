@@ -3,7 +3,7 @@ import { setupConsoleErrorTracking } from './helpers/console-errors';
 import { signupAndLogin } from './helpers/auth';
 import { resetDb } from './helpers/db';
 
-const FRONTEND_BASE = 'http://localhost:3002';
+import { BACKEND_URL, FRONTEND_BASE } from './helpers/config';
 
 /**
  * Tests e2e Explore : grid TMDB (mocké via MSW), filtres, pagination, ajout.
@@ -65,7 +65,7 @@ test.describe('Page /explore', () => {
     request,
   }) => {
     const res = await request.get(
-      `http://localhost:3457/tmdb/discover/movie?page=1&lang=fr`
+      `${BACKEND_URL}/tmdb/discover/movie?page=1&lang=fr`
     );
     expect(res.ok()).toBe(true);
     const body = (await res.json()) as {

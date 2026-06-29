@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { auth, optionalAuth } from '../middleware/auth.js';
-import * as WatchlistsController from '../controllers/watchlists.js';
+import { auth, optionalAuth } from '../middleware/auth.middleware.js';
+import * as WatchlistsController from '../controllers/watchlists.controller.js';
 import {
   createWatchlistSchema,
   updateWatchlistSchema,
@@ -14,7 +14,7 @@ import {
   limitQuerySchema,
   tmdbSearchQuerySchema,
   languageQuerySchema,
-} from '../validators/watchlists.js';
+} from '../validators/watchlists.validator.js';
 import type { AppEnv } from '../app.js';
 
 const watchlistRoutes = new Hono<AppEnv>()

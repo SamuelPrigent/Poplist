@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import 'dotenv/config';
+import { z } from "zod";
+import "dotenv/config";
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(3456),
 
   DATABASE_URL: z.string(),
@@ -18,7 +18,7 @@ const envSchema = z.object({
 
   TMDB_API: z.string(),
 
-  CLIENT_URL: z.string().default('http://localhost:3001'),
+  CLIENT_URL: z.string().default("http://localhost:3001"),
 });
 
 export const env = envSchema.parse(process.env);

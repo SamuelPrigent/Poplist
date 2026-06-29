@@ -11,15 +11,15 @@ import {
   hashToken,
   generateTokenId,
   REFRESH_TOKEN_EXPIRY_DAYS,
-} from "../services/jwt.js";
-import { exchangeGoogleCodeMobile } from "../services/google-oauth.js";
-import { generateUniqueUsername } from "../services/username.js";
+} from "../services/jwt.service.js";
+import { exchangeGoogleCodeMobile } from "../services/google-oauth.service.js";
+import { generateUniqueUsername } from "../services/username.service.js";
 import {
   googleMobileSchema,
   refreshMobileSchema,
   loginSchema,
   signupSchema,
-} from "../validators/auth.js";
+} from "../validators/auth.validator.js";
 import type { AppEnv } from "../app.js";
 
 type C = Context<AppEnv>;

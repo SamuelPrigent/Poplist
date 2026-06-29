@@ -1,6 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
-
-const BACKEND_URL = process.env.E2E_BACKEND_URL ?? 'http://localhost:3457';
+import { BACKEND_URL } from './config';
 
 /**
  * Truncate toutes les tables de poplist-db-test.

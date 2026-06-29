@@ -1,14 +1,13 @@
 import type { APIRequestContext, BrowserContext, Page } from '@playwright/test';
+import { FRONTEND_BASE } from './config';
 
 /**
  * Helpers d'authentification programmatique pour e2e.
  *
- * On passe par le proxy Vite `/api/*` (port 3001) plutôt que d'appeler
- * directement le backend (port 3457). Ainsi les cookies sont posés sur
- * le domaine du frontend → utilisables ensuite par la page.
+ * On passe par le proxy Vite `/api/*` (front de test) plutôt que d'appeler
+ * directement le backend. Ainsi les cookies sont posés sur le domaine du
+ * frontend → utilisables ensuite par la page.
  */
-
-const FRONTEND_BASE = process.env.E2E_FRONTEND_URL ?? 'http://localhost:3002';
 
 export interface TestUser {
   email: string;

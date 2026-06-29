@@ -1,7 +1,7 @@
 import { getCookie } from 'hono/cookie';
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
-import { verifyAccessToken } from '../services/jwt.js';
+import { verifyAccessToken } from '../services/jwt.service.js';
 import type { AppEnv } from '../app.js';
 
 function extractToken(c: any): string | undefined {

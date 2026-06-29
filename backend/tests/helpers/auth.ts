@@ -1,8 +1,20 @@
 import app from '../../src/app.js';
+import { signAccessToken } from '../../src/services/jwt.service.js';
+
+/**
+ * Forge un cookie d'auth valide SANS passer par /auth/login (rapide).
+ * Le middleware `auth` vérifie quand même réellement le token (secret de test) ;
+ * on saute juste le coût du login (bcrypt + round-trip) pour tester les
+ * endpoints protégés.
+ */
+export function authCookie(user: { id: string; email: string }): string {
+  return `accessToken=${signAccessToken({ sub: user.id, email: user.email })}`;
+}
 
 /**
  * Login via la route HTTP réelle, retourne le header `Cookie` à réinjecter
- * dans les requêtes suivantes du même test.
+ * dans les requêtes suivantes du même test. (Pour tester le flow de login
+ * lui-même ; sinon préférer `authCookie` plus rapide.)
  */
 export async function loginAndGetCookie(email: string, password: string): Promise<string> {
   const res = await app.fetch(

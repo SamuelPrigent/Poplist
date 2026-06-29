@@ -17,13 +17,13 @@ import {
   watchlistRecommendations,
   watchlists,
 } from '../db/schema.js';
-import { cloudinary, deleteFromCloudinary } from '../services/cloudinary.js';
+import { cloudinary, deleteFromCloudinary } from '../services/cloudinary.service.js';
 import {
   deleteThumbnailFromCloudinary,
   generateThumbnail,
   regenerateThumbnail,
   uploadThumbnailToCloudinary,
-} from '../services/thumbnail.js';
+} from '../services/thumbnail.service.js';
 import {
   enrichMediaData,
   getFullMediaDetails,
@@ -31,13 +31,13 @@ import {
   getRecommendationsMultiPage,
   getTVDetails,
   searchMedia,
-} from '../services/tmdb.js';
+} from '../services/tmdb.service.js';
 import {
   extractDominantColorFromBase64,
   extractDominantColorFromUrl,
   FALLBACK_COLOR,
-} from '../services/dominant-color.js';
-import { saveToCache } from '../services/cache.js';
+} from '../services/dominant-color.service.js';
+import { saveToCache } from '../services/cache.service.js';
 import type { z } from 'zod';
 import {
   createWatchlistSchema,
@@ -48,7 +48,7 @@ import {
   reorderItemsSchema,
   reorderWatchlistsSchema,
   uploadCoverSchema,
-} from '../validators/watchlists.js';
+} from '../validators/watchlists.validator.js';
 import type { AppEnv } from '../app.js';
 import type { Platform } from '../types/index.js';
 

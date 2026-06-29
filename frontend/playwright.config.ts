@@ -1,7 +1,12 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
 
-const FRONTEND_PORT = Number(process.env.E2E_FRONTEND_PORT ?? 3002);
-const BACKEND_URL = process.env.E2E_BACKEND_URL ?? 'http://localhost:3457';
+const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(CONFIG_DIR, '..');
+
+const FRONTEND_PORT = Number(process.env.E2E_FRONTEND_PORT ?? 3005);
+const BACKEND_URL = process.env.E2E_BACKEND_URL ?? 'http://localhost:4005';
 
 export default defineConfig({
   testDir: './e2e',
@@ -35,10 +40,34 @@ export default defineConfig({
     },
   ],
 
-  // Pas de webServer ici : on les lance via concurrently dans le script racine
-  // (back-test port 3457, frontend port 3001). Voir package.json racine.
-  // Si tu veux lancer Playwright SEUL en supposant que back+front tournent déjà,
-  // cette config marche directement.
+  // Playwright lance lui-même les serveurs (back de test + front), attend leur
+  // `url`, puis les tue à la fin. `reuseExistingServer` en local réutilise un
+  // serveur déjà up ; en CI on spawn toujours frais.
+  webServer: [
+    {
+      // Backend de test : tsx tests/server.ts charge .env.test (PORT=4005, DB de test) + MSW.
+      command: 'npm run test:server',
+      cwd: path.join(ROOT, 'backend'),
+      url: `${BACKEND_URL}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+    {
+      // Front en mode development (SSR servi) ; VITE_BACKEND_URL passé en env
+      // (PAS --mode test, qui casserait le SSR TanStack Start en dev).
+      command: 'npm run test:serve',
+      cwd: CONFIG_DIR,
+      env: { VITE_BACKEND_URL: BACKEND_URL },
+      url: `http://localhost:${FRONTEND_PORT}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+  ],
+
   // outputDir hors du dossier frontend pour ne pas déclencher Vite HMR sur les traces
   outputDir: '../.playwright/test-artifacts',
 

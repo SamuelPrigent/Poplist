@@ -16,6 +16,7 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 config({
   path: fileURLToPath(new URL('../.env.test', import.meta.url)),
   override: true,
+  quiet: true,
 });
 
 // SAFETY : refuse de tourner si on pointe ailleurs que sur poplist-db-test.

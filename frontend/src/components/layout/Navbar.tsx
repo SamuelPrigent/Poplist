@@ -32,15 +32,11 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
+    // La redirection post-logout est centralisée dans `useAuthRedirect` (monté
+    // dans Providers) : il réagit à la perte de session quelle qu'en soit la
+    // source (ce clic, expiration de token...). Éviter de dupliquer ici (la
+    // duplication avait introduit un bug : `/account` ne matchait pas `/account/`).
     await logout();
-
-    // Smart redirect based on current route
-    if (pathname === '/account/lists') {
-      navigate({ to: '/local/lists' as never });
-    } else if (pathname.startsWith('/account/')) {
-      navigate({ to: '/home' as never });
-    }
-    // For other pages, no redirect needed (stays on current page)
   };
 
   const isHomeActive = pathname === '/home';

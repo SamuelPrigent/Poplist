@@ -12,14 +12,14 @@ import {
   hashToken,
   generateTokenId,
   REFRESH_TOKEN_EXPIRY_DAYS,
-} from '../services/jwt.js'
+} from '../services/jwt.service.js'
 import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
   clearAuthCookies,
-} from '../services/cookie.js'
-import { getGoogleAuthURL, getGoogleUserInfo, getClientURL } from '../services/google-oauth.js'
-import { generateUniqueUsername } from '../services/username.js'
+} from '../services/cookie.service.js'
+import { getGoogleAuthURL, getGoogleUserInfo, getClientURL } from '../services/google-oauth.service.js'
+import { generateUniqueUsername } from '../services/username.service.js'
 import type { z } from 'zod'
 import {
   signupSchema,
@@ -29,7 +29,7 @@ import {
   changePasswordSchema,
   deleteAccountSchema,
   setTokensSchema,
-} from '../validators/auth.js'
+} from '../validators/auth.validator.js'
 import type { AppEnv } from '../app.js'
 
 type C = Context<AppEnv>

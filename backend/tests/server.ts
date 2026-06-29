@@ -6,7 +6,7 @@
  * - Démarre MSW pour intercepter les calls externes (TMDB, Cloudinary, Google)
  * - Safety check : refuse de démarrer si DATABASE_URL ne pointe pas sur poplist-db-test
  *
- * Le frontend Playwright pointe vers ce serveur (port 3457 par défaut, via .env.test).
+ * Le frontend Playwright pointe vers ce serveur (port 4005 par défaut, via .env.test).
  */
 
 import { config } from 'dotenv';
@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 config({
   path: fileURLToPath(new URL('../.env.test', import.meta.url)),
   override: true,
+  quiet: true,
 });
 
 // 2. Safety check

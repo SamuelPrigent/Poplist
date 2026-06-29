@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { auth } from '../middleware/auth.js';
-import * as AuthController from '../controllers/auth.js';
+import { auth } from '../middleware/auth.middleware.js';
+import * as AuthController from '../controllers/auth.controller.js';
 import {
   signupSchema,
   loginSchema,
@@ -10,7 +10,7 @@ import {
   updateLanguageSchema,
   changePasswordSchema,
   deleteAccountSchema,
-} from '../validators/auth.js';
+} from '../validators/auth.validator.js';
 import type { AppEnv } from '../app.js';
 
 const authRoutes = new Hono<AppEnv>()

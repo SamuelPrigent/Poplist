@@ -1,5 +1,5 @@
-import { getFromCache, saveToCache, buildCacheKey } from './cache.js';
-import { fetchFromTMDB } from './tmdb-queue.js';
+import { getFromCache, saveToCache, buildCacheKey } from './cache.service.js';
+import { fetchFromTMDB } from './tmdb-queue.service.js';
 
 const CACHE_TTL = {
   GENRES: 30,
