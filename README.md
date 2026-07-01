@@ -1,6 +1,6 @@
 # Poplist
 
-Application web de listes de films et séries — création, organisation collaborative, partage public, métadonnées TMDB. Web (Next.js) et Android.
+Application web de listes de films et séries — création, organisation collaborative, partage public, métadonnées TMDB. Web (TanStack Start) et Android.
 
 ---
 
@@ -9,7 +9,7 @@ Application web de listes de films et séries — création, organisation collab
 | Couche            | Choix                                                           |
 | ----------------- | --------------------------------------------------------------- |
 | Monorepo          | npm workspaces + Turborepo                                      |
-| Frontend web      | Next.js 16 (App Router) · React 19 · Tailwind v4 · Radix UI     |
+| Frontend web      | TanStack Start (React SSR, Vite 8 + Nitro 3) · React 19 · Tailwind v4 · Radix UI |
 | Backend           | Hono v4 · TypeScript · Node 22+                                 |
 | Base de données   | PostgreSQL · Drizzle ORM (Core API, joins explicites)           |
 | Types partagés    | Workspace `@poplist/shared` (entities + contrats API)           |
@@ -17,7 +17,7 @@ Application web de listes de films et séries — création, organisation collab
 | Validation        | Zod (env, body, schémas)                                        |
 | Stockage médias   | Cloudinary (avatars, covers, thumbnails)                        |
 | Cache TMDB        | DB-backed (table dédiée, TTL paramétrable par endpoint)         |
-| State côté client | Zustand · SWR (data fetching)                                   |
+| State côté client | Zustand · TanStack Query (data fetching)                        |
 | UI                | shadcn/ui · motion · sonner · cmdk · @dnd-kit                   |
 | Déploiement       | Vercel (web) · Railway (backend) · Neon (Postgres)              |
 
@@ -33,7 +33,7 @@ Trois packages liés par npm workspaces, orchestrés par Turborepo :
 poplist/
 ├── shared/      → @poplist/shared : types DOM + contrats API (zéro runtime)
 ├── backend/     → Hono + Drizzle (API REST)
-├── frontend/    → Next.js (web)
+├── frontend/    → TanStack Start (web, SSR via Vite + Nitro)
 └── mobile/      → Android (consomme l'API via /auth/mobile/*)
 ```
 
@@ -73,27 +73,29 @@ backend/src/
 
 **Cache TMDB DB-backed** : table `api_caches` avec `requestUrl` indexé et TTL par endpoint. Pas de Redis — la DB suffit pour le volume actuel et simplifie le déploiement.
 
-### Frontend (Next.js 16 App Router)
+### Frontend (TanStack Start — Vite 8 + Nitro 3)
 
 ```
 frontend/src/
-├── app/                → routes App Router (layouts, pages, error.tsx)
-├── api/                → SDK typé : auth, users, watchlists, tmdb + apiFetch
+├── routes/             → routing file-based TanStack Router (__root, index, home, explore, lists/$id...)
+├── app/                → composants de contenu par page (XxxContent.tsx) rendus par les routes
+├── api/                → SDK typé : auth, users, watchlists, tmdb + client (apiFetch)
 ├── components/
-│   ├── ui/             → primitives shadcn/ui customisées
-│   ├── List/           → composants liés aux watchlists
+│   ├── ui/             → primitives shadcn/ui customisées (dont drawer vaul, wheel-picker)
+│   ├── List/           → composants watchlists + modales/drawers responsive
 │   ├── Home/Landing/   → sections de pages
-│   └── layout/         → header, footer, navigation
+│   └── layout/         → header, footer, navigation, bottom-nav mobile
 ├── features/           → flows métier (auth drawer, sync localStorage)
 ├── context/            → AuthContext (user, login, logout)
 ├── store/              → Zustand (filtres listes, langue)
-├── hooks/              → SWR helpers, useAuthRedirect, useScrollToTopOnMount...
-└── proxy.ts            → API_BASE = '/api' → rewrite Next vers backend
+└── hooks/              → helpers TanStack Query, useAuthRedirect, useIsMobile, useIsMounted...
 ```
 
-**Proxy `/api` côté Next** (`next.config.ts`) : tous les appels frontend passent par `/api/*` qui est `rewrite` vers le backend. Avantage : cookies httpOnly same-site (pas de CORS cross-domain en prod), une seule URL côté client.
+Point d'entrée config : `frontend/vite.config.ts` (plugins TanStack Start + Nitro + Tailwind). Dev : `vite dev` (port 3001).
 
-**Hydratation et SSR** : pages publiques (landing, listes featured, profils) rendues côté serveur via fetch direct au backend. Pages authentifiées en client components avec SWR pour bénéficier du revalidate-on-focus et du cache partagé.
+**Proxy `/api`** : côté navigateur, tous les appels passent par `/api/*` — proxy Vite en dev, `rewrite` de `frontend/vercel.json` en prod vers le backend Railway (en stripant `/api`). Avantage : cookies httpOnly same-site (pas de CORS cross-domain en prod), une seule URL côté client. En SSR (Node), on appelle l'URL absolue du backend via `VITE_BACKEND_URL` (cf. `frontend/src/api/client.ts`).
+
+**Hydratation et SSR** : rendu serveur via Nitro. Les données sont chargées dans les loaders de route puis hydratées côté client via TanStack Query (dehydrate/hydrate) → cache partagé, revalidate-on-focus, zéro flicker. Le SSR n'a pas les cookies user : les endpoints protégés renvoient 401, puis le client refetch après hydratation.
 
 **Persistance offline** : un user non-connecté peut créer des listes en localStorage. Au login, un flow de migration propose de pousser ces listes vers la DB (`features/watchlists/localStorage.ts`).
 
@@ -155,7 +157,8 @@ CLIENT_URL=http://localhost:3001
 **`frontend/.env`** :
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3000
+# URL absolue du backend, utilisée en SSR (Node) et injectée au build par Vite.
+VITE_BACKEND_URL=http://localhost:3000
 ```
 
 L'env backend est validé par Zod au boot ([backend/src/env.ts](backend/src/env.ts)) — toute variable manquante stoppe le démarrage avec un message clair.
@@ -194,7 +197,7 @@ npm run dev
 
 ## Déploiement
 
-- **Frontend** : Vercel, build via `next build`. Le `next.config.ts` proxifie `/api/*` vers la prod backend via `NEXT_PUBLIC_API_URL`.
+- **Frontend** : Vercel (framework preset Vite), build via `vite build`. `frontend/vercel.json` rewrite `/api/*` vers le backend Railway ; le SSR lit `VITE_BACKEND_URL`.
 - **Backend** : Railway, build via `tsc`, run via `node dist/index.js`.
 - **DB** : Neon (PostgreSQL serverless). Schema poussé via `npm run db-push-prod` (utilise `.env.prod` via `dotenv-cli`).
 - **Cookies** : `Secure` + `SameSite=None` en prod (cross-site web↔backend), `Lax` en dev.

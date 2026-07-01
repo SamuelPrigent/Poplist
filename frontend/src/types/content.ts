@@ -7,6 +7,7 @@ export interface Content {
     signup: string;
     logout: string;
     myLists: string;
+    categories: string;
   };
   auth: {
     loginTitle: string;
@@ -115,6 +116,7 @@ export interface Content {
       director: string;
       creator: string;
       availableOn: string;
+      availableShort: string;
       mainCast: string;
       seeMore: string;
       seeLess: string;
@@ -175,6 +177,8 @@ export interface Content {
     hero: {
       title: string;
       subtitle: string;
+      titleMobile: string;
+      subtitleMobile: string;
     };
     features: {
       sectionTitle: string;
@@ -238,6 +242,7 @@ export interface Content {
     finalCta: {
       title: string;
       subtitle: string;
+      subtitleMobile: string;
       button: string;
       disclaimer: string;
     };
@@ -338,6 +343,9 @@ export interface Content {
       search: string;
       noYearFound: string;
       clearYears: string;
+      genres: string;
+      year: string;
+      apply: string;
     };
     genres: {
       action: string;

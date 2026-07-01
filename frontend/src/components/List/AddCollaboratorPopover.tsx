@@ -6,6 +6,15 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { watchlists as watchlistsApi } from '@/api';
 import type { Collaborator } from '@/api';
 import { useLanguageStore } from '@/store/language';
@@ -20,14 +29,17 @@ interface AddCollaboratorPopoverProps {
 
 type ValidationState = 'idle' | 'checking' | 'valid' | 'invalid' | 'error';
 
-export function AddCollaboratorPopover({
+// ---------------------------------------------------------------------------
+// Hook partagé : validation username + ajout / retrait de collaborateurs.
+// ---------------------------------------------------------------------------
+function useCollaboratorForm({
   watchlistId,
-  collaborators,
   onCollaboratorsChange,
-  children,
-}: AddCollaboratorPopoverProps) {
+}: {
+  watchlistId: string;
+  onCollaboratorsChange: (collaborators: Collaborator[]) => void;
+}) {
   const { content } = useLanguageStore();
-  const [open, setOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [validationState, setValidationState] = useState<ValidationState>('idle');
   const [isAdding, setIsAdding] = useState(false);
@@ -65,6 +77,8 @@ export function AddCollaboratorPopover({
 
     return () => clearTimeout(timeoutId);
   }, [username]);
+
+  const isAddButtonDisabled = validationState !== 'valid' || isAdding || !username.trim();
 
   const handleAddCollaborator = async () => {
     if (validationState !== 'valid' || !username.trim()) return;
@@ -130,99 +144,191 @@ export function AddCollaboratorPopover({
     }
   };
 
-  const isAddButtonDisabled = validationState !== 'valid' || isAdding || !username.trim();
+  return {
+    username,
+    setUsername,
+    isAdding,
+    isAddButtonDisabled,
+    handleAddCollaborator,
+    handleRemoveCollaborator,
+    getValidationIcon,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Corps partagé : champ + bouton "+" + liste des collaborateurs. Le titre et
+// la description sont fournis par le shell (popover ou drawer).
+// ---------------------------------------------------------------------------
+type CollaboratorForm = ReturnType<typeof useCollaboratorForm>;
+
+function CollaboratorBody({
+  form,
+  collaborators,
+}: {
+  form: CollaboratorForm;
+  collaborators: Collaborator[];
+}) {
+  const { content } = useLanguageStore();
+  const {
+    username,
+    setUsername,
+    isAdding,
+    isAddButtonDisabled,
+    handleAddCollaborator,
+    handleRemoveCollaborator,
+    getValidationIcon,
+  } = form;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Input
+            placeholder={content.watchlists.collaborators?.usernamePlaceholder || "Nom d'utilisateur"}
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !isAddButtonDisabled) {
+                handleAddCollaborator();
+              }
+            }}
+            className="pr-10"
+            disabled={isAdding}
+          />
+          <div className="absolute top-1/2 right-3 -translate-y-1/2">{getValidationIcon()}</div>
+        </div>
+
+        <Button
+          onClick={handleAddCollaborator}
+          disabled={isAddButtonDisabled}
+          className="aspect-square cursor-pointer p-0!"
+          size="icon"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {collaborators.length > 0 && (
+        <div className="border-t pt-3">
+          <h4 className="text-muted-foreground mb-2 text-xs font-semibold">
+            {content.watchlists.collaborators?.currentTitle || 'Collaborateurs actuels'}
+          </h4>
+          <div className="space-y-1">
+            {collaborators.map(collaborator => (
+              <div
+                key={collaborator.id}
+                className="bg-muted/50 flex items-center justify-between rounded-md p-2 text-sm"
+              >
+                <div className="flex items-center gap-2">
+                  {collaborator.avatarUrl ? (
+                    <Image
+                      src={collaborator.avatarUrl}
+                      alt={collaborator.username ?? ''}
+                      className="h-7 w-7 rounded-full object-cover"
+                      width={28}
+                      height={28}
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="bg-muted flex h-7 w-7 items-center justify-center rounded-full">
+                      <User className="text-muted-foreground h-4 w-4" />
+                    </div>
+                  )}
+                  <span className="font-medium">{collaborator.username}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleRemoveCollaborator(collaborator.id, collaborator.username ?? '')
+                  }
+                  className="text-muted-foreground cursor-pointer rounded transition-colors hover:text-red-500"
+                  title={content.watchlists.collaborators?.remove || 'Retirer'}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===========================================================================
+// Switcher responsive : < 750px → drawer bottom, sinon popover desktop.
+// ===========================================================================
+export function AddCollaboratorPopover(props: AddCollaboratorPopoverProps) {
+  const isMobile = useIsMobile();
+  return isMobile ? (
+    <CollaboratorDrawerShell {...props} />
+  ) : (
+    <CollaboratorPopoverShell {...props} />
+  );
+}
+
+// -------------------------------------------------------------------------
+// Shell popover (desktop) — inchangé.
+// -------------------------------------------------------------------------
+function CollaboratorPopoverShell({
+  watchlistId,
+  collaborators,
+  onCollaboratorsChange,
+  children,
+}: AddCollaboratorPopoverProps) {
+  const { content } = useLanguageStore();
+  const [open, setOpen] = useState(false);
+  const form = useCollaboratorForm({ watchlistId, onCollaboratorsChange });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-80 p-4" side="right" align="start">
-        <div className="space-y-4">
-          <div>
-            <h3 className="mb-2 text-sm font-semibold">
-              {content.watchlists.collaborators?.addTitle || 'Ajouter un collaborateur'}
-            </h3>
-            <p className="text-muted-foreground mb-3 text-xs">
-              {content.watchlists.collaborators?.addDescription ||
-                'Entrez le nom utilisateur du collaborateur'}
-            </p>
-
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Input
-                  placeholder={
-                    content.watchlists.collaborators?.usernamePlaceholder || "Nom d'utilisateur"
-                  }
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !isAddButtonDisabled) {
-                      handleAddCollaborator();
-                    }
-                  }}
-                  className="pr-10"
-                  disabled={isAdding}
-                />
-                <div className="absolute top-1/2 right-3 -translate-y-1/2">
-                  {getValidationIcon()}
-                </div>
-              </div>
-
-              <Button
-                onClick={handleAddCollaborator}
-                disabled={isAddButtonDisabled}
-                className="aspect-square cursor-pointer p-0!"
-                size="icon"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {collaborators.length > 0 && (
-            <div className="border-t pt-3">
-              <h4 className="text-muted-foreground mb-2 text-xs font-semibold">
-                {content.watchlists.collaborators?.currentTitle || 'Collaborateurs actuels'}
-              </h4>
-              <div className="space-y-1">
-                {collaborators.map(collaborator => (
-                  <div
-                    key={collaborator.id}
-                    className="bg-muted/50 flex items-center justify-between rounded-md p-2 text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      {collaborator.avatarUrl ? (
-                        <Image
-                          src={collaborator.avatarUrl}
-                          alt={collaborator.username ?? ''}
-                          className="h-7 w-7 rounded-full object-cover"
-                          width={28}
-                          height={28}
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="bg-muted flex h-7 w-7 items-center justify-center rounded-full">
-                          <User className="text-muted-foreground h-4 w-4" />
-                        </div>
-                      )}
-                      <span className="font-medium">{collaborator.username}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleRemoveCollaborator(collaborator.id, collaborator.username ?? '')
-                      }
-                      className="text-muted-foreground cursor-pointer rounded transition-colors hover:text-red-500"
-                      title={content.watchlists.collaborators?.remove || 'Retirer'}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="mb-4">
+          <h3 className="mb-2 text-sm font-semibold">
+            {content.watchlists.collaborators?.addTitle || 'Ajouter un collaborateur'}
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            {content.watchlists.collaborators?.addDescription ||
+              'Entrez le nom utilisateur du collaborateur'}
+          </p>
         </div>
+        <CollaboratorBody form={form} collaborators={collaborators} />
       </PopoverContent>
     </Popover>
+  );
+}
+
+// -------------------------------------------------------------------------
+// Shell drawer (mobile) — bottom sheet.
+// -------------------------------------------------------------------------
+function CollaboratorDrawerShell({
+  watchlistId,
+  collaborators,
+  onCollaboratorsChange,
+  children,
+}: AddCollaboratorPopoverProps) {
+  const { content } = useLanguageStore();
+  const [open, setOpen] = useState(false);
+  const form = useCollaboratorForm({ watchlistId, onCollaboratorsChange });
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>
+            {content.watchlists.collaborators?.addTitle || 'Ajouter un collaborateur'}
+          </DrawerTitle>
+          <DrawerDescription>
+            {content.watchlists.collaborators?.addDescription ||
+              'Entrez le nom utilisateur du collaborateur'}
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="overflow-y-auto px-4 pt-1 pb-[calc(2.25rem+env(safe-area-inset-bottom))]">
+          <CollaboratorBody form={form} collaborators={collaborators} />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

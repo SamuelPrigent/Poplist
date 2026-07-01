@@ -2,15 +2,26 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ArrowLeft, Calendar, Check, Eye, Search, Star, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Check, Eye, Plus, Search, Star, X } from 'lucide-react';
 import { Img as Image } from '@/components/ui/Img';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { CompactWatchProviders, getValidProviders } from '../CompactWatchProviders';
 import { createPlaceholderItem, watchlists as watchlistsApi } from '@/api';
 import type { FullMediaDetails, Watchlist, WatchlistItem } from '@/api';
 import { fetchTMDBProviders } from '@/api';
+import { cn } from '@/lib/cn';
 import { getLocalWatchlists } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
@@ -34,13 +45,10 @@ interface SearchResult {
   runtime?: number;
 }
 
-export function AddItemModal({
-  open,
-  onOpenChange,
-  watchlist,
-  onSuccess,
-  offline = false,
-}: AddItemModalProps) {
+// ---------------------------------------------------------------------------
+// Hook partagé : recherche, sélection, ajout/retrait — consommé par les 2 shells.
+// ---------------------------------------------------------------------------
+function useAddItem({ open, watchlist, onSuccess, offline = false }: AddItemModalProps) {
   const { content, language } = useLanguageStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -50,16 +58,16 @@ export function AddItemModal({
   const searchTimeoutRef = useRef<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // State for inline details view
   const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [itemDetails, setItemDetails] = useState<FullMediaDetails | null>(null);
+  const [detailProviders, setDetailProviders] = useState<Array<{ name: string; logoPath: string }>>(
+    []
+  );
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // Fresh watchlist items - fetched when modal opens
   const [freshWatchlistItems, setFreshWatchlistItems] = useState<WatchlistItem[]>(watchlist.items);
 
-  // Get language code from store
   const languageCode = getTMDBLanguage(language);
   const region = getTMDBRegion(language);
 
@@ -102,12 +110,12 @@ export function AddItemModal({
         setSelectedItem(null);
         setSelectedIndex(-1);
         setItemDetails(null);
+        setDetailProviders([]);
       }, 300);
       return () => clearTimeout(timer);
     }
   }, [open, addedItemIds.size, removedItemIds.size, onSuccess]);
 
-  // Debounced search
   const handleSearch = useCallback(
     async (query: string) => {
       if (!query.trim()) {
@@ -135,17 +143,14 @@ export function AddItemModal({
 
   const onSearchChange = (value: string) => {
     setSearchQuery(value);
-
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-
     searchTimeoutRef.current = window.setTimeout(() => {
       handleSearch(value);
     }, 500);
   };
 
-  // Virtualizer setup
   const virtualizer = useVirtualizer({
     count: searchResults.length,
     getScrollElement: () => scrollContainerRef.current,
@@ -157,25 +162,25 @@ export function AddItemModal({
     const existsInWatchlist = freshWatchlistItems.some(item => item.tmdbId === tmdbId);
     const wasAddedThisSession = addedItemIds.has(tmdbId);
     const wasRemovedThisSession = removedItemIds.has(tmdbId);
-
     if (wasRemovedThisSession) return false;
     return existsInWatchlist || wasAddedThisSession;
   };
 
-  // Handle viewing item details inline
   const handleViewDetails = async (item: SearchResult, index: number) => {
     setSelectedItem(item);
     setSelectedIndex(index);
     setLoadingDetails(true);
     setItemDetails(null);
+    setDetailProviders([]);
 
     try {
-      const { details } = await watchlistsApi.getItemDetails(
-        item.id.toString(),
-        item.media_type,
-        languageCode
-      );
+      // Détails + plateformes en parallèle (mêmes infos que ItemDetailsModal).
+      const [{ details }, providers] = await Promise.all([
+        watchlistsApi.getItemDetails(item.id.toString(), item.media_type, languageCode),
+        fetchTMDBProviders(item.id.toString(), item.media_type, region),
+      ]);
       setItemDetails(details);
+      setDetailProviders(providers);
     } catch (error) {
       console.error('Error fetching details:', error);
     } finally {
@@ -187,19 +192,18 @@ export function AddItemModal({
     setSelectedItem(null);
     setSelectedIndex(-1);
     setItemDetails(null);
+    setDetailProviders([]);
   };
 
   const handleNavigatePrevious = () => {
     if (selectedIndex > 0) {
-      const prevItem = searchResults[selectedIndex - 1];
-      handleViewDetails(prevItem, selectedIndex - 1);
+      handleViewDetails(searchResults[selectedIndex - 1], selectedIndex - 1);
     }
   };
 
   const handleNavigateNext = () => {
     if (selectedIndex < searchResults.length - 1) {
-      const nextItem = searchResults[selectedIndex + 1];
-      handleViewDetails(nextItem, selectedIndex + 1);
+      handleViewDetails(searchResults[selectedIndex + 1], selectedIndex + 1);
     }
   };
 
@@ -214,7 +218,6 @@ export function AddItemModal({
 
         const watchlists: Watchlist[] = JSON.parse(localWatchlists);
         const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
-
         if (watchlistIndex === -1) return;
 
         const [platformList, mediaDetails] = await Promise.all([
@@ -262,7 +265,6 @@ export function AddItemModal({
 
         const watchlists: Watchlist[] = JSON.parse(localWatchlists);
         const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
-
         if (watchlistIndex === -1) return;
 
         watchlists[watchlistIndex].items = watchlists[watchlistIndex].items.filter(
@@ -289,11 +291,8 @@ export function AddItemModal({
     return date ? new Date(date).getFullYear() : null;
   };
 
-  const getMediaType = (type: 'movie' | 'tv') => {
-    return type === 'movie'
-      ? content.watchlists.contentTypes.movie
-      : content.watchlists.contentTypes.series;
-  };
+  const getMediaType = (type: 'movie' | 'tv') =>
+    type === 'movie' ? content.watchlists.contentTypes.movie : content.watchlists.contentTypes.series;
 
   const formatRuntime = (minutes: number | undefined) => {
     if (!minutes) return null;
@@ -303,10 +302,433 @@ export function AddItemModal({
     return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
   };
 
-  const buildPosterUrl = (path: string | null) => {
-    if (!path) return '';
-    return `https://image.tmdb.org/t/p/w92${path}`;
+  const buildPosterUrl = (path: string | null) => (path ? `https://image.tmdb.org/t/p/w92${path}` : '');
+
+  return {
+    content,
+    searchQuery,
+    onSearchChange,
+    searchResults,
+    loading,
+    selectedItem,
+    selectedIndex,
+    itemDetails,
+    detailProviders,
+    loadingDetails,
+    scrollContainerRef,
+    virtualizer,
+    isItemInWatchlist,
+    handleViewDetails,
+    handleBackFromDetails,
+    handleNavigatePrevious,
+    handleNavigateNext,
+    handleAddItem,
+    handleRemoveItem,
+    getYear,
+    getMediaType,
+    formatRuntime,
+    buildPosterUrl,
   };
+}
+
+// ===========================================================================
+// Switcher : < 750px → drawer bottom, sinon modale desktop.
+// ===========================================================================
+export function AddItemModal(props: AddItemModalProps) {
+  const isMobile = useIsMobile();
+  return isMobile ? <AddItemDrawerShell {...props} /> : <AddItemModalShell {...props} />;
+}
+
+// ===========================================================================
+// Shell drawer (mobile)
+// ===========================================================================
+function AddItemDrawerShell(props: AddItemModalProps) {
+  const { open, onOpenChange } = props;
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
+  const {
+    content,
+    searchQuery,
+    onSearchChange,
+    searchResults,
+    loading,
+    selectedItem,
+    itemDetails,
+    detailProviders,
+    loadingDetails,
+    scrollContainerRef,
+    virtualizer,
+    isItemInWatchlist,
+    handleViewDetails,
+    handleBackFromDetails,
+    handleAddItem,
+    handleRemoveItem,
+    getYear,
+    getMediaType,
+    formatRuntime,
+    buildPosterUrl,
+  } = useAddItem(props);
+
+  // Réinitialise le "Voir plus" à chaque changement d'élément.
+  useEffect(() => {
+    setOverviewExpanded(false);
+  }, [selectedItem?.id]);
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="flex h-[92vh] flex-col">
+        {selectedItem ? (
+          // ---- Sous-vue détail ----
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="border-border/60 flex items-center gap-2 border-b px-4 pb-3">
+              <button
+                type="button"
+                onClick={handleBackFromDetails}
+                className="text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                aria-label="Retour"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <DrawerTitle className="text-base font-semibold">
+                {itemDetails?.title || content.watchlists.addItem}
+              </DrawerTitle>
+            </div>
+
+            <div className="overflow-y-auto px-4 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+              {loadingDetails ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground text-sm">
+                    {content.watchlists.itemDetails.loading}
+                  </div>
+                </div>
+              ) : itemDetails ? (
+                <>
+                  <div className="flex gap-4">
+                    <div className="bg-muted relative h-36 w-24 shrink-0 overflow-hidden rounded-lg">
+                      {itemDetails.posterUrl ? (
+                        <Image
+                          src={resizeTMDBPoster(itemDetails.posterUrl, 'w185')}
+                          alt={itemDetails.title}
+                          fill
+                          sizes="96px"
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h2 className="line-clamp-2 text-xl leading-tight font-bold mask-[linear-gradient(to_right,black,black_85%,transparent)]">
+                        {itemDetails.title}
+                      </h2>
+                      <p className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-1.5 text-sm">
+                        <span>
+                          {[
+                            selectedItem.media_type === 'movie'
+                              ? content.watchlists.contentTypes.movie
+                              : content.watchlists.contentTypes.series,
+                            selectedItem.media_type === 'movie'
+                              ? formatRuntime(itemDetails.runtime)
+                              : itemDetails.numberOfSeasons
+                                ? `${itemDetails.numberOfSeasons} ${itemDetails.numberOfSeasons > 1 ? content.watchlists.seriesInfo.seasons : content.watchlists.seriesInfo.season}`
+                                : null,
+                            itemDetails.releaseDate
+                              ? new Date(itemDetails.releaseDate).getFullYear()
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </span>
+                        {itemDetails.voteCount > 0 && (
+                          <>
+                            <span aria-hidden>·</span>
+                            <span className="flex items-center gap-1">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-foreground font-semibold">
+                                {(itemDetails.rating / 2).toFixed(1)}
+                              </span>
+                            </span>
+                          </>
+                        )}
+                      </p>
+                      {itemDetails.genres.length > 0 && (
+                        <p className="text-muted-foreground/80 mt-1.5 text-sm">
+                          {itemDetails.genres.join(' · ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {itemDetails.overview && (
+                    <div className="mt-5">
+                      <h3 className="mb-1.5 text-base font-semibold">
+                        {content.watchlists.itemDetails.synopsis}
+                      </h3>
+                      <p
+                        className={cn(
+                          'text-muted-foreground text-sm leading-relaxed',
+                          !overviewExpanded && 'line-clamp-2'
+                        )}
+                      >
+                        {itemDetails.overview}
+                      </p>
+                      {itemDetails.overview.length > 120 && (
+                        <button
+                          type="button"
+                          onClick={() => setOverviewExpanded(v => !v)}
+                          className="text-foreground mt-1 text-sm font-bold underline"
+                        >
+                          {overviewExpanded
+                            ? content.watchlists.itemDetails.seeLess
+                            : content.watchlists.itemDetails.seeMore}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Séparateur */}
+                  <div className="border-border/60 mt-4 border-t" />
+
+                  {/* Casting : bulles superposées + noms */}
+                  {itemDetails.cast.length > 0 && (
+                    <div className="mt-4 flex items-center gap-3">
+                      <div className="flex -space-x-3">
+                        {itemDetails.cast.slice(0, 3).map(actor => (
+                          <div
+                            key={`${actor.name}-${actor.character}`}
+                            className="border-background bg-muted relative h-[38px] w-[38px] shrink-0 overflow-hidden rounded-full border-4"
+                          >
+                            {actor.profileUrl ? (
+                              <Image
+                                src={resizeTMDBPoster(actor.profileUrl, 'w185')}
+                                alt={actor.name}
+                                fill
+                                sizes="38px"
+                                className="object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-muted-foreground min-w-0 flex-1 text-sm">
+                        {itemDetails.cast
+                          .slice(0, 3)
+                          .map(a => a.name)
+                          .join(', ')}
+                        .
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Dispo */}
+                  {getValidProviders(detailProviders).length > 0 && (
+                    <div className="mt-4 flex items-center gap-3">
+                      <span className="text-muted-foreground shrink-0 text-sm">
+                        {content.watchlists.itemDetails.availableShort} :
+                      </span>
+                      <CompactWatchProviders providers={detailProviders} size={32} />
+                    </div>
+                  )}
+
+                  {isItemInWatchlist(selectedItem.id) ? (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveItem(selectedItem)}
+                      className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-green-600/50 bg-green-800/35 text-sm font-semibold text-[#0bd42c]"
+                    >
+                      <Check className="h-4 w-4" />
+                      {content.watchlists.added}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleAddItem(selectedItem)}
+                      className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white bg-transparent text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {content.watchlists.add}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground text-sm">
+                    {content.watchlists.itemDetails.notAvailable}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          // ---- Recherche + résultats ----
+          <>
+            <DrawerHeader className="relative text-left">
+              <DrawerTitle>{content.watchlists.addItem}</DrawerTitle>
+              <DrawerDescription>{content.watchlists.searchMoviesAndSeries}</DrawerDescription>
+              <DrawerClose className="text-muted-foreground hover:text-foreground absolute top-3 right-4 transition-colors">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+              </DrawerClose>
+            </DrawerHeader>
+
+            <div className="px-4 pb-3">
+              <div className="relative">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Input
+                  type="text"
+                  placeholder={content.watchlists.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={e => onSearchChange(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto px-3 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+            >
+              {loading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground text-sm">{content.watchlists.searching}</div>
+                </div>
+              )}
+              {!loading && searchQuery && searchResults.length === 0 && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground text-sm">{content.watchlists.noResults}</div>
+                </div>
+              )}
+              {!loading && !searchQuery && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground px-6 text-center text-sm">
+                    {content.watchlists.startSearching}
+                  </div>
+                </div>
+              )}
+
+              {!loading && searchResults.length > 0 && (
+                <div
+                  style={{
+                    height: `${virtualizer.getTotalSize()}px`,
+                    width: '100%',
+                    position: 'relative',
+                  }}
+                >
+                  {virtualizer.getVirtualItems().map(virtualItem => {
+                    const item = searchResults[virtualItem.index];
+                    const year = getYear(item);
+                    const posterUrl = buildPosterUrl(item.poster_path);
+                    const isInWatchlist = isItemInWatchlist(item.id);
+
+                    return (
+                      <div
+                        key={virtualItem.key}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          transform: `translateY(${virtualItem.start}px)`,
+                        }}
+                      >
+                        <div className="flex items-center gap-3 rounded-lg p-2">
+                          <button
+                            type="button"
+                            onClick={() => handleViewDetails(item, virtualItem.index)}
+                            className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                          >
+                            <div className="bg-muted relative h-20 w-[54px] shrink-0 overflow-hidden rounded-md">
+                              {posterUrl ? (
+                                <Image
+                                  src={posterUrl}
+                                  alt={item.title || item.name || ''}
+                                  fill
+                                  sizes="54px"
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <h3 className="line-clamp-1 font-semibold">
+                                {item.title || item.name}
+                              </h3>
+                              <div className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
+                                <span className="bg-muted rounded-sm px-1.5 py-0.5 text-xs font-medium">
+                                  {getMediaType(item.media_type)}
+                                </span>
+                                {year && <span>· {year}</span>}
+                              </div>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => (isInWatchlist ? handleRemoveItem(item) : handleAddItem(item))}
+                            className={cn(
+                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors',
+                              isInWatchlist
+                                ? 'border-green-600/50 bg-green-800/35 text-[#0bd42c]'
+                                : 'border-border text-muted-foreground hover:text-foreground'
+                            )}
+                            aria-label={isInWatchlist ? content.watchlists.added : content.watchlists.add}
+                          >
+                            {isInWatchlist ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Plus className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+// ===========================================================================
+// Shell modale (desktop) — inchangé.
+// ===========================================================================
+function AddItemModalShell(props: AddItemModalProps) {
+  const { open, onOpenChange } = props;
+  const {
+    content,
+    searchQuery,
+    onSearchChange,
+    searchResults,
+    loading,
+    selectedItem,
+    selectedIndex,
+    itemDetails,
+    loadingDetails,
+    scrollContainerRef,
+    virtualizer,
+    isItemInWatchlist,
+    handleViewDetails,
+    handleBackFromDetails,
+    handleNavigatePrevious,
+    handleNavigateNext,
+    handleAddItem,
+    handleRemoveItem,
+    getYear,
+    getMediaType,
+    formatRuntime,
+    buildPosterUrl,
+  } = useAddItem(props);
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>

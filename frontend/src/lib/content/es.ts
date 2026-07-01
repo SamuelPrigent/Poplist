@@ -10,6 +10,7 @@ export const es: Content = {
     signup: 'Registrarse',
     logout: 'Cerrar sesión',
     myLists: 'Mis listas',
+    categories: 'Categorías',
   },
 
   // Auth Drawer
@@ -129,6 +130,7 @@ export const es: Content = {
       director: 'Director',
       creator: 'Creador',
       availableOn: 'Disponible en',
+      availableShort: 'Disponible',
       mainCast: 'Reparto principal',
       seeMore: 'Ver más',
       seeLess: 'Ver menos',
@@ -191,6 +193,8 @@ export const es: Content = {
     hero: {
       title: 'Crea y comparte listas de tus películas y series favoritas',
       subtitle: 'Organiza tus noches de TV y comparte tus descubrimientos con tus amigos',
+      titleMobile: 'Crea listas de tus películas y series favoritas',
+      subtitleMobile: 'Organiza tus noches de TV',
     },
     features: {
       sectionTitle: 'Comparte tu universo cinematográfico',
@@ -254,6 +258,7 @@ export const es: Content = {
     finalCta: {
       title: 'Comienza a crear tus listas fácilmente',
       subtitle: 'Únete a Poplist y organiza tu contenido favorito en unos pocos clics.',
+      subtitleMobile: 'Únete a nuestra comunidad y organiza tu contenido',
       button: 'Crear mi lista',
       disclaimer: 'Aplicación gratuita • No se requiere tarjeta',
     },
@@ -362,6 +367,9 @@ export const es: Content = {
       search: 'Buscar...',
       noYearFound: 'No se encontró ningún año.',
       clearYears: 'Borrar años',
+      genres: 'Géneros',
+      year: 'Año',
+      apply: 'Aplicar',
     },
     genres: {
       action: 'Acción',

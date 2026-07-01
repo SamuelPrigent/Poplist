@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @plugin "@toolwind/corner-shape";
-@import "tw-animate-css";
+@import 'tw-animate-css';
 
 * {
   /* font */
@@ -280,5 +280,13 @@ img {
   /* Remove focus styles from Command component inputs (year pickers) */
   [cmdk-input-wrapper] input:focus {
     @apply border-transparent shadow-none outline-none;
+  }
+}
+
+/* Toasts (sonner) au-dessus de la bottom-nav sur mobile (<750px).
+   Barre ≈ 65px + safe-area ; on remonte le toast avec ~35% de marge. */
+@media (max-width: 749px) {
+  [data-sonner-toaster][data-y-position='bottom'] {
+    bottom: calc(73px + env(safe-area-inset-bottom)) !important;
   }
 }

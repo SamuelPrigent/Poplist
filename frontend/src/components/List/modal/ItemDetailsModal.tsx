@@ -2,18 +2,29 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Calendar, Clock, Star, X } from 'lucide-react';
+import { ArrowLeft, Calendar, CirclePlus, Clock, Film, Plus, Star, X } from 'lucide-react';
 import { Img as Image } from '@/components/ui/Img';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigationArrows } from '@/components/ui/navigation-arrows';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { PosterGrid } from '@/components/List/PosterGrid';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { watchlists as watchlistsApi } from '@/api';
 import type { FullMediaDetails, Watchlist } from '@/api';
 import { fetchTMDBProviders } from '@/api';
+import { cn } from '@/lib/cn';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import { WatchlistPickerMenu } from '../WatchlistPickerMenu';
+import { CompactWatchProviders, getValidProviders } from '../CompactWatchProviders';
 import { WatchProviderList } from '../WatchProviderBubble';
 
 interface ItemDetailsModalProps {
@@ -30,19 +41,75 @@ interface ItemDetailsModalProps {
   isAuthenticated?: boolean;
 }
 
-export function ItemDetailsModal({
+// ---------------------------------------------------------------------------
+// Helpers purs
+// ---------------------------------------------------------------------------
+function formatRuntime(minutes: number | undefined) {
+  if (!minutes) return null;
+  if (minutes < 60) return `${minutes}min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+}
+
+function formatYear(dateString: string) {
+  if (!dateString) return null;
+  return new Date(dateString).getFullYear();
+}
+
+function formatRating(rating: number) {
+  return (rating / 2).toFixed(1);
+}
+
+function StarRating({
+  rating,
+  voteCount,
+  votesLabel,
+}: {
+  rating: number;
+  voteCount: number;
+  votesLabel: string;
+}) {
+  const stars = rating / 2;
+  const fullStars = Math.floor(stars);
+  const hasHalfStar = stars % 1 >= 0.5;
+  return (
+    <div className="flex items-center gap-1">
+      {[0, 1, 2, 3, 4].map((index) => (
+        <Star
+          key={`star-${index}`}
+          className={cn(
+            'h-4 w-4',
+            index < fullStars
+              ? 'fill-yellow-400 text-yellow-400'
+              : index === fullStars && hasHalfStar
+                ? 'fill-yellow-400/50 text-yellow-400'
+                : 'text-muted-foreground',
+          )}
+        />
+      ))}
+      <span className="ml-2 text-sm font-medium">{formatRating(rating)} / 5</span>
+      <span className="ml-1 text-xs text-white/70">
+        ({voteCount} {votesLabel})
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Hook partagé : fetch + états UI, consommé par les deux shells.
+// ---------------------------------------------------------------------------
+function useItemDetails({
   open,
-  onOpenChange,
   tmdbId,
   type,
-  platforms = [],
-  onPrevious,
-  onNext,
-  watchlists,
-  onAddToWatchlist,
-  onRemoveFromWatchlist,
-  isAuthenticated = false,
-}: ItemDetailsModalProps) {
+  platforms,
+}: {
+  open: boolean;
+  tmdbId: string;
+  type: 'movie' | 'tv';
+  platforms: Array<{ name: string; logoPath: string }>;
+}) {
   const { language, content } = useLanguageStore();
   const [details, setDetails] = useState<FullMediaDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +141,6 @@ export function ItemDetailsModal({
       prevTmdbIdRef.current !== null && prevTmdbIdRef.current !== tmdbId && hasLoadedRef.current;
     prevTmdbIdRef.current = tmdbId;
 
-    // Reset expanded state
     setIsOverviewExpanded(false);
     setShowSeeMore(false);
     setPosterLoaded(false);
@@ -92,16 +158,10 @@ export function ItemDetailsModal({
       try {
         const detailsPromise = watchlistsApi.getItemDetails(tmdbId, type, languageCode);
         const providersPromise =
-          platforms.length === 0
-            ? fetchTMDBProviders(tmdbId, type, region)
-            : Promise.resolve([]);
+          platforms.length === 0 ? fetchTMDBProviders(tmdbId, type, region) : Promise.resolve([]);
 
-        const [detailsRes, providersRes] = await Promise.all([
-          detailsPromise,
-          providersPromise,
-        ]);
-        const { details: data } = detailsRes;
-        setDetails(data);
+        const [detailsRes, providersRes] = await Promise.all([detailsPromise, providersPromise]);
+        setDetails(detailsRes.details);
         if (providersRes.length > 0) setFetchedPlatforms(providersRes);
         hasLoadedRef.current = true;
       } catch (err) {
@@ -124,68 +184,384 @@ export function ItemDetailsModal({
       setShowSeeMore(false);
       return;
     }
-
     const checkTruncation = () => {
       if (overviewRef.current) {
-        const isTruncated = overviewRef.current.scrollHeight > overviewRef.current.clientHeight;
-        setShowSeeMore(isTruncated);
+        setShowSeeMore(overviewRef.current.scrollHeight > overviewRef.current.clientHeight);
       }
     };
-
     checkTruncation();
-
     window.addEventListener('resize', checkTruncation);
     return () => window.removeEventListener('resize', checkTruncation);
   }, [details?.overview, isOverviewExpanded]);
 
-  const formatRuntime = (minutes: number | undefined) => {
-    if (!minutes) return null;
-    if (minutes < 60) return `${minutes}min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
-  };
+  const markActorLoaded = (url: string) =>
+    setLoadedActorImages((prev) => {
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return date.getFullYear();
+  return {
+    content,
+    details,
+    loading,
+    isNavigating,
+    isOverviewExpanded,
+    setIsOverviewExpanded,
+    showSeeMore,
+    overviewRef,
+    posterLoaded,
+    setPosterLoaded,
+    loadedActorImages,
+    markActorLoaded,
+    effectivePlatforms: platforms.length > 0 ? platforms : fetchedPlatforms,
+    voiceTranslation,
   };
+}
 
-  const formatRating = (rating: number) => {
-    return (rating / 2).toFixed(1);
-  };
+// ===========================================================================
+// Switcher : < 750px → drawer bottom (maquette), sinon modale desktop.
+// ===========================================================================
+export function ItemDetailsModal(props: ItemDetailsModalProps) {
+  const isMobile = useIsMobile();
+  return isMobile ? <ItemDetailsDrawerShell {...props} /> : <ItemDetailsModalShell {...props} />;
+}
 
-  const localizeCharacter = (character: string) => {
-    return character.replace(/\(voice\)/gi, `(${voiceTranslation})`);
-  };
+// ===========================================================================
+// Shell drawer (mobile) — selon la maquette.
+// ===========================================================================
+function ItemDetailsDrawerShell({
+  open,
+  onOpenChange,
+  tmdbId,
+  type,
+  platforms = [],
+  watchlists,
+  onAddToWatchlist,
+  onRemoveFromWatchlist,
+  isAuthenticated = false,
+}: ItemDetailsModalProps) {
+  const {
+    content,
+    details,
+    loading,
+    isNavigating,
+    isOverviewExpanded,
+    setIsOverviewExpanded,
+    showSeeMore,
+    overviewRef,
+    loadedActorImages,
+    markActorLoaded,
+    effectivePlatforms,
+    voiceTranslation,
+  } = useItemDetails({ open, tmdbId, type, platforms });
 
-  const renderStars = (rating: number) => {
-    const stars = rating / 2;
-    const fullStars = Math.floor(stars);
-    const hasHalfStar = stars % 1 >= 0.5;
+  const canPick = !!(isAuthenticated && watchlists && onAddToWatchlist && onRemoveFromWatchlist);
+  // Sous-vue interne : 'details' (fiche) ou 'pick' (liste des watchlists, cf. maquette).
+  const [view, setView] = useState<'details' | 'pick'>('details');
+  useEffect(() => {
+    if (!open) setView('details');
+  }, [open]);
 
-    return (
-      <div className="flex items-center gap-1">
-        {[0, 1, 2, 3, 4].map(index => (
-          <Star
-            key={`star-${index}`}
-            className={`h-4 w-4 ${
-              index < fullStars
-                ? 'fill-yellow-400 text-yellow-400'
-                : index === fullStars && hasHalfStar
-                  ? 'fill-yellow-400/50 text-yellow-400'
-                  : 'text-muted-foreground'
-            }`}
-          />
-        ))}
-        <span className="ml-2 text-sm font-medium">{formatRating(rating)} / 5</span>
-        <span className="ml-1 text-xs text-white/70">
-          ({details?.voteCount} {content.watchlists.itemDetails.votes})
-        </span>
-      </div>
-    );
-  };
+  const metaParts = details
+    ? [
+        type === 'movie'
+          ? content.watchlists.contentTypes.movie
+          : content.watchlists.contentTypes.series,
+        type === 'movie'
+          ? formatRuntime(details.runtime)
+          : details.numberOfSeasons
+            ? `${details.numberOfSeasons} ${details.numberOfSeasons > 1 ? content.watchlists.seriesInfo.seasons : content.watchlists.seriesInfo.season}`
+            : null,
+        formatYear(details.releaseDate),
+      ].filter(Boolean)
+    : [];
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="h-[90dvh]">
+        <DrawerTitle className="sr-only">
+          {details?.title || content.watchlists.itemDetails.mediaDetails}
+        </DrawerTitle>
+        <DrawerDescription className="sr-only">
+          {details
+            ? `${content.watchlists.itemDetails.mediaDetails} — ${details.title}`
+            : content.watchlists.itemDetails.loadingDetails}
+        </DrawerDescription>
+
+        {loading || isNavigating ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="text-muted-foreground">{content.watchlists.itemDetails.loading}</div>
+          </div>
+        ) : !details ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="text-muted-foreground">
+              {content.watchlists.itemDetails.notAvailable}
+            </div>
+          </div>
+        ) : view === 'pick' && canPick ? (
+          // ---- Sous-vue : ajouter à une liste ----
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="border-border/60 relative flex items-center justify-center border-b px-4 pb-3">
+              <button
+                type="button"
+                onClick={() => setView('details')}
+                className="text-muted-foreground hover:text-foreground absolute left-3 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                aria-label="Retour"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <h3 className="text-base font-semibold">{content.watchlists.addToWatchlist}</h3>
+            </div>
+            <div className="min-h-0 overflow-y-auto p-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              {watchlists!.length === 0 ? (
+                <div className="text-muted-foreground px-2 py-6 text-center text-sm">
+                  {content.watchlists.noWatchlist}
+                </div>
+              ) : (
+                watchlists!.map((wl) => {
+                  const isIn = wl.items.some((it) => it.tmdbId === Number(tmdbId));
+                  return (
+                    <button
+                      key={wl.id}
+                      type="button"
+                      onClick={() =>
+                        isIn ? onRemoveFromWatchlist!(wl.id) : onAddToWatchlist!(wl.id)
+                      }
+                      className="hover:bg-muted/50 flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors"
+                    >
+                      <div className="bg-muted relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+                        {wl.imageUrl ? (
+                          <Image
+                            src={wl.imageUrl}
+                            alt={wl.name}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                            unoptimized
+                          />
+                        ) : wl.items.length > 0 ? (
+                          <PosterGrid items={wl.items} alt={wl.name} imageSize="w92" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <Film strokeWidth={1} className="text-muted-foreground h-5 w-5" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{wl.name}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {wl.items.length} {content.watchlists.items}
+                        </div>
+                      </div>
+                      {isIn ? (
+                        <Image
+                          src="/checkGreenFull.svg"
+                          alt=""
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 shrink-0"
+                        />
+                      ) : (
+                        <CirclePlus
+                          className="text-muted-foreground h-6 w-6 shrink-0"
+                          strokeWidth={1.6}
+                        />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        ) : (
+          // ---- Vue fiche ----
+          <div className="relative min-h-0 flex-1 overflow-y-auto px-4 pt-1 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+            {/* Close */}
+            <DrawerClose className="bg-muted text-muted-foreground hover:text-foreground absolute top-1 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DrawerClose>
+
+            {/* Header : poster + méta */}
+            <div className="flex gap-4 pr-9">
+              <div className="bg-muted relative h-36 w-24 shrink-0 overflow-hidden rounded-lg">
+                {details.posterUrl ? (
+                  <Image
+                    src={resizeTMDBPoster(details.posterUrl, 'w185')}
+                    alt={details.title}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <h2 className="line-clamp-2 text-xl leading-tight font-bold mask-[linear-gradient(to_right,black,black_85%,transparent)]">
+                  {details.title}
+                </h2>
+                <p className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-1.5 text-sm">
+                  <span>{metaParts.join(' · ')}</span>
+                  {details.voteCount > 0 && (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-foreground font-semibold">
+                          {(details.rating / 2).toFixed(1)}
+                        </span>
+                      </span>
+                    </>
+                  )}
+                </p>
+                {details.genres.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {details.genres.map((genre) => (
+                      <span
+                        key={genre}
+                        className="border-border bg-muted/40 rounded-full border px-2.5 py-0.5 text-xs"
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Synopsis */}
+            {details.overview && (
+              <div className="mt-5">
+                <h3 className="mb-1.5 text-base font-semibold">
+                  {content.watchlists.itemDetails.synopsis}
+                </h3>
+                <p
+                  ref={overviewRef}
+                  className={cn(
+                    'text-muted-foreground text-sm leading-relaxed',
+                    !isOverviewExpanded && 'line-clamp-2',
+                  )}
+                >
+                  {details.overview}
+                </p>
+                {(showSeeMore || isOverviewExpanded) && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
+                    className="text-foreground mt-1 text-sm font-bold underline"
+                  >
+                    {isOverviewExpanded
+                      ? content.watchlists.itemDetails.seeLess
+                      : content.watchlists.itemDetails.seeMore}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Dispo */}
+            {getValidProviders(effectivePlatforms).length > 0 && (
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-muted-foreground shrink-0 text-sm">
+                  {content.watchlists.itemDetails.availableShort} :
+                </span>
+                <CompactWatchProviders providers={effectivePlatforms} size={32} />
+              </div>
+            )}
+
+            {/* Acteurs principaux */}
+            {details.cast.length > 0 && (
+              <div className="mt-5">
+                <h3 className="mb-3 text-base font-semibold">
+                  {content.watchlists.itemDetails.mainCast}
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {details.cast.slice(0, 6).map((actor) => (
+                    <div
+                      key={`${actor.name}-${actor.character}`}
+                      className="flex flex-col items-center text-center"
+                    >
+                      <div className="bg-muted relative h-12 w-12 overflow-hidden rounded-xl">
+                        {actor.profileUrl ? (
+                          <Image
+                            src={resizeTMDBPoster(actor.profileUrl, 'w185')}
+                            alt={actor.name}
+                            fill
+                            sizes="48px"
+                            className={cn(
+                              'object-cover transition-opacity duration-200',
+                              loadedActorImages.has(actor.profileUrl) ? 'opacity-100' : 'opacity-0',
+                            )}
+                            onLoad={() => markActorLoaded(actor.profileUrl!)}
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
+                        )}
+                      </div>
+                      <div className="mt-1.5 text-xs leading-tight font-medium">{actor.name}</div>
+                      <div className="text-muted-foreground/80 text-[11px] leading-tight">
+                        {actor.character.replace(/\(voice\)/gi, `(${voiceTranslation})`)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bouton Ajouter (ouvre la sous-vue picker) */}
+            {canPick && (
+              <button
+                type="button"
+                onClick={() => setView('pick')}
+                className="mt-6 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-black transition-colors hover:bg-white/90"
+              >
+                <Plus className="h-4 w-4" />
+                {content.watchlists.addToWatchlist}
+              </button>
+            )}
+          </div>
+        )}
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+// ===========================================================================
+// Shell modale (desktop) — inchangé.
+// ===========================================================================
+function ItemDetailsModalShell({
+  open,
+  onOpenChange,
+  tmdbId,
+  type,
+  platforms = [],
+  onPrevious,
+  onNext,
+  watchlists,
+  onAddToWatchlist,
+  onRemoveFromWatchlist,
+  isAuthenticated = false,
+}: ItemDetailsModalProps) {
+  const {
+    content,
+    details,
+    loading,
+    isNavigating,
+    isOverviewExpanded,
+    setIsOverviewExpanded,
+    showSeeMore,
+    overviewRef,
+    posterLoaded,
+    setPosterLoaded,
+    loadedActorImages,
+    markActorLoaded,
+    effectivePlatforms,
+    voiceTranslation,
+  } = useItemDetails({ open, tmdbId, type, platforms });
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -196,13 +572,13 @@ export function ItemDetailsModal({
         <NavigationArrows onPrevious={onPrevious} onNext={onNext} enableKeyboard={open} />
 
         <DialogPrimitive.Content
-          onPointerDownOutside={e => {
+          onPointerDownOutside={(e) => {
             const target = e.target as HTMLElement;
             if (target.closest('[data-nav-button]')) {
               e.preventDefault();
             }
           }}
-          onInteractOutside={e => {
+          onInteractOutside={(e) => {
             const target = e.target as HTMLElement;
             if (target.closest('[data-nav-button]')) {
               e.preventDefault();
@@ -210,7 +586,6 @@ export function ItemDetailsModal({
           }}
           className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 h-[620px] max-h-[85vh] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-lg border shadow-lg duration-200 focus:outline-none"
         >
-          {/* Hidden Title and Description for accessibility */}
           <DialogPrimitive.Title className="sr-only">
             {details?.title || content.watchlists.itemDetails.mediaDetails}
           </DialogPrimitive.Title>
@@ -241,7 +616,6 @@ export function ItemDetailsModal({
               >
                 {/* Backdrop Background */}
                 <div className="relative flex flex-1 flex-col overflow-hidden">
-                  {/* Backdrop Image as background */}
                   {details.backdropUrl ? (
                     <>
                       <div className="absolute inset-x-0 top-0 z-0 h-68">
@@ -313,10 +687,7 @@ export function ItemDetailsModal({
                                   align="start"
                                 >
                                   <DropdownMenu.Trigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className="w-full cursor-pointer"
-                                    >
+                                    <Button variant="outline" className="w-full cursor-pointer">
                                       {content.watchlists.add}
                                     </Button>
                                   </DropdownMenu.Trigger>
@@ -336,10 +707,10 @@ export function ItemDetailsModal({
                                   ? content.watchlists.contentTypes.movie
                                   : content.watchlists.contentTypes.series}
                               </span>
-                              {formatDate(details.releaseDate) && (
+                              {formatYear(details.releaseDate) && (
                                 <div className="flex items-center gap-1">
                                   <Calendar className="h-4 w-4" />
-                                  <span>{formatDate(details.releaseDate)}</span>
+                                  <span>{formatYear(details.releaseDate)}</span>
                                 </div>
                               )}
                               {type === 'movie' && details.runtime && (
@@ -365,12 +736,20 @@ export function ItemDetailsModal({
                           </div>
 
                           {/* Rating */}
-                          {details.voteCount > 0 && <div>{renderStars(details.rating)}</div>}
+                          {details.voteCount > 0 && (
+                            <div>
+                              <StarRating
+                                rating={details.rating}
+                                voteCount={details.voteCount}
+                                votesLabel={content.watchlists.itemDetails.votes}
+                              />
+                            </div>
+                          )}
 
                           {/* Genres */}
                           {details.genres.length > 0 && (
                             <div className="flex flex-wrap gap-2">
-                              {details.genres.map(genre => (
+                              {details.genres.map((genre) => (
                                 <span
                                   key={genre}
                                   className="border-border bg-muted/50 rounded-full border px-3 py-1 text-xs"
@@ -423,15 +802,12 @@ export function ItemDetailsModal({
                           )}
 
                           {/* Platforms */}
-                          {(platforms.length > 0 || fetchedPlatforms.length > 0) && (
+                          {effectivePlatforms.length > 0 && (
                             <div className="pt-1">
                               <h3 className="mb-2 text-sm font-semibold">
                                 {content.watchlists.itemDetails.availableOn}
                               </h3>
-                              <WatchProviderList
-                                providers={platforms.length > 0 ? platforms : fetchedPlatforms}
-                                maxVisible={6}
-                              />
+                              <WatchProviderList providers={effectivePlatforms} maxVisible={6} />
                             </div>
                           )}
                         </div>
@@ -445,7 +821,7 @@ export function ItemDetailsModal({
                           {content.watchlists.itemDetails.mainCast}
                         </h3>
                         <div className="grid grid-cols-3 gap-4 pb-2">
-                          {details.cast.map(actor => (
+                          {details.cast.map((actor) => (
                             <div key={`${actor.name}-${actor.character}`} className="flex gap-3">
                               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
                                 {actor.profileUrl ? (
@@ -463,13 +839,7 @@ export function ItemDetailsModal({
                                           ? 'opacity-100'
                                           : 'opacity-0'
                                       }`}
-                                      onLoad={() => {
-                                        setLoadedActorImages(prev => {
-                                          const newSet = new Set(prev);
-                                          newSet.add(actor.profileUrl!);
-                                          return newSet;
-                                        });
-                                      }}
+                                      onLoad={() => markActorLoaded(actor.profileUrl!)}
                                       unoptimized
                                     />
                                   </>
@@ -482,7 +852,7 @@ export function ItemDetailsModal({
                               <div className="flex-1">
                                 <div className="text-sm font-medium">{actor.name}</div>
                                 <div className="text-muted-foreground/80 text-xs">
-                                  {localizeCharacter(actor.character)}
+                                  {actor.character.replace(/\(voice\)/gi, `(${voiceTranslation})`)}
                                 </div>
                               </div>
                             </div>

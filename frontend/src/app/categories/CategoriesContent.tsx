@@ -47,7 +47,7 @@ function CategoriesPageInner() {
 
   return (
     <div className="bg-background min-h-screen pb-20">
-      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20">
+      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20 max-[749px]:px-4">
         <PageHeader
           title={content.categories.title}
           subtitle={content.categories.subtitle}
@@ -71,7 +71,7 @@ function CategoriesPageInner() {
                   },
                 },
               }}
-              className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-6"
+              className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-4 max-[749px]:gap-2.5 md:grid-cols-4 lg:grid-cols-6"
             >
               {GENRE_CATEGORIES.map((categoryId, index) => {
                 const category = getCategoryInfo(categoryId, content);

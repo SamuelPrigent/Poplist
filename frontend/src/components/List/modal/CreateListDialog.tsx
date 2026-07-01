@@ -7,6 +7,15 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { cn } from '@/lib/cn';
 import { watchlists as watchlistsApi } from '@/api';
 import type { Watchlist } from '@/api';
 import { useLanguageStore } from '@/store/language';
@@ -19,12 +28,93 @@ interface CreateListDialogProps {
   offline?: boolean;
 }
 
-export function CreateListDialog({
-  open,
-  onOpenChange,
+/**
+ * Switcher responsive : < 750px → drawer bottom (vaul), sinon modale desktop.
+ * Un seul shell est monté à la fois (rendu conditionnel, pas de display:none) →
+ * pas de conflit scroll-lock / focus-trap entre Radix Dialog et vaul.
+ * Le corps de formulaire (`CreateListForm`) est partagé : la logique n'existe
+ * qu'à un seul endroit, seul le shell (et son padding) change.
+ */
+export function CreateListDialog(props: CreateListDialogProps) {
+  const isMobile = useIsMobile();
+  return isMobile ? <CreateListDrawerShell {...props} /> : <CreateListModalShell {...props} />;
+}
+
+// -------------------------------------------------------------------------
+// Shell modale (desktop) — inchangé par rapport à l'existant.
+// -------------------------------------------------------------------------
+function CreateListModalShell({ open, onOpenChange, onSuccess, offline = false }: CreateListDialogProps) {
+  const { content } = useLanguageStore();
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80" />
+        <DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg">
+          <div className="mb-4 flex flex-col space-y-1.5">
+            <DialogPrimitive.Title className="text-lg font-semibold">
+              {content.watchlists.createWatchlist}
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Description className="text-muted-foreground text-sm">
+              {content.watchlists.createWatchlistDescription}
+            </DialogPrimitive.Description>
+          </div>
+
+          <CreateListForm
+            onClose={() => onOpenChange(false)}
+            onSuccess={onSuccess}
+            offline={offline}
+          />
+
+          <DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
+
+// -------------------------------------------------------------------------
+// Shell drawer (mobile) — vaul, bottom sheet.
+// -------------------------------------------------------------------------
+function CreateListDrawerShell({ open, onOpenChange, onSuccess, offline = false }: CreateListDialogProps) {
+  const { content } = useLanguageStore();
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>{content.watchlists.createWatchlist}</DrawerTitle>
+          <DrawerDescription>{content.watchlists.createWatchlistDescription}</DrawerDescription>
+        </DrawerHeader>
+        <div className="overflow-y-auto px-4 pt-1 pb-[calc(2.25rem+env(safe-area-inset-bottom))]">
+          <CreateListForm
+            onClose={() => onOpenChange(false)}
+            onSuccess={onSuccess}
+            offline={offline}
+            stacked
+          />
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+// -------------------------------------------------------------------------
+// Corps de formulaire partagé (état + logique + champs). Aucun wrapper Dialog
+// ou Drawer ici : c'est le shell qui fournit le positionnement et le titre.
+// -------------------------------------------------------------------------
+function CreateListForm({
+  onClose,
   onSuccess,
   offline = false,
-}: CreateListDialogProps) {
+  stacked = false,
+}: {
+  onClose: () => void;
+  onSuccess: (watchlist?: Watchlist) => void;
+  offline?: boolean;
+  stacked?: boolean;
+}) {
   const { content } = useLanguageStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -118,7 +208,7 @@ export function CreateListDialog({
         setImagePreview(null);
 
         onSuccess(newWatchlist);
-        onOpenChange(false);
+        onClose();
       } else {
         // Online mode: create via API
         const created = await watchlistsApi.create({
@@ -154,7 +244,7 @@ export function CreateListDialog({
           isCollaborator: false,
           isSaved: false,
         });
-        onOpenChange(false);
+        onClose();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create watchlist');
@@ -170,204 +260,183 @@ export function CreateListDialog({
     setGenreCategories([]);
     setImagePreview(null);
     setError(null);
-    onOpenChange(false);
+    onClose();
   };
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80" />
-        <DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg">
-          <div className="mb-4 flex flex-col space-y-1.5">
-            <DialogPrimitive.Title className="text-lg font-semibold">
-              {content.watchlists.createWatchlist}
-            </DialogPrimitive.Title>
-            <DialogPrimitive.Description className="text-muted-foreground text-sm">
-              {content.watchlists.createWatchlistDescription}
-            </DialogPrimitive.Description>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Name Input */}
+      <div className="space-y-2">
+        <label htmlFor="name" className="text-sm font-medium">
+          {content.watchlists.name} <span className="text-red-500">*</span>
+        </label>
+        <Input
+          id="name"
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder={content.watchlists.namePlaceholder}
+          maxLength={100}
+          disabled={loading}
+          required
+        />
+      </div>
+
+      {/* Description Textarea */}
+      <div className="space-y-2">
+        <label htmlFor="description" className="text-sm font-medium">
+          {content.watchlists.description}
+        </label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          placeholder={content.watchlists.descriptionPlaceholder}
+          maxLength={500}
+          disabled={loading}
+          rows={3}
+        />
+      </div>
+
+      {/* Public Checkbox - Only shown for authenticated users */}
+      {!offline && (
+        <>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={isPublic}
+              onChange={e => setIsPublic(e.target.checked)}
+              disabled={loading}
+              className="border-input bg-background text-primary focus-visible:ring-ring h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <label
+              htmlFor="isPublic"
+              className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              {content.watchlists.makePublic}
+            </label>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Input */}
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                {content.watchlists.name} <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder={content.watchlists.namePlaceholder}
-                maxLength={100}
-                disabled={loading}
-                required
-              />
-            </div>
-
-            {/* Description Textarea */}
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                {content.watchlists.description}
-              </label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder={content.watchlists.descriptionPlaceholder}
-                maxLength={500}
-                disabled={loading}
-                rows={3}
-              />
-            </div>
-
-            {/* Public Checkbox - Only shown for authenticated users */}
-            {!offline && (
-              <>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isPublic"
-                    checked={isPublic}
-                    onChange={e => setIsPublic(e.target.checked)}
-                    disabled={loading}
-                    className="border-input bg-background text-primary focus-visible:ring-ring h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                  <label
-                    htmlFor="isPublic"
-                    className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {content.watchlists.makePublic}
-                  </label>
-                </div>
-
-                {/* Categories Selection - Only shown if public */}
-                {isPublic && (
-                  <>
-                    {/* Genre Categories */}
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">
-                        {content.watchlists.genreCategories || 'Catégories par genre'}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {GENRE_CATEGORIES.map(category => (
-                          <button
-                            type="button"
-                            key={category}
-                            onClick={() => toggleGenreCategory(category)}
-                            disabled={loading}
-                            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                              genreCategories.includes(category)
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                            }`}
-                          >
-                            {getCategoryInfo(category, content).name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-
-            {/* Cover Image Upload */}
-            <div className="space-y-2">
-              <label htmlFor="cover-image-input" className="text-sm font-medium">
-                {content.watchlists.coverImage}
-              </label>
-              <div className="mt-2 flex items-center gap-4">
-                {imagePreview ? (
-                  <div className="border-border relative h-24 w-24 overflow-hidden rounded-md border">
-                    <Image
-                      src={imagePreview}
-                      alt="Preview"
-                      fill
-                      sizes="96px"
-                      className="object-cover"
-                    />
+          {/* Categories Selection - Only shown if public */}
+          {isPublic && (
+            <>
+              {/* Genre Categories */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">
+                  {content.watchlists.genreCategories || 'Catégories par genre'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {GENRE_CATEGORIES.map(category => (
                     <button
                       type="button"
-                      onClick={() => {
-                        setImagePreview(null);
-                      }}
-                      className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                      key={category}
+                      onClick={() => toggleGenreCategory(category)}
+                      disabled={loading}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                        genreCategories.includes(category)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
                     >
-                      <X className="h-3 w-3" />
+                      {getCategoryInfo(category, content).name}
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading}
-                    className="border-border bg-muted/50 hover:bg-muted flex h-24 w-24 cursor-pointer items-center justify-center rounded-md border border-dashed disabled:opacity-50"
-                  >
-                    <ImageIcon className="text-muted-foreground h-6 w-6" />
-                  </button>
-                )}
-                <div className="flex-1">
-                  <Button
-                    className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    {imagePreview ? content.watchlists.changeImage : content.watchlists.uploadImage}
-                  </Button>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {content.watchlists.imageUploadHint}
-                  </p>
+                  ))}
                 </div>
-                <input
-                  id="cover-image-input"
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
               </div>
-            </div>
+            </>
+          )}
+        </>
+      )}
 
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-500">
-                {error}
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2">
-              <Button
-                className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
+      {/* Cover Image Upload */}
+      <div className="space-y-2">
+        <label htmlFor="cover-image-input" className="text-sm font-medium">
+          {content.watchlists.coverImage}
+        </label>
+        <div className="mt-2 flex items-center gap-4">
+          {imagePreview ? (
+            <div className="border-border relative h-24 w-24 overflow-hidden rounded-md border">
+              <Image src={imagePreview} alt="Preview" fill sizes="96px" className="object-cover" />
+              <button
                 type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={loading}
+                onClick={() => {
+                  setImagePreview(null);
+                }}
+                className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
               >
-                {content.watchlists.cancel}
-              </Button>
-              <Button
-                className="focus-visible:ring-offset-background cursor-pointer text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? content.watchlists.creating : content.watchlists.create}
-              </Button>
+                <X className="h-3 w-3" />
+              </button>
             </div>
-          </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              className="border-border bg-muted/50 hover:bg-muted flex h-24 w-24 cursor-pointer items-center justify-center rounded-md border border-dashed disabled:opacity-50"
+            >
+              <ImageIcon className="text-muted-foreground h-6 w-6" />
+            </button>
+          )}
+          <div className="flex-1">
+            <Button
+              className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {imagePreview ? content.watchlists.changeImage : content.watchlists.uploadImage}
+            </Button>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {content.watchlists.imageUploadHint}
+            </p>
+          </div>
+          <input
+            id="cover-image-input"
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            onChange={handleImageChange}
+            className="hidden"
+          />
+        </div>
+      </div>
 
-          <DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+      {/* Error Message */}
+      {error && (
+        <div className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-500">
+          {error}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className={cn('flex gap-2', stacked ? 'flex-col' : 'justify-end')}>
+        <Button
+          className={cn(
+            'focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white',
+            stacked && 'w-full'
+          )}
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          disabled={loading}
+        >
+          {content.watchlists.cancel}
+        </Button>
+        <Button
+          className={cn(
+            'focus-visible:ring-offset-background cursor-pointer text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none',
+            stacked && 'w-full'
+          )}
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? content.watchlists.creating : content.watchlists.create}
+        </Button>
+      </div>
+    </form>
   );
 }

@@ -170,12 +170,12 @@ export function ListCard({
           <UsersRound strokeWidth={2} className="text-gray-300 h-[13px] w-[13px] shrink-0" />
         )}
 
-        <h3 className="line-clamp-2 text-[14.5px] font-semibold text-white">
+        <h3 className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[14.5px] font-semibold text-white mask-[linear-gradient(to_right,black,black_85%,transparent)]">
           {handleClick ? (
             <button
               type="button"
               onClick={handleClick}
-              className="w-full cursor-pointer text-left"
+              className="block w-full cursor-pointer truncate text-left"
               tabIndex={-1}
             >
               {watchlist.name}

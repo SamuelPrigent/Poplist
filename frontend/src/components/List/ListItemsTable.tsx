@@ -34,6 +34,7 @@ import {
   ArrowUp,
   Eye,
   Film,
+  GripVertical,
   MoreVertical,
   MoveDown,
   MoveUp,
@@ -62,6 +63,7 @@ import type { Content } from '@/types/content';
 import { ItemDetailsModal } from './modal/ItemDetailsModal';
 import { WatchlistPickerMenu } from './WatchlistPickerMenu';
 import { WatchProviderList } from './WatchProviderBubble';
+import { CompactWatchProviders, getValidProviders } from './CompactWatchProviders';
 
 // Separate component for poster image with its own loading state
 function PosterImage({ src, alt }: { src: string; alt: string }) {
@@ -202,7 +204,7 @@ const DraggableRow = memo(function DraggableRow({
   const pickerWatchlists = buildPickerWatchlists(
     watchlists,
     { ...currentWatchlist, items: currentWatchlistItems },
-    canEdit
+    canEdit,
   );
 
   return (
@@ -215,7 +217,7 @@ const DraggableRow = memo(function DraggableRow({
       className={cn(
         'group transition-colors duration-150 select-none',
         isFocused && 'bg-muted/50',
-        !isFocused && hoveredRow === item.tmdbId && 'bg-muted/30'
+        !isFocused && hoveredRow === item.tmdbId && 'bg-muted/30',
       )}
     >
       {row.getVisibleCells().map((cell, cellIndex: number) => {
@@ -225,23 +227,27 @@ const DraggableRow = memo(function DraggableRow({
         // Actions column (last column) - not draggable
         if (isActionsColumn) {
           return (
-            <td key={cell.id} className="px-4 py-3" onClick={e => e.stopPropagation()}>
+            <td key={cell.id} className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
               <div
                 className={cn(
                   'flex items-center gap-1 transition-opacity',
                   hoveredRow === item.tmdbId || isFocused
                     ? 'opacity-100'
-                    : 'opacity-0 group-hover:opacity-100'
+                    : 'opacity-0 group-hover:opacity-100',
                 )}
               >
                 {/* Add to watchlist button */}
                 <WatchlistPickerMenu
                   watchlists={pickerWatchlists}
                   tmdbId={item.tmdbId}
-                  onAdd={watchlistId =>
-                    handleAddFromRow(watchlistId, item.tmdbId.toString(), item.mediaType as 'movie' | 'tv')
+                  onAdd={(watchlistId) =>
+                    handleAddFromRow(
+                      watchlistId,
+                      item.tmdbId.toString(),
+                      item.mediaType as 'movie' | 'tv',
+                    )
                   }
-                  onRemove={watchlistId =>
+                  onRemove={(watchlistId) =>
                     handleRemoveFromRow(watchlistId, item.tmdbId.toString())
                   }
                   addToLabel={content.watchlists.addToWatchlist}
@@ -254,7 +260,7 @@ const DraggableRow = memo(function DraggableRow({
                       type="button"
                       className="hover:bg-muted cursor-pointer rounded p-2 transition-colors"
                       disabled={addingTo === item.tmdbId}
-                      onClick={e => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
                       title={content.watchlists.contextMenu.addToWatchlist}
                     >
                       {showCheck ? (
@@ -281,7 +287,7 @@ const DraggableRow = memo(function DraggableRow({
                 {/* More options menu - only for canEdit */}
                 {canEdit && (
                   <DropdownMenu.Root
-                    onOpenChange={open => {
+                    onOpenChange={(open) => {
                       if (!open) {
                         setTimeout(() => {
                           if (document.activeElement instanceof HTMLElement) {
@@ -296,7 +302,7 @@ const DraggableRow = memo(function DraggableRow({
                         type="button"
                         className="hover:bg-muted cursor-pointer rounded p-2 transition-colors"
                         disabled={loadingItem === item.tmdbId}
-                        onClick={e => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                         aria-label="Plus d'options"
                       >
                         <MoreVertical className="text-muted-foreground h-[18px] w-[18px]" />
@@ -356,6 +362,174 @@ const DraggableRow = memo(function DraggableRow({
     </tr>
   );
 });
+
+interface SortableMobileCardProps {
+  item: WatchlistItem;
+  isDragDisabled: boolean;
+  content: Content;
+  pickerWatchlists: Watchlist[];
+  showCheck: boolean;
+  addingTo: number | null;
+  onAdd: (watchlistId: string, tmdbId: string, mediaType: 'movie' | 'tv') => void;
+  onRemove: (watchlistId: string, tmdbId: string) => void;
+  onOpenDetails: () => void;
+}
+
+// Carte mobile (< 750px) — remplace totalement la table. Chaque carte est
+// sortable (handle GripVertical à gauche). DndContext dédié côté parent pour
+// éviter le conflit d'id avec le SortableContext de la table.
+function SortableMobileCard({
+  item,
+  isDragDisabled,
+  content,
+  pickerWatchlists,
+  showCheck,
+  addingTo,
+  onAdd,
+  onRemove,
+  onOpenDetails,
+}: SortableMobileCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.tmdbId,
+    disabled: isDragDisabled,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  const posterUrl = getTMDBImageUrl(item.posterPath, 'w185');
+  // formatItemFormat renvoie '—' quand pas de durée/saisons. Dans ce cas on affiche
+  // un court '-' (pas le long '—') et SANS séparateur.
+  const rawDuration = formatItemFormat(item);
+  const hasRealDuration = rawDuration !== '—';
+  const duration = hasRealDuration ? rawDuration : '-';
+  // On se base sur les providers réellement affichables (mêmes que CompactWatchProviders),
+  // sinon un point séparateur orphelin s'affiche pour des plateformes sans logo.
+  const hasPlatforms = getValidProviders(item.platformList ?? []).length > 0;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="border-border/60 bg-muted/20 relative flex items-stretch rounded-xl border"
+    >
+      {/* Div gauche : le handle porte son padding → toute la zone (padding carte +
+          gap) devient cliquable, sans changer le rendu. */}
+      {!isDragDisabled && (
+        <button
+          type="button"
+          className="text-muted-foreground/40 hover:text-muted-foreground flex shrink-0 cursor-grab touch-none items-center justify-center self-stretch pl-[7px] pr-2 transition-colors active:cursor-grabbing"
+          aria-label="Réordonner"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {/* Div droite : reprend py/pr + le gap poster↔contenu. pl seulement s'il n'y
+          a pas de handle (sinon le pr du handle fait office de gap). */}
+      <div
+        className={cn(
+          'flex min-w-0 flex-1 items-stretch gap-2.25 py-2.5 pr-2.5',
+          isDragDisabled && 'pl-2.5',
+        )}
+      >
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="bg-muted relative w-[52px] shrink-0 cursor-pointer self-stretch overflow-hidden rounded-md"
+        >
+        {posterUrl ? (
+          <Image
+            src={posterUrl}
+            alt={item.title ?? ''}
+            fill
+            sizes="52px"
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
+        )}
+      </button>
+
+      <div className="min-w-0 flex-1 pr-7">
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="block max-w-full cursor-pointer truncate text-left font-semibold text-white"
+        >
+          {item.title}
+        </button>
+        <span
+          className={cn(
+            'mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+            item.mediaType === 'movie'
+              ? 'bg-blue-500/10 text-blue-400'
+              : 'bg-purple-500/10 text-purple-400',
+          )}
+        >
+          {item.mediaType === 'movie'
+            ? content.watchlists.contentTypes.movie
+            : content.watchlists.contentTypes.series}
+        </span>
+        <div className="text-muted-foreground mt-2 flex items-end gap-2 pt-2 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="shrink-0">{duration}</span>
+            {hasRealDuration && hasPlatforms && (
+              <span className="text-muted-foreground/70 text-2xl leading-none">·</span>
+            )}
+          </div>
+          {hasPlatforms && <CompactWatchProviders providers={item.platformList ?? []} size={24} />}
+        </div>
+        </div>
+      </div>
+
+      {/* Picker +/check (même composant que la table) */}
+      <div className="absolute top-2 right-2">
+        <WatchlistPickerMenu
+          watchlists={pickerWatchlists}
+          tmdbId={item.tmdbId}
+          onAdd={(wid) => onAdd(wid, item.tmdbId.toString(), item.mediaType as 'movie' | 'tv')}
+          onRemove={(wid) => onRemove(wid, item.tmdbId.toString())}
+          addToLabel={content.watchlists.addToWatchlist}
+          noWatchlistLabel={content.watchlists.noWatchlist}
+          side="left"
+          align="start"
+        >
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              className="hover:bg-muted cursor-pointer rounded p-1.5 transition-colors"
+              disabled={addingTo === item.tmdbId}
+              title={content.watchlists.addToWatchlist}
+            >
+              {showCheck ? (
+                <Image
+                  src="/checkGreenFull.svg"
+                  alt=""
+                  width={18}
+                  height={18}
+                  className="h-[18px] w-[18px]"
+                />
+              ) : (
+                <Image
+                  src="/plus2.svg"
+                  alt=""
+                  width={18}
+                  height={18}
+                  className="h-[18px] w-[18px] opacity-70 brightness-0 invert"
+                />
+              )}
+            </button>
+          </DropdownMenu.Trigger>
+        </WatchlistPickerMenu>
+      </div>
+    </div>
+  );
+}
 
 export function ListItemsTable({
   watchlist,
@@ -431,7 +605,7 @@ export function ListItemsTable({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Suppression d'un item de la LISTE COURANTE (point d'entrée unique des 3
@@ -440,22 +614,22 @@ export function ListItemsTable({
   const deleteFromCurrentList = useCallback(
     async (tmdbId: number) => {
       const currentItems = itemsRef.current;
-      const index = currentItems.findIndex(it => it.tmdbId === tmdbId);
+      const index = currentItems.findIndex((it) => it.tmdbId === tmdbId);
       if (index === -1) return;
       const item = currentItems[index];
 
-      setUndoStack(prev => [...prev, { item, index }]);
+      setUndoStack((prev) => [...prev, { item, index }]);
 
-      const newItems = currentItems.filter(it => it.tmdbId !== tmdbId);
+      const newItems = currentItems.filter((it) => it.tmdbId !== tmdbId);
       setItems(newItems);
-      setMyWatchlists(prev =>
-        prev.map(wl =>
+      setMyWatchlists((prev) =>
+        prev.map((wl) =>
           wl.id === watchlist.id
-            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== tmdbId) }
-            : wl
-        )
+            ? { ...wl, items: wl.items.filter((it) => it.tmdbId !== tmdbId) }
+            : wl,
+        ),
       );
-      setFocusedRow(prev => (prev === tmdbId ? null : prev));
+      setFocusedRow((prev) => (prev === tmdbId ? null : prev));
 
       try {
         await watchlistsApi.removeItem(watchlist.id, String(tmdbId));
@@ -464,18 +638,18 @@ export function ListItemsTable({
       } catch (error) {
         console.error('Failed to delete item:', error);
         setItems(currentItems);
-        setMyWatchlists(prev =>
-          prev.map(wl =>
-            wl.id === watchlist.id && !wl.items.some(it => it.tmdbId === tmdbId)
+        setMyWatchlists((prev) =>
+          prev.map((wl) =>
+            wl.id === watchlist.id && !wl.items.some((it) => it.tmdbId === tmdbId)
               ? { ...wl, items: [...wl.items, item] }
-              : wl
-          )
+              : wl,
+          ),
         );
-        setUndoStack(prev => prev.slice(0, -1));
+        setUndoStack((prev) => prev.slice(0, -1));
         toast.error('Erreur lors de la suppression');
       }
     },
-    [watchlist, onUpdate, queryClient, setMyWatchlists]
+    [watchlist, onUpdate, queryClient, setMyWatchlists],
   );
 
   // Annulation (Cmd/Ctrl+Z) : restaure le dernier item supprimé à sa position
@@ -484,19 +658,19 @@ export function ListItemsTable({
     const stack = undoStackRef.current;
     if (stack.length === 0) return;
     const { item, index } = stack[stack.length - 1];
-    setUndoStack(prev => prev.slice(0, -1));
+    setUndoStack((prev) => prev.slice(0, -1));
 
     const currentItems = itemsRef.current;
     const insertAt = Math.min(index, currentItems.length);
     const newItems = [...currentItems];
     newItems.splice(insertAt, 0, item);
     setItems(newItems);
-    setMyWatchlists(prev =>
-      prev.map(wl =>
-        wl.id === watchlist.id && !wl.items.some(it => it.tmdbId === item.tmdbId)
+    setMyWatchlists((prev) =>
+      prev.map((wl) =>
+        wl.id === watchlist.id && !wl.items.some((it) => it.tmdbId === item.tmdbId)
           ? { ...wl, items: [...wl.items, item] }
-          : wl
-      )
+          : wl,
+      ),
     );
 
     try {
@@ -508,7 +682,7 @@ export function ListItemsTable({
       });
       await watchlistsApi.reorderItems(
         watchlist.id,
-        newItems.map(it => String(it.tmdbId))
+        newItems.map((it) => String(it.tmdbId)),
       );
       onUpdate({ ...watchlist, items: newItems });
       queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
@@ -527,13 +701,11 @@ export function ListItemsTable({
       const active = document.activeElement;
       const isTyping =
         active instanceof HTMLElement &&
-        (active.tagName === 'INPUT' ||
-          active.tagName === 'TEXTAREA' ||
-          active.isContentEditable);
+        (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
       if (isTyping) return;
       if (
         document.querySelector(
-          '[role="dialog"][data-state="open"], [role="menu"][data-state="open"]'
+          '[role="dialog"][data-state="open"], [role="menu"][data-state="open"]',
         )
       ) {
         return;
@@ -573,7 +745,7 @@ export function ListItemsTable({
   const handleAddFromDetails = async (
     watchlistId: string,
     tmdbId: string,
-    mediaType: 'movie' | 'tv'
+    mediaType: 'movie' | 'tv',
   ) => {
     const idNum = Number(tmdbId);
     const placeholder = createPlaceholderItem({
@@ -582,17 +754,15 @@ export function ListItemsTable({
       posterPath: null,
       mediaType,
     });
-    setMyWatchlists(prev =>
-      prev.map(wl =>
-        wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
+    setMyWatchlists((prev) =>
+      prev.map((wl) =>
+        wl.id === watchlistId && !wl.items.some((it) => it.tmdbId === idNum)
           ? { ...wl, items: [...wl.items, placeholder] }
-          : wl
-      )
+          : wl,
+      ),
     );
     if (watchlistId === watchlist.id) {
-      setItems(prev =>
-        prev.some(it => it.tmdbId === idNum) ? prev : [...prev, placeholder]
-      );
+      setItems((prev) => (prev.some((it) => it.tmdbId === idNum) ? prev : [...prev, placeholder]));
     }
     try {
       await watchlistsApi.addItem(watchlistId, {
@@ -608,15 +778,15 @@ export function ListItemsTable({
       toast.success('Ajouté à la liste');
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
-      setMyWatchlists(prev =>
-        prev.map(wl =>
+      setMyWatchlists((prev) =>
+        prev.map((wl) =>
           wl.id === watchlistId
-            ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) }
-            : wl
-        )
+            ? { ...wl, items: wl.items.filter((it) => it.tmdbId !== idNum) }
+            : wl,
+        ),
       );
       if (watchlistId === watchlist.id) {
-        setItems(prev => prev.filter(it => it.tmdbId !== idNum));
+        setItems((prev) => prev.filter((it) => it.tmdbId !== idNum));
       }
       toast.error("Erreur lors de l'ajout");
     }
@@ -631,12 +801,12 @@ export function ListItemsTable({
     // Retrait d'une AUTRE de mes listes (picker uniquement, non annulable).
     const idNum = Number(tmdbId);
     let removed: WatchlistItem | undefined;
-    setMyWatchlists(prev =>
-      prev.map(wl => {
+    setMyWatchlists((prev) =>
+      prev.map((wl) => {
         if (wl.id !== watchlistId) return wl;
-        removed = wl.items.find(it => it.tmdbId === idNum);
-        return { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) };
-      })
+        removed = wl.items.find((it) => it.tmdbId === idNum);
+        return { ...wl, items: wl.items.filter((it) => it.tmdbId !== idNum) };
+      }),
     );
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
@@ -647,10 +817,10 @@ export function ListItemsTable({
       toast.error('Erreur lors du retrait');
       if (removed) {
         const restored = removed;
-        setMyWatchlists(prev =>
-          prev.map(wl =>
-            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl
-          )
+        setMyWatchlists((prev) =>
+          prev.map((wl) =>
+            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl,
+          ),
         );
       }
     }
@@ -659,7 +829,7 @@ export function ListItemsTable({
   const handleMoveItem = async (tmdbId: number, position: 'first' | 'last') => {
     try {
       setLoadingItem(tmdbId);
-      const itemIndex = items.findIndex(item => item.tmdbId === tmdbId);
+      const itemIndex = items.findIndex((item) => item.tmdbId === tmdbId);
       if (itemIndex === -1) return;
 
       const newItems = [...items];
@@ -688,14 +858,14 @@ export function ListItemsTable({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex(item => item.tmdbId === active.id);
-      const newIndex = items.findIndex(item => item.tmdbId === over.id);
+      const oldIndex = items.findIndex((item) => item.tmdbId === active.id);
+      const newIndex = items.findIndex((item) => item.tmdbId === over.id);
 
       const newItems = arrayMove(items, oldIndex, newIndex);
       setItems(newItems);
 
       try {
-        const orderedTmdbIds = newItems.map(item => item.tmdbId.toString());
+        const orderedTmdbIds = newItems.map((item) => item.tmdbId.toString());
         await watchlistsApi.reorderItems(watchlist.id, orderedTmdbIds);
 
         // Notify parent with updated watchlist (no loading flicker)
@@ -713,7 +883,7 @@ export function ListItemsTable({
       {
         id: 'index',
         header: content.watchlists.tableHeaders.number,
-        cell: info => info.row.index + 1,
+        cell: (info) => info.row.index + 1,
         size: 39,
       },
       {
@@ -734,7 +904,7 @@ export function ListItemsTable({
               className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
               tabIndex={0}
               role="button"
-              onKeyDown={e => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   if (!isSorted) {
@@ -752,13 +922,13 @@ export function ListItemsTable({
             </div>
           );
         },
-        cell: info => {
+        cell: (info) => {
           const item = info.row.original;
           const rowIndex = info.row.index;
           return (
             <button
               type="button"
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 setSelectedItem(item);
                 setSelectedIndex(rowIndex);
@@ -794,7 +964,7 @@ export function ListItemsTable({
       {
         accessorKey: 'mediaType',
         header: content.watchlists.tableHeaders.type,
-        cell: info => {
+        cell: (info) => {
           const type = info.getValue() as 'movie' | 'tv';
           return (
             <span
@@ -802,7 +972,7 @@ export function ListItemsTable({
                 'inline-block rounded-full px-2 py-1 text-xs font-medium',
                 type === 'movie'
                   ? 'bg-blue-500/10 text-blue-400'
-                  : 'bg-purple-500/10 text-purple-400'
+                  : 'bg-purple-500/10 text-purple-400',
               )}
             >
               {type === 'movie'
@@ -816,13 +986,13 @@ export function ListItemsTable({
       {
         accessorKey: 'platformList',
         header: content.watchlists.tableHeaders.platforms,
-        cell: info => {
+        cell: (info) => {
           const rawPlatforms = info.getValue() as unknown;
 
           const platforms: { name: string; logoPath: string }[] = Array.isArray(rawPlatforms)
             ? rawPlatforms
-                .filter(p => p !== null && p !== undefined && p !== '')
-                .map(p => {
+                .filter((p) => p !== null && p !== undefined && p !== '')
+                .map((p) => {
                   if (typeof p === 'string') {
                     return p.trim() ? { name: p, logoPath: '' } : null;
                   }
@@ -856,7 +1026,7 @@ export function ListItemsTable({
               className="focus-visible:outline-primary flex w-full cursor-pointer items-center gap-2 transition-colors duration-150 hover:text-white focus-visible:outline-2"
               tabIndex={0}
               role="button"
-              onKeyDown={e => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   if (!isSorted) {
@@ -874,13 +1044,13 @@ export function ListItemsTable({
             </div>
           );
         },
-        accessorFn: row => {
+        accessorFn: (row) => {
           if (row.mediaType === 'tv' && row.numberOfEpisodes) {
             return row.numberOfEpisodes * 35;
           }
           return row.runtime || 0;
         },
-        cell: info => (
+        cell: (info) => (
           <span className="text-muted-foreground text-sm">
             {formatItemFormat(info.row.original)}
           </span>
@@ -894,7 +1064,7 @@ export function ListItemsTable({
         size: 120,
       },
     ],
-    [content]
+    [content],
   );
 
   const isCustomOrder = sorting.length === 0;
@@ -954,7 +1124,7 @@ export function ListItemsTable({
 
   return (
     <>
-      <div ref={tableWrapperRef} className="mb-2 overflow-hidden">
+      <div ref={tableWrapperRef} className="mb-2 overflow-hidden max-[749px]:hidden">
         <DndContext
           id={`dnd-watchlist-${watchlist.id}`}
           sensors={sensors}
@@ -963,9 +1133,9 @@ export function ListItemsTable({
         >
           <table className="w-full table-fixed">
             <thead>
-              {table.getHeaderGroups().map(headerGroup => (
+              {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-border border-b">
-                  {headerGroup.headers.map(header => (
+                  {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
                       className="text-muted-foreground px-4 py-4 text-left text-sm font-normal transition-colors duration-150 select-none"
@@ -981,7 +1151,7 @@ export function ListItemsTable({
             </thead>
             <tbody>
               <SortableContext
-                items={displayItems.map(item => item.tmdbId)}
+                items={displayItems.map((item) => item.tmdbId)}
                 strategy={verticalListSortingStrategy}
                 disabled={!isCustomOrder || !canEdit}
               >
@@ -1017,11 +1187,52 @@ export function ListItemsTable({
         </DndContext>
       </div>
 
+      {/* Vue cartes mobile (< 750px) — remplace totalement la table */}
+      <div className="min-[750px]:hidden">
+        <DndContext
+          id={`dnd-watchlist-mobile-${watchlist.id}`}
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={displayItems.map((item) => item.tmdbId)}
+            strategy={verticalListSortingStrategy}
+            disabled={!isCustomOrder || !canEdit}
+          >
+            <div className="space-y-3">
+              {displayItems.map((item, index) => (
+                <SortableMobileCard
+                  key={item.tmdbId}
+                  item={item}
+                  isDragDisabled={!isCustomOrder || !canEdit}
+                  content={content}
+                  pickerWatchlists={buildPickerWatchlists(
+                    editableWatchlists,
+                    { ...watchlist, items },
+                    canEdit,
+                  )}
+                  showCheck={canEdit || isInAnyOfMyLists(item.tmdbId)}
+                  addingTo={addingTo}
+                  onAdd={handleAddFromDetails}
+                  onRemove={handleRemoveFromDetails}
+                  onOpenDetails={() => {
+                    setSelectedItem(item);
+                    setSelectedIndex(index);
+                    setDetailsModalOpen(true);
+                  }}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+
       {/* Item Details Modal */}
       {selectedItem && (
         <ItemDetailsModal
           open={detailsModalOpen}
-          onOpenChange={open => {
+          onOpenChange={(open) => {
             setDetailsModalOpen(open);
             if (!open) {
               setSelectedIndex(-1);
@@ -1034,19 +1245,18 @@ export function ListItemsTable({
           onNext={selectedIndex < displayItems.length - 1 ? handleNavigateNext : undefined}
           watchlists={buildPickerWatchlists(editableWatchlists, { ...watchlist, items }, canEdit)}
           isAuthenticated={isAuthenticated}
-          onAddToWatchlist={watchlistId =>
+          onAddToWatchlist={(watchlistId) =>
             handleAddFromDetails(
               watchlistId,
               selectedItem.tmdbId.toString(),
-              selectedItem.mediaType as 'movie' | 'tv'
+              selectedItem.mediaType as 'movie' | 'tv',
             )
           }
-          onRemoveFromWatchlist={watchlistId =>
+          onRemoveFromWatchlist={(watchlistId) =>
             handleRemoveFromDetails(watchlistId, selectedItem.tmdbId.toString())
           }
         />
       )}
-
     </>
   );
 }

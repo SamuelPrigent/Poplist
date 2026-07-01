@@ -2,6 +2,7 @@
 
 import { Img as Image } from '@/components/ui/Img';
 import { Link } from '@/components/ui/Link';
+import { cn } from '@/lib/utils';
 import type { Content } from '@/types/content';
 
 interface TrendingItem {
@@ -32,86 +33,21 @@ const joker = '/landing/movies/joker.webp';
 const fenetre = '/landing/movies/fenetre.webp';
 
 const FAMOUS_MOVIES = [
-  // === COLONNE 1 (gauche) ===
-  {
-    id: 1,
-    title: 'Col1-Pos1',
-    image: doa,
-  }, // Avatar
-  {
-    id: 2,
-    title: 'Col1-Pos2',
-    image: oceans,
-  }, // Matrix
-  {
-    id: 3,
-    title: 'Col1-Pos3',
-    image: joker,
-  }, // The Dark Knight
-  {
-    id: 4,
-    title: 'Col1-Pos4',
-    image: jake,
-  }, // Shawshank
-  {
-    id: 5,
-    title: 'Col1-Pos5',
-    image: 'https://image.tmdb.org/t/p/w500/tmU7GeKVybMWFButWEGl2M4GeiP.jpg',
-  }, // The Godfather
-
-  // === COLONNE 2 (milieu) ===
-  {
-    id: 6,
-    title: 'Col2-Pos1',
-    image: 'https://image.tmdb.org/t/p/w500/hziiv14OpD73u9gAak4XDDfBKa2.jpg',
-  }, // Harry Potter
-  {
-    id: 7,
-    title: 'Col2-Pos2',
-    image: fenetre,
-  }, // Iron Man
-  {
-    id: 8,
-    title: 'Col2-Pos3',
-    image: theFifth2,
-  }, // Dune
-  {
-    id: 9,
-    title: 'Col2-Pos4',
-    image: jinx,
-  }, // Fight Club
-  {
-    id: 10,
-    title: 'Col2-Pos5',
-    image: kb,
-  }, // Forrest Gump
-
-  // === COLONNE 3 (droite) ===
-  {
-    id: 11,
-    title: 'Col3-Pos1',
-    image: saw,
-  }, // Star Wars
-  {
-    id: 12,
-    title: 'Col3-Pos2',
-    image: blade2,
-  }, // Avengers
-  {
-    id: 13,
-    title: 'Col3-Pos3',
-    image: 'https://image.tmdb.org/t/p/w500/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
-  }, // Pulp Fiction
-  {
-    id: 14,
-    title: 'Col3-Pos4',
-    image: passion,
-  }, // LOTR
-  {
-    id: 15,
-    title: 'Col3-Pos5',
-    image: pdc,
-  }, // Inception
+  { id: 1, title: 'Col1-Pos1', image: doa },
+  { id: 2, title: 'Col1-Pos2', image: oceans },
+  { id: 3, title: 'Col1-Pos3', image: joker },
+  { id: 4, title: 'Col1-Pos4', image: jake },
+  { id: 5, title: 'Col1-Pos5', image: 'https://image.tmdb.org/t/p/w500/tmU7GeKVybMWFButWEGl2M4GeiP.jpg' },
+  { id: 6, title: 'Col2-Pos1', image: 'https://image.tmdb.org/t/p/w500/hziiv14OpD73u9gAak4XDDfBKa2.jpg' },
+  { id: 7, title: 'Col2-Pos2', image: fenetre },
+  { id: 8, title: 'Col2-Pos3', image: theFifth2 },
+  { id: 9, title: 'Col2-Pos4', image: jinx },
+  { id: 10, title: 'Col2-Pos5', image: kb },
+  { id: 11, title: 'Col3-Pos1', image: saw },
+  { id: 12, title: 'Col3-Pos2', image: blade2 },
+  { id: 13, title: 'Col3-Pos3', image: 'https://image.tmdb.org/t/p/w500/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg' },
+  { id: 14, title: 'Col3-Pos4', image: passion },
+  { id: 15, title: 'Col3-Pos5', image: pdc },
 ];
 
 // Mots à mettre en gradient
@@ -172,133 +108,157 @@ const renderSubtitleWithUnderline = (subtitle: string) => {
   });
 };
 
-export function HeroSection({ content, watchlistsUrl: _watchlistsUrl }: HeroSectionProps) {
+// Masque de fondu horizontal (bords gauche/droite) du bandeau mobile.
+const MASK_X = 'mask-[linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]';
+
+/** Une rangée de posters qui défile en boucle (2 copies → boucle sans couture). */
+function PosterRow({ heightClass = 'h-[104px]', className }: { heightClass?: string; className?: string }) {
+  return (
+    <div className={cn('overflow-hidden', className)}>
+      <div className="flex w-max animate-slide-right gap-2.5">
+        {[...FAMOUS_MOVIES, ...FAMOUS_MOVIES].map((movie, index) => (
+          <div
+            key={`${movie.id}-${index}`}
+            className={cn(
+              'relative aspect-16/14 shrink-0 overflow-hidden rounded-lg border border-[lab(10_0_0)]',
+              heightClass
+            )}
+          >
+            <Image src={movie.image} alt="" fill sizes="140px" className="object-cover" loading="eager" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function HeroSection({ content }: HeroSectionProps) {
   const handleScrollToFeatures = () => {
-    const featuresSection = document.querySelector('#ensavoirplus');
-    featuresSection?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    document.querySelector('#ensavoirplus')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // Split movies into 3 columns
   const col1 = FAMOUS_MOVIES.slice(0, 5);
   const col2 = FAMOUS_MOVIES.slice(5, 10);
   const col3 = FAMOUS_MOVIES.slice(10, 15);
 
   return (
-    <section className="relative min-h-[85vh] overflow-hidden bg-background">
-      {/* Gradient overlay from left - full width, smooth fade */}
-      <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background from-0% via-background/90 via-30% to-transparent to-70%" />
+    <section className="relative overflow-hidden bg-background min-h-[85vh] max-[749px]:min-h-0">
+      {/* ============================ DESKTOP (>= 750px) ============================ */}
+      <div className="max-[749px]:hidden">
+        <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background from-0% via-background/90 via-30% to-transparent to-70%" />
+        <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background/80 from-0% to-transparent to-50% md:from-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-60 bg-linear-to-t from-background via-background/90 to-transparent" />
 
-      {/* Additional gradient for text readability on small screens */}
-      <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background/80 from-0% to-transparent to-50% md:from-transparent" />
-
-      {/* Gradient overlay from bottom */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-60 bg-linear-to-t from-background via-background/90 to-transparent" />
-
-      {/* Max-width container for large screens */}
-      <div className="relative mx-auto max-w-[1800px] 2xl:max-w-[1600px]">
-        {/* Right: Tilted Poster Grid - responsive columns */}
-        <div className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-[15%] opacity-40 sm:translate-x-[10%] sm:opacity-50 md:translate-x-[5%] md:opacity-70 lg:opacity-100 2xl:translate-x-0">
-          <div className="-rotate-12 transform">
-            <div className="flex gap-4 md:gap-7">
-              {/* Column 1 - hidden on very small screens */}
-              <div className="hidden sm:flex flex-col gap-3 md:gap-5">
-                {col1.map((movie, _index) => (
-                  <div
-                    key={movie.id}
-                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)]"
-                  >
-                    <Image
-                      src={movie.image}
-                      alt={movie.title}
-                      fill
-                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
-                      className="object-cover"
-                      loading="eager"
-                    />
-                  </div>
-                ))}
+        <div className="relative mx-auto max-w-[1800px] 2xl:max-w-[1600px]">
+          <div className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-[15%] opacity-40 sm:translate-x-[10%] sm:opacity-50 md:translate-x-[5%] md:opacity-70 lg:opacity-100 2xl:translate-x-0">
+            <div className="-rotate-12 transform">
+              <div className="flex gap-4 md:gap-7">
+                <div className="hidden sm:flex flex-col gap-3 md:gap-5">
+                  {col1.map(movie => (
+                    <div
+                      key={movie.id}
+                      className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)]"
+                    >
+                      <Image src={movie.image} alt={movie.title} fill sizes="200px" className="object-cover" loading="eager" />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-col gap-3 md:gap-5 -mt-16">
+                  {col2.map(movie => (
+                    <div
+                      key={movie.id}
+                      className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
+                    >
+                      <Image src={movie.image} alt={movie.title} fill sizes="200px" className="object-cover" loading="eager" />
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden md:flex flex-col gap-3 md:gap-5 mt-8">
+                  {col3.map(movie => (
+                    <div
+                      key={movie.id}
+                      className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
+                    >
+                      <Image src={movie.image} alt={movie.title} fill sizes="200px" className="object-cover" loading="eager" />
+                    </div>
+                  ))}
+                </div>
               </div>
+            </div>
+          </div>
 
-              {/* Column 2 - offset up, always visible */}
-              <div className="flex flex-col gap-3 md:gap-5 -mt-16">
-                {col2.map((movie, _index) => (
-                  <div
-                    key={movie.id}
-                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
-                  >
-                    <Image
-                      src={movie.image}
-                      alt={movie.title}
-                      fill
-                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
-                      className="object-cover"
-                      loading="eager"
-                    />
-                  </div>
-                ))}
+          <div className="mt-3 relative z-30 mx-auto flex min-h-[85vh] max-w-7xl items-center justify-center px-6 py-20 md:justify-start lg:px-8">
+            <div className="flex w-full flex-col items-center text-center md:w-auto md:max-w-xl md:items-start md:text-left">
+              <h1 className="mb-6 text-[40px] leading-[1.15] font-semibold tracking-tight text-white sm:text-5xl lg:text-[61px] lg:leading-[1.1]">
+                {renderTitleWithGradient(content.landing.hero.title)}
+              </h1>
+              <p className="mb-8 max-w-md text-lg text-gray-200">
+                {renderSubtitleWithUnderline(content.landing.hero.subtitle)}
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 mt-3 md:justify-start">
+                <Link
+                  to="/home"
+                  className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
+                >
+                  {content.home.hero.cta}
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleScrollToFeatures}
+                  className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-medium text-gray-300 transition-all hover:bg-white/5 hover:text-white"
+                >
+                  {content.home.hero.ctaSecondary}
+                </button>
               </div>
-
-              {/* Column 3 - offset down, hidden on small screens */}
-              <div className="hidden md:flex flex-col gap-3 md:gap-5 mt-8">
-                {col3.map((movie, _index) => (
-                  <div
-                    key={movie.id}
-                    className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
-                  >
-                    <Image
-                      src={movie.image}
-                      alt={movie.title}
-                      fill
-                      sizes="(max-width: 768px) 140px, (max-width: 1024px) 180px, 300px"
-                      className="object-cover"
-                      loading="eager"
-                    />
-                  </div>
-                ))}
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 md:justify-start">
+                <span className="flex items-center gap-2">
+                  <span className="text-cyan-400">✓</span> Sans carte bancaire
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-cyan-400">✓</span> Application 100% gratuite
+                </span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Text content - centered on mobile, left on desktop */}
-        <div className="mt-3 relative z-30 mx-auto flex min-h-[85vh] max-w-7xl items-center justify-center px-6 py-20 md:justify-start lg:px-8">
-          <div className="flex w-full flex-col items-center text-center md:w-auto md:max-w-xl md:items-start md:text-left">
-            {/* Main Title */}
-            <h1 className="mb-6 text-[40px] leading-[1.15] font-semibold tracking-tight text-white sm:text-5xl lg:text-[61px] lg:leading-[1.1]">
-              {renderTitleWithGradient(content.landing.hero.title)}
+      {/* ============================ MOBILE (< 750px) ============================ */}
+      <div className="relative min-[750px]:hidden">
+        <div className="flex flex-col justify-center gap-9 py-14">
+          {/* Bandeau de posters défilant + fondu immersif vers le bas */}
+          <div className="relative">
+            <PosterRow heightClass="h-[100px]" className={MASK_X} />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent via-transparent to-background" />
+          </div>
+
+          <div className="flex flex-col items-center px-5 text-center">
+            <h1 className="mb-4 text-[32px] leading-[1.15] font-semibold tracking-tight text-white">
+              {renderTitleWithGradient(content.landing.hero.titleMobile)}
             </h1>
-
-            {/* Subtitle */}
-            <p className="mb-8 max-w-md text-lg text-gray-200">
-              {renderSubtitleWithUnderline(content.landing.hero.subtitle)}
+            <p className="mb-6 max-w-md text-base text-gray-200">
+              {renderSubtitleWithUnderline(content.landing.hero.subtitleMobile)}
             </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap justify-center gap-4 mt-3 md:justify-start">
+            <div className="flex flex-wrap justify-center gap-3">
               <Link
                 to="/home"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-black transition-all hover:bg-gray-200"
               >
                 {content.home.hero.cta}
               </Link>
               <button
                 type="button"
                 onClick={handleScrollToFeatures}
-                className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-medium text-gray-300 transition-all hover:bg-white/5 hover:text-white"
+                className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-white/20 px-5 text-sm font-medium text-gray-300 transition-all hover:bg-white/5 hover:text-white"
               >
                 {content.home.hero.ctaSecondary}
               </button>
             </div>
-
-            {/* Trust badges */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 md:justify-start">
-              <span className="flex items-center gap-2">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-400">
+              <span className="flex items-center gap-1.5">
                 <span className="text-cyan-400">✓</span> Sans carte bancaire
               </span>
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5">
                 <span className="text-cyan-400">✓</span> Application 100% gratuite
               </span>
             </div>

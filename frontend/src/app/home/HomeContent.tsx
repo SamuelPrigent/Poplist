@@ -17,7 +17,12 @@ import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
-import { createPlaceholderItem, watchlists as watchlistsApi, type Watchlist, type WatchlistItem } from '@/api';
+import {
+  createPlaceholderItem,
+  watchlists as watchlistsApi,
+  type Watchlist,
+  type WatchlistItem,
+} from '@/api';
 import { tmdbQueries, watchlistsQueries } from '@/api/queries';
 import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
@@ -58,6 +63,47 @@ interface FeaturedCategory {
   gradient?: string;
   itemCount: number;
   username: string;
+}
+
+/**
+ * En-tête de section. Desktop : titre + description à gauche, bouton à droite.
+ * Mobile (< 750px) : titre seul sur sa ligne, puis description + bouton dessous
+ * (le bouton ne gêne plus le titre).
+ */
+function SectionHeader({
+  title,
+  subtitle,
+  to,
+  action,
+}: {
+  title: string;
+  subtitle: string;
+  to: string;
+  action: string;
+}) {
+  const btn = (
+    <Link
+      to={to}
+      className="bg-muted/50 hover:bg-muted shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
+    >
+      {action}
+    </Link>
+  );
+  return (
+    <div className="mb-6 max-[749px]:mb-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-3xl font-bold text-white max-[749px]:text-2xl">{title}</h2>
+          <p className="text-muted-foreground mt-1 text-sm max-[749px]:hidden">{subtitle}</p>
+        </div>
+        <div className="max-[749px]:hidden">{btn}</div>
+      </div>
+      <div className="mt-2.5 hidden items-center justify-between gap-3 max-[749px]:flex">
+        <p className="text-muted-foreground text-sm">{subtitle}</p>
+        {btn}
+      </div>
+    </div>
+  );
 }
 
 function HomeContentInner() {
@@ -133,7 +179,7 @@ function HomeContentInner() {
     }
   }, [user]);
   const userWatchlists: Watchlist[] = user
-    ? myWatchlistsQuery.data?.watchlists ?? []
+    ? (myWatchlistsQuery.data?.watchlists ?? [])
     : localWatchlists;
 
   // Discover movies + TV en parallèle (1h staleTime, partagé inter-pages)
@@ -144,7 +190,7 @@ function HomeContentInner() {
       voteCountGte: 100,
       voteAverageGte: 5.0,
       releaseDateGte: '2015-01-01',
-    })
+    }),
   );
   const tvDiscoverQuery = useQuery(
     tmdbQueries.discover('tv', {
@@ -153,15 +199,15 @@ function HomeContentInner() {
       voteCountGte: 100,
       voteAverageGte: 5.0,
       releaseDateGte: '2015-01-01',
-    })
+    }),
   );
 
   const recommendations = useMemo<DiscoverItem[]>(() => {
-    const movieResults = (movieDiscoverQuery.data?.results ?? []).map(item => ({
+    const movieResults = (movieDiscoverQuery.data?.results ?? []).map((item) => ({
       ...item,
       media_type: 'movie' as const,
     }));
-    const tvResults = (tvDiscoverQuery.data?.results ?? []).map(item => ({
+    const tvResults = (tvDiscoverQuery.data?.results ?? []).map((item) => ({
       ...item,
       media_type: 'tv' as const,
     }));
@@ -172,13 +218,13 @@ function HomeContentInner() {
       if (tvResults[i]) combined.push(tvResults[i]);
     }
     return combined.filter(
-      item => item.poster_path && item.vote_average && item.vote_average >= 5
+      (item) => item.poster_path && item.vote_average && item.vote_average >= 5,
     );
   }, [movieDiscoverQuery.data, tvDiscoverQuery.data]);
 
   // Comptage par catégorie : N queries en parallèle via useQueries
   const categoryCountQueries = useQueries({
-    queries: GENRE_CATEGORIES.map(genreId => ({
+    queries: GENRE_CATEGORIES.map((genreId) => ({
       ...watchlistsQueries.byGenre(genreId),
       select: (data: { watchlists: Watchlist[] }) => data.watchlists?.length ?? 0,
     })),
@@ -189,7 +235,7 @@ function HomeContentInner() {
         acc[genreId] = categoryCountQueries[i]?.data ?? 0;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
   }, [categoryCountQueries]);
 
@@ -197,9 +243,9 @@ function HomeContentInner() {
   const trendingQuery = useQuery(tmdbQueries.trending('day'));
   const trending = useMemo<DiscoverItem[]>(() => {
     return ((trendingQuery.data?.results ?? []) as DiscoverItem[])
-      .filter(r => r.poster_path)
+      .filter((r) => r.poster_path)
       .slice(0, 6)
-      .map(r => ({ ...r, media_type: r.media_type || 'movie' }));
+      .map((r) => ({ ...r, media_type: r.media_type || 'movie' }));
   }, [trendingQuery.data]);
 
   const loading =
@@ -224,20 +270,20 @@ function HomeContentInner() {
       queryClient.setQueryData(mineKey, (old: { watchlists: Watchlist[] } | undefined) => {
         if (!old) return old;
         return {
-          watchlists: old.watchlists.map(wl =>
-            wl.id === watchlistId && !wl.items.some(it => it.tmdbId === item.tmdbId)
+          watchlists: old.watchlists.map((wl) =>
+            wl.id === watchlistId && !wl.items.some((it) => it.tmdbId === item.tmdbId)
               ? { ...wl, items: [...wl.items, item] }
-              : wl
+              : wl,
           ),
         };
       });
     } else {
-      setLocalWatchlists(prev =>
-        prev.map(wl =>
-          wl.id === watchlistId && !wl.items.some(it => it.tmdbId === item.tmdbId)
+      setLocalWatchlists((prev) =>
+        prev.map((wl) =>
+          wl.id === watchlistId && !wl.items.some((it) => it.tmdbId === item.tmdbId)
             ? { ...wl, items: [...wl.items, item] }
-            : wl
-        )
+            : wl,
+        ),
       );
     }
   };
@@ -248,20 +294,20 @@ function HomeContentInner() {
       queryClient.setQueryData(mineKey, (old: { watchlists: Watchlist[] } | undefined) => {
         if (!old) return old;
         return {
-          watchlists: old.watchlists.map(wl => {
+          watchlists: old.watchlists.map((wl) => {
             if (wl.id !== watchlistId) return wl;
-            removed = wl.items.find(it => it.tmdbId === tmdbId);
-            return { ...wl, items: wl.items.filter(it => it.tmdbId !== tmdbId) };
+            removed = wl.items.find((it) => it.tmdbId === tmdbId);
+            return { ...wl, items: wl.items.filter((it) => it.tmdbId !== tmdbId) };
           }),
         };
       });
     } else {
-      setLocalWatchlists(prev =>
-        prev.map(wl => {
+      setLocalWatchlists((prev) =>
+        prev.map((wl) => {
           if (wl.id !== watchlistId) return wl;
-          removed = wl.items.find(it => it.tmdbId === tmdbId);
-          return { ...wl, items: wl.items.filter(it => it.tmdbId !== tmdbId) };
-        })
+          removed = wl.items.find((it) => it.tmdbId === tmdbId);
+          return { ...wl, items: wl.items.filter((it) => it.tmdbId !== tmdbId) };
+        }),
       );
     }
     return removed;
@@ -270,7 +316,7 @@ function HomeContentInner() {
   const handleAddToWatchlist = async (
     watchlistId: string,
     tmdbId: string,
-    mediaType: 'movie' | 'tv'
+    mediaType: 'movie' | 'tv',
   ) => {
     const idNum = Number(tmdbId);
     const placeholder = createPlaceholderItem({
@@ -331,7 +377,7 @@ function HomeContentInner() {
   };
 
   // Featured categories — 6 first
-  const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 6).map(categoryId => {
+  const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 6).map((categoryId) => {
     const categoryInfo = getCategoryInfo(categoryId, content);
     return {
       id: categoryId,
@@ -382,18 +428,12 @@ function HomeContentInner() {
       {/* My Watchlists - Library Section */}
       {(loading || userWatchlists.length > 0) && (
         <Section className="pb-5">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-white">{content.home.library.title}</h2>
-              <p className="text-muted-foreground mt-1 text-sm">{content.home.library.subtitle}</p>
-            </div>
-            <Link
-              to={listsUrl}
-              className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
-            >
-              {content.home.library.seeAll}
-            </Link>
-          </div>
+          <SectionHeader
+            title={content.home.library.title}
+            subtitle={content.home.library.subtitle}
+            to={listsUrl}
+            action={content.home.library.seeAll}
+          />
 
           {loading ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -403,7 +443,7 @@ function HomeContentInner() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-              {userWatchlists.slice(0, 4).map(watchlist => (
+              {userWatchlists.slice(0, 4).map((watchlist) => (
                 <ListCardSmall
                   key={watchlist.id}
                   watchlist={watchlist}
@@ -417,20 +457,14 @@ function HomeContentInner() {
 
       {/* Categories Section */}
       <Section className="">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-white">{content.home.categories.title}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">{content.home.categories.subtitle}</p>
-          </div>
-          <Link
-            to="/categories"
-            className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-          >
-            {content.home.categories.seeMore}
-          </Link>
-        </div>
+        <SectionHeader
+          title={content.home.categories.title}
+          subtitle={content.home.categories.subtitle}
+          to="/categories"
+          action={content.home.categories.seeMore}
+        />
 
-        <div className="grid grid-cols-3 gap-[14px] md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:gap-2.5 md:grid-cols-4 lg:grid-cols-6">
           {categories.map((category, index) => {
             const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
             const placeholderItems: WatchlistItem[] = Array.from(
@@ -441,7 +475,7 @@ function HomeContentInner() {
                   title: category.name,
                   mediaType: 'movie',
                   addedAt: placeholderTimestamp,
-                })
+                }),
             );
 
             const mockWatchlist: Watchlist = {
@@ -483,33 +517,23 @@ function HomeContentInner() {
 
       {/* Popular Watchlists Section */}
       <Section>
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-white">
-              {content.home.popularWatchlists.title}
-            </h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {content.home.popularWatchlists.subtitle}
-            </p>
-          </div>
-          <Link
-            to="/lists"
-            className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-          >
-            {content.home.popularWatchlists.seeMore}
-          </Link>
-        </div>
+        <SectionHeader
+          title={content.home.popularWatchlists.title}
+          subtitle={content.home.popularWatchlists.subtitle}
+          to="/lists"
+          action={content.home.popularWatchlists.seeMore}
+        />
 
         {loading ? (
-          <div className="grid grid-cols-3 gap-[8px] md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[8px] max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 12 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
           </div>
         ) : publicWatchlists.length > 0 ? (
-          <div className="grid grid-cols-3 gap-[4px] md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[3px] max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
             {publicWatchlists.slice(0, 12).map((watchlist, index) => {
-              const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
+              const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
               const isOwner = userWatchlist?.isOwner ?? false;
               const isCollaborator = userWatchlist?.isCollaborator ?? false;
               const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
@@ -544,28 +568,22 @@ function HomeContentInner() {
 
       {/* Creators Section */}
       <Section>
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-white">{content.home.creators.title}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">{content.home.creators.subtitle}</p>
-          </div>
-          <Link
-            to="/users"
-            className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-          >
-            {content.home.creators.seeMore}
-          </Link>
-        </div>
+        <SectionHeader
+          title={content.home.creators.title}
+          subtitle={content.home.creators.subtitle}
+          to="/users"
+          action={content.home.creators.seeMore}
+        />
 
         {loading ? (
-          <div className="grid grid-cols-3 gap-[11px] md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-3 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 12 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
-          <div className="grid grid-cols-3 gap-[11px] md:grid-cols-4 lg:grid-cols-6">
-            {creators.map(creator => (
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-3 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
+            {creators.map((creator) => (
               <UserCard
                 key={creator.id}
                 user={creator}
@@ -580,19 +598,13 @@ function HomeContentInner() {
       {/* Trending Section */}
       {!loading && trending.length > 0 && (
         <Section>
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-white">{content.home.trending.title}</h2>
-              <p className="text-muted-foreground mt-1 text-sm">{content.home.trending.subtitle}</p>
-            </div>
-            <Link
-              to="/explore"
-              className="bg-muted/50 hover:bg-muted rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-            >
-              {content.home.creators.seeMore}
-            </Link>
-          </div>
-          <div className="grid grid-cols-3 gap-[13px] sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+          <SectionHeader
+            title={content.home.trending.title}
+            subtitle={content.home.trending.subtitle}
+            to="/explore"
+            action={content.home.creators.seeMore}
+          />
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(124px,1fr))] gap-[13px] max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+5)]:hidden sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             {trending.map((item, index) => (
               <MoviePoster
                 key={item.id}
@@ -603,14 +615,14 @@ function HomeContentInner() {
                 voteAverage={item.vote_average}
                 onClick={() => handleOpenTrending(item, index)}
                 watchlists={isAuthenticated ? userWatchlists : []}
-                onAddToWatchlist={watchlistId =>
+                onAddToWatchlist={(watchlistId) =>
                   handleAddToWatchlist(
                     watchlistId,
                     item.id.toString(),
-                    item.media_type || (item.title ? 'movie' : 'tv')
+                    item.media_type || (item.title ? 'movie' : 'tv'),
                   )
                 }
-                onRemoveFromWatchlist={watchlistId =>
+                onRemoveFromWatchlist={(watchlistId) =>
                   handleRemoveFromWatchlist(watchlistId, item.id.toString())
                 }
                 addToWatchlistLabel={content.watchlists.addToWatchlist}
@@ -625,7 +637,7 @@ function HomeContentInner() {
       {selectedItem && (
         <ItemDetailsModal
           open={detailsModalOpen}
-          onOpenChange={open => {
+          onOpenChange={(open) => {
             setDetailsModalOpen(open);
             if (!open) {
               setSelectedItem(null);
@@ -636,12 +648,12 @@ function HomeContentInner() {
           type={selectedItem.type}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < safeRecommendations.length - 1 ? handleNavigateNext : undefined}
-          watchlists={userWatchlists.filter(w => w.isOwner || w.isCollaborator)}
+          watchlists={userWatchlists.filter((w) => w.isOwner || w.isCollaborator)}
           isAuthenticated={isAuthenticated}
-          onAddToWatchlist={watchlistId =>
+          onAddToWatchlist={(watchlistId) =>
             handleAddToWatchlist(watchlistId, selectedItem.tmdbId, selectedItem.type)
           }
-          onRemoveFromWatchlist={watchlistId =>
+          onRemoveFromWatchlist={(watchlistId) =>
             handleRemoveFromWatchlist(watchlistId, selectedItem.tmdbId)
           }
         />
@@ -651,7 +663,7 @@ function HomeContentInner() {
       {selectedTrendingItem && (
         <ItemDetailsModal
           open={trendingModalOpen}
-          onOpenChange={open => {
+          onOpenChange={(open) => {
             setTrendingModalOpen(open);
             if (!open) {
               setSelectedTrendingItem(null);
@@ -676,16 +688,16 @@ function HomeContentInner() {
                 }
               : undefined
           }
-          watchlists={userWatchlists.filter(w => w.isOwner || w.isCollaborator)}
+          watchlists={userWatchlists.filter((w) => w.isOwner || w.isCollaborator)}
           isAuthenticated={isAuthenticated}
-          onAddToWatchlist={watchlistId =>
+          onAddToWatchlist={(watchlistId) =>
             handleAddToWatchlist(
               watchlistId,
               selectedTrendingItem.tmdbId,
-              selectedTrendingItem.type
+              selectedTrendingItem.type,
             )
           }
-          onRemoveFromWatchlist={watchlistId =>
+          onRemoveFromWatchlist={(watchlistId) =>
             handleRemoveFromWatchlist(watchlistId, selectedTrendingItem.tmdbId)
           }
         />

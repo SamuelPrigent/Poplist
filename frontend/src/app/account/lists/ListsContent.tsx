@@ -42,6 +42,7 @@ import { watchlistsQueries } from '@/api/queries';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { useLanguageStore } from '@/store/language';
 import { useListFiltersStore } from '@/store/listFilters';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 // Skeleton component
 const ListCardSkeleton = () => (
@@ -113,6 +114,7 @@ function ListsContentInner() {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { showOwned, showSaved, toggleOwned, toggleSaved } = useListFiltersStore();
+  const mounted = useIsMounted();
 
   const queryClient = useQueryClient();
   const mineKey = watchlistsQueries.mine().queryKey;
@@ -160,15 +162,15 @@ function ListsContentInner() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = watchlists.findIndex(w => w.id === active.id);
-      const newIndex = watchlists.findIndex(w => w.id === over.id);
+      const oldIndex = watchlists.findIndex((w) => w.id === active.id);
+      const newIndex = watchlists.findIndex((w) => w.id === over.id);
 
       const newWatchlists = arrayMove(watchlists, oldIndex, newIndex);
       const previous = queryClient.getQueryData(mineKey);
@@ -177,7 +179,7 @@ function ListsContentInner() {
       queryClient.setQueryData(mineKey, { watchlists: newWatchlists });
 
       try {
-        const allWatchlistIds = newWatchlists.map(w => w.id);
+        const allWatchlistIds = newWatchlists.map((w) => w.id);
         await watchlistsApi.reorderWatchlists(allWatchlistIds);
       } catch (error) {
         console.error('Failed to reorder watchlists:', error);
@@ -198,20 +200,27 @@ function ListsContentInner() {
     }
   };
 
+  // Sur mobile (< 750px) les boutons de filtre sont masqués → on garde les deux
+  // filtres actifs (afficher toutes les listes). matchMedia évalué après mount.
+  const isMobile =
+    mounted && typeof window !== 'undefined' && window.matchMedia('(max-width: 749px)').matches;
+  const showOwnedEff = isMobile || showOwned;
+  const showSavedEff = isMobile || showSaved;
+
   // Filter watchlists based on selected filters
-  const filteredWatchlists = watchlists.filter(watchlist => {
+  const filteredWatchlists = watchlists.filter((watchlist) => {
     // Use flags from backend
     const isOwner = watchlist.isOwner ?? false;
     const isCollaborator = watchlist.isCollaborator ?? false;
     const isSaved = watchlist.isSaved ?? false;
 
     // "Mes watchlists" filter: show owned watchlists AND collaborative watchlists
-    if (showOwned && (isOwner || isCollaborator)) {
+    if (showOwnedEff && (isOwner || isCollaborator)) {
       return true;
     }
 
     // "Suivies" filter: show followed watchlists (not owned, not collaborative)
-    if (showSaved && isSaved && !isOwner && !isCollaborator) {
+    if (showSavedEff && isSaved && !isOwner && !isCollaborator) {
       return true;
     }
 
@@ -221,13 +230,15 @@ function ListsContentInner() {
   return (
     <Section className="mb-20">
       {/* Title */}
-      <div className="mt-0 mb-1">
-        <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>
+      <div className="mt-0 mb-1 max-[749px]:mb-5">
+        <h1 className="text-3xl font-bold text-white max-[749px]:text-[28px]">
+          {content.watchlists.title}
+        </h1>
       </div>
 
       {/* Filters and Create Button */}
-      <div className="mb-8 flex items-end justify-between">
-        <div className="flex items-end gap-2">
+      <div className="mb-8 flex items-end justify-between max-[749px]:mb-6">
+        <div className="flex items-end gap-2 max-[749px]:hidden">
           <button
             type="button"
             onClick={toggleOwned}
@@ -253,7 +264,7 @@ function ListsContentInner() {
         </div>
 
         <Button
-          className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none max-[749px]:w-full max-[749px]:justify-center"
           onClick={() => setDialogOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -285,7 +296,7 @@ function ListsContentInner() {
       )}
 
       {loading ? (
-        <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {Array.from({ length: 10 }).map((_, i) => (
             <ListCardSkeleton key={i} />
           ))}
@@ -311,19 +322,27 @@ function ListsContentInner() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <DndContext id="dnd-account-lists" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={filteredWatchlists.map(w => w.id)} strategy={rectSortingStrategy}>
+        <DndContext
+          id="dnd-account-lists"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={filteredWatchlists.map((w) => w.id)}
+            strategy={rectSortingStrategy}
+          >
             {/* Grid */}
-            <div className="grid gap-[4px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-[4px] max-[749px]:gap-1 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filteredWatchlists.map((watchlist, index) => (
                 <SortableWatchlistCard
                   key={watchlist.id}
                   watchlist={watchlist}
-                  onEdit={wl => {
+                  onEdit={(wl) => {
                     setSelectedWatchlist(wl);
                     setEditDialogOpen(true);
                   }}
-                  onDelete={wl => {
+                  onDelete={(wl) => {
                     setSelectedWatchlist(wl);
                     setDeleteDialogOpen(true);
                   }}

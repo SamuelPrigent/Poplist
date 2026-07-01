@@ -27,10 +27,10 @@ export function PageHeader({
 			</div>
 
 			{/* Header */}
-			<div className="mb-8">
-				<h1 className="mb-2 text-4xl font-bold text-white">{title}</h1>
+			<div className="mb-8 max-[749px]:mb-6">
+				<h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-3xl">{title}</h1>
 				{subtitle && (
-					<p className="text-muted-foreground text-base">{subtitle}</p>
+					<p className="text-muted-foreground text-base max-[749px]:text-sm">{subtitle}</p>
 				)}
 			</div>
 		</>

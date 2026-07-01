@@ -5,6 +5,7 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import {
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
@@ -33,6 +34,8 @@ import {
 } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { WheelPicker } from '@/components/ui/wheel-picker';
 import { useAuth } from '@/context/auth-context';
 import {
   createPlaceholderItem,
@@ -145,7 +148,7 @@ export function ExploreContent() {
         },
       });
     },
-    [navigate]
+    [navigate],
   );
 
   // Use useMemo to memoize derived values from searchParams
@@ -155,7 +158,7 @@ export function ExploreContent() {
 
   const filterType = useMemo(
     () => (searchParams.get('filter') as 'popular' | 'top_rated') || 'popular',
-    [searchParams]
+    [searchParams],
   );
 
   const selectedGenres = useMemo(() => {
@@ -200,18 +203,55 @@ export function ExploreContent() {
   const [openYearFrom, setOpenYearFrom] = useState(false);
   const [openYearTo, setOpenYearTo] = useState(false);
 
+  // Drawers mobile (Genres / Année)
+  const CURRENT_YEAR = YEARS[0];
+  const [genresDrawerOpen, setGenresDrawerOpen] = useState(false);
+  const [yearDrawerOpen, setYearDrawerOpen] = useState(false);
+  // Valeurs "settled" des roues (mêmes règles de clamp que l'app mobile).
+  const [settledFrom, setSettledFrom] = useState(CURRENT_YEAR);
+  const [settledTo, setSettledTo] = useState(CURRENT_YEAR);
+
+  const handleFromSettled = useCallback((v: number) => {
+    setSettledFrom(v);
+    setSettledTo(prev => (prev < v ? v : prev));
+  }, []);
+  const handleToSettled = useCallback((v: number) => {
+    setSettledTo(v);
+    setSettledFrom(prev => (prev > v ? v : prev));
+  }, []);
+
+  const openYearDrawer = () => {
+    setSettledFrom(yearFromParam ? Number(yearFromParam) : CURRENT_YEAR);
+    setSettledTo(yearToParam ? Number(yearToParam) : CURRENT_YEAR);
+    setYearDrawerOpen(true);
+  };
+  const applyYear = () => {
+    updateSearchParams({
+      dateFrom: `${settledFrom}-01-01`,
+      dateTo: `${settledTo}-12-31`,
+      page: '1',
+    });
+    setYearDrawerOpen(false);
+  };
+  const resetYear = () => {
+    updateSearchParams({ dateFrom: null, dateTo: null, page: '1' });
+    setSettledFrom(CURRENT_YEAR);
+    setSettledTo(CURRENT_YEAR);
+    setYearDrawerOpen(false);
+  };
+
   // Filter yearTo list: can't be less than yearFrom
   const availableYearsTo = useMemo(() => {
     if (!yearFromParam) return YEARS;
     const fromYear = Number.parseInt(yearFromParam);
-    return YEARS.filter(year => year >= fromYear);
+    return YEARS.filter((year) => year >= fromYear);
   }, [yearFromParam]);
 
   // Filter yearFrom list: can't be greater than yearTo
   const availableYearsFrom = useMemo(() => {
     if (!yearToParam) return YEARS;
     const toYear = Number.parseInt(yearToParam);
-    return YEARS.filter(year => year <= toYear);
+    return YEARS.filter((year) => year <= toYear);
   }, [yearToParam]);
 
   // Debounce de la search bar → écrit `q` dans les search params (300ms).
@@ -254,7 +294,7 @@ export function ExploreContent() {
     let newGenres = [...selectedGenres];
 
     if (newGenres.includes(genre)) {
-      newGenres = newGenres.filter(g => g !== genre);
+      newGenres = newGenres.filter((g) => g !== genre);
     } else {
       newGenres.push(genre);
     }
@@ -343,7 +383,7 @@ export function ExploreContent() {
   const withGenres = selectedGenres.length > 0 ? selectedGenres.join('|') : undefined;
 
   const discoverQueries = useQueries({
-    queries: [0, 1, 2].map(i => ({
+    queries: [0, 1, 2].map((i) => ({
       ...tmdbQueries.discover(mediaType, {
         page: startTMDBPage + i,
         language: tmdbLanguage,
@@ -372,18 +412,18 @@ export function ExploreContent() {
       yearFrom: yearFromParam ? Number(yearFromParam) : undefined,
       yearTo: yearToParam ? Number(yearToParam) : undefined,
       sortBy: filterType === 'top_rated' ? 'vote_average' : 'popularity',
-    })
+    }),
   );
 
   const loading = isSearching
     ? searchExploreQuery.isPending
-    : discoverQueries.some(q => q.isPending);
+    : discoverQueries.some((q) => q.isPending);
 
   const media = useMemo<MediaItem[]>(() => {
     if (isSearching) {
       return (searchExploreQuery.data?.results ?? []) as MediaItem[];
     }
-    const all = discoverQueries.flatMap(q => (q.data?.results ?? []) as MediaItem[]);
+    const all = discoverQueries.flatMap((q) => (q.data?.results ?? []) as MediaItem[]);
     return all.slice(0, 60);
   }, [isSearching, searchExploreQuery.data, discoverQueries]);
 
@@ -398,7 +438,7 @@ export function ExploreContent() {
   const handleAddFromDetails = async (
     watchlistId: string,
     tmdbId: string,
-    mediaType: 'movie' | 'tv'
+    mediaType: 'movie' | 'tv',
   ) => {
     const idNum = Number(tmdbId);
     const placeholder = createPlaceholderItem({
@@ -407,12 +447,12 @@ export function ExploreContent() {
       posterPath: null,
       mediaType,
     });
-    setWatchlists(prev =>
-      prev.map(wl =>
-        wl.id === watchlistId && !wl.items.some(it => it.tmdbId === idNum)
+    setWatchlists((prev) =>
+      prev.map((wl) =>
+        wl.id === watchlistId && !wl.items.some((it) => it.tmdbId === idNum)
           ? { ...wl, items: [...wl.items, placeholder] }
-          : wl
-      )
+          : wl,
+      ),
     );
     console.log('[explore] handleAddFromDetails called', { watchlistId, tmdbId, mediaType });
     try {
@@ -426,10 +466,12 @@ export function ExploreContent() {
       toast.success('Ajouté à la liste');
     } catch (error) {
       console.error('[explore] Failed to add to watchlist:', error);
-      setWatchlists(prev =>
-        prev.map(wl =>
-          wl.id === watchlistId ? { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) } : wl
-        )
+      setWatchlists((prev) =>
+        prev.map((wl) =>
+          wl.id === watchlistId
+            ? { ...wl, items: wl.items.filter((it) => it.tmdbId !== idNum) }
+            : wl,
+        ),
       );
       toast.error("Erreur lors de l'ajout");
     }
@@ -438,12 +480,12 @@ export function ExploreContent() {
   const handleRemoveFromDetails = async (watchlistId: string, tmdbId: string) => {
     const idNum = Number(tmdbId);
     let removed: WatchlistItem | undefined;
-    setWatchlists(prev =>
-      prev.map(wl => {
+    setWatchlists((prev) =>
+      prev.map((wl) => {
         if (wl.id !== watchlistId) return wl;
-        removed = wl.items.find(it => it.tmdbId === idNum);
-        return { ...wl, items: wl.items.filter(it => it.tmdbId !== idNum) };
-      })
+        removed = wl.items.find((it) => it.tmdbId === idNum);
+        return { ...wl, items: wl.items.filter((it) => it.tmdbId !== idNum) };
+      }),
     );
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
@@ -452,8 +494,10 @@ export function ExploreContent() {
       console.error('Failed to remove from watchlist:', error);
       if (removed) {
         const restored = removed;
-        setWatchlists(prev =>
-          prev.map(wl => (wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl))
+        setWatchlists((prev) =>
+          prev.map((wl) =>
+            wl.id === watchlistId ? { ...wl, items: [...wl.items, restored] } : wl,
+          ),
         );
       }
       toast.error('Erreur lors du retrait');
@@ -491,12 +535,16 @@ export function ExploreContent() {
   }, [mediaType, content]);
 
   return (
-    <div className="bg-background mb-24 min-h-screen p-12 py-8">
+    <div className="bg-background mb-24 min-h-screen p-12 py-8 max-[749px]:p-0 max-[749px]:py-4">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="mb-7 text-left">
-          <h1 className="mb-2 text-4xl font-bold text-white">{content.explore.title}</h1>
-          <p className="text-muted-foreground text-normal">{content.explore.subtitle}</p>
+        <div className="mb-7 text-left max-[749px]:mb-4">
+          <h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-2xl">
+            {content.explore.title}
+          </h1>
+          <p className="text-muted-foreground text-normal max-[749px]:text-sm">
+            {content.explore.subtitle}
+          </p>
         </div>
 
         {/* Filters */}
@@ -510,10 +558,10 @@ export function ExploreContent() {
                   type="button"
                   onClick={() => setMediaType('movie')}
                   className={cn(
-                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                     mediaType === 'movie'
                       ? 'bg-white text-black'
-                      : 'text-muted-foreground hover:text-foreground bg-transparent'
+                      : 'text-muted-foreground hover:text-foreground bg-transparent',
                   )}
                 >
                   {content.explore.filters.movies}
@@ -522,10 +570,10 @@ export function ExploreContent() {
                   type="button"
                   onClick={() => setMediaType('tv')}
                   className={cn(
-                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                     mediaType === 'tv'
                       ? 'bg-white text-black'
-                      : 'text-muted-foreground hover:text-foreground bg-transparent'
+                      : 'text-muted-foreground hover:text-foreground bg-transparent',
                   )}
                 >
                   {content.explore.filters.series}
@@ -540,10 +588,10 @@ export function ExploreContent() {
                   type="button"
                   onClick={() => updateFilterType('popular')}
                   className={cn(
-                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                     filterType === 'popular'
                       ? 'bg-white text-black'
-                      : 'text-muted-foreground hover:text-foreground bg-transparent'
+                      : 'text-muted-foreground hover:text-foreground bg-transparent',
                   )}
                 >
                   {content.explore.filters.popular}
@@ -552,10 +600,10 @@ export function ExploreContent() {
                   type="button"
                   onClick={() => updateFilterType('top_rated')}
                   className={cn(
-                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                     filterType === 'top_rated'
                       ? 'bg-white text-black'
-                      : 'text-muted-foreground hover:text-foreground bg-transparent'
+                      : 'text-muted-foreground hover:text-foreground bg-transparent',
                   )}
                 >
                   {content.explore.filters.bestRated}
@@ -563,6 +611,8 @@ export function ExploreContent() {
               </div>
             </div>
 
+            {/* Filtres année (desktop) — sur mobile : drawer via le bouton "Année" */}
+            <div className="flex flex-wrap items-center gap-3 max-[749px]:hidden">
             {/* Year From Picker - Combobox */}
             <Popover open={openYearFrom} onOpenChange={setOpenYearFrom}>
               <PopoverTrigger asChild>
@@ -571,7 +621,7 @@ export function ExploreContent() {
                   role="combobox"
                   aria-expanded={openYearFrom}
                   aria-label={content.explore.filters.yearMin}
-                  className="w-[200px] cursor-pointer justify-between"
+                  className="w-[200px] cursor-pointer justify-between max-[749px]:w-[calc(50%-6px)]"
                 >
                   {yearFromParam || content.explore.filters.yearMin}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -583,13 +633,12 @@ export function ExploreContent() {
                   <CommandList>
                     <CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
                     <CommandGroup>
-                      {availableYearsFrom.map(year => (
+                      {availableYearsFrom.map((year) => (
                         <CommandItem
                           key={year}
                           value={year.toString()}
-                          onSelect={currentValue => {
-                            const nextYear =
-                              currentValue === yearFromParam ? '' : currentValue;
+                          onSelect={(currentValue) => {
+                            const nextYear = currentValue === yearFromParam ? '' : currentValue;
                             updateSearchParams({
                               dateFrom: nextYear ? `${nextYear}-01-01` : null,
                               page: '1',
@@ -600,7 +649,7 @@ export function ExploreContent() {
                           <Check
                             className={cn(
                               'mr-2 h-4 w-4',
-                              yearFromParam === year.toString() ? 'opacity-100' : 'opacity-0'
+                              yearFromParam === year.toString() ? 'opacity-100' : 'opacity-0',
                             )}
                           />
                           {year}
@@ -620,7 +669,7 @@ export function ExploreContent() {
                   role="combobox"
                   aria-expanded={openYearTo}
                   aria-label={content.explore.filters.yearMax}
-                  className="w-[200px] cursor-pointer justify-between"
+                  className="w-[200px] cursor-pointer justify-between max-[749px]:w-[calc(50%-6px)]"
                 >
                   {yearToParam || content.explore.filters.yearMax}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -632,13 +681,12 @@ export function ExploreContent() {
                   <CommandList>
                     <CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
                     <CommandGroup>
-                      {availableYearsTo.map(year => (
+                      {availableYearsTo.map((year) => (
                         <CommandItem
                           key={year}
                           value={year.toString()}
-                          onSelect={currentValue => {
-                            const nextYear =
-                              currentValue === yearToParam ? '' : currentValue;
+                          onSelect={(currentValue) => {
+                            const nextYear = currentValue === yearToParam ? '' : currentValue;
                             updateSearchParams({
                               dateTo: nextYear ? `${nextYear}-12-31` : null,
                               page: '1',
@@ -649,7 +697,7 @@ export function ExploreContent() {
                           <Check
                             className={cn(
                               'mr-2 h-4 w-4',
-                              yearToParam === year.toString() ? 'opacity-100' : 'opacity-0'
+                              yearToParam === year.toString() ? 'opacity-100' : 'opacity-0',
                             )}
                           />
                           {year}
@@ -678,10 +726,137 @@ export function ExploreContent() {
                 {content.explore.filters.clearYears}
               </Button>
             )}
+            </div>
           </div>
 
-          {/* Genre Filter Row */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Boutons filtres mobile (Genres / Année) → drawers */}
+          <div className="flex gap-2 min-[750px]:hidden">
+            <button
+              type="button"
+              onClick={() => setGenresDrawerOpen(true)}
+              className={cn(
+                'flex flex-1 items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors',
+                selectedGenres.length > 0
+                  ? 'border-white/40 text-foreground'
+                  : 'border-border text-muted-foreground'
+              )}
+            >
+              <span className="truncate">
+                {content.explore.filters.genres}
+                {selectedGenres.length > 0 ? ` (${selectedGenres.length})` : ''}
+              </span>
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-60" />
+            </button>
+            <button
+              type="button"
+              onClick={openYearDrawer}
+              className={cn(
+                'flex flex-1 items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors',
+                yearFromParam || yearToParam
+                  ? 'border-white/40 text-foreground'
+                  : 'border-border text-muted-foreground'
+              )}
+            >
+              <span className="truncate">
+                {yearFromParam || yearToParam
+                  ? `${yearFromParam || '…'} – ${yearToParam || '…'}`
+                  : content.explore.filters.year}
+              </span>
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-60" />
+            </button>
+          </div>
+
+          {/* Drawer Genres (mobile) */}
+          <Drawer open={genresDrawerOpen} onOpenChange={setGenresDrawerOpen}>
+            <DrawerContent className="max-h-[80vh]">
+              <DrawerHeader className="text-left">
+                <DrawerTitle>{content.explore.filters.genres}</DrawerTitle>
+              </DrawerHeader>
+              <div className="overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                <button
+                  type="button"
+                  onClick={() => clearGenres()}
+                  className="border-border/60 flex w-full items-center justify-between border-b py-3.5 text-left text-[15px]"
+                >
+                  <span className={selectedGenres.length === 0 ? 'text-foreground' : 'text-muted-foreground'}>
+                    {content.explore.filters.all}
+                  </span>
+                  {selectedGenres.length === 0 && <Check className="h-5 w-5 text-white" />}
+                </button>
+                {availableGenres.map(genre => {
+                  const active = selectedGenres.includes(genre.id);
+                  return (
+                    <button
+                      key={genre.id}
+                      type="button"
+                      onClick={() => toggleGenre(genre.id)}
+                      className="border-border/60 flex w-full items-center justify-between border-b py-3.5 text-left text-[15px] last:border-b-0"
+                    >
+                      <span className={active ? 'text-foreground' : 'text-muted-foreground'}>
+                        {genre.name}
+                      </span>
+                      {active && <Check className="h-5 w-5 text-white" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          {/* Drawer Année (mobile) — 2 roues + Appliquer */}
+          <Drawer open={yearDrawerOpen} onOpenChange={setYearDrawerOpen}>
+            <DrawerContent>
+              <div className="px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
+                <DrawerTitle className="sr-only">{content.explore.filters.year}</DrawerTitle>
+                <div className="grid grid-cols-2">
+                  <div className="text-center text-sm font-semibold">
+                    {content.explore.filters.yearMin}
+                  </div>
+                  <div className="text-center text-sm font-semibold">
+                    {content.explore.filters.yearMax}
+                  </div>
+                </div>
+                <div className="relative mt-2 grid grid-cols-2">
+                  <span className="bg-border pointer-events-none absolute inset-y-4 left-1/2 w-px" />
+                  <WheelPicker
+                    items={YEARS}
+                    value={settledFrom}
+                    onSettle={handleFromSettled}
+                    isDisabled={y => y > settledTo}
+                    ariaLabel={content.explore.filters.yearMin}
+                  />
+                  <WheelPicker
+                    items={YEARS}
+                    value={settledTo}
+                    onSettle={handleToSettled}
+                    isDisabled={y => y < settledFrom}
+                    ariaLabel={content.explore.filters.yearMax}
+                  />
+                </div>
+                <div className="mt-3 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={applyYear}
+                    className="h-11 w-full rounded-xl bg-white text-sm font-semibold text-black transition-colors hover:bg-white/90"
+                  >
+                    {content.explore.filters.apply}
+                  </button>
+                  {(yearFromParam || yearToParam) && (
+                    <button
+                      type="button"
+                      onClick={resetYear}
+                      className="text-muted-foreground hover:text-foreground h-9 w-full text-sm"
+                    >
+                      {content.explore.filters.clearYears}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          {/* Genre Filter Row (desktop : chips) */}
+          <div className="flex flex-wrap items-center gap-2 max-[749px]:hidden">
             <button type="button" onClick={() => clearGenres()} className="cursor-pointer">
               {selectedGenres.length === 0 ? (
                 <span className="flex animate-fade-in items-center rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black">
@@ -693,7 +868,7 @@ export function ExploreContent() {
                 </span>
               )}
             </button>
-            {availableGenres.map(genre => (
+            {availableGenres.map((genre) => (
               <button
                 type="button"
                 key={genre.id}
@@ -724,7 +899,7 @@ export function ExploreContent() {
               type="text"
               placeholder={content.explore.searchPlaceholder}
               value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
+              onChange={(e) => setSearchInput(e.target.value)}
               className={cn('pl-10', searchInput ? 'pr-10' : '')}
             />
             {searchInput && (
@@ -772,7 +947,7 @@ export function ExploreContent() {
                   },
                 }}
               >
-                <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="mt-12 grid grid-cols-3 gap-1.75 sm:grid-cols-3 md:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {media.map((item, index) => (
                     <m.div
                       role="button"
@@ -792,7 +967,7 @@ export function ExploreContent() {
                       }}
                       className="group relative cursor-pointer overflow-hidden rounded-lg text-left"
                       onClick={() => handleItemClick(item, index)}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           handleItemClick(item, index);
@@ -844,18 +1019,18 @@ export function ExploreContent() {
 
                       {/* Add button in top right */}
                       {isAuthenticated && (
-                        <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                        <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-[749px]:hidden">
                           <WatchlistPickerMenu
-                            watchlists={watchlists.filter(w => w.isOwner || w.isCollaborator)}
+                            watchlists={watchlists.filter((w) => w.isOwner || w.isCollaborator)}
                             tmdbId={item.id}
-                            onAdd={watchlistId =>
+                            onAdd={(watchlistId) =>
                               handleAddFromDetails(
                                 watchlistId,
                                 item.id.toString(),
-                                item.title ? 'movie' : 'tv'
+                                item.title ? 'movie' : 'tv',
                               )
                             }
-                            onRemove={watchlistId =>
+                            onRemove={(watchlistId) =>
                               handleRemoveFromDetails(watchlistId, item.id.toString())
                             }
                             addToLabel={content.watchlists.addToWatchlist}
@@ -868,7 +1043,7 @@ export function ExploreContent() {
                                 type="button"
                                 className="cursor-pointer rounded-full bg-black/70 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black"
                                 disabled={addingTo === item.id}
-                                onClick={e => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <Plus className="h-4 w-4" />
                               </button>
@@ -922,7 +1097,7 @@ export function ExploreContent() {
       {selectedItem && (
         <ItemDetailsModal
           open={detailsModalOpen}
-          onOpenChange={open => {
+          onOpenChange={(open) => {
             setDetailsModalOpen(open);
             if (!open) {
               setSelectedItem(null);
@@ -933,12 +1108,12 @@ export function ExploreContent() {
           type={selectedItem.type}
           onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
           onNext={selectedIndex < media.length - 1 ? handleNavigateNext : undefined}
-          watchlists={watchlists.filter(w => w.isOwner || w.isCollaborator)}
+          watchlists={watchlists.filter((w) => w.isOwner || w.isCollaborator)}
           isAuthenticated={isAuthenticated}
-          onAddToWatchlist={watchlistId =>
+          onAddToWatchlist={(watchlistId) =>
             handleAddFromDetails(watchlistId, selectedItem.tmdbId, selectedItem.type)
           }
-          onRemoveFromWatchlist={watchlistId =>
+          onRemoveFromWatchlist={(watchlistId) =>
             handleRemoveFromDetails(watchlistId, selectedItem.tmdbId)
           }
         />

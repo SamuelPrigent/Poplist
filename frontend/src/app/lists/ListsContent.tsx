@@ -82,7 +82,7 @@ function CommunityListsPageInner() {
 
   return (
     <div className="bg-background min-h-screen pb-20">
-      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20">
+      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20 max-[749px]:px-4">
         <PageHeader
           title={content.home.communityWatchlists.title}
           subtitle={content.home.communityWatchlists.subtitle}
@@ -92,14 +92,14 @@ function CommunityListsPageInner() {
 
         {/* Watchlists Grid */}
         {loading ? (
-          <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 5 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
           </div>
         ) : watchlists.length > 0 ? (
           <>
-            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {paginatedWatchlists.map(watchlist => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;

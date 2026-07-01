@@ -45,7 +45,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="border-border bg-background relative z-50 border-b">
+      <header className="border-border bg-background relative z-50 border-b max-[749px]:hidden">
         <div className="mx-auto flex h-16 w-[92%] max-w-(--maxWidth) items-center justify-between px-4">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">

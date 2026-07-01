@@ -11,7 +11,7 @@ export function Section({
 	return (
 		<section
 			className={cn(
-				"container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-12 py-11",
+				"container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-12 py-11 max-[749px]:px-4 max-[749px]:py-7",
 				className,
 			)}
 		>

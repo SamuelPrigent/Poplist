@@ -45,24 +45,27 @@ function LandingPageInner() {
   const trending: TrendingItem[] = (trendingData?.results as TrendingItem[]) ?? [];
 
   return (
-    <div className="bg-background min-h-screen overflow-hidden">
+    <div className="bg-background min-h-screen overflow-hidden max-[749px]:px-[7px]">
       <HeroSection content={content} trending={trending} watchlistsUrl={watchlistsUrl} />
 
       {/* Features Section */}
-      <section id="ensavoirplus" className="container mx-auto px-4 pt-[130px] pb-28">
-        <div className="mx-auto grid max-w-[88%] items-center gap-16 lg:grid-cols-[55%_45%]">
+      <section
+        id="ensavoirplus"
+        className="container mx-auto px-4 pt-[130px] pb-28 max-[749px]:pt-20 max-[749px]:pb-16"
+      >
+        <div className="mx-auto grid max-w-[88%] items-center gap-16 lg:grid-cols-[55%_45%] max-[749px]:max-w-full max-[749px]:gap-8">
           {/* Left: Features */}
           <div>
-            <h2 className="mb-4 text-3xl leading-tight font-bold text-white">
+            <h2 className="mb-4 text-3xl leading-tight font-bold text-white max-[749px]:text-2xl">
               {content.landing.features.sectionTitle}
             </h2>
-            <p className="mb-10 text-lg text-gray-400">
+            <p className="mb-10 text-lg text-gray-400 max-[749px]:text-base">
               {content.landing.features.sectionSubtitle}
             </p>
 
             <div className="space-y-5">
               {/* Feature 1: Création de listes */}
-              <div className="flex gap-4">
+              <div className="flex items-start gap-4">
                 <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
                     <ListPlus strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
@@ -79,7 +82,7 @@ function LandingPageInner() {
               </div>
 
               {/* Feature 2: Collaborateurs */}
-              <div className="flex gap-4">
+              <div className="flex items-start gap-4">
                 <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
                     <UserPlus strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
@@ -96,7 +99,7 @@ function LandingPageInner() {
               </div>
 
               {/* Feature 3: Partage */}
-              <div className="flex gap-4">
+              <div className="flex items-start gap-4">
                 <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
                     <Share strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
@@ -113,7 +116,7 @@ function LandingPageInner() {
               </div>
 
               {/* Feature 4: Suivre */}
-              <div className="flex gap-4">
+              <div className="flex items-start gap-4">
                 <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
                     <Compass strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
@@ -138,21 +141,21 @@ function LandingPageInner() {
       </section>
 
       {/* Start in Seconds */}
-      <section className="container mx-auto mb-28 px-4 py-5 pt-10">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-white">
+      <section className="container mx-auto mb-28 px-4 py-5 pt-10 max-[749px]:mb-20 max-[749px]:pt-10">
+        <div className="mb-16 text-center max-[749px]:mb-10">
+          <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:text-2xl">
             {content.landing.startInSeconds.title}
           </h2>
-          <p className="text-lg text-gray-400">{content.landing.startInSeconds.subtitle}</p>
+          <p className="text-lg text-gray-400 max-[749px]:text-base">{content.landing.startInSeconds.subtitle}</p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 max-[749px]:gap-[22px]">
           {/* Step 1 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px">
-            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] px-6 py-8 text-center">
+          <div className="w-full max-w-[280px] max-[749px]:max-w-[90%] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px max-[749px]:p-0">
+            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] max-[749px]:bg-none px-6 py-8 text-center max-[749px]:py-5">
               <span
                 aria-hidden
-                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)]"
+                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] max-[749px]:text-[80px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)] max-[749px]:mask-[linear-gradient(to_bottom,black_0%,transparent_100%)] max-[749px]:text-blue-400/[0.27]"
               >
                 1
               </span>
@@ -177,11 +180,11 @@ function LandingPageInner() {
           </div>
 
           {/* Step 2 - Card with animated spark border */}
-          <div className="relative w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px motion-safe:bg-[conic-gradient(from_var(--border-angle),transparent_0deg,transparent_155deg,rgba(96,165,250,0.3)_170deg,#60a5fa_180deg,#ffffff_183deg,#ffffff_187deg,#60a5fa_190deg,transparent_205deg,transparent_360deg),linear-gradient(to_bottom_right,rgb(59_130_246/0.2),transparent)] motion-safe:animate-border-spin">
-            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] px-6 py-8 text-center">
+          <div className="relative w-full max-w-[280px] max-[749px]:max-w-[90%] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px max-[749px]:p-0 motion-safe:bg-[conic-gradient(from_var(--border-angle),transparent_0deg,transparent_155deg,rgba(96,165,250,0.3)_170deg,#60a5fa_180deg,#ffffff_183deg,#ffffff_187deg,#60a5fa_190deg,transparent_205deg,transparent_360deg),linear-gradient(to_bottom_right,rgb(59_130_246/0.2),transparent)] motion-safe:animate-border-spin max-[749px]:bg-none max-[749px]:animate-none">
+            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] max-[749px]:bg-none px-6 py-8 text-center max-[749px]:py-5">
               <span
                 aria-hidden
-                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)]"
+                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] max-[749px]:text-[80px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)] max-[749px]:mask-[linear-gradient(to_bottom,black_0%,transparent_100%)] max-[749px]:text-blue-400/[0.27]"
               >
                 2
               </span>
@@ -206,11 +209,11 @@ function LandingPageInner() {
           </div>
 
           {/* Step 3 - Card with icon */}
-          <div className="w-full max-w-[280px] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px">
-            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] px-6 py-8 text-center">
+          <div className="w-full max-w-[280px] max-[749px]:max-w-[90%] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px max-[749px]:p-0">
+            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] max-[749px]:bg-none px-6 py-8 text-center max-[749px]:py-5">
               <span
                 aria-hidden
-                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)]"
+                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] max-[749px]:text-[80px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)] max-[749px]:mask-[linear-gradient(to_bottom,black_0%,transparent_100%)] max-[749px]:text-blue-400/[0.27]"
               >
                 3
               </span>
@@ -232,18 +235,18 @@ function LandingPageInner() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="relative py-10 pb-30">
+      <section className="relative py-10 pb-30 max-[749px]:py-12 max-[749px]:pb-16">
         {/* Blur glow shapes */}
         <div className="pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] bg-slate-700/5" />
         <div className="pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] bg-slate-700/5" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] bg-slate-800/5" />
 
         <div className="relative z-10 container mx-auto max-w-[1150px] px-4">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-4xl font-bold text-white">
+          <div className="mb-12 text-center max-[749px]:mb-8">
+            <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:text-2xl">
               {content.landing.testimonials.title}
             </h2>
-            <p className="text-lg text-gray-400">{content.landing.testimonials.subtitle}</p>
+            <p className="text-lg text-gray-400 max-[749px]:text-base">{content.landing.testimonials.subtitle}</p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -368,17 +371,19 @@ function LandingPageInner() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 pb-24">
+      <section className="py-20 pb-24 max-[749px]:py-16">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
-            <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold text-white">{content.home.faq.title}</h2>
+            <div className="mb-12 text-center max-[749px]:mb-8">
+              <h2 className="mb-4 text-3xl font-bold text-white max-[749px]:text-2xl">
+                {content.home.faq.title}
+              </h2>
               <p className="text-muted-foreground">{content.home.faq.subtitle}</p>
             </div>
 
-            <Accordion type="single" collapsible className="mx-auto w-[90%]">
+            <Accordion type="single" collapsible className="mx-auto w-[90%] max-[749px]:w-full">
               <AccordionItem value="item-1">
-                <AccordionTrigger className="text-left text-white">
+                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
                   {content.home.faq.questions.privateWatchlists.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
@@ -387,7 +392,7 @@ function LandingPageInner() {
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger className="text-left text-white">
+                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
                   {content.home.faq.questions.pricing.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
@@ -396,7 +401,7 @@ function LandingPageInner() {
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger className="text-left text-white">
+                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
                   {content.home.faq.questions.exploreSection.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
@@ -405,7 +410,7 @@ function LandingPageInner() {
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger className="text-left text-white">
+                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
                   {content.home.faq.questions.whatMakesDifferent.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
@@ -414,7 +419,7 @@ function LandingPageInner() {
               </AccordionItem>
 
               <AccordionItem value="item-5">
-                <AccordionTrigger className="text-left text-white">
+                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
                   {content.home.faq.questions.streaming.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
@@ -427,16 +432,21 @@ function LandingPageInner() {
       </section>
 
       {/* Final CTA */}
-      <section className="relative py-24 pb-32">
+      <section className="relative py-24 pb-32 max-[749px]:py-16">
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <h2 className="mb-6 text-4xl font-bold text-white">
+          <h2 className="mb-6 text-4xl font-bold text-white max-[749px]:text-2xl max-[749px]:mb-[22px]">
             {content.landing.finalCta.title.split(' ').slice(0, -1).join(' ')}{' '}
             <span className="relative inline-block">
               {content.landing.finalCta.title.split(' ').slice(-1)}
               <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
             </span>
           </h2>
-          <p className="mb-10 text-xl text-gray-400">{content.landing.finalCta.subtitle}</p>
+          <p className="mb-10 text-xl text-gray-400 max-[749px]:mb-8 max-[749px]:text-base">
+            <span className="max-[749px]:hidden">{content.landing.finalCta.subtitle}</span>
+            <span className="hidden max-[749px]:inline">
+              {content.landing.finalCta.subtitleMobile}
+            </span>
+          </p>
           <Link
             to={watchlistsUrl}
             className="corner-squircle inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-7 py-5 text-base font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"

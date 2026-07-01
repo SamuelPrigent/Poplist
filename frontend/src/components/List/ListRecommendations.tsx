@@ -194,7 +194,7 @@ export function ListRecommendations({
     <section className="border-border/60 mx-auto mt-12 w-[94%] border-t pt-8">
       <RecommendationsHeader content={content} canEdit={canEdit} />
 
-      <div className="mt-6 overflow-x-auto">
+      <div className="mt-6 overflow-x-auto max-[749px]:hidden">
         <table className="w-full table-fixed">
           <tbody>
             {displayItems.map(item => (
@@ -214,6 +214,105 @@ export function ListRecommendations({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Vue cartes mobile (< 750px) */}
+      <div className="mt-2 min-[750px]:hidden">
+        {displayItems.map(item => {
+          const posterUrl = getTMDBImageUrl(item.posterPath, 'w185');
+          const inMyLists = isInAnyOfMyLists(item.tmdbId);
+          return (
+            <div
+              key={`m-${item.mediaType}-${item.tmdbId}`}
+              className="border-border/60 flex items-center gap-3 border-b py-3 last:border-b-0"
+            >
+              <button
+                type="button"
+                onClick={() => openDetails(item)}
+                className="bg-muted relative h-[78px] w-[56px] shrink-0 cursor-pointer overflow-hidden rounded-md"
+              >
+                {posterUrl ? (
+                  <Image
+                    src={posterUrl}
+                    alt={item.title}
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
+                )}
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={() => openDetails(item)}
+                  className="block max-w-full cursor-pointer truncate text-left font-semibold text-white"
+                >
+                  {item.title}
+                </button>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span
+                    className={cn(
+                      'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+                      item.mediaType === 'movie'
+                        ? 'bg-blue-500/10 text-blue-400'
+                        : 'bg-purple-500/10 text-purple-400'
+                    )}
+                  >
+                    {item.mediaType === 'movie'
+                      ? content.watchlists.contentTypes.movie
+                      : content.watchlists.contentTypes.series}
+                  </span>
+                  <span className="text-muted-foreground text-sm">{formatItemFormat(item)}</span>
+                </div>
+              </div>
+
+              {/* Picker +/check (même composant) */}
+              <div className="shrink-0">
+                <WatchlistPickerMenu
+                  watchlists={pickerWatchlists}
+                  tmdbId={item.tmdbId}
+                  onAdd={wid => handleAddToList(wid, item)}
+                  onRemove={wid => handleRemoveFromList(wid, item)}
+                  addToLabel={content.watchlists.addToWatchlist}
+                  noWatchlistLabel={content.watchlists.noWatchlist}
+                  side="left"
+                  align="start"
+                >
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      className="hover:bg-muted cursor-pointer rounded p-1.5 transition-colors"
+                      disabled={addingId === item.tmdbId}
+                      title={content.watchlists.addToWatchlist}
+                    >
+                      {inMyLists ? (
+                        <Image
+                          src="/checkGreenFull.svg"
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="h-[18px] w-[18px]"
+                        />
+                      ) : (
+                        <Image
+                          src="/plus2.svg"
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="h-[18px] w-[18px] opacity-70 brightness-0 invert"
+                        />
+                      )}
+                    </button>
+                  </DropdownMenu.Trigger>
+                </WatchlistPickerMenu>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {showRefresh && (

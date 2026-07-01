@@ -1,7 +1,7 @@
 'use client';
 
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { AlertTriangle, Check, Eye, EyeOff, Loader2, Trash2, Upload, User, X } from 'lucide-react';
+import { ResponsiveConfirmDialog } from '@/components/ui/responsive-confirm-dialog';
 import { Img as Image } from '@/components/ui/Img';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -261,11 +261,13 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="container mx-auto mt-6 mb-28 px-4 py-8">
+    <div className="container mx-auto mt-6 mb-28 px-4 py-8 max-[749px]:mt-2 max-[749px]:py-5">
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">{content.profile.title}</h1>
-          <p className="text-muted-foreground mt-2">{content.profile.subtitle}</p>
+          <h1 className="text-3xl font-bold max-[749px]:text-2xl">{content.profile.title}</h1>
+          <p className="text-muted-foreground mt-2 max-[749px]:text-sm">
+            {content.profile.subtitle}
+          </p>
         </div>
 
         {/* Avatar Section */}
@@ -279,9 +281,9 @@ export default function AccountPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 max-[749px]:flex-col max-[749px]:items-start max-[749px]:gap-4">
                 {/* Avatar Display */}
-                <div className="relative">
+                <div className="relative shrink-0">
                   {mounted && user?.avatarUrl ? (
                     <Image
                       src={user.avatarUrl}
@@ -556,75 +558,49 @@ export default function AccountPage() {
         </Card>
       </div>
 
-      {/* Delete Account Confirmation Dialog */}
-      <DialogPrimitive.Root open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80" />
-          <DialogPrimitive.Content className="border-border bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg">
-            <div className="flex flex-col space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                </div>
-                <DialogPrimitive.Title className="text-lg font-semibold text-red-500">
-                  {content.profile.deleteSection.dialogTitle}
-                </DialogPrimitive.Title>
-              </div>
-
-              <DialogPrimitive.Description className="text-muted-foreground text-sm">
-                {content.profile.deleteSection.dialogDescription}
-              </DialogPrimitive.Description>
-
-              <div className="space-y-2 pt-2">
-                <Label htmlFor="deleteConfirmation">
-                  {content.profile.deleteSection.confirmationLabel}
-                </Label>
-                <Input
-                  id="deleteConfirmation"
-                  type="text"
-                  value={deleteConfirmation}
-                  onChange={e => setDeleteConfirmation(e.target.value)}
-                  placeholder={content.profile.deleteSection.confirmationPlaceholder}
-                  disabled={deleteLoading}
-                />
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setDeleteDialogOpen(false);
-                  setDeleteConfirmation('');
-                }}
-                disabled={deleteLoading}
-              >
-                {content.profile.deleteSection.cancel}
-              </Button>
-              <Button
-                className="focus-visible:ring-offset-background cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
-                type="button"
-                variant="destructive"
-                onClick={handleDeleteAccount}
-                disabled={deleteLoading || deleteConfirmation !== 'confirmer'}
-              >
-                {deleteLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {deleteLoading
-                  ? content.profile.deleteSection.deleting
-                  : content.profile.deleteSection.deleteButton}
-              </Button>
-            </div>
-
-            <DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
-          </DialogPrimitive.Content>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
+      {/* Delete Account Confirmation Dialog (responsive : modale desktop / drawer mobile) */}
+      <ResponsiveConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={open => {
+          setDeleteDialogOpen(open);
+          if (!open) setDeleteConfirmation('');
+        }}
+        icon={
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+          </div>
+        }
+        title={content.profile.deleteSection.dialogTitle}
+        titleClassName="text-red-500"
+        description={content.profile.deleteSection.dialogDescription}
+        loading={deleteLoading}
+        confirmVariant="destructive"
+        confirmDisabled={deleteConfirmation !== 'confirmer'}
+        cancelLabel={content.profile.deleteSection.cancel}
+        confirmLabel={
+          <>
+            {deleteLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {deleteLoading
+              ? content.profile.deleteSection.deleting
+              : content.profile.deleteSection.deleteButton}
+          </>
+        }
+        onConfirm={handleDeleteAccount}
+      >
+        <div className="space-y-2 pt-2">
+          <Label htmlFor="deleteConfirmation">
+            {content.profile.deleteSection.confirmationLabel}
+          </Label>
+          <Input
+            id="deleteConfirmation"
+            type="text"
+            value={deleteConfirmation}
+            onChange={e => setDeleteConfirmation(e.target.value)}
+            placeholder={content.profile.deleteSection.confirmationPlaceholder}
+            disabled={deleteLoading}
+          />
+        </div>
+      </ResponsiveConfirmDialog>
     </div>
   );
 }

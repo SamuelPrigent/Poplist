@@ -224,9 +224,9 @@ export function RightSectionPreviewV1() {
 // ============================================
 export function RightSectionPreviewV2() {
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       {/* Parent avec taille fixe - les enfants débordent et sont coupés */}
-      <div className="relative h-[450px] w-full max-w-[550px] overflow-hidden rounded-2xl border border-[lab(10_0_0)] bg-card/80 p-4 backdrop-blur-sm">
+      <div className="relative h-[450px] w-full max-w-[550px] overflow-hidden rounded-2xl border border-[lab(10_0_0)] bg-card/80 p-4 backdrop-blur-sm max-[749px]:max-w-none">
         {/* Header avec tabs */}
         <div className="mb-3 px-2">
           <h3 className="text-base font-semibold text-white">Bibliothèque</h3>

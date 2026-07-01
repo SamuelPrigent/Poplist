@@ -10,6 +10,7 @@ export const de: Content = {
     signup: 'Registrieren',
     logout: 'Abmelden',
     myLists: 'Meine Listen',
+    categories: 'Kategorien',
   },
 
   // Auth Drawer
@@ -131,6 +132,7 @@ export const de: Content = {
       director: 'Regisseur',
       creator: 'Schöpfer',
       availableOn: 'Verfügbar auf',
+      availableShort: 'Verfügbar',
       mainCast: 'Hauptbesetzung',
       seeMore: 'Mehr sehen',
       seeLess: 'Weniger anzeigen',
@@ -194,6 +196,8 @@ export const de: Content = {
       title: 'Erstellen und teilen Sie Listen Ihrer Lieblingsfilme und -serien',
       subtitle:
         'Organisieren Sie Ihre TV-Abende und teilen Sie Ihre Entdeckungen mit Ihren Freunden',
+      titleMobile: 'Erstelle Listen deiner Lieblingsfilme und -serien',
+      subtitleMobile: 'Plane deine TV-Abende',
     },
     features: {
       sectionTitle: 'Teilen Sie Ihr Filmuniversum',
@@ -258,6 +262,7 @@ export const de: Content = {
       title: 'Beginnen Sie einfach mit der Erstellung Ihrer Listen',
       subtitle:
         'Treten Sie Poplist bei und organisieren Sie Ihre Lieblingsinhalte mit nur wenigen Klicks.',
+      subtitleMobile: 'Tritt unserer Community bei und organisiere deine Inhalte',
       button: 'Meine Liste erstellen',
       disclaimer: 'Kostenlose Anwendung • Keine Karte erforderlich',
     },
@@ -366,6 +371,9 @@ export const de: Content = {
       search: 'Suchen...',
       noYearFound: 'Kein Jahr gefunden.',
       clearYears: 'Jahre löschen',
+      genres: 'Genres',
+      year: 'Jahr',
+      apply: 'Anwenden',
     },
     genres: {
       action: 'Action',

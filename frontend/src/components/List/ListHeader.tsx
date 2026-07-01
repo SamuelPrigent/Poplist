@@ -26,7 +26,8 @@ interface ListHeaderProps {
 export const LIST_HEADER_BUTTON_CLASS =
   'group relative flex h-[80%] items-center justify-center rounded-lg border border-transparent p-1.5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white';
 
-export const LIST_HEADER_ICON_CLASS = 'h-6 w-6 transition-all opacity-60 group-hover:opacity-100';
+export const LIST_HEADER_ICON_CLASS =
+  'h-[23px] w-[23px] max-[749px]:h-[22px] max-[749px]:w-[22px] transition-all opacity-60 group-hover:opacity-100';
 
 export function ListHeader({
   watchlist,
@@ -360,9 +361,10 @@ export function ListHeader({
                       title={content.watchlists.tooltips.share}
                     >
                       {showShareConfirm ? (
-                        <div className="h-6 w-6 justify-center items-center flex">
-                          <Check strokeWidth={2} className="h-[24px] w-[24px] text-green-500" />
-                        </div>
+                        <Check
+                          strokeWidth={2}
+                          className="h-[23px] w-[23px] max-[749px]:h-[22px] max-[749px]:w-[22px] text-green-500"
+                        />
                       ) : (
                         <Share className={`${LIST_HEADER_ICON_CLASS} text-white`} />
                       )}

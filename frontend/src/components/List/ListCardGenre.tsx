@@ -70,7 +70,7 @@ export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: L
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
-        className="relative w-full overflow-hidden rounded-xl"
+        className="relative w-full overflow-hidden rounded-xl max-[749px]:rounded-lg"
         style={cardStyle}
       >
         {/* Top dark gradient (top→transparent at 40%) */}
@@ -97,7 +97,7 @@ export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: L
 
         {/* Count badge — top right, backdrop-blur */}
         <div
-          className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/95"
+          className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/95 max-[749px]:top-2 max-[749px]:right-2 max-[749px]:px-2 max-[749px]:py-0.5 max-[749px]:text-[10px]"
           style={{
             background: 'rgba(0,0,0,0.30)',
             backdropFilter: 'blur(8px)',
@@ -108,9 +108,9 @@ export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: L
         </div>
 
         {/* Title bottom-left */}
-        <div className="absolute inset-0 flex flex-col justify-end px-[18px] pt-[18px] pb-[22px]">
+        <div className="absolute inset-0 flex flex-col justify-end px-[18px] pt-[18px] pb-[22px] max-[749px]:px-2.5 max-[749px]:pt-2.5 max-[749px]:pb-3">
           <h3
-            className="m-0 text-[22px] leading-none font-bold tracking-tight text-white"
+            className="m-0 text-[22px] leading-none font-bold tracking-tight text-white max-[749px]:text-[15px]"
             style={{ textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
           >
             {watchlist.name}

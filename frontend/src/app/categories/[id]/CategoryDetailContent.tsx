@@ -72,13 +72,13 @@ function CategoryDetailPageInner() {
       {/* Header with subtle gradient */}
       <div className="relative w-full">
         <div
-          className="relative h-[165px] w-full overflow-hidden"
+          className="relative h-[165px] w-full overflow-hidden max-[749px]:h-[140px]"
           style={{
             background: `linear-gradient(to bottom, ${CATEGORY_HEADER_COLOR}, transparent 60%)`,
           }}
         >
           {/* Content */}
-          <div className="relative container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) flex-col justify-start px-10 pt-[1.7rem]">
+          <div className="relative container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) flex-col justify-start px-10 pt-[1.7rem] max-[749px]:px-4">
             {/* Back Button */}
             <div className="mb-4">
               <button
@@ -93,10 +93,10 @@ function CategoryDetailPageInner() {
 
             {/* Title and Description */}
             <div>
-              <h1 className="mb-2 text-5xl font-bold text-white drop-shadow-lg">
+              <h1 className="mb-2 text-5xl font-bold text-white drop-shadow-lg max-[749px]:text-3xl">
                 {categoryInfo.name}
               </h1>
-              <p className="text-muted-foreground max-w-2xl text-base">
+              <p className="text-muted-foreground max-w-2xl text-base max-[749px]:text-sm">
                 {categoryInfo.description}
               </p>
             </div>
@@ -106,16 +106,16 @@ function CategoryDetailPageInner() {
 
       {/* Watchlists section without gradient */}
       <div className="relative w-full">
-        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4">
+        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4 max-[749px]:px-4">
           {/* Watchlists Grid */}
           {loading ? (
-            <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ListCardSkeleton key={i} />
               ))}
             </div>
           ) : watchlists.length > 0 ? (
-            <div className="grid gap-[4px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-[4px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {watchlists.map(watchlist => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;
