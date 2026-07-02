@@ -38,7 +38,7 @@ export function AddToListDrawer({
           de ligne coupée) et garder une distance de swipe courte pour fermer :
           grip 22px (mt-3 + h-1.5 + mb-1) + titre 36px (24 + pb-3) + border 1px
           + padding haut liste 8px + 6 rows × 64px (h-12 + p-2) = 451px. */}
-      <DrawerContent className="max-h-[458px]">
+      <DrawerContent className="max-h-[458px] min-h-[280px]">
         <div className="border-border/60 flex items-center justify-center border-b px-4 pb-3">
           <DrawerTitle className="text-base font-semibold">
             {content.watchlists.addToWatchlist}

@@ -59,7 +59,10 @@ export default defineConfig({
       // (PAS --mode test, qui casserait le SSR TanStack Start en dev).
       command: 'npm run test:serve',
       cwd: CONFIG_DIR,
-      env: { VITE_BACKEND_URL: BACKEND_URL },
+      // VITE_E2E=1 → cache Vite dédié (node_modules/.vite-e2e), cf.
+      // vite.config.ts : évite la corruption du cache de deps quand le dev
+      // server (3001) tourne en même temps que ce serveur de test (3005).
+      env: { VITE_BACKEND_URL: BACKEND_URL, VITE_E2E: '1' },
       url: `http://localhost:${FRONTEND_PORT}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

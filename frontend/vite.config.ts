@@ -26,6 +26,14 @@ export default defineConfig(({ mode, command }) => {
     String(Date.now());
 
   return {
+    // Cache Vite séparé pour le serveur E2E (port 3005) : quand il tourne en
+    // même temps que le dev server (3001), les deux process se partagent
+    // node_modules/.vite/deps et corrompent mutuellement l'optimisation des
+    // deps ("Pre-transform error: The file does not exist at .../deps/…",
+    // "504 Outdated Optimize Dep"). VITE_E2E=1 est posé par playwright.config.
+    ...(process.env.VITE_E2E || env.VITE_E2E
+      ? { cacheDir: 'node_modules/.vite-e2e' }
+      : {}),
     resolve: { tsconfigPaths: true },
     define: {
       'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(buildVersion),

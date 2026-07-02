@@ -1204,6 +1204,11 @@ export function ListItemsTable({
                   addingTo={addingTo}
                   onOpenPicker={() => setMobilePickerItem(item)}
                   onOpenDetails={() => {
+                    // Blur le bouton poster/titre : sinon vaul pose aria-hidden
+                    // sur le layout pendant qu'il garde le focus (warning Chrome)
+                    if (document.activeElement instanceof HTMLElement) {
+                      document.activeElement.blur();
+                    }
                     setSelectedItem(item);
                     setSelectedIndex(index);
                     setDetailsModalOpen(true);

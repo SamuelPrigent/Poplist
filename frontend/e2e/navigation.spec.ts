@@ -82,6 +82,13 @@ test.describe('Navigation entre pages (SPA)', () => {
   }) => {
     const tracker = setupConsoleErrorTracking(page);
 
+    // Préchauffe le graphe de modules SSR de /explore : en `vite dev`, le tout
+    // premier chargement d'une route déclenche un full-reload broadcast par
+    // Vite (comportement dev-only), ce qui faisait compter un faux "load" et
+    // rendait ce test flaky quand il tournait isolément (ou pendant un HMR).
+    await page.goto('/explore', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(500);
+
     // Compte uniquement les vrais loads de document (pas les fragments SPA)
     let documentLoads = 0;
     page.on('load', () => {
@@ -89,7 +96,15 @@ test.describe('Navigation entre pages (SPA)', () => {
     });
 
     await page.goto('/home', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(500);
+
+    // Stabilisation : en dev, Vite peut encore broadcaster un full-reload
+    // tardif (compilation SSR à froid). On attend qu'aucun 'load' ne survienne
+    // pendant 1,5s avant de figer le compteur de référence.
+    let prevLoads = -1;
+    while (prevLoads !== documentLoads) {
+      prevLoads = documentLoads;
+      await page.waitForTimeout(1500);
+    }
     const loadsAfterFirst = documentLoads;
 
     const exploreLink = page.getByRole('link', { name: /explorer|explore/i }).first();

@@ -44,6 +44,22 @@ export const useLanguageStore = create<LanguageState>()(
 			// d'hydratation sur tout le texte traduit. On rehydrate à la main
 			// dans `Providers` après le mount.
 			skipHydration: true,
+			// Ne persiste QUE la langue. Avant, tout le state (dont `content`)
+			// partait dans le localStorage : après un deploy ajoutant de nouvelles
+			// clés de traduction, les visiteurs réhydrataient un vieux `content`
+			// sans ces clés → crash (ex : `titleMobile.split(...)` sur undefined).
+			// `content` est maintenant toujours re-dérivé du bundle courant.
+			partialize: (state) => ({ language: state.language }),
+			merge: (persisted, current) => {
+				const lang =
+					(persisted as { language?: Language } | undefined)?.language ??
+					current.language;
+				return {
+					...current,
+					language: lang,
+					content: contentMap[lang] ?? fr,
+				};
+			},
 		},
 	),
 );

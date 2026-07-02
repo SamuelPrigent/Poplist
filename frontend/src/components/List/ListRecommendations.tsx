@@ -20,6 +20,7 @@ import { formatItemFormat } from '@/lib/format';
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
+import { AddToListDrawer } from './AddToListDrawer';
 import { ItemDetailsModal } from './modal/ItemDetailsModal';
 import { WatchlistPickerMenu } from './WatchlistPickerMenu';
 
@@ -52,6 +53,8 @@ export function ListRecommendations({
   const [addingId, setAddingId] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<RecommendedItem | null>(null);
+  // Reco dont on ouvre le drawer "Ajouter à une liste" (vue mobile)
+  const [pickerItem, setPickerItem] = useState<RecommendedItem | null>(null);
 
   const { data, isPending, isError } = useQuery({
     ...watchlistsQueries.recommendations(watchlist.id, tmdbLanguage),
@@ -151,6 +154,11 @@ export function ListRecommendations({
   };
 
   const openDetails = (item: RecommendedItem) => {
+    // Blur le bouton déclencheur : sinon vaul pose aria-hidden sur le layout
+    // pendant que le bouton garde le focus (warning Chrome)
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setSelectedItem(item);
     setDetailsOpen(true);
   };
@@ -270,45 +278,38 @@ export function ListRecommendations({
                 </div>
               </div>
 
-              {/* Picker +/check (même composant) */}
+              {/* Picker +/check — ouvre le drawer "Ajouter à une liste" (même
+                  drawer que le + des items d'une liste, pas le popover desktop) */}
               <div className="shrink-0">
-                <WatchlistPickerMenu
-                  watchlists={pickerWatchlists}
-                  tmdbId={item.tmdbId}
-                  onAdd={wid => handleAddToList(wid, item)}
-                  onRemove={wid => handleRemoveFromList(wid, item)}
-                  addToLabel={content.watchlists.addToWatchlist}
-                  noWatchlistLabel={content.watchlists.noWatchlist}
-                  side="left"
-                  align="start"
+                <button
+                  type="button"
+                  className="hover:bg-muted cursor-pointer rounded p-1.5 transition-colors"
+                  disabled={addingId === item.tmdbId}
+                  title={content.watchlists.addToWatchlist}
+                  onClick={(e) => {
+                    // Blur avant l'ouverture du drawer (warning aria-hidden)
+                    e.currentTarget.blur();
+                    setPickerItem(item);
+                  }}
                 >
-                  <DropdownMenu.Trigger asChild>
-                    <button
-                      type="button"
-                      className="hover:bg-muted cursor-pointer rounded p-1.5 transition-colors"
-                      disabled={addingId === item.tmdbId}
-                      title={content.watchlists.addToWatchlist}
-                    >
-                      {inMyLists ? (
-                        <Image
-                          src="/checkGreenFull.svg"
-                          alt=""
-                          width={18}
-                          height={18}
-                          className="h-[18px] w-[18px]"
-                        />
-                      ) : (
-                        <Image
-                          src="/plus2.svg"
-                          alt=""
-                          width={18}
-                          height={18}
-                          className="h-[18px] w-[18px] opacity-70 brightness-0 invert"
-                        />
-                      )}
-                    </button>
-                  </DropdownMenu.Trigger>
-                </WatchlistPickerMenu>
+                  {inMyLists ? (
+                    <Image
+                      src="/checkGreenFull.svg"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px]"
+                    />
+                  ) : (
+                    <Image
+                      src="/plus2.svg"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px] opacity-70 brightness-0 invert"
+                    />
+                  )}
+                </button>
               </div>
             </div>
           );
@@ -325,6 +326,20 @@ export function ListRecommendations({
             {content.watchlists.recommendations.refresh}
           </button>
         </div>
+      )}
+
+      {/* Drawer "Ajouter à une liste" (mobile) */}
+      {pickerItem && (
+        <AddToListDrawer
+          open={!!pickerItem}
+          onOpenChange={(open) => {
+            if (!open) setPickerItem(null);
+          }}
+          watchlists={pickerWatchlists}
+          tmdbId={pickerItem.tmdbId}
+          onAdd={(wid) => handleAddToList(wid, pickerItem)}
+          onRemove={(wid) => handleRemoveFromList(wid, pickerItem)}
+        />
       )}
 
       {selectedItem && (
