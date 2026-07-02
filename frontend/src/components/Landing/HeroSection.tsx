@@ -20,7 +20,7 @@ interface HeroSectionProps {
   watchlistsUrl: string;
 }
 const saw = '/landing/movies/saw3.webp';
-// const pdc = '/landing/movies/pdc2.webp';
+const pdc = '/landing/movies/pdc2.webp';
 const jinx = '/landing/movies/jinx.webp';
 const doa = '/landing/movies/DOA.webp';
 const blade2 = '/landing/movies/blade2.webp';
@@ -31,10 +31,10 @@ const passion = '/landing/movies/passion.webp';
 const theFifth2 = '/landing/movies/theFifth2.webp';
 const joker = '/landing/movies/joker.webp';
 const fenetre = '/landing/movies/fenetre.webp';
-const hp1 = 'landing/movies/hp1.webp';
-const pulp = 'landing/movies/pulp.webp';
+const hp1 = '/landing/movies/hp1.webp';
+const pulp = '/landing/movies/pulp.webp';
 
-const FAMOUS_MOVIES = [
+const FAMOUS_MOVIES_MOBILE = [
   { id: 1, title: 'Col1-Pos1', image: doa },
   { id: 2, title: 'Col1-Pos2', image: oceans },
   { id: 3, title: 'Col1-Pos3', image: joker },
@@ -48,6 +48,27 @@ const FAMOUS_MOVIES = [
   { id: 12, title: 'Col3-Pos2', image: blade2 },
   { id: 13, title: 'Col3-Pos3', image: pulp },
   { id: 14, title: 'Col3-Pos4', image: passion },
+];
+
+// Version desktop — rétablie depuis l'historique git (état d'avant les
+// derniers commits) : les remaniements récents ne concernaient que le mobile
+// (cf. FAMOUS_MOVIES_MOBILE ci-dessus).
+const FAMOUS_MOVIES = [
+  { id: 1, title: 'Col1-Pos1', image: doa },
+  { id: 2, title: 'Col1-Pos2', image: oceans },
+  { id: 3, title: 'Col1-Pos3', image: joker },
+  { id: 4, title: 'Col1-Pos4', image: jake },
+  { id: 5, title: 'Col1-Pos5', image: 'https://image.tmdb.org/t/p/w500/tmU7GeKVybMWFButWEGl2M4GeiP.jpg' },
+  { id: 6, title: 'Col2-Pos1', image: 'https://image.tmdb.org/t/p/w500/hziiv14OpD73u9gAak4XDDfBKa2.jpg' },
+  { id: 7, title: 'Col2-Pos2', image: fenetre },
+  { id: 8, title: 'Col2-Pos3', image: theFifth2 },
+  { id: 9, title: 'Col2-Pos4', image: jinx },
+  { id: 10, title: 'Col2-Pos5', image: kb },
+  { id: 11, title: 'Col3-Pos1', image: saw },
+  { id: 12, title: 'Col3-Pos2', image: blade2 },
+  { id: 13, title: 'Col3-Pos3', image: 'https://image.tmdb.org/t/p/w500/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg' },
+  { id: 14, title: 'Col3-Pos4', image: passion },
+  { id: 15, title: 'Col3-Pos5', image: pdc },
 ];
 
 // Mots à mettre en gradient
@@ -122,7 +143,7 @@ function PosterRow({
   return (
     <div className={cn('overflow-hidden', className)}>
       <div className="flex w-max animate-slide-right gap-2.5">
-        {[...FAMOUS_MOVIES, ...FAMOUS_MOVIES].map((movie, index) => (
+        {[...FAMOUS_MOVIES_MOBILE, ...FAMOUS_MOVIES_MOBILE].map((movie, index) => (
           <div
             key={`${movie.id}-${index}`}
             className={cn(
