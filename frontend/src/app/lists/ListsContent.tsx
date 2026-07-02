@@ -92,14 +92,14 @@ function CommunityListsPageInner() {
 
         {/* Watchlists Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-2 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 5 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
           </div>
         ) : watchlists.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 gap-2 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {paginatedWatchlists.map(watchlist => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;

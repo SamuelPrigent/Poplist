@@ -91,22 +91,26 @@ function UsersContentInner() {
           <span>{content.watchlists.back}</span>
         </button>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white">{content.home.creators.title}</h1>
-          <p className="text-muted-foreground mt-2 text-lg">{content.home.creators.subtitle}</p>
+        {/* Header — mêmes tailles que PageHeader (page /categories) */}
+        <div className="mb-8 max-[749px]:mb-6">
+          <h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-3xl">
+            {content.home.creators.title}
+          </h1>
+          <p className="text-muted-foreground text-base max-[749px]:text-sm">
+            {content.home.creators.subtitle}
+          </p>
         </div>
 
         {/* Creators grid */}
         {loading ? (
-          <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-3 gap-3 max-[749px]:grid-cols-2 max-[749px]:gap-2 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 10 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
           <>
-            <div className="grid grid-cols-3 gap-[11px] md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-3 gap-[11px] max-[749px]:grid-cols-2 max-[749px]:gap-2 md:grid-cols-4 lg:grid-cols-6">
               {paginatedCreators.map(creator => (
                 <UserCard
                   key={creator.id}

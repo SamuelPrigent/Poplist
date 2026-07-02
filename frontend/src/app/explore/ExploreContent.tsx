@@ -34,7 +34,13 @@ import {
 } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { WheelPicker } from '@/components/ui/wheel-picker';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -202,6 +208,7 @@ export function ExploreContent() {
   // listes…), bloquant la navigation.
   const [openYearFrom, setOpenYearFrom] = useState(false);
   const [openYearTo, setOpenYearTo] = useState(false);
+  const [openGenres, setOpenGenres] = useState(false);
 
   // Drawers mobile (Genres / Année)
   const CURRENT_YEAR = YEARS[0];
@@ -220,7 +227,23 @@ export function ExploreContent() {
     setSettledFrom(prev => (prev > v ? v : prev));
   }, []);
 
+  // Blur le bouton déclencheur avant d'ouvrir un drawer : sinon vaul pose
+  // aria-hidden sur le layout pendant que le bouton garde le focus → warning
+  // Chrome "Blocked aria-hidden on an element because its descendant retained
+  // focus".
+  const blurActiveElement = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
+  const openGenresDrawer = () => {
+    blurActiveElement();
+    setGenresDrawerOpen(true);
+  };
+
   const openYearDrawer = () => {
+    blurActiveElement();
     setSettledFrom(yearFromParam ? Number(yearFromParam) : CURRENT_YEAR);
     setSettledTo(yearToParam ? Number(yearToParam) : CURRENT_YEAR);
     setYearDrawerOpen(true);
@@ -505,6 +528,7 @@ export function ExploreContent() {
   };
 
   const handleItemClick = (item: MediaItem, index: number) => {
+    blurActiveElement();
     const itemType = item.title ? 'movie' : 'tv';
     setSelectedItem({
       tmdbId: item.id.toString(),
@@ -548,17 +572,19 @@ export function ExploreContent() {
         </div>
 
         {/* Filters */}
-        <div className="mb-8 space-y-[18px]">
-          {/* Main Filters Row - Media Type + Sort Type */}
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="mb-8 space-y-[18px] max-[749px]:space-y-2.5">
+          {/* Main Filters Row - Media Type + Sort Type.
+              Mobile : les 2 groupes s'étirent sur 100% de la largeur pour que
+              les 4 boutons tiennent sur une seule ligne sans rétrécir le texte. */}
+          <div className="flex flex-wrap items-center gap-3 max-[749px]:gap-2">
             {/* Media Type Filter - Single select switch */}
-            <div className="bg-muted/50 rounded-md">
+            <div className="bg-muted/50 rounded-md max-[749px]:flex-1">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setMediaType('movie')}
                   className={cn(
-                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors max-[749px]:flex-1 max-[749px]:px-2 max-[749px]:py-1.5',
                     mediaType === 'movie'
                       ? 'bg-white text-black'
                       : 'text-muted-foreground hover:text-foreground bg-transparent',
@@ -570,7 +596,7 @@ export function ExploreContent() {
                   type="button"
                   onClick={() => setMediaType('tv')}
                   className={cn(
-                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors max-[749px]:flex-1 max-[749px]:px-2 max-[749px]:py-1.5',
                     mediaType === 'tv'
                       ? 'bg-white text-black'
                       : 'text-muted-foreground hover:text-foreground bg-transparent',
@@ -582,13 +608,13 @@ export function ExploreContent() {
             </div>
 
             {/* Sort Filter - Single select in dark container */}
-            <div className="bg-muted/50 rounded-md">
+            <div className="bg-muted/50 rounded-md max-[749px]:flex-1">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => updateFilterType('popular')}
                   className={cn(
-                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors max-[749px]:flex-1 max-[749px]:px-2 max-[749px]:py-1.5',
                     filterType === 'popular'
                       ? 'bg-white text-black'
                       : 'text-muted-foreground hover:text-foreground bg-transparent',
@@ -600,7 +626,7 @@ export function ExploreContent() {
                   type="button"
                   onClick={() => updateFilterType('top_rated')}
                   className={cn(
-                    'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                    'cursor-pointer rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors max-[749px]:flex-1 max-[749px]:px-2 max-[749px]:py-1.5',
                     filterType === 'top_rated'
                       ? 'bg-white text-black'
                       : 'text-muted-foreground hover:text-foreground bg-transparent',
@@ -726,6 +752,60 @@ export function ExploreContent() {
                 {content.explore.filters.clearYears}
               </Button>
             )}
+
+            {/* Genre Filter - Dropdown multi-select (desktop) */}
+            <Popover open={openGenres} onOpenChange={setOpenGenres}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openGenres}
+                  aria-label={content.explore.filters.genres}
+                  className="w-[200px] cursor-pointer justify-between"
+                >
+                  <span className="truncate">
+                    {content.explore.filters.genres}
+                    {selectedGenres.length > 0 ? ` (${selectedGenres.length})` : ''}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0">
+                <Command>
+                  <CommandList>
+                    <CommandGroup>
+                      <CommandItem
+                        value={content.explore.filters.all}
+                        onSelect={() => clearGenres()}
+                      >
+                        <Check
+                          className={cn(
+                            'mr-2 h-4 w-4',
+                            selectedGenres.length === 0 ? 'opacity-100' : 'opacity-0',
+                          )}
+                        />
+                        {content.explore.filters.all}
+                      </CommandItem>
+                      {availableGenres.map((genre) => (
+                        <CommandItem
+                          key={genre.id}
+                          value={genre.name}
+                          onSelect={() => toggleGenre(genre.id)}
+                        >
+                          <Check
+                            className={cn(
+                              'mr-2 h-4 w-4',
+                              selectedGenres.includes(genre.id) ? 'opacity-100' : 'opacity-0',
+                            )}
+                          />
+                          {genre.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             </div>
           </div>
 
@@ -733,7 +813,7 @@ export function ExploreContent() {
           <div className="flex gap-2 min-[750px]:hidden">
             <button
               type="button"
-              onClick={() => setGenresDrawerOpen(true)}
+              onClick={openGenresDrawer}
               className={cn(
                 'flex flex-1 items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors',
                 selectedGenres.length > 0
@@ -771,6 +851,9 @@ export function ExploreContent() {
             <DrawerContent className="max-h-[80vh]">
               <DrawerHeader className="text-left">
                 <DrawerTitle>{content.explore.filters.genres}</DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  {content.explore.filters.genres}
+                </DrawerDescription>
               </DrawerHeader>
               <div className="overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
                 <button
@@ -808,6 +891,9 @@ export function ExploreContent() {
             <DrawerContent>
               <div className="px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
                 <DrawerTitle className="sr-only">{content.explore.filters.year}</DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  {content.explore.filters.year}
+                </DrawerDescription>
                 <div className="grid grid-cols-2">
                   <div className="text-center text-sm font-semibold">
                     {content.explore.filters.yearMin}
@@ -855,40 +941,6 @@ export function ExploreContent() {
             </DrawerContent>
           </Drawer>
 
-          {/* Genre Filter Row (desktop : chips) */}
-          <div className="flex flex-wrap items-center gap-2 max-[749px]:hidden">
-            <button type="button" onClick={() => clearGenres()} className="cursor-pointer">
-              {selectedGenres.length === 0 ? (
-                <span className="flex animate-fade-in items-center rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black">
-                  {content.explore.filters.all}
-                </span>
-              ) : (
-                <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center rounded-lg px-3 py-1.5 text-sm font-medium">
-                  {content.explore.filters.all}
-                </span>
-              )}
-            </button>
-            {availableGenres.map((genre) => (
-              <button
-                type="button"
-                key={genre.id}
-                onClick={() => toggleGenre(genre.id)}
-                className="cursor-pointer"
-              >
-                {selectedGenres.includes(genre.id) ? (
-                  <span className="flex animate-fade-in items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black">
-                    <Check className="h-3.5 w-3.5" />
-                    {genre.name}
-                  </span>
-                ) : (
-                  <span className="bg-muted text-muted-foreground hover:text-foreground flex animate-fade-in items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium">
-                    {genre.name}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
           {/* Search Bar — bascule sur l'endpoint /tmdb/search/:type quand
               la longueur de la recherche dépasse 3 caractères. Les filtres
               actuels (genre, year, sort, type) restent appliqués via le
@@ -927,7 +979,7 @@ export function ExploreContent() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="mt-12 min-h-[600px]"
+                className="mt-12 min-h-[600px] max-[749px]:mt-11"
               />
             ) : (
               <m.div
@@ -947,21 +999,21 @@ export function ExploreContent() {
                   },
                 }}
               >
-                <div className="mt-12 grid grid-cols-3 gap-1.75 sm:grid-cols-3 md:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="mt-12 grid grid-cols-3 gap-1.75 max-[749px]:mt-11 sm:grid-cols-3 md:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {media.map((item, index) => (
                     <m.div
                       role="button"
                       tabIndex={0}
                       key={`${item.id}-${index}-${page}`}
                       variants={{
-                        hidden: { opacity: 0, y: 20, scale: 0.95 },
+                        hidden: { opacity: 0, y: 8, scale: 0.95 },
                         visible: {
                           opacity: 1,
                           y: 0,
                           scale: 1,
                           transition: {
-                            duration: 0.4,
-                            ease: [0.25, 0.46, 0.45, 0.94],
+                            duration: 0.6,
+                            ease: 'easeOut',
                           },
                         },
                       }}
@@ -983,7 +1035,7 @@ export function ExploreContent() {
                             alt={item.title || item.name || ''}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                             unoptimized
                             {...(index < 6 ? { priority: true } : {})}
                           />

@@ -54,8 +54,9 @@ export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: L
     width: 'auto',
     objectFit: 'contain',
     objectPosition: 'center bottom',
-    transform: hover ? 'translateY(0px) scale(1.02)' : 'scale(1)',
-    transition: 'transform 380ms cubic-bezier(.2,.8,.2,1)',
+    // Décalé de 3px vers le bas : l'overflow-hidden du conteneur clippe le bas
+    // et évite la ligne/pixel transparent visible à certaines largeurs.
+    transform: 'translateY(3px)',
     filter: 'drop-shadow(0 12px 18px rgba(0,0,0,0.30))',
   };
 

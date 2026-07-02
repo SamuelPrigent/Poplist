@@ -142,6 +142,16 @@ img {
   }
 }
 
+/* Mobile (< 750px) : les containers `w-(--sectionWidth)` / `max-w-(--maxWidth)`
+   prennent toute la largeur — le 93% créait une marge parasite (~14px) en plus
+   du padding sur toutes les pages. */
+@media (max-width: 749px) {
+  :root {
+    --sectionWidth: 100%;
+    --maxWidth: 100%;
+  }
+}
+
 /* Tailwind CSS Animate utilities */
 .animate-in {
   animation-name: enter;

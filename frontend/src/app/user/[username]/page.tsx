@@ -148,7 +148,6 @@ function UserProfilePageInner() {
               watchlist={watchlist}
               content={content}
               href={`/lists/${watchlist.id}`}
-              showVisibility={false}
               showSavedBadge={false}
               showCollaborativeBadge={false}
               showMenu={false}

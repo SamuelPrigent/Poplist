@@ -279,7 +279,7 @@ function ItemDetailsDrawerShell({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[90dvh]">
+      <DrawerContent className="h-[85dvh]">
         <DrawerTitle className="sr-only">
           {details?.title || content.watchlists.itemDetails.mediaDetails}
         </DrawerTitle>
@@ -313,7 +313,7 @@ function ItemDetailsDrawerShell({
               </button>
               <h3 className="text-base font-semibold">{content.watchlists.addToWatchlist}</h3>
             </div>
-            <div className="min-h-0 overflow-y-auto p-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <div className="min-h-0 flex-1 overflow-y-auto p-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
               {watchlists!.length === 0 ? (
                 <div className="text-muted-foreground px-2 py-6 text-center text-sm">
                   {content.watchlists.noWatchlist}
@@ -378,7 +378,7 @@ function ItemDetailsDrawerShell({
           // ---- Vue fiche ----
           <div className="relative min-h-0 flex-1 overflow-y-auto px-4 pt-1 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
             {/* Close */}
-            <DrawerClose className="bg-muted text-muted-foreground hover:text-foreground absolute top-1 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors">
+            <DrawerClose className="text-muted-foreground hover:text-foreground absolute top-[-2.5px] right-[7px] z-10 flex h-8 w-8 items-center justify-center rounded-full bg-transparent transition-colors">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </DrawerClose>
@@ -435,7 +435,7 @@ function ItemDetailsDrawerShell({
 
             {/* Synopsis */}
             {details.overview && (
-              <div className="mt-5">
+              <div className="mt-3">
                 <h3 className="mb-1.5 text-base font-semibold">
                   {content.watchlists.itemDetails.synopsis}
                 </h3>
@@ -464,7 +464,7 @@ function ItemDetailsDrawerShell({
 
             {/* Dispo */}
             {getValidProviders(effectivePlatforms).length > 0 && (
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-3 flex items-center gap-3">
                 <span className="text-muted-foreground shrink-0 text-sm">
                   {content.watchlists.itemDetails.availableShort} :
                 </span>
@@ -474,7 +474,7 @@ function ItemDetailsDrawerShell({
 
             {/* Acteurs principaux */}
             {details.cast.length > 0 && (
-              <div className="mt-5">
+              <div className="mt-3">
                 <h3 className="mb-3 text-base font-semibold">
                   {content.watchlists.itemDetails.mainCast}
                 </h3>

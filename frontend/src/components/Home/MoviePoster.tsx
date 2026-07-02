@@ -81,9 +81,11 @@ export function MoviePoster({
                </div>
             )}
 
-            {/* Add to watchlist dropdown - top right */}
+            {/* Add to watchlist dropdown - top right.
+                Masqué sur mobile : opacity-0 restait tapable par inadvertance
+                (pas de hover) — on passe par le drawer détail pour ajouter */}
             {showAddButton && (
-               <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+               <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-[749px]:hidden">
                   <WatchlistPickerMenu
                      watchlists={ownedWatchlists}
                      tmdbId={id}
@@ -113,7 +115,11 @@ export function MoviePoster({
                </div>
             )}
          </div>
-         <h3 className="line-clamp-2 text-base font-semibold text-white">{displayTitle}</h3>
+         {/* Mobile : jamais de retour à la ligne — 1 seule ligne, "…" en fin
+             de ligne + mask gradient à droite (même pattern que ListCard) */}
+         <h3 className="line-clamp-2 text-base font-semibold text-white max-[749px]:line-clamp-none max-[749px]:truncate max-[749px]:mask-[linear-gradient(to_right,black,black_85%,transparent)]">
+            {displayTitle}
+         </h3>
       </>
    );
 

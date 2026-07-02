@@ -198,6 +198,7 @@ export const fr: Content = {
     },
     features: {
       sectionTitle: 'Découvrez toutes nos fonctionnalités',
+      sectionTitleMobile: 'Nos fonctionnalités',
       sectionSubtitle: 'Partagez votre univers cinématographique',
       organize: {
         tagline: 'Organisation',
@@ -238,6 +239,7 @@ export const fr: Content = {
     },
     testimonials: {
       title: 'Apprécié par les passionnés',
+      titleMobile: 'Témoignages',
       subtitle: "Rejoignez une communauté d'utilisateurs satisfaits",
       testimonial1: {
         text: 'Application parfaite pour organiser mes listes. Interface claire et intuitive.',
@@ -257,8 +259,9 @@ export const fr: Content = {
     },
     finalCta: {
       title: 'Commence à créer tes listes facilement',
+      titleMobile: "Rejoins l'aventure",
       subtitle: 'Rejoignez Poplist et organisez vos contenus favoris en quelques clics.',
-      subtitleMobile: 'Rejoignez notre communauté et organisez vos contenus',
+      subtitleMobile: 'Rejoignez notre communauté',
       button: 'Créer ma liste',
       disclaimer: 'Application gratuite • Pas de carte requise',
     },
@@ -303,29 +306,28 @@ export const fr: Content = {
       subtitle: 'Tout ce que tu dois savoir pour commencer',
       questions: {
         privateWatchlists: {
-          question: 'Comment les listes privées fonctionnent ?',
+          question: 'Fonctionnements des listes privées',
           answer:
             "Les listes privées te permettent de garder tes sélections pour toi seul. Elles ne sont visibles que par toi et ne peuvent pas être partagées avec d'autres utilisateurs. Tu peux basculer entre privé et public à tout moment depuis les paramètres de ta liste.",
         },
         pricing: {
-          question: "Est-ce que c'est gratuit à l'utilisation ?",
+          question: "Est-ce que c'est gratuit ?",
           answer:
             "Oui, l'application est entièrement gratuite ! Tu peux créer autant de listes que tu veux, les partager avec tes amis et explorer des milliers de films et séries sans aucun frais.",
         },
         exploreSection: {
-          question: 'À quoi sert la partie Explorer du site ?',
+          question: 'À quoi sert la page Explorer ?',
           answer:
             'La section Explorer te permet de découvrir de nouveaux contenus en parcourant les tendances actuelles, les films et séries les plus populaires ou les mieux notés. Tu peux filtrer par genre pour trouver exactement ce que tu recherches et ajouter directement des éléments à tes listes.',
         },
         whatMakesDifferent: {
-          question: "Qu'est-ce qui fait que cette application est différente ?",
+          question: 'En quoi cette application est différente ?',
           answer:
-            "Cette application a pour but de rester simple avec peu de fonctionnalités et de pages différentes pour être claire et facile d'utilisation. L'expérience se veut naturelle et intuitive, sans complexité inutile. On se concentre sur l'essentiel : organiser et partager tes films et séries préférés.",
+            "L'expérience est simple avec peu de fonctionnalités, le but c'est de répondre le plus efficacement au besoin. L'expérience se veut naturelle et intuitive, sans complexité inutile.",
         },
         streaming: {
-          question: 'Est-ce que je peux regarder des séries ou des films ?',
-          answer:
-            "Non, le but de cette application n'est pas le streaming mais le partage facile de contenu qui t'a plu sur tes plateformes favorites. On t'aide à organiser ce que tu veux regarder et à le partager avec ta communauté, mais pour visionner le contenu, tu devras te rendre sur les plateformes de streaming appropriées.",
+          question: 'Je peux regarder des séries ou des films ?',
+          answer: `Poplist n'est pas une plateforme de streaming. L'idée, c'est de garder une trace de ce que tu veux voir et de partager tes coups de cœur. Le visionnage se fait ensuite sur les services de streaming.`,
         },
       },
     },
@@ -345,7 +347,7 @@ export const fr: Content = {
       seeMore: 'Voir tout',
     },
     communityWatchlists: {
-      title: 'Listes de la communauté',
+      title: 'Par la communauté',
       subtitle: 'Découvrez les collections partagées par nos utilisateurs',
     },
   },

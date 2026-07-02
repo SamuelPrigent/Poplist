@@ -42,6 +42,8 @@ export function Img({
   quality: _quality,
   className,
   style,
+  loading,
+  fetchPriority,
   ...rest
 }: ImgProps) {
   const fillStyle: CSSProperties = fill
@@ -62,8 +64,12 @@ export function Img({
       height={fill ? undefined : height}
       sizes={sizes}
       srcSet={srcSet}
-      loading={priority ? 'eager' : 'lazy'}
-      fetchPriority={priority ? 'high' : 'auto'}
+      // Un `loading`/`fetchPriority` explicite passé par l'appelant prime sur
+      // la valeur dérivée de `priority` (avant, le spread {...rest} était
+      // écrasé par ces attributs → loading="eager" ignoré, cf. bug des posters
+      // du slide landing jamais chargés hors viewport sur mobile).
+      loading={loading ?? (priority ? 'eager' : 'lazy')}
+      fetchPriority={fetchPriority ?? (priority ? 'high' : 'auto')}
       decoding="async"
       className={cn(fill && 'object-cover', className)}
       style={{ ...fillStyle, ...style }}

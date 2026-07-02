@@ -51,13 +51,16 @@ function LandingPageInner() {
       {/* Features Section */}
       <section
         id="ensavoirplus"
-        className="container mx-auto px-4 pt-[130px] pb-28 max-[749px]:pt-20 max-[749px]:pb-16"
+        className="container mx-auto px-4 pt-[130px] pb-28 max-[749px]:pt-10 max-[749px]:pb-13"
       >
         <div className="mx-auto grid max-w-[88%] items-center gap-16 lg:grid-cols-[55%_45%] max-[749px]:max-w-full max-[749px]:gap-8">
           {/* Left: Features */}
           <div>
             <h2 className="mb-4 text-3xl leading-tight font-bold text-white max-[749px]:text-2xl">
-              {content.landing.features.sectionTitle}
+              <span className="max-[749px]:hidden">{content.landing.features.sectionTitle}</span>
+              <span className="hidden max-[749px]:inline">
+                {content.landing.features.sectionTitleMobile}
+              </span>
             </h2>
             <p className="mb-10 text-lg text-gray-400 max-[749px]:text-base">
               {content.landing.features.sectionSubtitle}
@@ -141,12 +144,14 @@ function LandingPageInner() {
       </section>
 
       {/* Start in Seconds */}
-      <section className="container mx-auto mb-28 px-4 py-5 pt-10 max-[749px]:mb-20 max-[749px]:pt-10">
-        <div className="mb-16 text-center max-[749px]:mb-10">
-          <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:text-2xl">
+      <section className="container mx-auto mb-28 px-4 py-5 pt-10 max-[749px]:mb-16 max-[749px]:pt-8">
+        <div className="mb-16 text-center max-[749px]:mb-8">
+          <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:mb-0 max-[749px]:text-2xl">
             {content.landing.startInSeconds.title}
           </h2>
-          <p className="text-lg text-gray-400 max-[749px]:text-base">{content.landing.startInSeconds.subtitle}</p>
+          <p className="text-lg text-gray-400 max-[749px]:hidden">
+            {content.landing.startInSeconds.subtitle}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 max-[749px]:gap-[22px]">
@@ -235,7 +240,7 @@ function LandingPageInner() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="relative py-10 pb-30 max-[749px]:py-12 max-[749px]:pb-16">
+      <section className="relative py-10 pb-30 max-[749px]:py-10 max-[749px]:pb-13">
         {/* Blur glow shapes */}
         <div className="pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] bg-slate-700/5" />
         <div className="pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] bg-slate-700/5" />
@@ -243,10 +248,15 @@ function LandingPageInner() {
 
         <div className="relative z-10 container mx-auto max-w-[1150px] px-4">
           <div className="mb-12 text-center max-[749px]:mb-8">
-            <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:text-2xl">
-              {content.landing.testimonials.title}
+            <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:mb-0 max-[749px]:text-2xl">
+              <span className="max-[749px]:hidden">{content.landing.testimonials.title}</span>
+              <span className="hidden max-[749px]:inline">
+                {content.landing.testimonials.titleMobile}
+              </span>
             </h2>
-            <p className="text-lg text-gray-400 max-[749px]:text-base">{content.landing.testimonials.subtitle}</p>
+            <p className="text-lg text-gray-400 max-[749px]:hidden">
+              {content.landing.testimonials.subtitle}
+            </p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -371,7 +381,7 @@ function LandingPageInner() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 pb-24 max-[749px]:py-16">
+      <section className="py-20 pb-24 max-[749px]:py-13">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
             <div className="mb-12 text-center max-[749px]:mb-8">
@@ -432,13 +442,24 @@ function LandingPageInner() {
       </section>
 
       {/* Final CTA */}
-      <section className="relative py-24 pb-32 max-[749px]:py-16">
+      <section className="relative py-24 pb-32 max-[749px]:py-13">
         <div className="relative z-10 container mx-auto px-4 text-center">
           <h2 className="mb-6 text-4xl font-bold text-white max-[749px]:text-2xl max-[749px]:mb-[22px]">
-            {content.landing.finalCta.title.split(' ').slice(0, -1).join(' ')}{' '}
-            <span className="relative inline-block">
-              {content.landing.finalCta.title.split(' ').slice(-1)}
-              <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
+            {/* Desktop : titre complet, dernier mot souligné */}
+            <span className="max-[749px]:hidden">
+              {content.landing.finalCta.title.split(' ').slice(0, -1).join(' ')}{' '}
+              <span className="relative inline-block">
+                {content.landing.finalCta.title.split(' ').slice(-1)}
+                <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
+              </span>
+            </span>
+            {/* Mobile : titre court, même soulignement sur le dernier mot */}
+            <span className="hidden max-[749px]:inline">
+              {content.landing.finalCta.titleMobile.split(' ').slice(0, -1).join(' ')}{' '}
+              <span className="relative inline-block">
+                {content.landing.finalCta.titleMobile.split(' ').slice(-1)}
+                <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
+              </span>
             </span>
           </h2>
           <p className="mb-10 text-xl text-gray-400 max-[749px]:mb-8 max-[749px]:text-base">

@@ -95,7 +95,6 @@ function SortableWatchlistCard({
       onEdit={isOwner ? onEdit : undefined}
       onDelete={isOwner ? onDelete : undefined}
       showMenu={isOwner}
-      showVisibility={true}
       showSavedBadge={!isOwner && !watchlist.isCollaborator && watchlist.isSaved}
       showCollaborativeBadge={(watchlist.collaborators?.length ?? 0) > 0}
       priority={priority}
@@ -296,7 +295,7 @@ function ListsContentInner() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-2 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {Array.from({ length: 10 }).map((_, i) => (
             <ListCardSkeleton key={i} />
           ))}
@@ -333,7 +332,7 @@ function ListsContentInner() {
             strategy={rectSortingStrategy}
           >
             {/* Grid */}
-            <div className="grid grid-cols-2 gap-[4px] max-[749px]:gap-1 min-[750px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-[4px] max-[749px]:gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filteredWatchlists.map((watchlist, index) => (
                 <SortableWatchlistCard
                   key={watchlist.id}

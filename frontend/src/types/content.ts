@@ -182,6 +182,7 @@ export interface Content {
     };
     features: {
       sectionTitle: string;
+      sectionTitleMobile: string;
       sectionSubtitle: string;
       organize: {
         tagline: string;
@@ -222,6 +223,7 @@ export interface Content {
     };
     testimonials: {
       title: string;
+      titleMobile: string;
       subtitle: string;
       testimonial1: {
         text: string;
@@ -241,6 +243,7 @@ export interface Content {
     };
     finalCta: {
       title: string;
+      titleMobile: string;
       subtitle: string;
       subtitleMobile: string;
       button: string;

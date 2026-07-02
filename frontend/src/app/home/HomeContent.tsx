@@ -28,6 +28,8 @@ import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { MoviePoster } from '@/components/Home/MoviePoster';
+import { TrendingCardMobile } from '@/components/Home/TrendingCardMobile';
+import { AddToListDrawer } from '@/components/List/AddToListDrawer';
 import {
   getTMDBLanguage,
   // getTMDBRegion
@@ -66,9 +68,9 @@ interface FeaturedCategory {
 }
 
 /**
- * En-tête de section. Desktop : titre + description à gauche, bouton à droite.
- * Mobile (< 750px) : titre seul sur sa ligne, puis description + bouton dessous
- * (le bouton ne gêne plus le titre).
+ * En-tête de section. Desktop : titre + description à gauche, bouton pill à droite.
+ * Mobile (< 750px) : titre allégé + action en texte simple sur la même ligne,
+ * description masquée.
  */
 function SectionHeader({
   title,
@@ -81,26 +83,27 @@ function SectionHeader({
   to: string;
   action: string;
 }) {
-  const btn = (
-    <Link
-      to={to}
-      className="bg-muted/50 hover:bg-muted shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-    >
-      {action}
-    </Link>
-  );
   return (
     <div className="mb-6 max-[749px]:mb-4">
-      <div className="flex items-start justify-between gap-3">
+      {/* Desktop : titre + description + bouton pill */}
+      <div className="flex items-start justify-between gap-3 max-[749px]:hidden">
         <div className="min-w-0">
-          <h2 className="text-3xl font-bold text-white max-[749px]:text-2xl">{title}</h2>
-          <p className="text-muted-foreground mt-1 text-sm max-[749px]:hidden">{subtitle}</p>
+          <h2 className="text-3xl font-bold text-white">{title}</h2>
+          <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
         </div>
-        <div className="max-[749px]:hidden">{btn}</div>
+        <Link
+          to={to}
+          className="bg-muted/50 hover:bg-muted shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
+        >
+          {action}
+        </Link>
       </div>
-      <div className="mt-2.5 hidden items-center justify-between gap-3 max-[749px]:flex">
-        <p className="text-muted-foreground text-sm">{subtitle}</p>
-        {btn}
+      {/* Mobile : titre allégé + action en texte simple, pas de description */}
+      <div className="hidden items-center justify-between gap-3 max-[749px]:flex">
+        <h2 className="min-w-0 truncate text-xl font-semibold text-white">{title}</h2>
+        <Link to={to} className="text-muted-foreground shrink-0 text-sm whitespace-nowrap">
+          {action}
+        </Link>
       </div>
     </div>
   );
@@ -126,6 +129,8 @@ function HomeContentInner() {
   } | null>(null);
   const [selectedTrendingIndex, setSelectedTrendingIndex] = useState<number>(-1);
   const [trendingModalOpen, setTrendingModalOpen] = useState(false);
+  // Item tendance dont on ouvre le drawer "Ajouter à une liste" (mobile)
+  const [trendingAddItem, setTrendingAddItem] = useState<DiscoverItem | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     tmdbId: string;
@@ -464,7 +469,7 @@ function HomeContentInner() {
           action={content.home.categories.seeMore}
         />
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:gap-2.5 md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:grid-cols-3 max-[749px]:gap-2.5 max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
           {categories.map((category, index) => {
             const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
             const placeholderItems: WatchlistItem[] = Array.from(
@@ -525,13 +530,13 @@ function HomeContentInner() {
         />
 
         {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[8px] max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[8px] max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+7)]:hidden max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 12 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
           </div>
         ) : publicWatchlists.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[3px] max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[3px] max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+7)]:hidden max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
             {publicWatchlists.slice(0, 12).map((watchlist, index) => {
               const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
               const isOwner = userWatchlist?.isOwner ?? false;
@@ -576,13 +581,13 @@ function HomeContentInner() {
         />
 
         {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-3 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-2 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 12 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-3 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-2 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
             {creators.map((creator) => (
               <UserCard
                 key={creator.id}
@@ -604,7 +609,8 @@ function HomeContentInner() {
             to="/explore"
             action={content.home.creators.seeMore}
           />
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(124px,1fr))] gap-[13px] max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+5)]:hidden sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+          {/* Desktop : grille de posters (hover + dropdown) */}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(124px,1fr))] gap-[13px] max-[749px]:hidden sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             {trending.map((item, index) => (
               <MoviePoster
                 key={item.id}
@@ -627,6 +633,24 @@ function HomeContentInner() {
                 }
                 addToWatchlistLabel={content.watchlists.addToWatchlist}
                 noWatchlistLabel={content.watchlists.noWatchlist}
+              />
+            ))}
+          </div>
+
+          {/* Mobile : cards paysage pleine largeur (backdrop), le + ouvre
+              directement le drawer d'ajout à une liste */}
+          <div className="hidden max-[749px]:flex max-[749px]:flex-col max-[749px]:gap-3">
+            {trending.slice(0, 4).map((item, index) => (
+              <TrendingCardMobile
+                key={item.id}
+                id={item.id}
+                title={item.title}
+                name={item.name}
+                backdropPath={item.backdrop_path}
+                mediaType={item.media_type || (item.title ? 'movie' : 'tv')}
+                voteAverage={item.vote_average}
+                onClick={() => handleOpenTrending(item, index)}
+                onAddClick={isAuthenticated ? () => setTrendingAddItem(item) : undefined}
               />
             ))}
           </div>
@@ -655,6 +679,28 @@ function HomeContentInner() {
           }
           onRemoveFromWatchlist={(watchlistId) =>
             handleRemoveFromWatchlist(watchlistId, selectedItem.tmdbId)
+          }
+        />
+      )}
+
+      {/* Drawer "Ajouter à une liste" (mobile, + des cards tendances) */}
+      {trendingAddItem && (
+        <AddToListDrawer
+          open={!!trendingAddItem}
+          onOpenChange={(open) => {
+            if (!open) setTrendingAddItem(null);
+          }}
+          watchlists={userWatchlists.filter((w) => w.isOwner || w.isCollaborator)}
+          tmdbId={trendingAddItem.id}
+          onAdd={(watchlistId) =>
+            handleAddToWatchlist(
+              watchlistId,
+              trendingAddItem.id.toString(),
+              trendingAddItem.media_type || (trendingAddItem.title ? 'movie' : 'tv'),
+            )
+          }
+          onRemove={(watchlistId) =>
+            handleRemoveFromWatchlist(watchlistId, trendingAddItem.id.toString())
           }
         />
       )}

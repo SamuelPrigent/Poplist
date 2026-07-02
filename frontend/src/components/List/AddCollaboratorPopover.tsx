@@ -325,7 +325,10 @@ function CollaboratorDrawerShell({
               'Entrez le nom utilisateur du collaborateur'}
           </DrawerDescription>
         </DrawerHeader>
-        <div className="overflow-y-auto px-4 pt-1 pb-[calc(2.25rem+env(safe-area-inset-bottom))]">
+        {/* flex-1 + min-h-0 : la zone scrollable s'étire avec le drawer quand il
+            est déployé (sinon la liste garde sa hauteur initiale et la dernière
+            card est coupée) */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-1 pb-[calc(2.25rem+env(safe-area-inset-bottom))]">
           <CollaboratorBody form={form} collaborators={collaborators} />
         </div>
       </DrawerContent>

@@ -56,6 +56,7 @@ import { createPlaceholderItem, type Watchlist, type WatchlistItem } from '@/api
 import { cn } from '@/lib/cn';
 import { formatItemFormat } from '@/lib/format';
 import { buildPickerWatchlists, useMyWatchlists } from '@/hooks/useMyWatchlists';
+import { AddToListDrawer } from '@/components/List/AddToListDrawer';
 import { getTMDBImageUrl, getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLanguageStore } from '@/store/language';
@@ -367,11 +368,10 @@ interface SortableMobileCardProps {
   item: WatchlistItem;
   isDragDisabled: boolean;
   content: Content;
-  pickerWatchlists: Watchlist[];
   showCheck: boolean;
   addingTo: number | null;
-  onAdd: (watchlistId: string, tmdbId: string, mediaType: 'movie' | 'tv') => void;
-  onRemove: (watchlistId: string, tmdbId: string) => void;
+  /** Ouvre le drawer "Ajouter à une liste" (remplace le dropdown desktop, trop petit sur mobile) */
+  onOpenPicker: () => void;
   onOpenDetails: () => void;
 }
 
@@ -382,11 +382,9 @@ function SortableMobileCard({
   item,
   isDragDisabled,
   content,
-  pickerWatchlists,
   showCheck,
   addingTo,
-  onAdd,
-  onRemove,
+  onOpenPicker,
   onOpenDetails,
 }: SortableMobileCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -487,45 +485,38 @@ function SortableMobileCard({
         </div>
       </div>
 
-      {/* Picker +/check (même composant que la table) */}
+      {/* Picker +/check — ouvre le drawer "Ajouter à une liste" (mobile) */}
       <div className="absolute top-2 right-2">
-        <WatchlistPickerMenu
-          watchlists={pickerWatchlists}
-          tmdbId={item.tmdbId}
-          onAdd={(wid) => onAdd(wid, item.tmdbId.toString(), item.mediaType as 'movie' | 'tv')}
-          onRemove={(wid) => onRemove(wid, item.tmdbId.toString())}
-          addToLabel={content.watchlists.addToWatchlist}
-          noWatchlistLabel={content.watchlists.noWatchlist}
-          side="left"
-          align="start"
+        <button
+          type="button"
+          className="hover:bg-muted cursor-pointer rounded p-1.5 transition-colors"
+          disabled={addingTo === item.tmdbId}
+          title={content.watchlists.addToWatchlist}
+          onClick={(e) => {
+            // Blur avant l'ouverture du drawer : sinon vaul pose aria-hidden
+            // sur le layout pendant que le bouton garde le focus (warning Chrome)
+            e.currentTarget.blur();
+            onOpenPicker();
+          }}
         >
-          <DropdownMenu.Trigger asChild>
-            <button
-              type="button"
-              className="hover:bg-muted cursor-pointer rounded p-1.5 transition-colors"
-              disabled={addingTo === item.tmdbId}
-              title={content.watchlists.addToWatchlist}
-            >
-              {showCheck ? (
-                <Image
-                  src="/checkGreenFull.svg"
-                  alt=""
-                  width={18}
-                  height={18}
-                  className="h-[18px] w-[18px]"
-                />
-              ) : (
-                <Image
-                  src="/plus2.svg"
-                  alt=""
-                  width={18}
-                  height={18}
-                  className="h-[18px] w-[18px] opacity-70 brightness-0 invert"
-                />
-              )}
-            </button>
-          </DropdownMenu.Trigger>
-        </WatchlistPickerMenu>
+          {showCheck ? (
+            <Image
+              src="/checkGreenFull.svg"
+              alt=""
+              width={18}
+              height={18}
+              className="h-[18px] w-[18px]"
+            />
+          ) : (
+            <Image
+              src="/plus2.svg"
+              alt=""
+              width={18}
+              height={18}
+              className="h-[18px] w-[18px] opacity-70 brightness-0 invert"
+            />
+          )}
+        </button>
       </div>
     </div>
   );
@@ -553,6 +544,8 @@ export function ListItemsTable({
   const [loadingItem, setLoadingItem] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null);
+  // Item dont on ouvre le drawer "Ajouter à une liste" (vue cartes mobile)
+  const [mobilePickerItem, setMobilePickerItem] = useState<WatchlistItem | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const { setMyWatchlists, editableWatchlists, isInAnyOfMyLists } = useMyWatchlists(watchlist.id);
   // setter retiré : setAddingTo n'était appelé que par handleAddToWatchlist
@@ -1207,15 +1200,9 @@ export function ListItemsTable({
                   item={item}
                   isDragDisabled={!isCustomOrder || !canEdit}
                   content={content}
-                  pickerWatchlists={buildPickerWatchlists(
-                    editableWatchlists,
-                    { ...watchlist, items },
-                    canEdit,
-                  )}
                   showCheck={canEdit || isInAnyOfMyLists(item.tmdbId)}
                   addingTo={addingTo}
-                  onAdd={handleAddFromDetails}
-                  onRemove={handleRemoveFromDetails}
+                  onOpenPicker={() => setMobilePickerItem(item)}
                   onOpenDetails={() => {
                     setSelectedItem(item);
                     setSelectedIndex(index);
@@ -1227,6 +1214,28 @@ export function ListItemsTable({
           </SortableContext>
         </DndContext>
       </div>
+
+      {/* Drawer "Ajouter à une liste" (mobile, + des cartes) */}
+      {mobilePickerItem && (
+        <AddToListDrawer
+          open={!!mobilePickerItem}
+          onOpenChange={(open) => {
+            if (!open) setMobilePickerItem(null);
+          }}
+          watchlists={buildPickerWatchlists(editableWatchlists, { ...watchlist, items }, canEdit)}
+          tmdbId={mobilePickerItem.tmdbId}
+          onAdd={(watchlistId) =>
+            handleAddFromDetails(
+              watchlistId,
+              mobilePickerItem.tmdbId.toString(),
+              mobilePickerItem.mediaType as 'movie' | 'tv',
+            )
+          }
+          onRemove={(watchlistId) =>
+            handleRemoveFromDetails(watchlistId, mobilePickerItem.tmdbId.toString())
+          }
+        />
+      )}
 
       {/* Item Details Modal */}
       {selectedItem && (

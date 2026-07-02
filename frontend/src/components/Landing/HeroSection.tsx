@@ -20,7 +20,7 @@ interface HeroSectionProps {
   watchlistsUrl: string;
 }
 const saw = '/landing/movies/saw3.webp';
-const pdc = '/landing/movies/pdc2.webp';
+// const pdc = '/landing/movies/pdc2.webp';
 const jinx = '/landing/movies/jinx.webp';
 const doa = '/landing/movies/DOA.webp';
 const blade2 = '/landing/movies/blade2.webp';
@@ -31,23 +31,23 @@ const passion = '/landing/movies/passion.webp';
 const theFifth2 = '/landing/movies/theFifth2.webp';
 const joker = '/landing/movies/joker.webp';
 const fenetre = '/landing/movies/fenetre.webp';
+const hp1 = 'landing/movies/hp1.webp';
+const pulp = 'landing/movies/pulp.webp';
 
 const FAMOUS_MOVIES = [
   { id: 1, title: 'Col1-Pos1', image: doa },
   { id: 2, title: 'Col1-Pos2', image: oceans },
   { id: 3, title: 'Col1-Pos3', image: joker },
   { id: 4, title: 'Col1-Pos4', image: jake },
-  { id: 5, title: 'Col1-Pos5', image: 'https://image.tmdb.org/t/p/w500/tmU7GeKVybMWFButWEGl2M4GeiP.jpg' },
-  { id: 6, title: 'Col2-Pos1', image: 'https://image.tmdb.org/t/p/w500/hziiv14OpD73u9gAak4XDDfBKa2.jpg' },
+  { id: 6, title: 'Col2-Pos1', image: hp1 },
   { id: 7, title: 'Col2-Pos2', image: fenetre },
   { id: 8, title: 'Col2-Pos3', image: theFifth2 },
   { id: 9, title: 'Col2-Pos4', image: jinx },
   { id: 10, title: 'Col2-Pos5', image: kb },
   { id: 11, title: 'Col3-Pos1', image: saw },
   { id: 12, title: 'Col3-Pos2', image: blade2 },
-  { id: 13, title: 'Col3-Pos3', image: 'https://image.tmdb.org/t/p/w500/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg' },
+  { id: 13, title: 'Col3-Pos3', image: pulp },
   { id: 14, title: 'Col3-Pos4', image: passion },
-  { id: 15, title: 'Col3-Pos5', image: pdc },
 ];
 
 // Mots à mettre en gradient
@@ -112,7 +112,13 @@ const renderSubtitleWithUnderline = (subtitle: string) => {
 const MASK_X = 'mask-[linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]';
 
 /** Une rangée de posters qui défile en boucle (2 copies → boucle sans couture). */
-function PosterRow({ heightClass = 'h-[104px]', className }: { heightClass?: string; className?: string }) {
+function PosterRow({
+  heightClass = 'h-[104px]',
+  className,
+}: {
+  heightClass?: string;
+  className?: string;
+}) {
   return (
     <div className={cn('overflow-hidden', className)}>
       <div className="flex w-max animate-slide-right gap-2.5">
@@ -121,10 +127,17 @@ function PosterRow({ heightClass = 'h-[104px]', className }: { heightClass?: str
             key={`${movie.id}-${index}`}
             className={cn(
               'relative aspect-16/14 shrink-0 overflow-hidden rounded-lg border border-[lab(10_0_0)]',
-              heightClass
+              heightClass,
             )}
           >
-            <Image src={movie.image} alt="" fill sizes="140px" className="object-cover" loading="eager" />
+            <Image
+              src={movie.image}
+              alt=""
+              fill
+              sizes="140px"
+              className="object-cover"
+              loading="eager"
+            />
           </div>
         ))}
       </div>
@@ -154,32 +167,53 @@ export function HeroSection({ content }: HeroSectionProps) {
             <div className="-rotate-12 transform">
               <div className="flex gap-4 md:gap-7">
                 <div className="hidden sm:flex flex-col gap-3 md:gap-5">
-                  {col1.map(movie => (
+                  {col1.map((movie) => (
                     <div
                       key={movie.id}
                       className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)]"
                     >
-                      <Image src={movie.image} alt={movie.title} fill sizes="200px" className="object-cover" loading="eager" />
+                      <Image
+                        src={movie.image}
+                        alt={movie.title}
+                        fill
+                        sizes="200px"
+                        className="object-cover"
+                        loading="eager"
+                      />
                     </div>
                   ))}
                 </div>
                 <div className="flex flex-col gap-3 md:gap-5 -mt-16">
-                  {col2.map(movie => (
+                  {col2.map((movie) => (
                     <div
                       key={movie.id}
                       className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
                     >
-                      <Image src={movie.image} alt={movie.title} fill sizes="200px" className="object-cover" loading="eager" />
+                      <Image
+                        src={movie.image}
+                        alt={movie.title}
+                        fill
+                        sizes="200px"
+                        className="object-cover"
+                        loading="eager"
+                      />
                     </div>
                   ))}
                 </div>
                 <div className="hidden md:flex flex-col gap-3 md:gap-5 mt-8">
-                  {col3.map(movie => (
+                  {col3.map((movie) => (
                     <div
                       key={movie.id}
                       className="relative w-[140px] md:w-[180px] lg:w-[200px] aspect-16/14 overflow-hidden rounded-lg border border-[lab(10_0_0)] shadow-lg"
                     >
-                      <Image src={movie.image} alt={movie.title} fill sizes="200px" className="object-cover" loading="eager" />
+                      <Image
+                        src={movie.image}
+                        alt={movie.title}
+                        fill
+                        sizes="200px"
+                        className="object-cover"
+                        loading="eager"
+                      />
                     </div>
                   ))}
                 </div>
@@ -236,7 +270,7 @@ export function HeroSection({ content }: HeroSectionProps) {
             <h1 className="mb-4 text-[32px] leading-[1.15] font-semibold tracking-tight text-white">
               {renderTitleWithGradient(content.landing.hero.titleMobile)}
             </h1>
-            <p className="mb-6 max-w-md text-base text-gray-200">
+            <p className="mb-7.5 max-w-md text-base text-gray-200">
               {renderSubtitleWithUnderline(content.landing.hero.subtitleMobile)}
             </p>
             <div className="flex flex-wrap justify-center gap-3">

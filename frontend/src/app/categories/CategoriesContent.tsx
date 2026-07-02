@@ -71,7 +71,7 @@ function CategoriesPageInner() {
                   },
                 },
               }}
-              className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-4 max-[749px]:gap-2.5 md:grid-cols-4 lg:grid-cols-6"
+              className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-4 max-[749px]:grid-cols-3 max-[749px]:gap-2.5 max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
             >
               {GENRE_CATEGORIES.map((categoryId, index) => {
                 const category = getCategoryInfo(categoryId, content);

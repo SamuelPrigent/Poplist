@@ -20,7 +20,6 @@ interface ListCardProps {
   onDelete?: (watchlist: Watchlist) => void;
   showMenu?: boolean;
   showOwner?: boolean;
-  showVisibility?: boolean;
   showSavedBadge?: boolean;
   showCollaborativeBadge?: boolean;
   categoryGradient?: string;
@@ -41,7 +40,6 @@ export function ListCard({
   onDelete,
   showMenu = true,
   showOwner = false,
-  showVisibility = false,
   showSavedBadge = false,
   showCollaborativeBadge = false,
   categoryGradient,
@@ -85,6 +83,22 @@ export function ListCard({
     }
   };
 
+  // Badge "Suivi" — overlay en haut à gauche de la cover (check 16px). La
+  // pastille bg-background est légèrement plus petite (inset 1px) que le
+  // disque vert du SVG : elle comble le transparent sans jamais dépasser.
+  const savedBadge = showSavedBadge ? (
+    <span className="absolute top-1.5 left-1.5 z-10 block h-4 w-4">
+      <span className="bg-background absolute inset-[1px] rounded-full" />
+      <Image
+        src="/checkGreenFull.svg"
+        alt="Suivi"
+        width={16}
+        height={16}
+        className="relative h-4 w-4"
+      />
+    </span>
+  ) : null;
+
   const cardContent = (
     <>
       {/* Cover Image */}
@@ -119,6 +133,7 @@ export function ListCard({
               <Film strokeWidth={1.4} className="text-muted-foreground h-12 w-12" />
             </div>
           )}
+          {savedBadge}
         </button>
       ) : (
         <div
@@ -149,22 +164,12 @@ export function ListCard({
               <Film strokeWidth={1} className="text-muted-foreground h-12 w-12" />
             </div>
           )}
+          {savedBadge}
         </div>
       )}
 
       {/* Text Info */}
       <div className="flex items-center gap-1">
-        {/* Saved Badge */}
-        {showSavedBadge && (
-          <Image
-            src="/checkGreenFull.svg"
-            alt="Suivi"
-            width={16}
-            height={16}
-            className="h-3.5 w-3.5 shrink-0"
-          />
-        )}
-
         {/* Collaborative Badge */}
         {showCollaborativeBadge && !showSavedBadge && (
           <UsersRound strokeWidth={2} className="text-gray-300 h-[13px] w-[13px] shrink-0" />
@@ -187,7 +192,7 @@ export function ListCard({
       </div>
 
       {showOwner && (
-        <p className="text-muted-foreground mt-1 text-xs">
+        <p className="text-muted-foreground mt-0.5 text-xs">
           {'par '}
           {watchlist.owner?.username ? (
             <button
@@ -207,26 +212,13 @@ export function ListCard({
         </p>
       )}
 
-      {showVisibility && (
-        <div className="text-muted-foreground mt-1 text-xs">
-          {handleClick ? (
-            <button
-              type="button"
-              onClick={handleClick}
-              className="text-muted-foreground cursor-pointer"
-              tabIndex={-1}
-            >
-              {watchlist.isPublic ? content.watchlists.public : content.watchlists.private}
-            </button>
-          ) : (
-            <span className="text-muted-foreground">
-              {watchlist.isPublic ? content.watchlists.public : content.watchlists.private}
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
+      {/* Nb d'éléments — masqué sur mobile quand on affiche déjà "par X"
+          (décharge l'interface) */}
+      <div
+        className={`text-muted-foreground mt-0.5 flex items-center justify-between text-xs ${
+          showOwner ? 'max-[749px]:hidden' : ''
+        }`}
+      >
         {handleClick ? (
           <button
             type="button"
@@ -327,7 +319,7 @@ export function ListCard({
             navigate({ to: href as never });
           }
         }}
-        className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
+        className="group cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50 max-[749px]:p-0"
       >
         {cardContent}
       </div>
@@ -337,7 +329,7 @@ export function ListCard({
   return (
     <Link
       to={href}
-      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50"
+      className="group block cursor-pointer rounded-lg p-2 transition-colors hover:bg-muted/50 max-[749px]:p-0"
     >
       {cardContent}
     </Link>

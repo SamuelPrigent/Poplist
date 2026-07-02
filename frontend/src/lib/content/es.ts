@@ -198,6 +198,7 @@ export const es: Content = {
     },
     features: {
       sectionTitle: 'Comparte tu universo cinematográfico',
+      sectionTitleMobile: 'Nuestras funcionalidades',
       sectionSubtitle: 'Descubre todas nuestras funcionalidades',
       organize: {
         tagline: 'Organización',
@@ -238,6 +239,7 @@ export const es: Content = {
     },
     testimonials: {
       title: 'Amado por los entusiastas',
+      titleMobile: 'Testimonios',
       subtitle: 'Únete a una comunidad de usuarios satisfechos',
       testimonial1: {
         text: 'Aplicación perfecta para organizar mis listas. Interfaz clara e intuitiva.',
@@ -257,8 +259,9 @@ export const es: Content = {
     },
     finalCta: {
       title: 'Comienza a crear tus listas fácilmente',
+      titleMobile: 'Únete a la aventura',
       subtitle: 'Únete a Poplist y organiza tu contenido favorito en unos pocos clics.',
-      subtitleMobile: 'Únete a nuestra comunidad y organiza tu contenido',
+      subtitleMobile: 'Únete a nuestra comunidad',
       button: 'Crear mi lista',
       disclaimer: 'Aplicación gratuita • No se requiere tarjeta',
     },

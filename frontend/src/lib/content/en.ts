@@ -197,6 +197,7 @@ export const en: Content = {
     },
     features: {
       sectionTitle: 'Share your cinematic universe',
+      sectionTitleMobile: 'Our features',
       sectionSubtitle: 'Discover all our features',
       organize: {
         tagline: 'Organization',
@@ -237,6 +238,7 @@ export const en: Content = {
     },
     testimonials: {
       title: 'Loved by enthusiasts',
+      titleMobile: 'Testimonials',
       subtitle: 'Join a community of satisfied users',
       testimonial1: {
         text: 'Perfect app for organizing my lists. Clear and intuitive interface.',
@@ -256,8 +258,9 @@ export const en: Content = {
     },
     finalCta: {
       title: 'Start creating your lists easily',
+      titleMobile: 'Join the adventure',
       subtitle: 'Join Poplist and organize your favorite content in just a few clicks.',
-      subtitleMobile: 'Join our community and organize your content',
+      subtitleMobile: 'Join our community',
       button: 'Create my list',
       disclaimer: 'Free application • No card required',
     },
