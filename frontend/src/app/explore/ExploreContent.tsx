@@ -559,7 +559,7 @@ export function ExploreContent() {
   }, [mediaType, content]);
 
   return (
-    <div className="bg-background mb-24 min-h-screen p-12 py-8 max-[749px]:p-0 max-[749px]:py-4">
+    <div className="bg-background mb-24 min-h-screen p-12 py-8 max-[749px]:mb-4 max-[749px]:p-0 max-[749px]:py-4">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-7 text-left max-[749px]:mb-4">
@@ -848,7 +848,7 @@ export function ExploreContent() {
 
           {/* Drawer Genres (mobile) */}
           <Drawer open={genresDrawerOpen} onOpenChange={setGenresDrawerOpen}>
-            <DrawerContent className="max-h-[80vh]">
+            <DrawerContent className="max-h-[60vh]">
               <DrawerHeader className="text-left">
                 <DrawerTitle>{content.explore.filters.genres}</DrawerTitle>
                 <DrawerDescription className="sr-only">

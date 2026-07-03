@@ -35,6 +35,7 @@ interface TMDBMovieDetails {
   id: number;
   title: string;
   poster_path: string | null;
+  backdrop_path: string | null;
   runtime: number | null;
 }
 
@@ -42,6 +43,7 @@ interface TMDBTVDetails {
   id: number;
   name: string;
   poster_path: string | null;
+  backdrop_path: string | null;
   episode_run_time: number[];
   number_of_seasons: number;
   number_of_episodes: number;
@@ -74,6 +76,8 @@ export interface EnrichedMediaData {
   tmdbId: string;
   title: string;
   posterPath: string | null;
+  /** URL complète de la bannière paysage TMDB ('' si absente) */
+  backdropUrl?: string;
   mediaType: 'movie' | 'tv';
   runtime?: number;
   numberOfSeasons?: number;
@@ -166,6 +170,7 @@ export async function getMovieDetails(
       tmdbId,
       title: data.title,
       posterPath: data.poster_path,
+      backdropUrl: buildBackdropUrl(data.backdrop_path || null),
       mediaType: 'movie',
       runtime: data.runtime ?? undefined,
     };
@@ -189,6 +194,7 @@ export async function getTVDetails(
       tmdbId,
       title: data.name,
       posterPath: data.poster_path,
+      backdropUrl: buildBackdropUrl(data.backdrop_path || null),
       mediaType: 'tv',
       runtime: data.episode_run_time?.[0] ?? undefined,
       numberOfSeasons: data.number_of_seasons,

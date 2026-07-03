@@ -82,7 +82,13 @@ export function ListHeader({
               <button
                 type="button"
                 className="group relative h-56 w-56 cursor-pointer overflow-hidden rounded-lg shadow-2xl"
-                onClick={onImageClick}
+                onClick={(e) => {
+                  // Blur avant l'ouverture de la modale : sinon radix/vaul pose
+                  // aria-hidden sur le layout pendant que le bouton garde le
+                  // focus (warning Chrome)
+                  e.currentTarget.blur();
+                  onImageClick();
+                }}
               >
                 {watchlist.imageUrl ? (
                   <>

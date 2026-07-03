@@ -386,15 +386,17 @@ export interface Content {
   categories: {
     title: string;
     subtitle: string;
+    // `nameMobile` optionnel : label court affiché sur les cards catégorie
+    // en < 750px. Absent → fallback sur `name`.
     list: {
-      movies: { name: string; description: string };
-      series: { name: string; description: string };
-      animation: { name: string; description: string };
-      enfant: { name: string; description: string };
-      jeunesse: { name: string; description: string };
-      documentaries: { name: string; description: string };
-      action: { name: string; description: string };
-      anime: { name: string; description: string };
+      movies: { name: string; nameMobile?: string; description: string };
+      series: { name: string; nameMobile?: string; description: string };
+      animation: { name: string; nameMobile?: string; description: string };
+      enfant: { name: string; nameMobile?: string; description: string };
+      jeunesse: { name: string; nameMobile?: string; description: string };
+      documentaries: { name: string; nameMobile?: string; description: string };
+      action: { name: string; nameMobile?: string; description: string };
+      anime: { name: string; nameMobile?: string; description: string };
     };
   };
   footer: {

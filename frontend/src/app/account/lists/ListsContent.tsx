@@ -227,7 +227,7 @@ function ListsContentInner() {
   });
 
   return (
-    <Section className="mb-20">
+    <Section className="mb-20 max-[749px]:mb-2">
       {/* Title */}
       <div className="mt-0 mb-1 max-[749px]:mb-5">
         <h1 className="text-3xl font-bold text-white max-[749px]:text-[28px]">
@@ -264,7 +264,11 @@ function ListsContentInner() {
 
         <Button
           className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none max-[749px]:w-full max-[749px]:justify-center"
-          onClick={() => setDialogOpen(true)}
+          onClick={(e) => {
+            // Blur avant l'ouverture de la modale (warning aria-hidden Chrome)
+            e.currentTarget.blur();
+            setDialogOpen(true);
+          }}
         >
           <Plus className="h-4 w-4" />
           {content.watchlists.createWatchlist}

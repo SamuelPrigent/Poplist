@@ -61,6 +61,7 @@ interface Creator {
 interface FeaturedCategory {
   id: string;
   name: string;
+  nameMobile?: string;
   description: string;
   gradient?: string;
   itemCount: number;
@@ -387,6 +388,7 @@ function HomeContentInner() {
     return {
       id: categoryId,
       name: categoryInfo.name,
+      nameMobile: categoryInfo.nameMobile,
       description: categoryInfo.description,
       gradient: categoryInfo.cardGradient,
       itemCount: categoryCounts[categoryId] || 0,
@@ -429,7 +431,7 @@ function HomeContentInner() {
   );
 
   return (
-    <div className="bg-background min-h-screen pb-20">
+    <div className="bg-background min-h-screen pb-20 max-[749px]:pb-4">
       {/* My Watchlists - Library Section */}
       {(loading || userWatchlists.length > 0) && (
         <Section className="pb-5">
@@ -469,7 +471,8 @@ function HomeContentInner() {
           action={content.home.categories.seeMore}
         />
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:grid-cols-3 max-[749px]:gap-2.5 max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+        {/* Mobile : 4 catégories max (2 rangées de 2), le reste via "Tout afficher" */}
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:grid-cols-2 max-[749px]:gap-3 max-[749px]:[&>*:nth-child(n+5)]:hidden md:grid-cols-4 lg:grid-cols-6">
           {categories.map((category, index) => {
             const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
             const placeholderItems: WatchlistItem[] = Array.from(
@@ -513,6 +516,7 @@ function HomeContentInner() {
                 content={content}
                 href={`/categories/${category.id}`}
                 genreId={category.id}
+                titleMobile={category.nameMobile}
                 index={index}
               />
             );

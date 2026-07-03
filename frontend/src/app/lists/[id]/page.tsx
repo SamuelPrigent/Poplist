@@ -150,7 +150,7 @@ export default function ListDetailPage() {
 
   if (isMissing || !watchlist) {
     return (
-      <div className="container mx-auto mb-32 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
+      <div className="container mx-auto mb-32 max-[749px]:mb-10 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
           <div className="bg-muted rounded-full p-6">
             <svg

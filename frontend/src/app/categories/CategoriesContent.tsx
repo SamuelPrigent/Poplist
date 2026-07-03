@@ -45,9 +45,11 @@ function CategoriesPageInner() {
     navigate({ to: '/home' as never });
   };
 
+  // max-[749px]:min-h-0 : sans ça le min-h-screen étire la page au-delà du
+  // contenu (8 cards < viewport) → gros vide au-dessus de la bottom nav.
   return (
-    <div className="bg-background min-h-screen pb-20">
-      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20 max-[749px]:px-4">
+    <div className="bg-background min-h-screen pb-20 max-[749px]:min-h-0 max-[749px]:pb-0">
+      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20 max-[749px]:px-4 max-[749px]:pb-10">
         <PageHeader
           title={content.categories.title}
           subtitle={content.categories.subtitle}
@@ -71,7 +73,7 @@ function CategoriesPageInner() {
                   },
                 },
               }}
-              className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-4 max-[749px]:grid-cols-3 max-[749px]:gap-2.5 max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
+              className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-4 max-[749px]:grid-cols-2 max-[749px]:gap-3 md:grid-cols-4 lg:grid-cols-6"
             >
               {GENRE_CATEGORIES.map((categoryId, index) => {
                 const category = getCategoryInfo(categoryId, content);
@@ -128,6 +130,7 @@ function CategoriesPageInner() {
                       content={content}
                       href={`/categories/${categoryId}`}
                       genreId={categoryId}
+                      titleMobile={category.nameMobile}
                       showOwner={false}
                       index={index}
                     />

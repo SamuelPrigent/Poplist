@@ -17,6 +17,8 @@ export type GenreCategory = (typeof GENRE_CATEGORIES)[number];
 export interface CategoryInfo {
   id: GenreCategory;
   name: string;
+  /** Label court pour mobile (< 750px). Absent → fallback sur `name`. */
+  nameMobile?: string;
   description: string;
   gradient: string;
   cardGradient: string;
@@ -40,6 +42,7 @@ export const getCategoryInfo = (categoryId: GenreCategory, content: Content): Ca
   return {
     id: categoryId,
     name: translations.name,
+    nameMobile: translations.nameMobile,
     description: translations.description,
     ...SHARED_GRADIENTS,
   };

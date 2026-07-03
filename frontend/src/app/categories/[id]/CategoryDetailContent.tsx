@@ -57,7 +57,7 @@ function CategoryDetailPageInner() {
 
   if (!categoryInfo) {
     return (
-      <div className="bg-background min-h-screen pb-20">
+      <div className="bg-background min-h-screen pb-20 max-[749px]:pb-4">
         <div className="container mx-auto max-w-(--maxWidth) px-4 py-12">
           <div className="border-border bg-card rounded-lg border p-12 text-center">
             <p className="text-muted-foreground">Catégorie non trouvée</p>
@@ -68,7 +68,7 @@ function CategoryDetailPageInner() {
   }
 
   return (
-    <div className="bg-background min-h-screen pb-20">
+    <div className="bg-background min-h-screen pb-20 max-[749px]:pb-4">
       {/* Header with subtle gradient */}
       <div className="relative w-full">
         <div
@@ -106,7 +106,7 @@ function CategoryDetailPageInner() {
 
       {/* Watchlists section without gradient */}
       <div className="relative w-full">
-        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4 max-[749px]:px-4">
+        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4 max-[749px]:min-h-0 max-[749px]:px-4">
           {/* Watchlists Grid */}
           {loading ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-2 max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

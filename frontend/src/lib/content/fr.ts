@@ -433,6 +433,7 @@ export const fr: Content = {
       },
       documentaries: {
         name: 'Documentaires',
+        nameMobile: 'Docu',
         description: 'Documentaires captivants et éducatifs',
       },
       action: {

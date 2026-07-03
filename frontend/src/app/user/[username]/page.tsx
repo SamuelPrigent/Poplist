@@ -64,7 +64,7 @@ function UserProfilePageInner() {
     return (
       <div className="bg-background min-h-screen pb-24 w-(--sectionWidth) max-w-(--maxWidth) px-12 max-[749px]:px-4">
         <ProfileHeaderSkeleton />
-        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8 pt-10 pb-16 max-[749px]:px-4">
+        <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8 pt-10 pb-16 max-[749px]:min-h-0 max-[749px]:px-4 max-[749px]:pb-6">
           <div className="bg-muted/50 mb-7 h-7 w-40 rounded" />
           <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -129,14 +129,14 @@ function UserProfilePageInner() {
 
   // User has public watchlists
   return (
-    <div className="bg-background min-h-screen pb-24">
+    <div className="bg-background min-h-screen pb-24 max-[749px]:pb-4">
       <UserProfileHeader
         user={user}
         totalPublicWatchlists={totalPublicWatchlists}
         hasWatchlists={true}
       />
 
-      <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8 pt-10 pb-16 max-[749px]:px-4">
+      <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-12 py-8 pt-10 pb-16 max-[749px]:min-h-0 max-[749px]:px-4 max-[749px]:pb-6">
         <h2 className="mb-7 text-2xl font-semibold text-white">
           {content.userProfile?.publicWatchlists || 'Listes publiques'}
         </h2>

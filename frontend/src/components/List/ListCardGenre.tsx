@@ -13,6 +13,8 @@ interface ListCardGenreProps {
   genreId?: string;
   showOwner?: boolean;
   index?: number;
+  /** Label court pour mobile (< 750px). Absent → fallback sur le nom normal. */
+  titleMobile?: string;
 }
 
 interface CategoryVisuals {
@@ -36,13 +38,20 @@ const CATEGORY_VISUALS: Record<string, CategoryVisuals> = {
 const DEFAULT_VISUALS: CategoryVisuals = CATEGORY_VISUALS.movies;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: ListCardGenreProps) {
+export function ListCardGenre({
+  watchlist,
+  href,
+  genreId,
+  titleMobile,
+  index: _index = 0,
+}: ListCardGenreProps) {
   const visuals = (genreId && CATEGORY_VISUALS[genreId]) || DEFAULT_VISUALS;
   const itemCount = watchlist.items.length;
   const [hover, setHover] = useState(false);
 
+  // NB : l'aspect ratio est en className (responsive) — presque carré sur
+  // desktop, portrait 4/5 sur mobile (cf. maquette app native).
   const cardStyle: CSSProperties = {
-    aspectRatio: '21 / 20',
     background: `linear-gradient(160deg, ${visuals.vivid} 0%, ${visuals.deep} 100%)`,
     transform: hover ? 'translateY(-2px)' : 'translateY(0)',
     transition: 'transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms',
@@ -71,7 +80,7 @@ export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: L
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
-        className="relative w-full overflow-hidden rounded-xl max-[749px]:rounded-lg"
+        className="relative aspect-[21/20] w-full overflow-hidden rounded-xl max-[749px]:aspect-[4/4.5] max-[749px]:rounded-lg"
         style={cardStyle}
       >
         {/* Top dark gradient (top→transparent at 40%) */}
@@ -111,10 +120,11 @@ export function ListCardGenre({ watchlist, href, genreId, index: _index = 0 }: L
         {/* Title bottom-left */}
         <div className="absolute inset-0 flex flex-col justify-end px-[18px] pt-[18px] pb-[22px] max-[749px]:px-2.5 max-[749px]:pt-2.5 max-[749px]:pb-3">
           <h3
-            className="m-0 text-[22px] leading-none font-bold tracking-tight text-white max-[749px]:text-[15px]"
+            className="m-0 text-[22px] leading-none font-bold tracking-tight text-white max-[749px]:text-[18px]"
             style={{ textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
           >
-            {watchlist.name}
+            <span className="max-[749px]:hidden">{watchlist.name}</span>
+            <span className="hidden max-[749px]:inline">{titleMobile ?? watchlist.name}</span>
           </h3>
         </div>
       </motion.div>

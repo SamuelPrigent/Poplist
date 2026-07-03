@@ -79,7 +79,7 @@ function UsersContentInner() {
   const totalPages = Math.ceil(creators.length / itemsPerPage);
 
   return (
-    <div className="bg-background min-h-screen pb-20">
+    <div className="bg-background min-h-screen pb-20 max-[749px]:pb-4">
       <Section className="pt-6">
         {/* Back button */}
         <button

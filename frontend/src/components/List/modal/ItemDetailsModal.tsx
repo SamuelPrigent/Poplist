@@ -24,7 +24,6 @@ import { cn } from '@/lib/cn';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import { WatchlistPickerMenu } from '../WatchlistPickerMenu';
-import { CompactWatchProviders, getValidProviders } from '../CompactWatchProviders';
 import { WatchProviderList } from '../WatchProviderBubble';
 
 interface ItemDetailsModalProps {
@@ -104,11 +103,14 @@ function useItemDetails({
   tmdbId,
   type,
   platforms,
+  skipProviders = false,
 }: {
   open: boolean;
   tmdbId: string;
   type: 'movie' | 'tv';
   platforms: Array<{ name: string; logoPath: string }>;
+  /** true → ne fetch jamais les providers TMDB (drawer mobile : non affichés) */
+  skipProviders?: boolean;
 }) {
   const { language, content } = useLanguageStore();
   const [details, setDetails] = useState<FullMediaDetails | null>(null);
@@ -158,7 +160,9 @@ function useItemDetails({
       try {
         const detailsPromise = watchlistsApi.getItemDetails(tmdbId, type, languageCode);
         const providersPromise =
-          platforms.length === 0 ? fetchTMDBProviders(tmdbId, type, region) : Promise.resolve([]);
+          !skipProviders && platforms.length === 0
+            ? fetchTMDBProviders(tmdbId, type, region)
+            : Promise.resolve([]);
 
         const [detailsRes, providersRes] = await Promise.all([detailsPromise, providersPromise]);
         setDetails(detailsRes.details);
@@ -176,7 +180,7 @@ function useItemDetails({
     };
 
     void fetchDetails();
-  }, [open, tmdbId, type, languageCode, platforms.length, region]);
+  }, [open, tmdbId, type, languageCode, platforms.length, region, skipProviders]);
 
   // Check if overview is truncated and needs "see more" button
   useEffect(() => {
@@ -252,9 +256,8 @@ function ItemDetailsDrawerShell({
     overviewRef,
     loadedActorImages,
     markActorLoaded,
-    effectivePlatforms,
     voiceTranslation,
-  } = useItemDetails({ open, tmdbId, type, platforms });
+  } = useItemDetails({ open, tmdbId, type, platforms, skipProviders: true });
 
   const canPick = !!(isAuthenticated && watchlists && onAddToWatchlist && onRemoveFromWatchlist);
   // Sous-vue interne : 'details' (fiche) ou 'pick' (liste des watchlists, cf. maquette).
@@ -279,7 +282,9 @@ function ItemDetailsDrawerShell({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[85dvh]">
+      {/* Hauteur naturelle (plafonnée) : le drawer épouse son contenu au lieu
+          d'imposer 85dvh avec du vide sous le bouton Ajouter */}
+      <DrawerContent className="max-h-[78dvh]">
         <DrawerTitle className="sr-only">
           {details?.title || content.watchlists.itemDetails.mediaDetails}
         </DrawerTitle>
@@ -398,38 +403,23 @@ function ItemDetailsDrawerShell({
                 ) : (
                   <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
                 )}
+                {/* Note — badge en haut à gauche du poster (comme les cards) */}
+                {details.voteCount > 0 && (
+                  <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 backdrop-blur-sm">
+                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm font-semibold text-white">
+                      {(details.rating / 2).toFixed(1)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="min-w-0 flex-1">
                 <h2 className="line-clamp-2 text-xl leading-tight font-bold mask-[linear-gradient(to_right,black,black_85%,transparent)]">
                   {details.title}
                 </h2>
-                <p className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-1.5 text-sm">
-                  <span>{metaParts.join(' · ')}</span>
-                  {details.voteCount > 0 && (
-                    <>
-                      <span aria-hidden>·</span>
-                      <span className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-foreground font-semibold">
-                          {(details.rating / 2).toFixed(1)}
-                        </span>
-                      </span>
-                    </>
-                  )}
-                </p>
-                {details.genres.length > 0 && (
-                  <div className="mt-2.5 flex flex-wrap gap-2">
-                    {details.genres.map((genre) => (
-                      <span
-                        key={genre}
-                        className="border-border bg-muted/40 rounded-full border px-2.5 py-0.5 text-xs"
-                      >
-                        {genre}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <p className="text-muted-foreground mt-1.5 text-sm">{metaParts.join(' · ')}</p>
+                {/* Tags de genre volontairement absents du drawer mobile */}
               </div>
             </div>
 
@@ -462,15 +452,8 @@ function ItemDetailsDrawerShell({
               </div>
             )}
 
-            {/* Dispo */}
-            {getValidProviders(effectivePlatforms).length > 0 && (
-              <div className="mt-3 flex items-center gap-3">
-                <span className="text-muted-foreground shrink-0 text-sm">
-                  {content.watchlists.itemDetails.availableShort} :
-                </span>
-                <CompactWatchProviders providers={effectivePlatforms} size={32} />
-              </div>
-            )}
+            {/* Providers volontairement absents du drawer mobile (affichés
+                uniquement dans la modale desktop) — allège la fiche */}
 
             {/* Acteurs principaux */}
             {details.cast.length > 0 && (

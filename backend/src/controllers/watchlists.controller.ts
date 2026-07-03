@@ -1296,6 +1296,8 @@ export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
     mediaType: enrichedData.mediaType,
     title: enrichedData.title,
     posterPath: enrichedData.posterPath,
+    // Bannière paysage (utilisée par les cards mobiles / fiche détails).
+    backdropPath: enrichedData.backdropUrl || null,
     platformList: enrichedData.platformList,
     runtime: enrichedData.runtime,
     numberOfSeasons: enrichedData.numberOfSeasons,
@@ -1965,6 +1967,7 @@ export const duplicateWatchlist = async (c: C) => {
       mediaType: item.mediaType,
       title: item.title,
       posterPath: item.posterPath,
+      backdropPath: item.backdropPath,
       platformList: item.platformList,
       runtime: item.runtime,
       numberOfSeasons: item.numberOfSeasons,

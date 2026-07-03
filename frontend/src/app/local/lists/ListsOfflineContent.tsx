@@ -365,7 +365,7 @@ function ListsOfflineContentInner() {
 
   if (loading) {
     return (
-      <div className="container mx-auto mb-32 min-h-[80vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
+      <div className="container mx-auto mb-32 max-[749px]:mb-10 max-[749px]:min-h-0 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
         <div className="mt-9 mb-3">
           <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>
         </div>
@@ -380,7 +380,7 @@ function ListsOfflineContentInner() {
   }
 
   return (
-    <div className="container mx-auto mb-32 min-h-[80vh] w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
+    <div className="container mx-auto mb-32 max-[749px]:mb-10 max-[749px]:min-h-0 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
       <div className="mt-9 mb-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>

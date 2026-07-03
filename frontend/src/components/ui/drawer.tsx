@@ -4,6 +4,23 @@ import * as React from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
 import { cn } from '@/lib/cn';
 
+/**
+ * Blur l'élément focusé (le bouton/card déclencheur) au mount du drawer.
+ * Sans ça, vaul pose aria-hidden sur le layout pendant que le déclencheur
+ * garde le focus → warning Chrome "Blocked aria-hidden on an element because
+ * its descendant retained focus". Rendu en premier enfant du Content : son
+ * effect s'exécute avant celui de vaul (bottom-up), donc avant l'application
+ * de aria-hidden. Couvre TOUS les drawers de l'app, présents et futurs.
+ */
+function BlurTriggerOnMount() {
+  React.useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  }, []);
+  return null;
+}
+
 function Drawer(props: React.ComponentProps<typeof DrawerPrimitive.Root>) {
   return <DrawerPrimitive.Root data-slot="drawer" {...props} />;
 }
@@ -47,12 +64,16 @@ function DrawerContent({
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
+        // border-t + border-x (pas de bottom, collé au bord de l'écran) : les
+        // côtés prolongent la border du haut, elle suit donc le rounded-t-2xl
+        // au lieu de se faire couper par l'arrondi.
         className={cn(
-          'border-border bg-background fixed inset-x-0 bottom-0 z-[2100] mt-24 flex h-auto max-h-[92vh] flex-col rounded-t-2xl border-t',
+          'border-border bg-background fixed inset-x-0 bottom-0 z-[2100] mt-24 flex h-auto max-h-[85vh] flex-col rounded-t-2xl border-x border-t',
           className,
         )}
         {...props}
       >
+        <BlurTriggerOnMount />
         {/* Poignée de préhension (grip) */}
         <div className="bg-muted-foreground/40 mx-auto mt-3 mb-1 h-1.5 w-11 shrink-0 rounded-full" />
         {children}
