@@ -64,11 +64,11 @@ function DrawerContent({
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
-        // border-t + border-x (pas de bottom, collé au bord de l'écran) : les
-        // côtés prolongent la border du haut, elle suit donc le rounded-t-2xl
-        // au lieu de se faire couper par l'arrondi.
+        // Liseré du haut via une ombre interne de 1px (pas une border CSS) :
+        // elle épouse parfaitement le rounded-t-2xl sans se rétrécir dans les
+        // coins, et il n'y a aucun liseré sur les côtés.
         className={cn(
-          'border-border bg-background fixed inset-x-0 bottom-0 z-[2100] mt-24 flex h-auto max-h-[85vh] flex-col rounded-t-2xl border-x border-t',
+          'bg-background fixed inset-x-0 bottom-0 z-[2100] mt-24 flex h-auto max-h-[85vh] flex-col rounded-t-2xl shadow-[inset_0_1px_0_0_var(--color-border)]',
           className,
         )}
         {...props}

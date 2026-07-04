@@ -36,6 +36,8 @@ export const de: Content = {
     createWatchlist: 'Neue Liste',
     createWatchlistDescription:
       'Erstellen Sie eine neue Liste, um Ihre Filme und Serien zu organisieren.',
+    noWatchlistsMobile: 'Keine Liste',
+    createWatchlistDescriptionMobile: 'Erstelle deine erste Liste.',
     notLoggedInWarning: 'Offline-Modus',
     noWatchlists: 'Sie haben noch keine Listen erstellt.',
     myWatchlists: 'Meine Listen',

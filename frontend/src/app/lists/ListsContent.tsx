@@ -6,6 +6,7 @@ import { Film } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
+import { ListCardGrid } from '@/components/List/ListCardGrid';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/context/auth-context';
@@ -35,8 +36,10 @@ function CommunityListsPageInner() {
 
   // Pagination — préférence persistée globalement (50, 100, ou 'all')
   const [currentPage, setCurrentPage] = useState(1);
-  const { watchlistsPerPage: watchlistsPerPagePref, setWatchlistsPerPage: setWatchlistsPerPagePref } =
-    useListPaginationStore();
+  const {
+    watchlistsPerPage: watchlistsPerPagePref,
+    setWatchlistsPerPage: setWatchlistsPerPagePref,
+  } = useListPaginationStore();
 
   useScrollToTopOnMount();
 
@@ -88,25 +91,27 @@ function CommunityListsPageInner() {
           subtitle={content.home.communityWatchlists.subtitle}
           backLabel={content.watchlists.back}
           onBack={handleBackClick}
+          hideSubtitleOnMobile
+          className="max-[749px]:mb-6"
         />
 
         {/* Watchlists Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <ListCardGrid>
             {Array.from({ length: 5 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
-          </div>
+          </ListCardGrid>
         ) : watchlists.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {paginatedWatchlists.map(watchlist => {
+            <ListCardGrid>
+              {paginatedWatchlists.map((watchlist) => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;
                 const isOwner = user?.email === ownerEmail;
 
                 // Find this watchlist in user's watchlists to check status
-                const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
+                const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
                 const isCollaborator = userWatchlist?.isCollaborator === true;
                 const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
 
@@ -126,7 +131,7 @@ function CommunityListsPageInner() {
                   />
                 );
               })}
-            </div>
+            </ListCardGrid>
 
             {/* Pagination - only show if more than threshold items */}
             {watchlists.length > SHOW_PAGINATION_THRESHOLD && (
@@ -137,10 +142,10 @@ function CommunityListsPageInner() {
                   onPageChange={setCurrentPage}
                   itemsPerPage={effectiveWatchlistsPerPage}
                   totalItems={watchlists.length}
-                  onItemsPerPageChange={newItemsPerPage => {
+                  onItemsPerPageChange={(newItemsPerPage) => {
                     // Click sur "Tout" → on stocke 'all' pour préserver la sémantique
                     setWatchlistsPerPagePref(
-                      newItemsPerPage === watchlists.length ? 'all' : newItemsPerPage
+                      newItemsPerPage === watchlists.length ? 'all' : newItemsPerPage,
                     );
                     setCurrentPage(1);
                   }}

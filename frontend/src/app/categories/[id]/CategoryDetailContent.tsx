@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useMemo } from 'react';
 import { ListCard } from '@/components/List/ListCard';
+import { ListCardGrid } from '@/components/List/ListCardGrid';
 import { useAuth } from '@/context/auth-context';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { watchlistsQueries } from '@/api/queries';
@@ -107,13 +108,13 @@ function CategoryDetailPageInner() {
         <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4 max-[749px]:min-h-0 max-[749px]:px-4">
           {/* Watchlists Grid */}
           {loading ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-2 max-[749px]:gap-y-4 max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <ListCardGrid>
               {Array.from({ length: 10 }).map((_, i) => (
                 <ListCardSkeleton key={i} />
               ))}
-            </div>
+            </ListCardGrid>
           ) : watchlists.length > 0 ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] max-[749px]:gap-y-4 gap-[4px] max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <ListCardGrid>
               {watchlists.map((watchlist) => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;
@@ -139,7 +140,7 @@ function CategoryDetailPageInner() {
                   />
                 );
               })}
-            </div>
+            </ListCardGrid>
           ) : (
             <div className="border-border bg-card rounded-lg border p-12 text-center">
               <Film strokeWidth={1.4} className="text-muted-foreground mx-auto h-16 w-16" />

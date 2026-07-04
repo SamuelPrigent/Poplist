@@ -35,6 +35,8 @@ export const pt: Content = {
     title: 'Biblioteca',
     createWatchlist: 'Nova lista',
     createWatchlistDescription: 'Crie uma nova lista para organizar os seus filmes e séries.',
+    noWatchlistsMobile: 'Nenhuma lista',
+    createWatchlistDescriptionMobile: 'Crie a sua primeira lista.',
     notLoggedInWarning: 'Modo offline',
     noWatchlists: 'Ainda não criou nenhuma lista.',
     myWatchlists: 'As minhas listas',

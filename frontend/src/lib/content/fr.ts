@@ -35,6 +35,8 @@ export const fr: Content = {
     title: 'Bibliothèque',
     createWatchlist: 'Nouvelle liste',
     createWatchlistDescription: 'Créez une nouvelle liste pour organiser vos films et séries.',
+    noWatchlistsMobile: 'Aucune liste',
+    createWatchlistDescriptionMobile: 'Créez votre première liste.',
     notLoggedInWarning: 'Non authentifié',
     noWatchlists: "Vous n'avez pas encore créé de liste.",
     myWatchlists: 'Mes listes',

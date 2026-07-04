@@ -403,15 +403,6 @@ function ItemDetailsDrawerShell({
                 ) : (
                   <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
                 )}
-                {/* Note — badge en haut à gauche du poster (comme les cards) */}
-                {details.voteCount > 0 && (
-                  <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 backdrop-blur-sm">
-                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-semibold text-white">
-                      {(details.rating / 2).toFixed(1)}
-                    </span>
-                  </div>
-                )}
               </div>
 
               <div className="min-w-0 flex-1">
@@ -419,7 +410,15 @@ function ItemDetailsDrawerShell({
                   {details.title}
                 </h2>
                 <p className="text-muted-foreground mt-1.5 text-sm">{metaParts.join(' · ')}</p>
-                {/* Tags de genre volontairement absents du drawer mobile */}
+                {/* Note — 3e ligne, sous la méta (les genres ont été retirés) */}
+                {details.voteCount > 0 && (
+                  <p className="mt-2 flex items-center gap-1.5 text-sm">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-foreground font-semibold">
+                      {(details.rating / 2).toFixed(1)}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 

@@ -220,11 +220,11 @@ export function ExploreContent() {
 
   const handleFromSettled = useCallback((v: number) => {
     setSettledFrom(v);
-    setSettledTo(prev => (prev < v ? v : prev));
+    setSettledTo((prev) => (prev < v ? v : prev));
   }, []);
   const handleToSettled = useCallback((v: number) => {
     setSettledTo(v);
-    setSettledFrom(prev => (prev > v ? v : prev));
+    setSettledFrom((prev) => (prev > v ? v : prev));
   }, []);
 
   // Blur le bouton déclencheur avant d'ouvrir un drawer : sinon vaul pose
@@ -639,173 +639,173 @@ export function ExploreContent() {
 
             {/* Filtres année (desktop) — sur mobile : drawer via le bouton "Année" */}
             <div className="flex flex-wrap items-center gap-3 max-[749px]:hidden">
-            {/* Year From Picker - Combobox */}
-            <Popover open={openYearFrom} onOpenChange={setOpenYearFrom}>
-              <PopoverTrigger asChild>
+              {/* Year From Picker - Combobox */}
+              <Popover open={openYearFrom} onOpenChange={setOpenYearFrom}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openYearFrom}
+                    aria-label={content.explore.filters.yearMin}
+                    className="w-[200px] cursor-pointer justify-between max-[749px]:w-[calc(50%-6px)]"
+                  >
+                    {yearFromParam || content.explore.filters.yearMin}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandInput placeholder={content.explore.filters.search} />
+                    <CommandList>
+                      <CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
+                      <CommandGroup>
+                        {availableYearsFrom.map((year) => (
+                          <CommandItem
+                            key={year}
+                            value={year.toString()}
+                            onSelect={(currentValue) => {
+                              const nextYear = currentValue === yearFromParam ? '' : currentValue;
+                              updateSearchParams({
+                                dateFrom: nextYear ? `${nextYear}-01-01` : null,
+                                page: '1',
+                              });
+                              setOpenYearFrom(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                yearFromParam === year.toString() ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            {year}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {/* Year To Picker - Combobox */}
+              <Popover open={openYearTo} onOpenChange={setOpenYearTo}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openYearTo}
+                    aria-label={content.explore.filters.yearMax}
+                    className="w-[200px] cursor-pointer justify-between max-[749px]:w-[calc(50%-6px)]"
+                  >
+                    {yearToParam || content.explore.filters.yearMax}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandInput placeholder={content.explore.filters.search} />
+                    <CommandList>
+                      <CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
+                      <CommandGroup>
+                        {availableYearsTo.map((year) => (
+                          <CommandItem
+                            key={year}
+                            value={year.toString()}
+                            onSelect={(currentValue) => {
+                              const nextYear = currentValue === yearToParam ? '' : currentValue;
+                              updateSearchParams({
+                                dateTo: nextYear ? `${nextYear}-12-31` : null,
+                                page: '1',
+                              });
+                              setOpenYearTo(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                yearToParam === year.toString() ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            {year}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {/* Clear years button */}
+              {(yearFromParam || yearToParam) && (
                 <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openYearFrom}
-                  aria-label={content.explore.filters.yearMin}
-                  className="w-[200px] cursor-pointer justify-between max-[749px]:w-[calc(50%-6px)]"
+                  variant="ghost"
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    updateSearchParams({
+                      dateFrom: null,
+                      dateTo: null,
+                      page: '1',
+                    });
+                  }}
                 >
-                  {yearFromParam || content.explore.filters.yearMin}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  {content.explore.filters.clearYears}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandInput placeholder={content.explore.filters.search} />
-                  <CommandList>
-                    <CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
-                    <CommandGroup>
-                      {availableYearsFrom.map((year) => (
+              )}
+
+              {/* Genre Filter - Dropdown multi-select (desktop) */}
+              <Popover open={openGenres} onOpenChange={setOpenGenres}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openGenres}
+                    aria-label={content.explore.filters.genres}
+                    className="w-[200px] cursor-pointer justify-between"
+                  >
+                    <span className="truncate">
+                      {content.explore.filters.genres}
+                      {selectedGenres.length > 0 ? ` (${selectedGenres.length})` : ''}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandGroup>
                         <CommandItem
-                          key={year}
-                          value={year.toString()}
-                          onSelect={(currentValue) => {
-                            const nextYear = currentValue === yearFromParam ? '' : currentValue;
-                            updateSearchParams({
-                              dateFrom: nextYear ? `${nextYear}-01-01` : null,
-                              page: '1',
-                            });
-                            setOpenYearFrom(false);
-                          }}
+                          value={content.explore.filters.all}
+                          onSelect={() => clearGenres()}
                         >
                           <Check
                             className={cn(
                               'mr-2 h-4 w-4',
-                              yearFromParam === year.toString() ? 'opacity-100' : 'opacity-0',
+                              selectedGenres.length === 0 ? 'opacity-100' : 'opacity-0',
                             )}
                           />
-                          {year}
+                          {content.explore.filters.all}
                         </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-
-            {/* Year To Picker - Combobox */}
-            <Popover open={openYearTo} onOpenChange={setOpenYearTo}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openYearTo}
-                  aria-label={content.explore.filters.yearMax}
-                  className="w-[200px] cursor-pointer justify-between max-[749px]:w-[calc(50%-6px)]"
-                >
-                  {yearToParam || content.explore.filters.yearMax}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandInput placeholder={content.explore.filters.search} />
-                  <CommandList>
-                    <CommandEmpty>{content.explore.filters.noYearFound}</CommandEmpty>
-                    <CommandGroup>
-                      {availableYearsTo.map((year) => (
-                        <CommandItem
-                          key={year}
-                          value={year.toString()}
-                          onSelect={(currentValue) => {
-                            const nextYear = currentValue === yearToParam ? '' : currentValue;
-                            updateSearchParams({
-                              dateTo: nextYear ? `${nextYear}-12-31` : null,
-                              page: '1',
-                            });
-                            setOpenYearTo(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              'mr-2 h-4 w-4',
-                              yearToParam === year.toString() ? 'opacity-100' : 'opacity-0',
-                            )}
-                          />
-                          {year}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-
-            {/* Clear years button */}
-            {(yearFromParam || yearToParam) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="cursor-pointer"
-                onClick={() => {
-                  updateSearchParams({
-                    dateFrom: null,
-                    dateTo: null,
-                    page: '1',
-                  });
-                }}
-              >
-                {content.explore.filters.clearYears}
-              </Button>
-            )}
-
-            {/* Genre Filter - Dropdown multi-select (desktop) */}
-            <Popover open={openGenres} onOpenChange={setOpenGenres}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openGenres}
-                  aria-label={content.explore.filters.genres}
-                  className="w-[200px] cursor-pointer justify-between"
-                >
-                  <span className="truncate">
-                    {content.explore.filters.genres}
-                    {selectedGenres.length > 0 ? ` (${selectedGenres.length})` : ''}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandList>
-                    <CommandGroup>
-                      <CommandItem
-                        value={content.explore.filters.all}
-                        onSelect={() => clearGenres()}
-                      >
-                        <Check
-                          className={cn(
-                            'mr-2 h-4 w-4',
-                            selectedGenres.length === 0 ? 'opacity-100' : 'opacity-0',
-                          )}
-                        />
-                        {content.explore.filters.all}
-                      </CommandItem>
-                      {availableGenres.map((genre) => (
-                        <CommandItem
-                          key={genre.id}
-                          value={genre.name}
-                          onSelect={() => toggleGenre(genre.id)}
-                        >
-                          <Check
-                            className={cn(
-                              'mr-2 h-4 w-4',
-                              selectedGenres.includes(genre.id) ? 'opacity-100' : 'opacity-0',
-                            )}
-                          />
-                          {genre.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+                        {availableGenres.map((genre) => (
+                          <CommandItem
+                            key={genre.id}
+                            value={genre.name}
+                            onSelect={() => toggleGenre(genre.id)}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedGenres.includes(genre.id) ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            {genre.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
@@ -818,7 +818,7 @@ export function ExploreContent() {
                 'flex flex-1 items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors',
                 selectedGenres.length > 0
                   ? 'border-white/40 text-foreground'
-                  : 'border-border text-muted-foreground'
+                  : 'border-border text-muted-foreground',
               )}
             >
               <span className="truncate">
@@ -834,7 +834,7 @@ export function ExploreContent() {
                 'flex flex-1 items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors',
                 yearFromParam || yearToParam
                   ? 'border-white/40 text-foreground'
-                  : 'border-border text-muted-foreground'
+                  : 'border-border text-muted-foreground',
               )}
             >
               <span className="truncate">
@@ -861,12 +861,16 @@ export function ExploreContent() {
                   onClick={() => clearGenres()}
                   className="border-border/60 flex w-full items-center justify-between border-b py-3.5 text-left text-[15px]"
                 >
-                  <span className={selectedGenres.length === 0 ? 'text-foreground' : 'text-muted-foreground'}>
+                  <span
+                    className={
+                      selectedGenres.length === 0 ? 'text-foreground' : 'text-muted-foreground'
+                    }
+                  >
                     {content.explore.filters.all}
                   </span>
                   {selectedGenres.length === 0 && <Check className="h-5 w-5 text-white" />}
                 </button>
-                {availableGenres.map(genre => {
+                {availableGenres.map((genre) => {
                   const active = selectedGenres.includes(genre.id);
                   return (
                     <button
@@ -908,14 +912,14 @@ export function ExploreContent() {
                     items={YEARS}
                     value={settledFrom}
                     onSettle={handleFromSettled}
-                    isDisabled={y => y > settledTo}
+                    isDisabled={(y) => y > settledTo}
                     ariaLabel={content.explore.filters.yearMin}
                   />
                   <WheelPicker
                     items={YEARS}
                     value={settledTo}
                     onSettle={handleToSettled}
-                    isDisabled={y => y < settledFrom}
+                    isDisabled={(y) => y < settledFrom}
                     ariaLabel={content.explore.filters.yearMax}
                   />
                 </div>

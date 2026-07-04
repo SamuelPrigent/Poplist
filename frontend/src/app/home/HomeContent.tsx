@@ -11,6 +11,7 @@ import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@/components/ui/Link';
 import { ListCard } from '@/components/List/ListCard';
+import { ListCardGrid } from '@/components/List/ListCardGrid';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { ListCardSmall } from '@/components/List/ListCardSmall';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
@@ -497,7 +498,7 @@ function HomeContentInner() {
             droite, scroll edge-to-edge grâce aux -mx/px). Desktop : grille. */}
         <div
           ref={categoriesScrollRef}
-          className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-3 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[150px] max-[749px]:[&>*]:shrink-0 md:grid-cols-4 lg:grid-cols-6"
+          className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-3 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[128px] max-[749px]:[&>*]:shrink-0 md:grid-cols-4 lg:grid-cols-6"
         >
           {categories.map((category, index) => {
             const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
@@ -561,13 +562,14 @@ function HomeContentInner() {
         />
 
         {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[8px] max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+7)]:hidden max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+          // Aperçu accueil : max 6 items sur mobile (le reste via "Voir tout").
+          <ListCardGrid className="max-[749px]:[&>*:nth-child(n+7)]:hidden">
             {Array.from({ length: 12 }).map((_, i) => (
               <ListCardSkeleton key={i} />
             ))}
-          </div>
+          </ListCardGrid>
         ) : publicWatchlists.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[3px] max-[749px]:gap-y-4 max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+7)]:hidden max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+          <ListCardGrid className="max-[749px]:[&>*:nth-child(n+7)]:hidden">
             {publicWatchlists.slice(0, 12).map((watchlist, index) => {
               const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
               const isOwner = userWatchlist?.isOwner ?? false;
@@ -591,7 +593,7 @@ function HomeContentInner() {
                 />
               );
             })}
-          </div>
+          </ListCardGrid>
         ) : (
           <div className="border-border bg-card rounded-lg border p-12 text-center">
             <Film strokeWidth={1.4} className="text-muted-foreground mx-auto h-16 w-16" />

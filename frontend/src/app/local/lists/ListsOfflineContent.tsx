@@ -24,17 +24,12 @@ import { domAnimation, LazyMotion, m } from 'motion/react';
 import { Img as Image } from '@/components/ui/Img';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ListCardGrid } from '@/components/List/ListCardGrid';
 import { CreateListDialog } from '@/components/List/modal/CreateListDialog';
 import { DeleteListDialog } from '@/components/List/modal/DeleteListDialog';
 import { EditListDialogOffline } from '@/components/List/modal/EditListDialogOffline';
 import { Button } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { LibraryEmpty } from '@/components/List/LibraryEmpty';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
 import { AuthDrawer } from '@/features/auth/AuthDrawer';
@@ -365,81 +360,46 @@ function ListsOfflineContentInner() {
 
   if (loading) {
     return (
-      <div className="container mx-auto mb-32 max-[749px]:mb-10 max-[749px]:min-h-0 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-        <div className="mt-9 mb-3">
-          <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>
+      <div className="container mx-auto mb-32 max-[749px]:mb-10 max-[749px]:min-h-0 w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-11 pb-8 max-[749px]:pt-7">
+        <div className="mb-1 flex items-center justify-between max-[749px]:mb-5">
+          <h1 className="text-3xl font-bold text-white max-[749px]:text-[28px]">
+            {content.watchlists.title}
+          </h1>
+          <div className="h-9 w-9 shrink-0" /> {/* Placeholder icône hors-ligne */}
         </div>
-        <div className="mb-7 h-8" /> {/* Placeholder for badge */}
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="mb-8 h-9 max-[749px]:mb-6" /> {/* Placeholder bouton créer */}
+        <ListCardGrid>
           {Array.from({ length: 8 }).map((_, i) => (
             <ListCardSkeleton key={i} />
           ))}
-        </div>
+        </ListCardGrid>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto mb-32 max-[749px]:mb-10 max-[749px]:min-h-0 w-(--sectionWidth) max-w-(--maxWidth) px-4 py-8">
-      <div className="mt-9 mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-white">{content.watchlists.title}</h1>
-        </div>
-        <Button
-          className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          {content.watchlists.createWatchlist}
-        </Button>
-      </div>
-
-      <CreateListDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSuccess={handleCreateSuccess}
-        offline={true}
-      />
-
-      {selectedWatchlist && (
-        <>
-          <EditListDialogOffline
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            onSuccess={fetchWatchlists}
-            watchlist={selectedWatchlist}
-          />
-          <DeleteListDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            onSuccess={fetchWatchlists}
-            watchlist={selectedWatchlist}
-            offline={true}
-          />
-        </>
-      )}
-
-      {/* Data Source Badge with Signup Popover */}
-      <div className="mb-7">
-        <Popover open={popoverOpen} onOpenChange={() => {}}>
+    <div className="container mx-auto mb-32 max-[749px]:mb-10 max-[749px]:min-h-0 w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-11 pb-8 max-[749px]:pt-7">
+      {/* Titre + icône hors-ligne (cliquable → popover d'info) à droite */}
+      <div className="mb-1 flex items-center justify-between max-[749px]:mb-5">
+        <h1 className="text-3xl font-bold text-white max-[749px]:text-[28px]">
+          {content.watchlists.title}
+        </h1>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
-            <div
-              role="button"
-              tabIndex={0}
-              className="flex w-fit cursor-default items-center gap-2 rounded-full bg-slate-800/60 px-3 py-[6px] text-sm text-gray-400 backdrop-blur-sm transition-all hover:bg-slate-800/80"
+            <button
+              type="button"
+              aria-label={content.watchlists.notLoggedInWarning}
+              className="hover:bg-muted flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:text-white"
               onMouseEnter={handlePopoverEnter}
               onMouseLeave={handlePopoverLeave}
             >
-              <GlobeOff className="h-4 w-4 shrink-0 text-slate-400" />
-              <span className="text-sm font-medium text-slate-300 select-none">
-                {content.watchlists.notLoggedInWarning}
-              </span>
-            </div>
+              <GlobeOff className="h-5 w-5" />
+            </button>
           </PopoverTrigger>
           <PopoverContent
             className="w-72 border-2 border-none bg-transparent p-0"
             side="bottom"
-            align="start"
+            align="end"
             sideOffset={0}
             onMouseEnter={handlePopoverEnter}
             onMouseLeave={handlePopoverLeave}
@@ -476,6 +436,45 @@ function ListsOfflineContentInner() {
         </Popover>
       </div>
 
+      {/* Bouton créer une liste — pleine largeur sur mobile */}
+      <div className="mb-8 flex justify-end max-[749px]:mb-6">
+        <Button
+          className="corner-squircle focus-visible:ring-offset-background cursor-pointer rounded-2xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none max-[749px]:w-full max-[749px]:justify-center"
+          onClick={(e) => {
+            e.currentTarget.blur();
+            setDialogOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          {content.watchlists.createWatchlist}
+        </Button>
+      </div>
+
+      <CreateListDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSuccess={handleCreateSuccess}
+        offline={true}
+      />
+
+      {selectedWatchlist && (
+        <>
+          <EditListDialogOffline
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            onSuccess={fetchWatchlists}
+            watchlist={selectedWatchlist}
+          />
+          <DeleteListDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onSuccess={fetchWatchlists}
+            watchlist={selectedWatchlist}
+            offline={true}
+          />
+        </>
+      )}
+
       <AuthDrawer
         open={authDrawerOpen}
         onClose={() => setAuthDrawerOpen(false)}
@@ -483,15 +482,12 @@ function ListsOfflineContentInner() {
       />
 
       {watchlists.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Film strokeWidth={1.4} className="text-muted-foreground h-8 w-8" />
-            </EmptyMedia>
-            <EmptyTitle>{content.watchlists.noWatchlists}</EmptyTitle>
-            <EmptyDescription>{content.watchlists.createWatchlistDescription}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <LibraryEmpty
+          title={content.watchlists.noWatchlists}
+          titleMobile={content.watchlists.noWatchlistsMobile}
+          description={content.watchlists.createWatchlistDescription}
+          descriptionMobile={content.watchlists.createWatchlistDescriptionMobile}
+        />
       ) : (
         <DndContext
           id="dnd-local-lists"
@@ -500,7 +496,7 @@ function ListsOfflineContentInner() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={watchlists.map((w) => w.id)} strategy={rectSortingStrategy}>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <ListCardGrid>
               {watchlists.map((watchlist) => (
                 <SortableWatchlistCardOffline
                   key={watchlist.id}
@@ -515,7 +511,7 @@ function ListsOfflineContentInner() {
                   }}
                 />
               ))}
-            </div>
+            </ListCardGrid>
           </SortableContext>
         </DndContext>
       )}

@@ -28,6 +28,9 @@ export interface Content {
     title: string;
     createWatchlist: string;
     createWatchlistDescription: string;
+    /** Versions courtes du placeholder vide, affichées sur mobile (< 750px). */
+    noWatchlistsMobile: string;
+    createWatchlistDescriptionMobile: string;
     notLoggedInWarning: string;
     noWatchlists: string;
     myWatchlists: string;

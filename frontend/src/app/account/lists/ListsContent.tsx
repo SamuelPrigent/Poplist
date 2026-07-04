@@ -20,23 +20,18 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Film, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
+import { ListCardGrid } from '@/components/List/ListCardGrid';
+import { LibraryEmpty } from '@/components/List/LibraryEmpty';
 import { useAuth } from '@/context/auth-context';
 import { CreateListDialog } from '@/components/List/modal/CreateListDialog';
 import { DeleteListDialog } from '@/components/List/modal/DeleteListDialog';
 import { EditListDialog } from '@/components/List/modal/EditListDialog';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import { watchlists as watchlistsApi, type Watchlist } from '@/api';
 import { watchlistsQueries } from '@/api/queries';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
@@ -299,31 +294,27 @@ function ListsContentInner() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <ListCardGrid>
           {Array.from({ length: 10 }).map((_, i) => (
             <ListCardSkeleton key={i} />
           ))}
-        </div>
+        </ListCardGrid>
       ) : filteredWatchlists.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Film strokeWidth={1.4} className="text-muted-foreground h-8 w-8" />
-            </EmptyMedia>
-            <EmptyTitle>
-              {watchlists.length === 0
-                ? content.watchlists.noWatchlists
-                : content.watchlists.noWatchlistsInCategory ||
-                  'Aucune watchlist dans cette catégorie'}
-            </EmptyTitle>
-            <EmptyDescription>
-              {watchlists.length === 0
-                ? content.watchlists.createWatchlistDescription
-                : content.watchlists.adjustFilters ||
-                  'Ajustez les filtres pour voir plus de watchlists'}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        watchlists.length === 0 ? (
+          <LibraryEmpty
+            title={content.watchlists.noWatchlists}
+            titleMobile={content.watchlists.noWatchlistsMobile}
+            description={content.watchlists.createWatchlistDescription}
+            descriptionMobile={content.watchlists.createWatchlistDescriptionMobile}
+          />
+        ) : (
+          <LibraryEmpty
+            title={content.watchlists.noWatchlistsInCategory || 'Aucune liste dans cette catégorie'}
+            description={
+              content.watchlists.adjustFilters || 'Ajustez les filtres pour voir plus de listes'
+            }
+          />
+        )
       ) : (
         <DndContext
           id="dnd-account-lists"
@@ -336,7 +327,7 @@ function ListsContentInner() {
             strategy={rectSortingStrategy}
           >
             {/* Grid */}
-            <div className="grid grid-cols-2 gap-[4px] max-[749px]:gap-2 min-[350px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <ListCardGrid>
               {filteredWatchlists.map((watchlist, index) => (
                 <SortableWatchlistCard
                   key={watchlist.id}
@@ -352,7 +343,7 @@ function ListsContentInner() {
                   priority={index < 4}
                 />
               ))}
-            </div>
+            </ListCardGrid>
           </SortableContext>
         </DndContext>
       )}

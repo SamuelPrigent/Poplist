@@ -11,6 +11,8 @@ interface PageHeaderProps {
 	onBack: () => void;
 	/** Mobile (< 750px) : masque la description et resserre la marge basse. */
 	hideSubtitleOnMobile?: boolean;
+	/** Classes supplémentaires sur le bloc titre (ex. surcharger la marge basse). */
+	className?: string;
 }
 
 export function PageHeader({
@@ -19,6 +21,7 @@ export function PageHeader({
 	backLabel,
 	onBack,
 	hideSubtitleOnMobile = false,
+	className,
 }: PageHeaderProps) {
 	return (
 		<>
@@ -35,6 +38,7 @@ export function PageHeader({
 				className={cn(
 					"mb-8 max-[749px]:mb-6",
 					hideSubtitleOnMobile && "max-[749px]:mb-[13px]",
+					className,
 				)}
 			>
 				<h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-3xl">{title}</h1>
