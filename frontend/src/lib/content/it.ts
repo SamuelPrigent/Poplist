@@ -66,6 +66,7 @@ export const it: Content = {
     uploadImage: 'Carica immagine',
     changeImage: 'Cambia immagine',
     imageUploadHint: 'PNG, JPG o WEBP (max. 5MB)',
+    removeImage: 'Rimuovi la copertina',
     makePublic: 'Rendi pubblica',
     cancel: 'Annulla',
     create: 'Crea',

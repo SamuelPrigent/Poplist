@@ -66,6 +66,7 @@ export const es: Content = {
     uploadImage: 'Subir imagen',
     changeImage: 'Cambiar imagen',
     imageUploadHint: 'PNG, JPG o WEBP (máx. 5MB)',
+    removeImage: 'Eliminar la portada',
     makePublic: 'Hacer pública',
     cancel: 'Cancelar',
     create: 'Crear',

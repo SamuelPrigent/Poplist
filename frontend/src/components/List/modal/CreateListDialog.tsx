@@ -364,12 +364,14 @@ function CreateListForm({
           {imagePreview ? (
             <div className="border-border relative h-24 w-24 overflow-hidden rounded-md border">
               <Image src={imagePreview} alt="Preview" fill sizes="96px" className="object-cover" />
+              {/* Croix desktop — trop petite au doigt, remplacée sur mobile
+                  par le bouton texte "Supprimer la cover" ci-contre */}
               <button
                 type="button"
                 onClick={() => {
                   setImagePreview(null);
                 }}
-                className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 max-[749px]:hidden"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -385,17 +387,33 @@ function CreateListForm({
             </button>
           )}
           <div className="flex-1">
-            <Button
-              className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading}
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              {imagePreview ? content.watchlists.changeImage : content.watchlists.uploadImage}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                className="focus-visible:ring-offset-background cursor-pointer focus-visible:border-slate-800 focus-visible:ring-2 focus-visible:ring-white"
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {imagePreview ? content.watchlists.changeImage : content.watchlists.uploadImage}
+              </Button>
+              {/* Mobile : la croix sur l'image est masquée → bouton texte */}
+              {imagePreview && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer min-[750px]:hidden"
+                  onClick={() => setImagePreview(null)}
+                  disabled={loading}
+                >
+                  <X className="mr-1.5 h-4 w-4" />
+                  {content.watchlists.removeImage}
+                </Button>
+              )}
+            </div>
             <p className="text-muted-foreground mt-1 text-xs">
               {content.watchlists.imageUploadHint}
             </p>

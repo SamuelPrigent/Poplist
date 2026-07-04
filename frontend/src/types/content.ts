@@ -59,6 +59,7 @@ export interface Content {
     uploadImage: string;
     changeImage: string;
     imageUploadHint: string;
+    removeImage: string;
     makePublic: string;
     cancel: string;
     create: string;

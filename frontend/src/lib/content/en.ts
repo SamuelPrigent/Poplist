@@ -65,6 +65,7 @@ export const en: Content = {
     uploadImage: 'Upload image',
     changeImage: 'Change image',
     imageUploadHint: 'PNG, JPG or WEBP (max. 5MB)',
+    removeImage: 'Remove cover',
     makePublic: 'Make public',
     cancel: 'Cancel',
     create: 'Create',

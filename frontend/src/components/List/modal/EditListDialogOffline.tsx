@@ -222,12 +222,13 @@ const EditListOfflineForm = forwardRef<
     <form onSubmit={handleSubmit} className="mt-3 space-y-6">
       {/* Main Layout: square cover on the left, fields on the right */}
       <div className="flex flex-col gap-6 md:flex-row">
-        {/* Cover Image */}
-        <div className="flex justify-center md:block">
+        {/* Cover Image — mobile : décentrée à gauche, réduite (192→115px), avec
+            un bouton texte "Supprimer la cover" à droite. Desktop : inchangé. */}
+        <div className="flex items-center gap-4 md:block">
           <div
             role="button"
             tabIndex={0}
-            className="group border-border relative aspect-square w-48 cursor-pointer overflow-hidden rounded-lg border"
+            className="group border-border relative aspect-square w-48 shrink-0 cursor-pointer overflow-hidden rounded-lg border max-[749px]:w-[115px]"
             onClick={() => fileInputRef.current?.click()}
             onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -250,25 +251,40 @@ const EditListOfflineForm = forwardRef<
                   <Pencil className="h-8 w-8 text-white" />
                   <span className="mt-2 text-sm text-white">Sélectionner une photo</span>
                 </div>
-                {/* Remove button */}
+                {/* Remove button (desktop, au hover) */}
                 <button
                   type="button"
                   onClick={e => {
                     e.stopPropagation();
                     setImagePreview(null);
                   }}
-                  className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
+                  className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80 max-[749px]:hidden"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </>
             ) : (
               <div className="bg-muted/50 group-hover:bg-muted flex h-full w-full flex-col items-center justify-center transition-colors">
-                <ImageIcon className="text-muted-foreground h-12 w-12" />
-                <span className="text-muted-foreground mt-2 text-sm">Sélectionner une photo</span>
+                <ImageIcon className="text-muted-foreground h-12 w-12 max-[749px]:h-8 max-[749px]:w-8" />
+                <span className="text-muted-foreground mt-2 text-sm max-[749px]:hidden">
+                  Sélectionner une photo
+                </span>
               </div>
             )}
           </div>
+          {/* Bouton texte mobile : seul moyen tactile de retirer la cover */}
+          {imagePreview && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="cursor-pointer min-[750px]:hidden"
+              onClick={() => setImagePreview(null)}
+            >
+              <X className="mr-1.5 h-4 w-4" />
+              {content.watchlists.removeImage}
+            </Button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
