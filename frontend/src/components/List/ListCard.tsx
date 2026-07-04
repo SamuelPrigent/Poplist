@@ -263,7 +263,9 @@ export function ListCard({
                   }
                 }}
                 aria-label="Plus d'options"
-                className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all group-hover:opacity-100 hover:brightness-125 hover:backdrop-brightness-150 focus-visible:opacity-100"
+                // Masqué sur mobile : opacity-0 restait tapable (pas de hover)
+                // → tap sur une zone "vide" qui ouvrait le menu par surprise
+                className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all group-hover:opacity-100 hover:brightness-125 hover:backdrop-brightness-150 focus-visible:opacity-100 max-[749px]:hidden"
               >
                 <MoreVertical className="h-4 w-4" />
               </button>

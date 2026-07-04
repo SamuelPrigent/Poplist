@@ -1017,7 +1017,7 @@ export function ExploreContent() {
                           },
                         },
                       }}
-                      className="group relative cursor-pointer overflow-hidden rounded-lg text-left"
+                      className="group relative cursor-pointer overflow-hidden rounded-lg text-left max-[749px]:rounded-md"
                       onClick={() => handleItemClick(item, index)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -1027,7 +1027,7 @@ export function ExploreContent() {
                       }}
                     >
                       {/* Poster with zoom */}
-                      <div className="bg-muted relative aspect-2/3 overflow-hidden rounded-lg">
+                      <div className="bg-muted relative aspect-2/3 overflow-hidden rounded-lg max-[749px]:rounded-md">
                         {item.poster_path ? (
                           <Image
                             src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
@@ -1054,11 +1054,11 @@ export function ExploreContent() {
                       </div>
 
                       {/* Bottom gradient - always visible */}
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 rounded-b-lg bg-linear-to-t from-black/80 via-black/30 to-transparent" />
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 rounded-b-lg bg-linear-to-t from-black/80 via-black/30 to-transparent max-[749px]:rounded-b-md" />
 
-                      {/* Rating badge */}
+                      {/* Rating badge — masqué sur mobile (poster nu) */}
                       {item.vote_average > 0 && (
-                        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 backdrop-blur-sm max-[749px]:hidden">
                           <Star
                             className="h-3.5 w-3.5 fill-yellow-500/70 stroke-yellow-500"
                             strokeWidth={1.5}

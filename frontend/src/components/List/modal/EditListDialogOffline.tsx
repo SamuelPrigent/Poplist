@@ -18,7 +18,6 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -97,10 +96,17 @@ function EditListOfflineDrawerShell({ open, onOpenChange, onSuccess, watchlist, 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="text-left">
-          <DrawerTitle>{content.watchlists.editWatchlist}</DrawerTitle>
-          <DrawerDescription>{content.watchlists.editWatchlistDescription}</DrawerDescription>
-        </DrawerHeader>
+        {/* Header type barre de titre (non scrollable) : titre centré +
+            border-b, sans description — même pattern que "Ajouter à une liste".
+            La description reste en sr-only pour l'accessibilité (Radix). */}
+        <div className="border-border/60 flex items-center justify-center border-b px-4 pb-3">
+          <DrawerTitle className="text-base font-semibold">
+            {content.watchlists.editWatchlist}
+          </DrawerTitle>
+        </div>
+        <DrawerDescription className="sr-only">
+          {content.watchlists.editWatchlistDescription}
+        </DrawerDescription>
         <div className="overflow-y-auto px-4 pt-1 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <EditListOfflineForm
             ref={formRef}

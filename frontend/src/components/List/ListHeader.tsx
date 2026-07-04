@@ -62,9 +62,9 @@ export function ListHeader({
         }}
       />
 
-      <div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-8">
+      <div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-8 max-[749px]:pt-[16px]">
         {/* Back Button */}
-        <div className="mb-8">
+        <div className="mb-8 max-[749px]:mb-3">
           <button
             type="button"
             onClick={() => window.history.back()}
@@ -215,7 +215,7 @@ export function ListHeader({
                           {(watchlist.collaborators as Collaborator[])
                             .filter((c): c is Collaborator => typeof c === 'object' && c !== null)
                             .slice(0, 3)
-                            .map(collaborator => (
+                            .map((collaborator) => (
                               <div
                                 key={collaborator.id}
                                 className="bg-muted ring-background flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ring-2"
@@ -246,7 +246,7 @@ export function ListHeader({
                               </div>
                             ))}
                           {(watchlist.collaborators as Collaborator[]).filter(
-                            (c): c is Collaborator => typeof c === 'object' && c !== null
+                            (c): c is Collaborator => typeof c === 'object' && c !== null,
                           ).length > 3 && (
                             <div
                               className="bg-muted ring-background flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ring-2"
@@ -254,7 +254,7 @@ export function ListHeader({
                             >
                               +
                               {(watchlist.collaborators as Collaborator[]).filter(
-                                (c): c is Collaborator => typeof c === 'object' && c !== null
+                                (c): c is Collaborator => typeof c === 'object' && c !== null,
                               ).length - 3}
                             </div>
                           )}

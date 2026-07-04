@@ -395,6 +395,7 @@ export default function ListDetailPage() {
           const prefAsNumber =
             itemsPerPagePref === 'all' ? Number.POSITIVE_INFINITY : itemsPerPagePref;
           const effectiveItemsPerPage = Math.min(prefAsNumber, totalItems);
+          const totalPages = Math.ceil(totalItems / effectiveItemsPerPage);
 
           return (
             <>
@@ -408,9 +409,15 @@ export default function ListDetailPage() {
               />
 
               {totalItems > 0 && (
+                <div
+                  // Une seule page → la barre ne rend que des placeholders
+                  // invisibles (py-4 + h-9) : on la masque sur mobile pour ne
+                  // pas creuser un vide entre les items et les recommandations.
+                  className={totalPages <= 1 ? 'max-[749px]:hidden' : undefined}
+                >
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={Math.ceil(totalItems / effectiveItemsPerPage)}
+                  totalPages={totalPages}
                   onPageChange={setCurrentPage}
                   itemsPerPage={effectiveItemsPerPage}
                   totalItems={totalItems}
@@ -421,6 +428,7 @@ export default function ListDetailPage() {
                     setCurrentPage(1);
                   }}
                 />
+                </div>
               )}
             </>
           );

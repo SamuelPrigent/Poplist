@@ -80,12 +80,12 @@ function UsersContentInner() {
 
   return (
     <div className="bg-background min-h-screen pb-20 max-[749px]:pb-4">
-      <Section className="pt-6">
+      <Section className="pt-6 max-[749px]:pt-3">
         {/* Back button */}
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="text-muted-foreground mb-6 flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white"
+          className="text-muted-foreground mb-6 flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-white max-[749px]:mb-1"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>{content.watchlists.back}</span>

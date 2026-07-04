@@ -82,7 +82,7 @@ function CommunityListsPageInner() {
 
   return (
     <div className="bg-background min-h-screen pb-20 max-[749px]:pb-0">
-      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20 max-[749px]:px-4 max-[749px]:pb-6">
+      <div className="container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-7 pt-6.5 pb-20 max-[749px]:px-4 max-[749px]:pt-3 max-[749px]:pb-6">
         <PageHeader
           title={content.home.communityWatchlists.title}
           subtitle={content.home.communityWatchlists.subtitle}

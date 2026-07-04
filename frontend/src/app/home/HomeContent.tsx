@@ -6,8 +6,9 @@ import {
   Film,
   // Plus
 } from 'lucide-react';
+import { useRouter } from '@tanstack/react-router';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@/components/ui/Link';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
@@ -85,7 +86,7 @@ function SectionHeader({
   action: string;
 }) {
   return (
-    <div className="mb-6 max-[749px]:mb-4">
+    <div className="mb-6 max-[749px]:mb-[19px]">
       {/* Desktop : titre + description + bouton pill */}
       <div className="flex items-start justify-between gap-3 max-[749px]:hidden">
         <div className="min-w-0">
@@ -140,6 +141,27 @@ function HomeContentInner() {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
   useScrollToTopOnMount();
+
+  // Carrousel catégories (mobile) : le scrollRestoration de TanStack Router
+  // snapshot la position de CHAQUE élément scrollé (sessionStorage) et la
+  // restaure au `onRendered` du back — c'est lui qui "cache" la position, pas
+  // le navigateur. Pas d'opt-out par élément → on s'abonne à `onRendered`
+  // (notre subscriber tourne juste après le sien, dans le même tick, avant
+  // tout paint) et on remet le carrousel à 0 : ni position restaurée, ni
+  // flash visible, ni saut au clic.
+  const router = useRouter();
+  const categoriesScrollRef = useRef<HTMLDivElement>(null);
+  const creatorsScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const resetCarousels = () => {
+      categoriesScrollRef.current?.scrollTo({ left: 0 });
+      creatorsScrollRef.current?.scrollTo({ left: 0 });
+    };
+    // Cas où le `onRendered` de la navigation courante est déjà passé au
+    // moment où l'effect s'exécute (1er load / hydration).
+    resetCarousels();
+    return router.subscribe('onRendered', resetCarousels);
+  }, [router]);
 
   // Featured publics : on fetch 100 d'un coup (sert pour la grille + les creators),
   // évite 2 fetches identiques côté backend.
@@ -423,10 +445,10 @@ function HomeContentInner() {
   );
 
   const UserCardSkeleton = () => (
-    <div className="bg-muted/30 flex flex-col items-center gap-3 rounded-lg p-5">
-      <div className="bg-muted/50 h-20 w-20 rounded-full" />
-      <div className="bg-muted/50 h-4 w-24 rounded" />
-      <div className="bg-muted/50 h-3 w-16 rounded" />
+    <div className="flex flex-col items-center gap-3 max-[749px]:gap-2">
+      <div className="bg-muted/50 h-20 w-20 rounded-full max-[749px]:h-[60px] max-[749px]:w-[60px]" />
+      <div className="bg-muted/50 h-4 w-24 rounded max-[749px]:h-3.5 max-[749px]:w-16" />
+      <div className="bg-muted/50 h-3 w-16 rounded max-[749px]:w-12" />
     </div>
   );
 
@@ -443,13 +465,13 @@ function HomeContentInner() {
           />
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 max-[749px]:grid-cols-2 max-[414px]:gap-x-[4px] max-[414px]:gap-y-[11px] md:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <ListCardSmallSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 max-[749px]:grid-cols-2 max-[414px]:gap-x-[4px] max-[414px]:gap-y-[11px] md:grid-cols-2 lg:grid-cols-4">
               {userWatchlists.slice(0, 4).map((watchlist) => (
                 <ListCardSmall
                   key={watchlist.id}
@@ -471,8 +493,12 @@ function HomeContentInner() {
           action={content.home.categories.seeMore}
         />
 
-        {/* Mobile : 4 catégories max (2 rangées de 2), le reste via "Tout afficher" */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:grid-cols-2 max-[749px]:gap-3 max-[749px]:[&>*:nth-child(n+5)]:hidden md:grid-cols-4 lg:grid-cols-6">
+        {/* Mobile : carrousel horizontal (cards à largeur fixe qui débordent à
+            droite, scroll edge-to-edge grâce aux -mx/px). Desktop : grille. */}
+        <div
+          ref={categoriesScrollRef}
+          className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-3 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[150px] max-[749px]:[&>*]:shrink-0 md:grid-cols-4 lg:grid-cols-6"
+        >
           {categories.map((category, index) => {
             const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
             const placeholderItems: WatchlistItem[] = Array.from(
@@ -517,6 +543,7 @@ function HomeContentInner() {
                 href={`/categories/${category.id}`}
                 genreId={category.id}
                 titleMobile={category.nameMobile}
+                desktopAspectOnMobile
                 index={index}
               />
             );
@@ -540,7 +567,7 @@ function HomeContentInner() {
             ))}
           </div>
         ) : publicWatchlists.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[3px] max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+7)]:hidden max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(114px,1fr))] gap-[3px] max-[749px]:gap-y-4 max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[749px]:[&>*:nth-child(n+7)]:hidden max-[349px]:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
             {publicWatchlists.slice(0, 12).map((watchlist, index) => {
               const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
               const isOwner = userWatchlist?.isOwner ?? false;
@@ -585,19 +612,25 @@ function HomeContentInner() {
         />
 
         {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-2 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-[repeat(auto-fill,104px)] justify-start gap-x-2 gap-y-3 max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0">
             {Array.from({ length: 12 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-[11px] max-[749px]:gap-2 max-[749px]:grid-cols-2 max-[749px]:[&>*:nth-child(n+7)]:hidden md:grid-cols-4 lg:grid-cols-6">
+          // Mobile : carrousel horizontal (avatars ronds), reset de la position
+          // en nav (cf. creatorsScrollRef). Desktop : grille inchangée.
+          <div
+            ref={creatorsScrollRef}
+            className="grid grid-cols-[repeat(auto-fill,104px)] justify-start gap-x-2 gap-y-3 max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-0.5 max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0"
+          >
             {creators.map((creator) => (
               <UserCard
                 key={creator.id}
                 user={creator}
                 listCount={creator.listCount}
                 content={content}
+                carousel
               />
             ))}
           </div>

@@ -370,20 +370,24 @@ interface SortableMobileCardProps {
   content: Content;
   showCheck: boolean;
   addingTo: number | null;
+  /** Premier item de la liste → pas de séparateur au-dessus. */
+  isFirst: boolean;
   /** Ouvre le drawer "Ajouter à une liste" (remplace le dropdown desktop, trop petit sur mobile) */
   onOpenPicker: () => void;
   onOpenDetails: () => void;
 }
 
-// Carte mobile (< 750px) — remplace totalement la table. Chaque carte est
-// sortable (handle GripVertical à gauche). DndContext dédié côté parent pour
-// éviter le conflit d'id avec le SortableContext de la table.
+// Carte mobile (< 750px) — remplace totalement la table. Lignes séparées par un
+// séparateur (pas de border-card ni de fond), handle GripVertical à gauche.
+// DndContext dédié côté parent pour éviter le conflit d'id avec le
+// SortableContext de la table.
 function SortableMobileCard({
   item,
   isDragDisabled,
   content,
   showCheck,
   addingTo,
+  isFirst,
   onOpenPicker,
   onOpenDetails,
 }: SortableMobileCardProps) {
@@ -407,17 +411,13 @@ function SortableMobileCard({
   const hasPlatforms = getValidProviders(item.platformList ?? []).length > 0;
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="border-border/60 bg-muted/20 relative flex items-stretch rounded-xl border"
-    >
+    <div ref={setNodeRef} style={style} className="relative flex items-stretch">
       {/* Div gauche : le handle porte son padding → toute la zone (padding carte +
           gap) devient cliquable, sans changer le rendu. */}
       {!isDragDisabled && (
         <button
           type="button"
-          className="text-muted-foreground/40 hover:text-muted-foreground flex shrink-0 cursor-grab touch-none items-center justify-center self-stretch pl-[7px] pr-2 transition-colors active:cursor-grabbing"
+          className="text-muted-foreground/40 hover:text-muted-foreground flex shrink-0 cursor-grab touch-none items-center justify-center self-stretch pr-2 transition-colors active:cursor-grabbing"
           aria-label="Réordonner"
           {...attributes}
           {...listeners}
@@ -426,12 +426,12 @@ function SortableMobileCard({
         </button>
       )}
 
-      {/* Div droite : reprend py/pr + le gap poster↔contenu. pl seulement s'il n'y
-          a pas de handle (sinon le pr du handle fait office de gap). */}
+      {/* Div droite : séparateur en haut (sauf 1er item) → lignes séparées sans
+          border-card. Le séparateur démarre au poster (pas sous le handle). */}
       <div
         className={cn(
-          'flex min-w-0 flex-1 items-stretch gap-2.25 py-2.5 pr-2.5',
-          isDragDisabled && 'pl-2.5',
+          'flex min-w-0 flex-1 items-stretch gap-2.25 py-3 pr-1',
+          !isFirst && 'border-border/60 border-t',
         )}
       >
         <button
@@ -453,7 +453,7 @@ function SortableMobileCard({
         )}
       </button>
 
-      <div className="min-w-0 flex-1 pr-7">
+      <div className="min-w-0 flex-1 pr-8">
         <button
           type="button"
           onClick={onOpenDetails}
@@ -485,8 +485,9 @@ function SortableMobileCard({
         </div>
       </div>
 
-      {/* Picker +/check — ouvre le drawer "Ajouter à une liste" (mobile) */}
-      <div className="absolute top-2 right-2">
+      {/* Picker +/check — ouvre le drawer "Ajouter à une liste" (mobile).
+          Aligné sur le titre (haut de la ligne, sous le séparateur). */}
+      <div className="absolute top-3.5 right-0">
         <button
           type="button"
           className="hover:bg-muted cursor-pointer rounded p-1.5 transition-colors"
@@ -1193,7 +1194,7 @@ export function ListItemsTable({
             strategy={verticalListSortingStrategy}
             disabled={!isCustomOrder || !canEdit}
           >
-            <div className="space-y-3">
+            <div>
               {displayItems.map((item, index) => (
                 <SortableMobileCard
                   key={item.tmdbId}
@@ -1202,6 +1203,7 @@ export function ListItemsTable({
                   content={content}
                   showCheck={canEdit || isInAnyOfMyLists(item.tmdbId)}
                   addingTo={addingTo}
+                  isFirst={index === 0}
                   onOpenPicker={() => setMobilePickerItem(item)}
                   onOpenDetails={() => {
                     // Blur le bouton poster/titre : sinon vaul pose aria-hidden

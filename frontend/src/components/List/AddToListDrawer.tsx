@@ -93,13 +93,13 @@ export function AddToListDrawer({
                     <Image
                       src="/checkGreenFull.svg"
                       alt=""
-                      width={24}
-                      height={24}
-                      className="h-6 w-6 shrink-0"
+                      width={22}
+                      height={22}
+                      className="h-[22px] w-[22px] shrink-0"
                     />
                   ) : (
                     <CirclePlus
-                      className="text-muted-foreground h-6 w-6 shrink-0"
+                      className="text-muted-foreground h-[22px] w-[22px] shrink-0"
                       strokeWidth={1.6}
                     />
                   )}

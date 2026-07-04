@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { ArrowLeft, Film } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useMemo } from 'react';
 import { ListCard } from '@/components/List/ListCard';
@@ -44,7 +45,7 @@ function CategoryDetailPageInner() {
   const loading = genreQuery.isPending;
   const watchlists = useMemo(() => {
     return [...(genreQuery.data?.watchlists ?? [])].sort(
-      (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0)
+      (a, b) => (b.likedBy?.length || 0) - (a.likedBy?.length || 0),
     );
   }, [genreQuery.data]);
 
@@ -72,23 +73,20 @@ function CategoryDetailPageInner() {
       {/* Header with subtle gradient */}
       <div className="relative w-full">
         <div
-          className="relative h-[165px] w-full overflow-hidden max-[749px]:h-[140px]"
+          className="relative h-[165px] w-full overflow-hidden max-[749px]:h-[80px]"
           style={{
             background: `linear-gradient(to bottom, ${CATEGORY_HEADER_COLOR}, transparent 60%)`,
           }}
         >
           {/* Content */}
-          <div className="relative container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) flex-col justify-start px-10 pt-[1.7rem] max-[749px]:px-4">
-            {/* Back Button */}
-            <div className="mb-4">
-              <button
-                type="button"
-                onClick={() => window.history.back()}
-                className="flex cursor-pointer items-center gap-2 text-sm text-white/80 transition-colors hover:text-white"
-              >
+          <div className="relative container mx-auto flex h-full w-(--sectionWidth) max-w-(--maxWidth) flex-col justify-start px-10 pt-[1.7rem] max-[749px]:px-4 max-[749px]:pt-[16px] max-[749px]:mb-3">
+            {/* Back Button — même variant que le PageHeader (/categories) pour
+                une couleur identique */}
+            <div className="mb-4 max-[749px]:mb-1">
+              <Button variant="nav-link" size="auto" onClick={() => window.history.back()}>
                 <ArrowLeft className="h-4 w-4" />
                 <span>{content.watchlists.back}</span>
-              </button>
+              </Button>
             </div>
 
             {/* Title and Description */}
@@ -96,7 +94,7 @@ function CategoryDetailPageInner() {
               <h1 className="mb-2 text-5xl font-bold text-white drop-shadow-lg max-[749px]:text-3xl">
                 {categoryInfo.name}
               </h1>
-              <p className="text-muted-foreground max-w-2xl text-base max-[749px]:text-sm">
+              <p className="text-muted-foreground max-w-2xl text-base max-[749px]:hidden">
                 {categoryInfo.description}
               </p>
             </div>
@@ -109,20 +107,20 @@ function CategoryDetailPageInner() {
         <div className="container mx-auto min-h-[75vh] w-(--sectionWidth) max-w-(--maxWidth) px-10 py-4 max-[749px]:min-h-0 max-[749px]:px-4">
           {/* Watchlists Grid */}
           {loading ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-2 max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-2 max-[749px]:gap-y-4 max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ListCardSkeleton key={i} />
               ))}
             </div>
           ) : watchlists.length > 0 ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-[4px] max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {watchlists.map(watchlist => {
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] max-[749px]:gap-y-4 gap-[4px] max-[749px]:grid-cols-3 max-[749px]:gap-2 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {watchlists.map((watchlist) => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;
                 const isOwner = user?.email === ownerEmail;
 
                 // Check if this watchlist is in user's watchlists
-                const userWatchlist = userWatchlists.find(uw => uw.id === watchlist.id);
+                const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
                 const isCollaborator = userWatchlist?.isCollaborator === true;
                 const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
                 const showSavedBadge = !isOwner && isSaved;

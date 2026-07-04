@@ -18,10 +18,10 @@ export function ListCardSmall({ watchlist, to }: ListCardSmallProps) {
    return (
       <Link
          to={to}
-         className="group bg-muted/30 hover:bg-muted/50 flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg p-3 text-left transition-all"
+         className="group bg-muted/30 hover:bg-muted/50 flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg p-3 text-left transition-all max-[414px]:bg-transparent max-[414px]:p-0 max-[414px]:hover:bg-transparent"
       >
          {/* Thumbnail - Square */}
-         <div className="bg-muted relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
+         <div className="bg-muted relative h-16 w-16 shrink-0 overflow-hidden rounded-md max-[414px]:h-14 max-[414px]:w-14">
             {watchlist.imageUrl ? (
                <Image
                   src={watchlist.imageUrl}

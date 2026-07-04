@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import { Link } from '@/components/ui/Link';
+import { cn } from '@/lib/cn';
 import { useState, type CSSProperties } from 'react';
 import type { Watchlist } from '@/api';
 import type { Content } from '@/types/content';
@@ -15,6 +16,9 @@ interface ListCardGenreProps {
   index?: number;
   /** Label court pour mobile (< 750px). Absent → fallback sur le nom normal. */
   titleMobile?: string;
+  /** Garde l'aspect quasi carré du desktop aussi sur mobile (carrousel home).
+      Par défaut mobile = portrait 4/5 (page /categories). */
+  desktopAspectOnMobile?: boolean;
 }
 
 interface CategoryVisuals {
@@ -43,6 +47,7 @@ export function ListCardGenre({
   href,
   genreId,
   titleMobile,
+  desktopAspectOnMobile = false,
   index: _index = 0,
 }: ListCardGenreProps) {
   const visuals = (genreId && CATEGORY_VISUALS[genreId]) || DEFAULT_VISUALS;
@@ -80,7 +85,10 @@ export function ListCardGenre({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
-        className="relative aspect-[21/20] w-full overflow-hidden rounded-xl max-[749px]:aspect-[4/4.5] max-[749px]:rounded-lg"
+        className={cn(
+          'relative aspect-[21/20] w-full overflow-hidden rounded-xl max-[749px]:rounded-lg',
+          !desktopAspectOnMobile && 'max-[749px]:aspect-[4/4.1]',
+        )}
         style={cardStyle}
       >
         {/* Top dark gradient (top→transparent at 40%) */}

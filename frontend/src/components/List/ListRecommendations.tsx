@@ -69,11 +69,46 @@ export function ListRecommendations({
     canEdit
   );
 
+  // Update optimiste de la LISTE COURANTE : l'entrée courante du picker (et la
+  // table d'items de la page) est alimentée par la prop `watchlist`, qui vient
+  // du cache TQ byId/publicById — PAS de `myWatchlists`. Sans ce patch, le
+  // check du drawer restait vert après un retrait (et l'item restait affiché
+  // dans la liste), poussant à re-taper → 2e DELETE sur un item déjà supprimé
+  // → erreur.
+  const patchCurrentWatchlistCache = (
+    patch: (items: Watchlist['items']) => Watchlist['items']
+  ) => {
+    for (const queryKey of [
+      watchlistsQueries.byId(watchlist.id).queryKey,
+      watchlistsQueries.publicById(watchlist.id).queryKey,
+    ]) {
+      queryClient.setQueryData(queryKey, (old: { watchlist: Watchlist } | undefined) => {
+        if (!old) return old;
+        return { ...old, watchlist: { ...old.watchlist, items: patch(old.watchlist.items) } };
+      });
+    }
+  };
+
   // Ajoute l'item à la liste `wid`. Si `wid` est la liste courante (cas
   // « Recommandés » d'une liste à nous), on retire la reco de la section.
   const handleAddToList = async (wid: string, item: RecommendedItem) => {
     const key = `${item.mediaType}:${item.tmdbId}`;
     setAddingId(item.tmdbId);
+    if (wid === watchlist.id) {
+      patchCurrentWatchlistCache(items =>
+        items.some(it => it.tmdbId === item.tmdbId)
+          ? items
+          : [
+              ...items,
+              createPlaceholderItem({
+                tmdbId: item.tmdbId,
+                title: item.title,
+                posterPath: item.posterPath,
+                mediaType: item.mediaType,
+              }),
+            ]
+      );
+    }
     setMyWatchlists(prev =>
       prev.map(wl =>
         wl.id === wid && !wl.items.some(it => it.tmdbId === item.tmdbId)
@@ -116,6 +151,8 @@ export function ListRecommendations({
         )
       );
       if (wid === watchlist.id) {
+        // Rollback du patch optimiste du cache de la page
+        patchCurrentWatchlistCache(items => items.filter(it => it.tmdbId !== item.tmdbId));
         setRemoved(prev => {
           const next = new Set(prev);
           next.delete(key);
@@ -129,6 +166,8 @@ export function ListRecommendations({
   };
 
   const handleRemoveFromList = async (wid: string, item: RecommendedItem) => {
+    const key = `${item.mediaType}:${item.tmdbId}`;
+    const isCurrent = wid === watchlist.id;
     let restored: Watchlist['items'][number] | undefined;
     setMyWatchlists(prev =>
       prev.map(wl => {
@@ -137,9 +176,32 @@ export function ListRecommendations({
         return { ...wl, items: wl.items.filter(it => it.tmdbId !== item.tmdbId) };
       })
     );
+    let removedFromCache: Watchlist['items'][number] | undefined;
+    if (isCurrent) {
+      // Optimistic : l'item disparaît de la liste (prop `watchlist`) et le
+      // check du drawer se décoche immédiatement.
+      patchCurrentWatchlistCache(items => {
+        removedFromCache ??= items.find(it => it.tmdbId === item.tmdbId);
+        return items.filter(it => it.tmdbId !== item.tmdbId);
+      });
+      // La reco redevient proposable dans la section (symétrie de l'ajout).
+      setRemoved(prev => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
     try {
       await watchlistsApi.removeItem(wid, String(item.tmdbId));
       queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      if (isCurrent) {
+        // Resync serveur de la liste courante (symétrie avec handleAddToList —
+        // c'était le maillon manquant : sans ça la page gardait l'item).
+        queryClient.invalidateQueries({ queryKey: watchlistsQueries.byId(watchlist.id).queryKey });
+        queryClient.invalidateQueries({
+          queryKey: watchlistsQueries.publicById(watchlist.id).queryKey,
+        });
+      }
       toast.success('Retiré de la liste');
     } catch (error) {
       console.error('Failed to remove from list:', error);
@@ -148,6 +210,15 @@ export function ListRecommendations({
         setMyWatchlists(prev =>
           prev.map(wl => (wl.id === wid ? { ...wl, items: [...wl.items, r] } : wl))
         );
+      }
+      if (isCurrent) {
+        if (removedFromCache) {
+          const r = removedFromCache;
+          patchCurrentWatchlistCache(items =>
+            items.some(it => it.tmdbId === r.tmdbId) ? items : [...items, r]
+          );
+        }
+        setRemoved(prev => new Set(prev).add(key));
       }
       toast.error('Erreur lors du retrait');
     }
@@ -168,7 +239,7 @@ export function ListRecommendations({
 
   if (isPending) {
     return (
-      <section className="border-border/60 mx-auto mt-12 w-[92%] border-t pt-8">
+      <section className="border-border/60 mx-auto mt-12 w-[92%] border-t pt-8 max-[749px]:mt-4 max-[749px]:pt-6">
         <RecommendationsHeader content={content} canEdit={canEdit} />
         <div className="mt-6 space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -199,7 +270,7 @@ export function ListRecommendations({
     : -1;
 
   return (
-    <section className="border-border/60 mx-auto mt-12 w-[94%] border-t pt-8">
+    <section className="border-border/60 mx-auto mt-12 w-[94%] border-t pt-8 max-[749px]:mt-4 max-[749px]:pt-6">
       <RecommendationsHeader content={content} canEdit={canEdit} />
 
       <div className="mt-6 overflow-x-auto max-[749px]:hidden">
