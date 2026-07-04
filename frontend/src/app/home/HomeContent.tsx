@@ -622,7 +622,7 @@ function HomeContentInner() {
           // en nav (cf. creatorsScrollRef). Desktop : grille inchangée.
           <div
             ref={creatorsScrollRef}
-            className="grid grid-cols-[repeat(auto-fill,104px)] justify-start gap-x-2 gap-y-3 max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-0.5 max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0"
+            className="grid grid-cols-[repeat(auto-fill,104px)] justify-start gap-x-2 gap-y-3 max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0"
           >
             {creators.map((creator) => (
               <UserCard
