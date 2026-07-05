@@ -16,6 +16,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { useBackHandler } from '@/hooks/useBackHandler';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { CompactWatchProviders, getValidProviders } from '../CompactWatchProviders';
 import { createPlaceholderItem, watchlists as watchlistsApi } from '@/api';
@@ -378,6 +379,10 @@ function AddItemDrawerShell(props: AddItemModalProps) {
   useEffect(() => {
     setOverviewExpanded(false);
   }, [selectedItem?.id]);
+
+  // Bouton retour (Android) sur la sous-vue détail → revient à la liste des
+  // résultats (le niveau drawer est géré par le composant Drawer partagé).
+  useBackHandler(!!open && !!selectedItem, handleBackFromDetails);
 
   // Auto-focus de la recherche UNIQUEMENT à l'ouverture du drawer. setTimeout
   // (pas onOpenAutoFocus) pour passer APRÈS le focus-trap de vaul et le

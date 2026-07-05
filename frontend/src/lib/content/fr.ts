@@ -87,7 +87,7 @@ export const fr: Content = {
     deleting: 'Suppression...',
     delete: 'Supprimer',
     addItem: 'Ajouter',
-    searchMoviesAndSeries: 'Recherchez et ajoutez des films ou séries à votre liste',
+    searchMoviesAndSeries: 'Ajouter des éléments à votre liste',
     searchPlaceholder: 'Rechercher un film ou une série...',
     searching: 'Recherche...',
     noResults: 'Aucun résultat trouvé',

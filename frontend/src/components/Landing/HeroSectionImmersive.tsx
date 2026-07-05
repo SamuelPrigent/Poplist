@@ -33,6 +33,29 @@ const joker = '/landing/movies/joker.webp';
 const fenetre = '/landing/movies/fenetre.webp';
 const hp1 = '/landing/movies/hp1.webp';
 const pulp = '/landing/movies/pulp.webp';
+// new
+// const smokew = 'landing/movies/smokew.jpeg';
+// const mili = 'landing/movies/mili.jpg';
+// const titanic = 'landing/movies/titanic.webp';
+// const titanic2 = 'landing/movies/titanic.jpg';
+// const taran = 'landing/movies/taran.jpg';
+// const sw4 = 'landing/movies/sw4.jpg';
+// const cruella = 'landing/movies/cruella.jpg';
+// const batman = 'landing/movies/batman.webp';
+// const nightagent = 'landing/movies/nightagent.jpeg';
+// const nightclub = 'landing/movies/nclub.jpg';
+// const bestDressed = 'landing/movies/bestDressed.jpg';
+// const ryangosling = 'landing/movies/ryangos.jpg';
+// const ryangosling2 = 'landing/movies/ryangosling.jpg';
+// const ryangolsing3 = 'landing/movies/ryangosling2.jpg';
+// const mike = 'landing/movies/mike.jpg';
+// const fnf = 'landing/movies/fnf.jpg';
+const western = 'landing/movies/western.jpeg';
+const mercredi = 'landing/movies/mercredi.jpg';
+const bluetv = 'landing/movies/bluetv.jpg';
+const damon = 'landing/movies/damon.jpg';
+const agentsecret = 'landing/movies/007.jpg';
+const dicap = 'landing/movies/dicap.jpg';
 
 const FAMOUS_MOVIES_MOBILE = [
   { id: 1, title: 'Col1-Pos1', image: doa },
@@ -50,12 +73,77 @@ const FAMOUS_MOVIES_MOBILE = [
   { id: 14, title: 'Col3-Pos4', image: passion },
 ];
 
-// Les 15 images d'origine, dans le MÊME ordre que HeroSection classique :
+// Passe à true le temps de placer tes images : ça coupe tous les fondus /
+// assombrissements → la grille apparaît en pleine lumière, colonnes bien
+// visibles. Remets false quand c'est fini.
+// const DEBUG_HIDE_MASKS = true;
+const DEBUG_HIDE_MASKS = false;
+
+// new — colonnes ajoutées à GAUCHE, de gauche à droite à l'écran (ColG10
+// touche les colonnes V1 Hero). Dans chaque colonne : de haut en bas.
+// `visibleFrom` = largeur d'écran approx. à partir de laquelle la colonne
+// entre dans le viewport — en dessous, elle est HORS ÉCRAN à gauche (modifier
+// ses images ne change donc rien de visible, ce n'est pas un bug de refresh).
+const EXTRA_COLUMNS_IMAGES = [
+  //   {
+  //     col: 'G1',
+  //     visibleFrom: '~3900px (ultra-wide uniquement)',
+  //     images: [kb, saw, blade2, pulp, passion, pdc, doa],
+  //   },
+  //   {
+  //     col: 'G2',
+  //     visibleFrom: '~3400px (ultra-wide uniquement)',
+  //     images: [jake, blade2, fenetre, theFifth2, jinx, kb, saw],
+  //   },
+  //   {
+  //     col: 'G3',
+  //     visibleFrom: '~2950px',
+  //     images: [passion, pdc, doa, oceans, joker, jake, blade2],
+  //   },
+  //   {
+  //     col: 'G4',
+  //     visibleFrom: '~2500px',
+  //     images: [jinx, kb, saw, blade2, pulp, passion, pdc],
+  //   },
+  //   {
+  //     col: 'G5',
+  //     visibleFrom: '~2050px',
+  //     images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+  //   },
+  {
+    col: 'G6',
+    visibleFrom: '~1600px',
+    images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+  },
+  {
+    col: 'G7',
+    visibleFrom: '~1150px',
+    images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+  },
+  {
+    col: 'G8',
+    visibleFrom: 'tous les écrans',
+    images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+  },
+  {
+    col: 'G9',
+    visibleFrom: 'tous les écrans',
+    images: [blade2, blade2, dicap, saw, mercredi, western, blade2],
+  },
+  {
+    col: 'G10',
+    visibleFrom: 'tous les écrans (juste à gauche des colonnes V1 Hero)',
+    images: [fenetre, bluetv, kb, damon, saw, pulp, blade2],
+    // images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+  },
+];
+
+// V1 Hero — les 15 images d'origine, dans le MÊME ordre que HeroSection classique :
 // col1 = 0-4, col2 = 5-9, col3 = 10-14. Ces 3 colonnes gardent exactement
 // leur emplacement d'avant (même wrapper ancré à droite, même rotation).
 const FAMOUS_MOVIES = [
   { id: 1, title: 'Col1-Pos1', image: doa },
-  { id: 2, title: 'Col1-Pos2', image: oceans },
+  { id: 2, title: 'Col1-Pos2', image: agentsecret },
   { id: 3, title: 'Col1-Pos3', image: joker },
   { id: 4, title: 'Col1-Pos4', image: jake },
   {
@@ -88,8 +176,6 @@ const FAMOUS_MOVIES = [
 // elles ne changent donc ni la taille ni le pivot de rotation du bloc → les
 // 3 colonnes d'origine restent au pixel près, et les extras suivent le même
 // plan incliné en débordant du bord gauche de l'écran (comme la maquette).
-const EXTRA_COLUMNS_COUNT = 10;
-const EXTRA_ROWS = 7;
 // Rythme vertical d'origine : col1 = 0, col2 = -64px (-mt-16), col3 = +32px
 // (mt-8). On prolonge ce cycle vers la gauche pour un motif continu.
 const COLUMN_OFFSETS = [0, -64, 32];
@@ -98,23 +184,20 @@ const COLUMN_OFFSETS = [0, -64, 32];
 // d'autant pour rester dans la bande visible de l'écran.
 const ROTATION_DROP_PER_COLUMN = 47; // ≈ 228px (largeur+gap lg) × 0.208
 
-const EXTRA_COLUMNS = Array.from({ length: EXTRA_COLUMNS_COUNT }, (_, i) => {
+// Seul le POSITIONNEMENT est calculé ici — les images viennent telles quelles
+// de EXTRA_COLUMNS_IMAGES (contrôle manuel, emplacement par emplacement).
+const EXTRA_COLUMNS = EXTRA_COLUMNS_IMAGES.map((column, i) => {
   // j = distance depuis col1 (j=1 → colonne juste à gauche de col1)
-  const j = EXTRA_COLUMNS_COUNT - i;
+  const j = EXTRA_COLUMNS_IMAGES.length - i;
   // Cycle inversé vers la gauche : ..., 0, -64, +32 | col1(0), col2(-64), col3(+32)
   const cycleIndex = (3 - (j % 3)) % 3;
   return {
-    key: `extra-${j}`,
+    key: `extra-${column.col}`,
     step: j,
     // -195px ≈ un poster (175px) + gap (20px) : une rangée de plus en haut
     // pour couvrir le coin haut-gauche.
     top: COLUMN_OFFSETS[cycleIndex] - 195 - j * ROTATION_DROP_PER_COLUMN,
-    images: Array.from({ length: EXTRA_ROWS }, (_, r) => {
-      // 7 est premier avec 15 → chaque colonne démarre sur une image
-      // différente, pas de doublon aligné entre colonnes voisines.
-      const idx = (j * 7 + r) % FAMOUS_MOVIES.length;
-      return { key: `extra-${j}-${r}`, image: FAMOUS_MOVIES[idx].image };
-    }),
+    images: column.images.map((image, r) => ({ key: `extra-${column.col}-${r}`, image })),
   };
 });
 
@@ -227,13 +310,17 @@ export function HeroSectionImmersive({ content }: HeroSectionProps) {
       {/* ============================ DESKTOP (>= 750px) ============================ */}
       <div className="max-[749px]:hidden">
         {/* --- Masques de lisibilité (au-dessus des posters, sous le texte) --- */}
-        {/* Assombrissement global léger pour homogénéiser l'ensemble */}
-        <div className="pointer-events-none absolute inset-0 z-20 bg-background/30" />
-        {/* Dégradé gauche → droite : zone texte bien lisible à gauche */}
-        <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background from-0% via-background/85 via-35% to-transparent to-75%" />
-        {/* Fondu haut (sous la navbar) et bas (transition vers la section suivante) */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-32 bg-linear-to-b from-background to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-60 bg-linear-to-t from-background via-background/90 to-transparent" />
+        {!DEBUG_HIDE_MASKS && (
+          <>
+            {/* Assombrissement global léger pour homogénéiser l'ensemble */}
+            <div className="pointer-events-none absolute inset-0 z-20 bg-background/30" />
+            {/* Dégradé gauche → droite : zone texte bien lisible à gauche */}
+            <div className="pointer-events-none absolute inset-0 z-20 bg-linear-to-r from-background from-0% via-background/85 via-35% to-transparent to-75%" />
+            {/* Fondu haut (sous la navbar) et bas (transition vers la section suivante) */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-32 bg-linear-to-b from-background to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-60 bg-linear-to-t from-background via-background/90 to-transparent" />
+          </>
+        )}
 
         <div className="relative mx-auto max-w-[1800px] 2xl:max-w-[1600px]">
           {/* Bloc posters : STRICTEMENT identique à HeroSection (ancrage droite,
@@ -328,35 +415,35 @@ export function HeroSectionImmersive({ content }: HeroSectionProps) {
 
           <div className="mt-3 relative z-30 mx-auto flex min-h-[85vh] max-w-7xl items-center justify-center px-6 py-20 md:justify-start lg:px-8">
             <div className="flex w-full flex-col items-center text-center md:w-auto md:max-w-xl md:items-start md:text-left">
-            <h1 className="mb-6 text-[40px] leading-[1.15] font-semibold tracking-tight text-white sm:text-5xl lg:text-[61px] lg:leading-[1.1]">
-              {renderTitleWithGradient(content.landing.hero.title)}
-            </h1>
-            <p className="mb-8 max-w-md text-lg text-gray-200">
-              {renderSubtitleWithUnderline(content.landing.hero.subtitle)}
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 mt-3 md:justify-start">
-              <Link
-                to="/home"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
-              >
-                {content.home.hero.cta}
-              </Link>
-              <button
-                type="button"
-                onClick={handleScrollToFeatures}
-                className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-medium text-gray-300 transition-all hover:bg-white/5 hover:text-white"
-              >
-                {content.home.hero.ctaSecondary}
-              </button>
-            </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 md:justify-start">
-              <span className="flex items-center gap-2">
-                <span className="text-cyan-400">✓</span> Sans carte bancaire
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="text-cyan-400">✓</span> Application 100% gratuite
-              </span>
-            </div>
+              <h1 className="mb-6 text-[40px] leading-[1.15] font-semibold tracking-tight text-white sm:text-5xl lg:text-[61px] lg:leading-[1.1]">
+                {renderTitleWithGradient(content.landing.hero.title)}
+              </h1>
+              <p className="mb-8 max-w-md text-lg text-gray-200">
+                {renderSubtitleWithUnderline(content.landing.hero.subtitle)}
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 mt-3 md:justify-start">
+                <Link
+                  to="/home"
+                  className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition-all hover:bg-gray-200"
+                >
+                  {content.home.hero.cta}
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleScrollToFeatures}
+                  className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-medium text-gray-300 transition-all hover:bg-white/5 hover:text-white"
+                >
+                  {content.home.hero.ctaSecondary}
+                </button>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 md:justify-start">
+                <span className="flex items-center gap-2">
+                  <span className="text-cyan-400">✓</span> Sans carte bancaire
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-cyan-400">✓</span> Application 100% gratuite
+                </span>
+              </div>
             </div>
           </div>
         </div>

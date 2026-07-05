@@ -16,6 +16,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { PosterGrid } from '@/components/List/PosterGrid';
+import { useBackHandler } from '@/hooks/useBackHandler';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { watchlists as watchlistsApi } from '@/api';
 import type { FullMediaDetails, Watchlist } from '@/api';
@@ -265,6 +266,10 @@ function ItemDetailsDrawerShell({
   useEffect(() => {
     if (!open) setView('details');
   }, [open]);
+
+  // Bouton retour (Android) sur la sous-vue "pick" → revient à la fiche (le
+  // niveau drawer est géré par le composant Drawer partagé).
+  useBackHandler(open && view === 'pick', () => setView('details'));
 
   const metaParts = details
     ? [

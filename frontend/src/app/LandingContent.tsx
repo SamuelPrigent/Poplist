@@ -47,6 +47,7 @@ function LandingPageInner() {
   return (
     <div className="bg-background min-h-screen overflow-hidden max-[749px]:px-[7px]">
       {/* Version plein écran (Crunchyroll-like) en test — réimporter `HeroSection` depuis '@/components/Landing' pour revenir à l'ancienne */}
+      {/* <HeroSection content={content} trending={trending} watchlistsUrl={watchlistsUrl} /> */}
       <HeroSectionImmersive content={content} trending={trending} watchlistsUrl={watchlistsUrl} />
 
       {/* Features Section */}
@@ -266,7 +267,7 @@ function LandingPageInner() {
               <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
                 <div>
                   <div className="mb-4 flex gap-1">
-                    {STAR_KEYS.map(starKey => (
+                    {STAR_KEYS.map((starKey) => (
                       <Star
                         key={`testimonial1-${starKey}`}
                         className="h-4 w-4 fill-yellow-500/70 stroke-yellow-500"
@@ -305,7 +306,7 @@ function LandingPageInner() {
               <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
                 <div>
                   <div className="mb-4 flex gap-1">
-                    {STAR_KEYS.map(starKey => (
+                    {STAR_KEYS.map((starKey) => (
                       <Star
                         key={`testimonial2-${starKey}`}
                         className="h-4 w-4 fill-yellow-500/70 stroke-yellow-500"
@@ -344,7 +345,7 @@ function LandingPageInner() {
               <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
                 <div>
                   <div className="mb-4 flex gap-1">
-                    {STAR_KEYS.map(starKey => (
+                    {STAR_KEYS.map((starKey) => (
                       <Star
                         key={`testimonial3-${starKey}`}
                         className="h-4 w-4 fill-yellow-500/70 stroke-yellow-500"

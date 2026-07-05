@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
+import { useBackHandler } from '@/hooks/useBackHandler';
 import { cn } from '@/lib/cn';
 
 /**
@@ -21,12 +22,23 @@ function BlurTriggerOnMount() {
   return null;
 }
 
-function Drawer(props: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  // repositionInputs=false : on laisse le clavier redimensionner le layout via
-  // `interactive-widget=resizes-content` (meta viewport). Le repositionnement
-  // interne de vaul ferait double emploi et laissait le drawer coincé « petit »
-  // à la fermeture du clavier.
-  return <DrawerPrimitive.Root data-slot="drawer" repositionInputs={false} {...props} />;
+function Drawer({ open, onOpenChange, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+  // Bouton retour (Android/navigateur) → ferme le drawer au lieu de naviguer.
+  // Couvre automatiquement tous les drawers contrôlés de l'app.
+  useBackHandler(!!open, () => onOpenChange?.(false));
+
+  // repositionInputs=false : le clavier recouvre simplement le bas du drawer
+  // (hauteur dvh stable, inputs placés en haut). Le repositionnement interne
+  // de vaul laissait le drawer coincé « petit » à la fermeture du clavier.
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      repositionInputs={false}
+      open={open}
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
 }
 
 function DrawerTrigger(props: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {

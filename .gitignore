@@ -2,6 +2,7 @@ secrets
 notes
 -notes
 prompt
+frontend/public/landing/movies/unused
 .env
 .env.prod
 .DS_Store
