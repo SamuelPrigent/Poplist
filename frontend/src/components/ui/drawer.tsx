@@ -22,7 +22,11 @@ function BlurTriggerOnMount() {
 }
 
 function Drawer(props: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />;
+  // repositionInputs=false : on laisse le clavier redimensionner le layout via
+  // `interactive-widget=resizes-content` (meta viewport). Le repositionnement
+  // interne de vaul ferait double emploi et laissait le drawer coincé « petit »
+  // à la fermeture du clavier.
+  return <DrawerPrimitive.Root data-slot="drawer" repositionInputs={false} {...props} />;
 }
 
 function DrawerTrigger(props: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
