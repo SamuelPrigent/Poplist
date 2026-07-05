@@ -48,7 +48,13 @@ interface SearchResult {
 // ---------------------------------------------------------------------------
 // Hook partagé : recherche, sélection, ajout/retrait — consommé par les 2 shells.
 // ---------------------------------------------------------------------------
-function useAddItem({ open, watchlist, onSuccess, offline = false }: AddItemModalProps) {
+function useAddItem(
+  { open, watchlist, onSuccess, offline = false }: AddItemModalProps,
+  // Hauteur d'un slot du virtualizer : doit refléter la hauteur RÉELLE de la
+  // row de chaque shell (desktop : p-3 + h-24 = 120px ; drawer mobile : p-2 +
+  // h-20 = 96px + 4px de respiration), sinon du vide apparaît sous chaque row.
+  rowHeight = 120,
+) {
   const { content, language } = useLanguageStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -154,7 +160,7 @@ function useAddItem({ open, watchlist, onSuccess, offline = false }: AddItemModa
   const virtualizer = useVirtualizer({
     count: searchResults.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => 120,
+    estimateSize: () => rowHeight,
     overscan: 5,
   });
 
@@ -366,21 +372,24 @@ function AddItemDrawerShell(props: AddItemModalProps) {
     getMediaType,
     formatRuntime,
     buildPosterUrl,
-  } = useAddItem(props);
+  } = useAddItem(props, 100);
 
   // Réinitialise le "Voir plus" à chaque changement d'élément.
   useEffect(() => {
     setOverviewExpanded(false);
   }, [selectedItem?.id]);
 
-  // Auto-focus de la recherche à l'ouverture. setTimeout (pas onOpenAutoFocus)
-  // pour passer APRÈS le focus-trap de vaul et le BlurTriggerOnMount du drawer.
+  // Auto-focus de la recherche UNIQUEMENT à l'ouverture du drawer. setTimeout
+  // (pas onOpenAutoFocus) pour passer APRÈS le focus-trap de vaul et le
+  // BlurTriggerOnMount. Volontairement PAS re-déclenché au retour de la
+  // sous-vue détail : les résultats sont déjà là, rouvrir le clavier serait
+  // pénible sur mobile.
   const searchInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (!open || selectedItem) return;
+    if (!open) return;
     const t = window.setTimeout(() => searchInputRef.current?.focus(), 80);
     return () => window.clearTimeout(t);
-  }, [open, selectedItem]);
+  }, [open]);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>

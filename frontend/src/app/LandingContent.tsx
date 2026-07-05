@@ -5,7 +5,7 @@ import { ChevronRight, Compass, Film, ListPlus, Share, Star, UserPlus } from 'lu
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { Img as Image } from '@/components/ui/Img';
 import { Link } from '@/components/ui/Link';
-import { HeroSection, RightSectionPreviewV2 } from '@/components/Landing';
+import { HeroSectionImmersive, RightSectionPreviewV2 } from '@/components/Landing';
 import {
   Accordion,
   AccordionContent,
@@ -46,7 +46,8 @@ function LandingPageInner() {
 
   return (
     <div className="bg-background min-h-screen overflow-hidden max-[749px]:px-[7px]">
-      <HeroSection content={content} trending={trending} watchlistsUrl={watchlistsUrl} />
+      {/* Version plein écran (Crunchyroll-like) en test — réimporter `HeroSection` depuis '@/components/Landing' pour revenir à l'ancienne */}
+      <HeroSectionImmersive content={content} trending={trending} watchlistsUrl={watchlistsUrl} />
 
       {/* Features Section */}
       <section
