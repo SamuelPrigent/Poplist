@@ -48,41 +48,25 @@ export function ListHeader({
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const [showShareConfirm, setShowShareConfirm] = useState(false);
 
-  // ---- Bandeau mobile fixe (parité app RN, cf. mobile/app/lists/[id].tsx) ----
-  // 1. Le fond + le titre centré fondent (0→1 sur ~40px) au moment où le bas du
-  //    <h1> passe sous le bandeau.
-  // 2. La cover se réduit au scroll : scale interpolé [0,300px] → [1, ~0.6]
-  //    (mêmes bornes que le RN : IMAGE_SIZE_MIN/IMAGE_SIZE_MAX = 0.73/1.22),
-  //    clampé, linéaire, depuis le centre.
-  // Le tout piloté en direct sur les refs DOM (pas de state → zéro re-render
-  // pendant le scroll), rAF-throttled. Mobile <750px uniquement.
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const fixedBgRef = useRef<HTMLDivElement>(null);
-  const fixedTitleRef = useRef<HTMLSpanElement>(null);
+  // ---- Cover animée au scroll (parité app RN, mobile <750px) ----
+  // scale interpolé [0,300px] → [1, ~0.6] (mêmes bornes que le RN :
+  // IMAGE_SIZE_MIN/IMAGE_SIZE_MAX = 0.73/1.22), clampé, linéaire, depuis le
+  // centre. Piloté en direct sur la ref DOM (pas de state → zéro re-render
+  // pendant le scroll), rAF-throttled.
   const coverRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // 56px = header app mobile (h-14, sticky) + 44px = hauteur du bandeau.
-    const HEADER_BOTTOM = 56 + 44;
     const COVER_MIN_SCALE = 0.73 / 1.22; // ≈ 0.6, comme l'app RN
     const mq = window.matchMedia('(max-width: 749px)');
     let raf = 0;
     const update = () => {
       raf = 0;
-      const title = titleRef.current;
-      if (!title || !fixedBgRef.current || !fixedTitleRef.current) return;
-      const rect = title.getBoundingClientRect();
-      // Équivalent de l'interpolate RN [titleBottom-20, titleBottom+20] → [0,1]
-      const opacity = Math.min(1, Math.max(0, (HEADER_BOTTOM + 20 - rect.bottom) / 40));
-      fixedBgRef.current.style.opacity = String(opacity);
-      fixedTitleRef.current.style.opacity = String(opacity);
-      if (coverRef.current) {
-        if (mq.matches) {
-          const progress = Math.min(1, Math.max(0, window.scrollY / 300));
-          const scale = 1 - progress * (1 - COVER_MIN_SCALE);
-          coverRef.current.style.transform = `scale(${scale})`;
-        } else {
-          coverRef.current.style.transform = '';
-        }
+      if (!coverRef.current) return;
+      if (mq.matches) {
+        const progress = Math.min(1, Math.max(0, window.scrollY / 300));
+        const scale = 1 - progress * (1 - COVER_MIN_SCALE);
+        coverRef.current.style.transform = `scale(${scale})`;
+      } else {
+        coverRef.current.style.transform = '';
       }
     };
     const onScroll = () => {
@@ -112,47 +96,19 @@ export function ListHeader({
         }}
       />
 
-      {/* ===== Bandeau mobile fixe : flèche seule + fond/titre au scroll =====
-          Calé sous le header app (sticky h-14). pointer-events-none sur le
-          wrapper → seuls la flèche capte les taps ; le fond opaque coupe le
-          contenu qui scrolle dessous (z-30 < header app z-40 < drawers). */}
-      <div className="pointer-events-none fixed inset-x-0 top-14 z-30 min-[750px]:hidden">
-        <div
-          ref={fixedBgRef}
-          className="bg-background absolute inset-0"
-          style={{ opacity: 0 }}
-        />
-        <div className="relative flex h-11 items-center px-1.5">
+      <div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-8 max-[749px]:pt-8">
+        {/* Back Button — mobile : flèche seule en absolute (hors du flux, posée
+            en haut à gauche par-dessus le header) → aucun vide au-dessus de la
+            cover centrée, qui remonte. Desktop : flèche + texte, dans le flux. */}
+        <div className="mb-8 max-[749px]:mb-0">
           <button
             type="button"
             onClick={() => window.history.back()}
             aria-label={content.watchlists.back}
-            className="pointer-events-auto flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-white"
+            className="text-muted-foreground flex cursor-pointer items-center gap-2 rounded text-sm transition-colors hover:text-white max-[749px]:absolute max-[749px]:top-2.5 max-[749px]:left-2 max-[749px]:z-10 max-[749px]:h-10 max-[749px]:w-10 max-[749px]:justify-center max-[749px]:rounded-full max-[749px]:text-white"
           >
-            <ArrowLeft className="h-5.5 w-5.5" />
-          </button>
-          <span
-            ref={fixedTitleRef}
-            className="pointer-events-none absolute inset-x-14 truncate text-center text-[17px] font-semibold text-white"
-            style={{ opacity: 0 }}
-          >
-            {watchlist.name}
-          </span>
-        </div>
-      </div>
-
-      {/* Mobile : pt sous le bandeau fixe (44px) pour que la cover ne colle pas
-          à la barre de navigation du top */}
-      <div className="relative container mx-auto w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-8 max-[749px]:pt-7">
-        {/* Back Button — desktop uniquement (mobile : flèche du bandeau fixe) */}
-        <div className="mb-8 max-[749px]:hidden">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="text-muted-foreground flex cursor-pointer items-center gap-2 rounded text-sm transition-colors hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>{content.watchlists.back}</span>
+            <ArrowLeft className="h-4 w-4 max-[749px]:h-5.5 max-[749px]:w-5.5" />
+            <span className="max-[749px]:hidden">{content.watchlists.back}</span>
           </button>
         </div>
 
@@ -241,7 +197,7 @@ export function ListHeader({
             )}
 
             {/* Mobile : taille alignée sur l'app native (gain d'espace vertical) */}
-            <h1 ref={titleRef} className="text-4xl font-bold text-white max-[749px]:text-2xl md:text-7xl">
+            <h1 className="text-4xl font-bold text-white max-[749px]:text-2xl md:text-7xl">
               {onEdit ? (
                 <button
                   type="button"

@@ -435,9 +435,11 @@ function HomeContentInner() {
     </div>
   );
 
+  // Suit exactement le rendu de ListCardSmall : sous 415px, fond/padding
+  // retirés et thumbnail 56px → le skeleton ne « saute » plus au chargement.
   const ListCardSmallSkeleton = () => (
-    <div className="bg-muted/30 flex w-full items-center gap-3 overflow-hidden rounded-lg p-3">
-      <div className="bg-muted/50 h-16 w-16 shrink-0 rounded-md" />
+    <div className="bg-muted/30 flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 max-[414px]:bg-transparent max-[414px]:p-0">
+      <div className="bg-muted/50 h-16 w-16 shrink-0 rounded-md max-[414px]:h-14 max-[414px]:w-14" />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="bg-muted/50 h-4 w-3/4 rounded" />
         <div className="bg-muted/50 h-3 w-1/3 rounded" />

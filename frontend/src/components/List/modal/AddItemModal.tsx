@@ -373,9 +373,20 @@ function AddItemDrawerShell(props: AddItemModalProps) {
     setOverviewExpanded(false);
   }, [selectedItem?.id]);
 
+  // Auto-focus de la recherche à l'ouverture. setTimeout (pas onOpenAutoFocus)
+  // pour passer APRÈS le focus-trap de vaul et le BlurTriggerOnMount du drawer.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!open || selectedItem) return;
+    const t = window.setTimeout(() => searchInputRef.current?.focus(), 80);
+    return () => window.clearTimeout(t);
+  }, [open, selectedItem]);
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="flex h-[92vh] flex-col">
+      {/* h en dvh : suit la réduction du viewport quand le clavier s'ouvre
+          (cf. interactive-widget=resizes-content) → plus de débordement en haut */}
+      <DrawerContent className="flex h-[92dvh] max-h-[92dvh] flex-col">
         {selectedItem ? (
           // ---- Sous-vue détail ----
           <div className="flex min-h-0 flex-1 flex-col">
@@ -579,6 +590,7 @@ function AddItemDrawerShell(props: AddItemModalProps) {
               <div className="relative">
                 <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                 <Input
+                  ref={searchInputRef}
                   type="text"
                   placeholder={content.watchlists.searchPlaceholder}
                   value={searchQuery}
@@ -730,6 +742,15 @@ function AddItemModalShell(props: AddItemModalProps) {
     buildPosterUrl,
   } = useAddItem(props);
 
+  // Auto-focus de la recherche à l'ouverture (le `autoFocus` était volé par le
+  // focus-trap de Radix). setTimeout → focus après l'ouverture du dialog.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!open || selectedItem) return;
+    const t = window.setTimeout(() => searchInputRef.current?.focus(), 80);
+    return () => window.clearTimeout(t);
+  }, [open, selectedItem]);
+
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
@@ -781,12 +802,12 @@ function AddItemModalShell(props: AddItemModalProps) {
                 <div className="relative">
                   <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
+                    ref={searchInputRef}
                     type="text"
                     placeholder={content.watchlists.searchPlaceholder}
                     value={searchQuery}
                     onChange={e => onSearchChange(e.target.value)}
                     className="pl-10"
-                    autoFocus
                   />
                 </div>
               </div>

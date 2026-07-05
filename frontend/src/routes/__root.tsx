@@ -16,7 +16,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+      {
+        name: 'viewport',
+        // interactive-widget=resizes-content : à l'ouverture du clavier, le
+        // layout viewport (et donc vh/dvh) se réduit au lieu de juste couvrir
+        // l'écran. Sans ça, un drawer en dvh reste pleine hauteur et vaul le
+        // remonte au-dessus du clavier → il déborde en haut de l'écran.
+        content:
+          'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
+      },
       { name: 'theme-color', content: '#090a0c' },
       { name: 'mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },

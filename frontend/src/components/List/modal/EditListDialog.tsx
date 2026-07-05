@@ -294,11 +294,11 @@ const EditListForm = forwardRef<
         {/* Cover Image — mobile : décentrée à gauche, réduite (192→115px), avec
             un bouton texte "Supprimer la cover" à droite (la croix au hover est
             intapable sans souris). Desktop : inchangé (croix au hover). */}
-        <div className="flex items-center gap-4 md:block">
+        <div className="flex items-start gap-4 md:block">
           <div
             role="button"
             tabIndex={0}
-            className="group border-border relative aspect-square w-48 shrink-0 cursor-pointer overflow-hidden rounded-lg border max-[749px]:w-[115px]"
+            className="group border-border relative aspect-square w-48 shrink-0 cursor-pointer overflow-hidden rounded-lg border max-[749px]:w-[90px]"
             onClick={() => fileInputRef.current?.click()}
             onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') {

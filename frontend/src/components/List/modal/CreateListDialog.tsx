@@ -360,9 +360,9 @@ function CreateListForm({
         <label htmlFor="cover-image-input" className="text-sm font-medium">
           {content.watchlists.coverImage}
         </label>
-        <div className="mt-2 flex items-center gap-4">
+        <div className="mt-2 flex items-center gap-4 max-[749px]:items-start">
           {imagePreview ? (
-            <div className="border-border relative h-24 w-24 overflow-hidden rounded-md border">
+            <div className="border-border relative h-24 w-24 overflow-hidden rounded-md border max-[749px]:h-[90px] max-[749px]:w-[90px]">
               <Image src={imagePreview} alt="Preview" fill sizes="96px" className="object-cover" />
               {/* Croix desktop — trop petite au doigt, remplacée sur mobile
                   par le bouton texte "Supprimer la cover" ci-contre */}
@@ -381,7 +381,7 @@ function CreateListForm({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={loading}
-              className="border-border bg-muted/50 hover:bg-muted flex h-24 w-24 cursor-pointer items-center justify-center rounded-md border border-dashed disabled:opacity-50"
+              className="border-border bg-muted/50 hover:bg-muted flex h-24 w-24 cursor-pointer items-center justify-center rounded-md border border-dashed disabled:opacity-50 max-[749px]:h-[90px] max-[749px]:w-[90px]"
             >
               <ImageIcon className="text-muted-foreground h-6 w-6" />
             </button>
