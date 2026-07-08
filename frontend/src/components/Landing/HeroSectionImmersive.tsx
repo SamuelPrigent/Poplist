@@ -32,76 +32,37 @@ const theFifth2 = '/landing/movies/theFifth2.webp';
 const joker = '/landing/movies/joker.webp';
 const fenetre = '/landing/movies/fenetre.webp';
 const hp1 = '/landing/movies/hp1.webp';
+const padre = '/landing/movies/padre.webp';
 const pulp = '/landing/movies/pulp.webp';
-// new
-// const smokew = 'landing/movies/smokew.jpeg';
-// const mili = 'landing/movies/mili.jpg';
-// const titanic = 'landing/movies/titanic.webp';
-// const titanic2 = 'landing/movies/titanic.jpg';
-// const taran = 'landing/movies/taran.jpg';
-// const sw4 = 'landing/movies/sw4.jpg';
-// const cruella = 'landing/movies/cruella.jpg';
-// const batman = 'landing/movies/batman.webp';
-// const nightagent = 'landing/movies/nightagent.jpeg';
-// const nightclub = 'landing/movies/nclub.jpg';
-// const bestDressed = 'landing/movies/bestDressed.jpg';
-// const ryangosling = 'landing/movies/ryangos.jpg';
-// const ryangosling2 = 'landing/movies/ryangosling.jpg';
-// const ryangolsing3 = 'landing/movies/ryangosling2.jpg';
-// const mike = 'landing/movies/mike.jpg';
-// const fnf = 'landing/movies/fnf.jpg';
-const western = 'landing/movies/western.jpeg';
-const mercredi = 'landing/movies/mercredi.jpg';
-const bluetv = 'landing/movies/bluetv.jpg';
-const damon = 'landing/movies/damon.jpg';
-const agentsecret = 'landing/movies/007.jpg';
-const dicap = 'landing/movies/dicap.jpg';
-const gosling = 'landing/movies/ryangoslingcar.jpg';
-
-// Candidats TMDB alternatifs à blade2 (tons chauds/ambre) — liens directs w500,
-// à valider visuellement puis récupérer/convertir en webp si OK.
-// Blade Runner 2049 — brume orange iconique, Gosling de dos
-const brume2049 = 'https://image.tmdb.org/t/p/w500/ilRyazdMJwN05exqhwK4tMKBYZs.jpg';
-// Taxi Driver — De Niro au cinéma, rouges/bruns chauds
-const taxidriver = 'https://image.tmdb.org/t/p/w500/9uddYYTNcLWpzUkl5iw1RUYhLhY.jpg';
-// Her — Joaquin Phoenix à la fenêtre, lumière dorée (proche de fenetre/blade2)
-const herFenetre = 'https://image.tmdb.org/t/p/w500/zxttikp0SNEtF4vWsg70Vs6McFi.jpg';
-// Mad Max Fury Road — Furiosa gros plan, tons chauds désert
-const furiosa = 'https://image.tmdb.org/t/p/w500/n6vWE0bXq4ImAM00iM5gWyORNSM.jpg';
-// Mad Max Fury Road — plan large désert, teal + orange lumineux
-const madmax = 'https://image.tmdb.org/t/p/w500/uT895WNwm0aIJRtGizcQhrejWUo.jpg';
-// Kill Bill — O-Ren Ishii, sombre + lueur chaude du sabre
-const oren = 'https://image.tmdb.org/t/p/w500/gPA8Th4CyuL5IeTzHE2THkxihkU.jpg';
-// Amélie — fond vert profond + rouge (rappel du vert de saw)
-const amelie = 'https://image.tmdb.org/t/p/w500/6n53UI4mX9QMfe2S0Pgt8mGebY1.jpg';
-// Drive — scène du marteau, rouge sombre très moody
-const driveHammer = 'https://image.tmdb.org/t/p/w500/iymDDg4upZWgpbSeiE1JCjsSPBs.jpg';
-// Drive — Gosling devant la voiture, rue néon bleu/teal (rappel jinx/theFifth2)
-const driveNeon = 'https://image.tmdb.org/t/p/w500/hoyAALgfmjMEK7O1wZ4r8wT91RP.jpg';
-// La La Land — danse au coucher de soleil, robe jaune + ciel rose/violet
-const lalaland = 'https://image.tmdb.org/t/p/w500/2wmDyHz4gvF6m51IQZJnJzlLsnz.jpg';
-// La La Land — baiser sous le lampadaire, nuit violette
-const lalalandNight = 'https://image.tmdb.org/t/p/w500/nlPCdZlHtRNcF6C9hzUH4ebmV1w.jpg';
-// Whiplash — aplat orange vif (pop, comme le jaune Kill Bill)
-const whiplashOrange = 'https://image.tmdb.org/t/p/w500/wbQa0EnWUyRzQ5d1pHLNRlmsCUP.jpg';
-// Whiplash — scène batterie, bruns chauds
-const whiplashDrums = 'https://image.tmdb.org/t/p/w500/fRGxZuo7jJUWQsVg9PREb98Aclp.jpg';
-// The Grand Budapest Hotel — loge du concierge, rouge saturé
-const budapestRouge = 'https://image.tmdb.org/t/p/w500/xHDynIimfsgj0ZOs0j5ma8v1vmM.jpg';
-// In the Mood for Love — mur d'affiches, rouge/ambre chaud
-const inTheMood = 'https://image.tmdb.org/t/p/w500/ffQFnAUm2Uu4RU0nijpjPRf9TBT.jpg';
-// In the Mood for Love — aplat rouge profond
-const inTheMoodRed = 'https://image.tmdb.org/t/p/w500/9JZKUOQdQPTJ4OdYKttYOQCREdw.jpg';
-// Once Upon a Time in Hollywood — DiCaprio/Pitt et la Cadillac JAUNE
-const onceUpon = 'https://image.tmdb.org/t/p/w500/kKTPv9LKKs5L3oO1y5FNObxAPWI.jpg';
-// Dune 2 — Paul en capuche, tons sable chauds
-const dunePaul = 'https://image.tmdb.org/t/p/w500/eZ239CUp1d6OryZEBPnO2n87gMG.jpg';
-// Dune 2 — poster feu orange/noir
-const dune2Fire = 'https://image.tmdb.org/t/p/w500/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg';
-// Oppenheimer — silhouette dans les nuages ambre
-const oppenClouds = 'https://image.tmdb.org/t/p/w500/neeNHeXjMF5fXoCJRsOmkNGC7q.jpg';
-// Oppenheimer — noir & blanc, photographes (rappel de tes stills N&B)
-const oppenBW = 'https://image.tmdb.org/t/p/w500/ycnO0cjsAROSGJKuMODgRtWsHQw.jpg';
+const western = 'landing/movies/western.webp';
+const mercredi = 'landing/movies/mercredi.webp';
+const bluetv = 'landing/movies/bluetv.webp';
+const damon = 'landing/movies/damon.webp';
+const agentsecret = 'landing/movies/007.webp';
+const dicap = 'landing/movies/dicap.webp';
+const gosling = 'landing/movies/ryangoslingcar.webp';
+const brume2049 = 'landing/movies/brume2049.webp';
+const taxidriver = 'landing/movies/taxidriver.webp';
+const herFenetre = 'landing/movies/herFenetre.webp';
+const furiosa = 'landing/movies/furiosa.webp';
+const madmax = 'landing/movies/madmax.webp';
+const oren = 'landing/movies/oren.webp';
+const amelie = 'landing/movies/amelie.webp';
+const driveHammer = 'landing/movies/driveHammer.webp';
+const driveNeon = 'landing/movies/driveNeon.webp';
+const lalaland = 'landing/movies/lalaland.webp';
+const lalalandNight = 'landing/movies/lalalandNight.webp';
+const whiplashOrange = 'landing/movies/whiplashOrange.webp';
+const whiplashDrums = 'landing/movies/whiplashDrums.webp';
+const budapestRouge = 'landing/movies/budapestRouge.webp';
+const inTheMood = 'landing/movies/inTheMood.webp';
+const inTheMoodRed = 'landing/movies/inTheMoodRed.webp';
+const onceUpon = 'landing/movies/onceUpon.webp';
+const dunePaul = 'landing/movies/dunePaul.webp';
+const dune2Fire = 'landing/movies/dune2Fire.webp';
+const oppenClouds = 'landing/movies/oppenClouds.webp';
+const oppenBW = 'landing/movies/oppenBW.webp';
+const guns = 'landing/movies/guns.webp';
 
 const FAMOUS_MOVIES_MOBILE = [
   { id: 1, title: 'Col1-Pos1', image: doa },
@@ -131,31 +92,6 @@ const DEBUG_HIDE_MASKS = false;
 // entre dans le viewport — en dessous, elle est HORS ÉCRAN à gauche (modifier
 // ses images ne change donc rien de visible, ce n'est pas un bug de refresh).
 const EXTRA_COLUMNS_IMAGES = [
-  //   {
-  //     col: 'G1',
-  //     visibleFrom: '~3900px (ultra-wide uniquement)',
-  //     images: [kb, saw, blade2, pulp, passion, pdc, doa],
-  //   },
-  //   {
-  //     col: 'G2',
-  //     visibleFrom: '~3400px (ultra-wide uniquement)',
-  //     images: [jake, blade2, fenetre, theFifth2, jinx, kb, saw],
-  //   },
-  //   {
-  //     col: 'G3',
-  //     visibleFrom: '~2950px',
-  //     images: [passion, pdc, doa, oceans, joker, jake, blade2],
-  //   },
-  //   {
-  //     col: 'G4',
-  //     visibleFrom: '~2500px',
-  //     images: [jinx, kb, saw, blade2, pulp, passion, pdc],
-  //   },
-  //   {
-  //     col: 'G5',
-  //     visibleFrom: '~2050px',
-  //     images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
-  //   },
   {
     col: 'G6',
     visibleFrom: '~1600px',
@@ -195,12 +131,12 @@ const FAMOUS_MOVIES = [
   {
     id: 5,
     title: 'Col1-Pos5',
-    image: 'https://image.tmdb.org/t/p/w500/tmU7GeKVybMWFButWEGl2M4GeiP.jpg',
+    image: hp1,
   },
   {
     id: 6,
     title: 'Col2-Pos1',
-    image: 'https://image.tmdb.org/t/p/w500/hziiv14OpD73u9gAak4XDDfBKa2.jpg',
+    image: padre,
   },
   { id: 7, title: 'Col2-Pos2', image: fenetre },
   { id: 8, title: 'Col2-Pos3', image: theFifth2 },
@@ -208,11 +144,7 @@ const FAMOUS_MOVIES = [
   { id: 10, title: 'Col2-Pos5', image: gosling },
   { id: 11, title: 'Col3-Pos1', image: saw },
   { id: 12, title: 'Col3-Pos2', image: blade2 },
-  {
-    id: 13,
-    title: 'Col3-Pos3',
-    image: 'https://image.tmdb.org/t/p/w500/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
-  },
+  { id: 13, title: 'Col3-Pos3', image: guns },
   { id: 14, title: 'Col3-Pos4', image: passion },
   { id: 15, title: 'Col3-Pos5', image: pdc },
 ];
