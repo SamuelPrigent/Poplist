@@ -106,7 +106,6 @@ function CategoriesPageInner() {
                   },
                   name: category.name,
                   description: category.description,
-                  isPublic: true,
                   collaborators: [],
                   items: placeholderItems,
                   createdAt: placeholderTimestamp,

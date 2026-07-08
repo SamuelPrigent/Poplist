@@ -55,7 +55,12 @@ function scheduleConsume() {
     const n = pendingConsume;
     pendingConsume = 0;
     consumeScheduled = false;
-    if (n > 0) {
+    // Garde-fou : on ne consomme que si le sommet de l'historique est bien
+    // une entrée fantôme. Si une navigation (pushState du router) a eu lieu
+    // pendant que l'élément était ouvert, go(-n) annulerait cette navigation
+    // — on préfère laisser une entrée fantôme orpheline (un back « à vide »)
+    // que de reverter l'URL de l'utilisateur.
+    if (n > 0 && window.history.state?.__backHandler === true) {
       ignorePops += 1; // go(-n) n'émet qu'un seul popstate
       window.history.go(-n);
     }

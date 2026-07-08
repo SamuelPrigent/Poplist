@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import ListsContent from '@/app/lists/ListsContent';
 import { watchlistsQueries } from '@/api/queries';
-import { getAuthStatus } from '@/server/auth';
+import { getAuthStatusFast } from '@/lib/auth-status';
 import { getMineForSSR } from '@/server/watchlists';
 
 export const Route = createFileRoute('/lists/')({
   beforeLoad: async () => {
-    const { isAuthenticated } = await getAuthStatus();
+    const { isAuthenticated } = await getAuthStatusFast();
     return { isAuthenticated };
   },
   loader: async ({ context: { queryClient, isAuthenticated } }) => {

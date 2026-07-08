@@ -23,16 +23,13 @@ export interface WatchlistItemInput {
 export interface CreateWatchlistRequest {
   name: string;
   description?: string;
-  isPublic?: boolean;
   genres?: string[];
   items?: WatchlistItemInput[];
-  fromLocalStorage?: boolean;
 }
 
 export interface UpdateWatchlistRequest {
   name?: string;
   description?: string;
-  isPublic?: boolean;
   genres?: string[];
   items?: WatchlistItemInput[];
 }

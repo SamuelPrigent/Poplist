@@ -37,18 +37,18 @@ export const en: Content = {
     createWatchlistDescription: 'Create a new list to organize your movies and series.',
     noWatchlistsMobile: 'No list yet',
     createWatchlistDescriptionMobile: 'Create your first list.',
-    notLoggedInWarning: 'Offline mode',
     noWatchlists: "You haven't created any lists yet.",
+    signupCta: {
+      title: 'Create an account',
+      description: 'Create movie and TV show lists and share them with the community.',
+      button: 'Sign up',
+    },
     myWatchlists: 'My lists',
     followed: 'Followed',
     noWatchlistsInCategory: 'No lists in this category',
     adjustFilters: 'Adjust the filters to see more lists',
     items: 'items',
     item: 'item',
-    headerPublic: 'Public list',
-    headerPrivate: 'Private list',
-    public: 'Public',
-    private: 'Private',
     loading: 'Loading...',
     accountDataBadge: 'User account data',
     preview: 'Preview',
@@ -66,7 +66,6 @@ export const en: Content = {
     changeImage: 'Change image',
     imageUploadHint: 'PNG, JPG or WEBP (max. 5MB)',
     removeImage: 'Remove cover',
-    makePublic: 'Make public',
     cancel: 'Cancel',
     create: 'Create',
     creating: 'Creating...',
@@ -172,13 +171,6 @@ export const en: Content = {
     },
     addToWatchlist: 'Add to a list',
     noWatchlist: 'No list',
-    offlinePopover: {
-      title: 'Why sign up?',
-      accessEverywhere: 'Access your lists everywhere',
-      collaborativeLists: 'Create collaborative lists',
-      shareWithFriends: 'Share your lists with friends',
-      signup: 'Sign Up',
-    },
     toasts: {
       linkCopied: 'Link copied',
       linkCopyError: 'Failed to copy link',
@@ -307,11 +299,6 @@ export const en: Content = {
       title: 'Frequently Asked Questions',
       subtitle: 'Everything you need to know to get started',
       questions: {
-        privateWatchlists: {
-          question: 'How do private lists work?',
-          answer:
-            'Private lists allow you to keep your selections to yourself. They are only visible to you and cannot be shared with other users. You can switch between private and public at any time from your list settings.',
-        },
         pricing: {
           question: 'Is it free to use?',
           answer:

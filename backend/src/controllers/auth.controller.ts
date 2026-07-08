@@ -79,7 +79,7 @@ export const signup = async (c: C, data: SignupInput) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
-  const username = await generateUniqueUsername()
+  const username = await generateUniqueUsername(email)
 
   const [user] = await db
     .insert(users)
@@ -124,7 +124,7 @@ export const login = async (c: C, data: LoginInput) => {
   }
 
   if (!user.username) {
-    const username = await generateUniqueUsername()
+    const username = await generateUniqueUsername(user.email)
     await db.update(users).set({ username }).where(eq(users.id, user.id))
     user.username = username
   }
@@ -184,7 +184,7 @@ export const googleCallback = async (c: C) => {
       .limit(1)
 
     if (!user) {
-      const username = await generateUniqueUsername()
+      const username = await generateUniqueUsername(email)
       const [created] = await db
         .insert(users)
         .values({ email, username, googleId, language: 'fr' })
@@ -193,7 +193,7 @@ export const googleCallback = async (c: C) => {
     } else {
       const updates: { googleId?: string; username?: string } = {}
       if (!user.googleId) updates.googleId = googleId
-      if (!user.username) updates.username = await generateUniqueUsername()
+      if (!user.username) updates.username = await generateUniqueUsername(user.email)
       if (Object.keys(updates).length > 0) {
         const [updated] = await db
           .update(users)

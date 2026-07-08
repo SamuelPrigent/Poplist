@@ -55,7 +55,7 @@ function handleLogoutRedirect(pathname: string, navigate: Navigate) {
   // On ne redirige QUE depuis les pages protégées (compte). Sur les pages
   // publiques (/, /home, /explore, /lists/[id] public...) on reste sur place.
 
-  // /account/lists (mes listes) → /local/lists (les listes locales prennent le relais)
+  // /account/lists (mes listes) → /local/lists (placeholder « créez un compte »)
   if (pathname === '/account/lists') {
     navigate({ to: '/local/lists' as never });
     return;
@@ -71,10 +71,7 @@ function handleLoginRedirect(pathname: string, navigate: Navigate) {
   // Sur /local/lists → /account/lists
   if (pathname === '/local/lists') {
     navigate({ to: '/account/lists' as never });
-    return;
   }
-
-  // Sur /local/list/[id] → rester (les listes locales existent toujours)
 }
 
 /**

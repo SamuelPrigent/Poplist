@@ -2,6 +2,7 @@ import { dehydrate, hydrate, QueryClientProvider } from '@tanstack/react-query';
 import { createRouter as createTanStackRouter, Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { getQueryClient } from '@/lib/query-client';
+import { CardGridPending } from '@/components/skeletons/RoutePending';
 import { routeTree } from './routeTree.gen';
 
 function NotFoundPage() {
@@ -53,6 +54,15 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 30_000,
+    // Réseau lent : si un loader n'a pas résolu après 100 ms de navigation,
+    // on bascule sur le skeleton de la route (pendingComponent) au lieu de
+    // rester figé sur l'ancienne page. `pendingMinMs` évite le flash : une
+    // fois affiché, le skeleton reste au moins 300 ms. Sur bonne connexion /
+    // cache hit (preload), le seuil de 100 ms n'est jamais atteint → ressenti
+    // instantané inchangé.
+    defaultPendingMs: 100,
+    defaultPendingMinMs: 300,
+    defaultPendingComponent: CardGridPending,
     defaultNotFoundComponent: NotFoundPage,
     context: { queryClient },
     parseSearch,

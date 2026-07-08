@@ -315,7 +315,9 @@ function CollaboratorDrawerShell({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent>
+      {/* min-h : avec 0-2 collaborateurs le drawer était tout petit ; on
+          garantit ~55% de la hauteur d'écran depuis le bas. */}
+      <DrawerContent className="min-h-[55dvh]">
         <DrawerHeader className="text-left">
           <DrawerTitle>
             {content.watchlists.collaborators?.addTitle || 'Ajouter un collaborateur'}

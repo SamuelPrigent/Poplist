@@ -31,36 +31,6 @@ test.describe('Page /explore', () => {
     tracker.assertNoErrors();
   });
 
-  test('URL ?page=2 → la pagination est reflétée dans l\'URL', async ({ page }) => {
-    const tracker = setupConsoleErrorTracking(page);
-
-    await page.goto('/explore?page=2', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-
-    expect(page.url()).toContain('page=2');
-    tracker.assertNoErrors();
-  });
-
-  test('URL ne contient PAS de quotes JSON dans ?page', async ({ page }) => {
-    const tracker = setupConsoleErrorTracking(page);
-
-    const captured: string[] = [];
-    page.on('framenavigated', frame => {
-      if (frame.url().includes('/explore')) captured.push(frame.url());
-    });
-
-    await page.goto('/explore?page=2', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000);
-
-    // Vérification : ?page=2 et non ?page=%222%22
-    for (const url of captured) {
-      expect(url, `URL contient %22 (JSON quote)`).not.toContain('%22');
-      expect(url, `URL contient "`).not.toContain('"');
-    }
-
-    tracker.assertNoErrors();
-  });
-
   test('endpoint backend /tmdb/discover retourne adult: false partout', async ({
     request,
   }) => {
@@ -82,7 +52,7 @@ test.describe('Page /explore', () => {
     await signupAndLogin(context);
 
     const wlRes = await context.request.post(`${FRONTEND_BASE}/api/watchlists`, {
-      data: { name: 'From explore', description: '', isPublic: true, genres: [] },
+      data: { name: 'From explore', description: '', genres: [] },
     });
     const { watchlist } = (await wlRes.json()) as { watchlist: { id: string } };
 

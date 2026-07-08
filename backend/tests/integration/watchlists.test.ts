@@ -51,7 +51,7 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
     });
     it('GET /watchlists/:id', async () => {
       const owner = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: true });
+      const wl = await createWatchlist(owner.id);
       expect((await anon(`/watchlists/${wl.id}`)).status).toBe(401);
     });
     it('PUT /watchlists/:id', async () => {
@@ -76,46 +76,19 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
   });
 
   // ========================================================================
-  // Visibilité d'une liste privée
-  // ========================================================================
-  describe('Liste privée', () => {
-    it('GET /watchlists/public/:id (privée) → 403, même contenu inaccessible', async () => {
-      const owner = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: false });
-      const res = await anon(`/watchlists/public/${wl.id}`);
-      expect(res.status).toBe(403);
-    });
-
-    it('GET /watchlists/:id (privée) par un NON-owner → 403', async () => {
-      const owner = await createUser();
-      const intruder = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: false });
-      const res = await authedFetch(`/watchlists/${wl.id}`, await cookieFor(intruder));
-      expect(res.status).toBe(403);
-    });
-
-    it('GET /watchlists/:id (privée) par le OWNER → 200', async () => {
-      const owner = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: false });
-      const res = await authedFetch(`/watchlists/${wl.id}`, await cookieFor(owner));
-      expect(res.status).toBe(200);
-    });
-  });
-
-  // ========================================================================
-  // Liste publique : lisible par tous
+  // Toutes les listes sont publiques : lisibles par tous
   // ========================================================================
   describe('Liste publique', () => {
     it('GET /watchlists/public/:id (publique) → 200', async () => {
       const owner = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: true });
+      const wl = await createWatchlist(owner.id);
       expect((await anon(`/watchlists/public/${wl.id}`)).status).toBe(200);
     });
 
     it('GET /watchlists/:id (publique) par un NON-owner connecté → 200', async () => {
       const owner = await createUser();
       const viewer = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: true });
+      const wl = await createWatchlist(owner.id);
       const res = await authedFetch(`/watchlists/${wl.id}`, await cookieFor(viewer));
       expect(res.status).toBe(200);
       const body = (await res.json()) as { isOwner: boolean; isCollaborator: boolean };
@@ -136,7 +109,7 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
       owner = await createUser();
       const intruder = await createUser();
       intruderCookie = await cookieFor(intruder);
-      const wl = await createWatchlist(owner.id, { isPublic: true });
+      const wl = await createWatchlist(owner.id);
       wlId = wl.id;
       await createWatchlistItem(wlId, { tmdbId: 1000 });
     });
@@ -239,12 +212,12 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
       owner = await createUser();
       const collab = await createUser();
       collabCookie = await cookieFor(collab);
-      const wl = await createWatchlist(owner.id, { isPublic: false });
+      const wl = await createWatchlist(owner.id);
       wlId = wl.id;
       await makeCollaborator(wlId, collab.id);
     });
 
-    it('GET /watchlists/:id (privée) → 200 + isCollaborator true', async () => {
+    it('GET /watchlists/:id → 200 + isCollaborator true', async () => {
       const res = await authedFetch(`/watchlists/${wlId}`, collabCookie);
       expect(res.status).toBe(200);
       const body = (await res.json()) as { isOwner: boolean; isCollaborator: boolean };
@@ -289,20 +262,9 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
   // Recommandations : public OU owner/collab
   // ========================================================================
   describe('GET /watchlists/:id/recommendations', () => {
-    it('liste privée, NON-owner → 403', async () => {
+    it('anonyme → 200', async () => {
       const owner = await createUser();
-      const intruder = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: false });
-      await createWatchlistItem(wl.id, { tmdbId: 1000 });
-      const res = await authedFetch(
-        `/watchlists/${wl.id}/recommendations`,
-        await cookieFor(intruder),
-      );
-      expect(res.status).toBe(403);
-    });
-    it('liste publique, anonyme → 200', async () => {
-      const owner = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: true });
+      const wl = await createWatchlist(owner.id);
       await createWatchlistItem(wl.id, { tmdbId: 1000, mediaType: 'movie' });
       const res = await anon(`/watchlists/${wl.id}/recommendations`);
       expect(res.status).toBe(200);
@@ -310,9 +272,9 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
       expect(Array.isArray(body.items)).toBe(true);
       expect(typeof body.generatedAt).toBe('string');
     });
-    it('liste privée, owner → 200', async () => {
+    it('owner → 200', async () => {
       const owner = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: false });
+      const wl = await createWatchlist(owner.id);
       await createWatchlistItem(wl.id, { tmdbId: 1000, mediaType: 'movie' });
       const res = await authedFetch(`/watchlists/${wl.id}/recommendations`, await cookieFor(owner));
       expect(res.status).toBe(200);
@@ -367,7 +329,7 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
   describe('Format de réponse', () => {
     it('GET /watchlists/:id renvoie { watchlist, isSaved, isOwner, isCollaborator }', async () => {
       const owner = await createUser();
-      const wl = await createWatchlist(owner.id, { isPublic: true });
+      const wl = await createWatchlist(owner.id);
       await createWatchlistItem(wl.id, { tmdbId: 1000, title: 'Film 1' });
 
       const res = await authedFetch(`/watchlists/${wl.id}`, await cookieFor(owner));
@@ -376,7 +338,6 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
         watchlist: {
           id: string;
           name: string;
-          isPublic: boolean;
           items: Array<{ tmdbId: number; title: string | null }>;
         };
         isSaved: boolean;
@@ -385,7 +346,6 @@ describe('Watchlists — autorisations (owner / collaborateur / non-owner / anon
       };
       expect(body.watchlist.id).toBe(wl.id);
       expect(typeof body.watchlist.name).toBe('string');
-      expect(body.watchlist.isPublic).toBe(true);
       expect(Array.isArray(body.watchlist.items)).toBe(true);
       expect(body.watchlist.items[0].tmdbId).toBe(1000);
       expect(typeof body.isSaved).toBe('boolean');

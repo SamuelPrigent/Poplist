@@ -38,18 +38,18 @@ export const de: Content = {
       'Erstellen Sie eine neue Liste, um Ihre Filme und Serien zu organisieren.',
     noWatchlistsMobile: 'Keine Liste',
     createWatchlistDescriptionMobile: 'Erstelle deine erste Liste.',
-    notLoggedInWarning: 'Offline-Modus',
     noWatchlists: 'Sie haben noch keine Listen erstellt.',
+    signupCta: {
+      title: 'Erstelle ein Konto',
+      description: 'Erstelle Film- und Serienlisten und teile sie mit der Community.',
+      button: 'Registrieren',
+    },
     myWatchlists: 'Meine Listen',
     followed: 'Gefolgt',
     noWatchlistsInCategory: 'Keine Listen in dieser Kategorie',
     adjustFilters: 'Passen Sie die Filter an, um mehr Listen zu sehen',
     items: 'Elemente',
     item: 'Element',
-    headerPublic: 'Öffentliche liste',
-    headerPrivate: 'Private liste',
-    public: 'Öffentlich',
-    private: 'Privat',
     loading: 'Lädt...',
     accountDataBadge: 'Benutzerkontodaten',
     preview: 'Vorschau',
@@ -68,7 +68,6 @@ export const de: Content = {
     changeImage: 'Bild ändern',
     imageUploadHint: 'PNG, JPG oder WEBP (max. 5MB)',
     removeImage: 'Cover entfernen',
-    makePublic: 'Öffentlich machen',
     cancel: 'Abbrechen',
     create: 'Erstellen',
     creating: 'Wird erstellt...',
@@ -175,13 +174,6 @@ export const de: Content = {
     },
     addToWatchlist: 'Zu einer Liste hinzufügen',
     noWatchlist: 'Keine Liste',
-    offlinePopover: {
-      title: 'Warum registrieren?',
-      accessEverywhere: 'Greifen Sie überall auf Ihre Listen zu',
-      collaborativeLists: 'Erstellen Sie kollaborative Listen',
-      shareWithFriends: 'Teilen Sie Ihre Listen mit Freunden',
-      signup: 'Registrieren',
-    },
     toasts: {
       linkCopied: 'Link kopiert',
       linkCopyError: 'Link konnte nicht kopiert werden',
@@ -312,11 +304,6 @@ export const de: Content = {
       title: 'Häufig gestellte Fragen',
       subtitle: 'Alles, was Sie wissen müssen, um loszulegen',
       questions: {
-        privateWatchlists: {
-          question: 'Wie funktionieren private Listen?',
-          answer:
-            'Private Listen ermöglichen es Ihnen, Ihre Auswahl für sich zu behalten. Sie sind nur für Sie sichtbar und können nicht mit anderen Benutzern geteilt werden. Sie können jederzeit in den Einstellungen Ihrer Liste zwischen privat und öffentlich wechseln.',
-        },
         pricing: {
           question: 'Ist die Nutzung kostenlos?',
           answer:

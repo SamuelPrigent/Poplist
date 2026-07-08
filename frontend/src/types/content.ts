@@ -31,18 +31,19 @@ export interface Content {
     /** Versions courtes du placeholder vide, affichées sur mobile (< 750px). */
     noWatchlistsMobile: string;
     createWatchlistDescriptionMobile: string;
-    notLoggedInWarning: string;
     noWatchlists: string;
+    /** Placeholder « Mes listes » pour les visiteurs non connectés. */
+    signupCta: {
+      title: string;
+      description: string;
+      button: string;
+    };
     myWatchlists: string;
     followed: string;
     noWatchlistsInCategory: string;
     adjustFilters: string;
     items: string;
     item: string;
-    headerPublic: string;
-    headerPrivate: string;
-    public: string;
-    private: string;
     loading: string;
     accountDataBadge: string;
     preview: string;
@@ -60,7 +61,6 @@ export interface Content {
     changeImage: string;
     imageUploadHint: string;
     removeImage: string;
-    makePublic: string;
     cancel: string;
     create: string;
     creating: string;
@@ -159,13 +159,6 @@ export interface Content {
     };
     addToWatchlist: string;
     noWatchlist: string;
-    offlinePopover: {
-      title: string;
-      accessEverywhere: string;
-      collaborativeLists: string;
-      shareWithFriends: string;
-      signup: string;
-    };
     toasts?: {
       linkCopied: string;
       linkCopyError: string;
@@ -291,10 +284,6 @@ export interface Content {
       title: string;
       subtitle: string;
       questions: {
-        privateWatchlists: {
-          question: string;
-          answer: string;
-        };
         pricing: {
           question: string;
           answer: string;

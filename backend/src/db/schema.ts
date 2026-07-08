@@ -6,7 +6,6 @@ import {
   text,
   jsonb,
   timestamp,
-  boolean,
   integer,
   date,
   numeric,
@@ -71,17 +70,11 @@ export const watchlists = pgTable(
     imageUrl: text('image_url'),
     thumbnailUrl: text('thumbnail_url'),
     dominantColor: text('dominant_color'),
-    isPublic: boolean('is_public').default(false),
     genres: text('genres').array(),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow(),
   },
-  (t) => [
-    index('idx_watchlists_owner').on(t.ownerId),
-    index('idx_watchlists_public')
-      .on(t.isPublic)
-      .where(sql`(is_public = true)`),
-  ]
+  (t) => [index('idx_watchlists_owner').on(t.ownerId)]
 );
 
 // ========================================

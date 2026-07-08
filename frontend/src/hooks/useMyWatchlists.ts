@@ -3,22 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { watchlists as watchlistsApi, type Watchlist } from '@/api';
 import { useAuth } from '@/context/auth-context';
-import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 
 /**
  * Source unique des « listes de l'utilisateur », partagée par ListItemsTable,
  * l'ItemDetailsModal (via son parent) et ListRecommendations.
  *
- * - Connecté : `getMine()`. Non connecté : listes localStorage possédées (et on
- *   réécoute les changements localStorage, comme le faisait ListItemsTable).
+ * - Connecté : `getMine()`. Non connecté : aucune liste (les listes locales
+ *   offline n'existent plus).
  * - `editableWatchlists` : listes où l'on peut ajouter des items (owner ou collab) ;
  *   ce sont les cibles valides du WatchlistPickerMenu.
  * - `isInAnyOfMyLists(tmdbId)` : true si l'item est dans une de mes listes éditables
  *   (dérivé des items déjà renvoyés par getMine, donc aucune requête en plus).
- *
- * @param excludeWatchlistId liste à exclure du chargement localStorage (la liste courante)
  */
-export function useMyWatchlists(excludeWatchlistId?: string) {
+export function useMyWatchlists(_excludeWatchlistId?: string) {
   const { isAuthenticated } = useAuth();
   const [myWatchlists, setMyWatchlists] = useState<Watchlist[]>([]);
 
@@ -29,32 +26,13 @@ export function useMyWatchlists(excludeWatchlistId?: string) {
         .then(data => setMyWatchlists(data.watchlists))
         .catch(console.error);
     } else {
-      setMyWatchlists(
-        getLocalWatchlistsWithOwnership().filter(
-          wl => wl.isOwner && wl.id !== excludeWatchlistId
-        )
-      );
+      setMyWatchlists([]);
     }
-  }, [isAuthenticated, excludeWatchlistId]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     reload();
   }, [reload]);
-
-  // Sync localStorage (mode non connecté uniquement).
-  useEffect(() => {
-    if (isAuthenticated) return;
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'watchlists') reload();
-    };
-    const onCustom = () => reload();
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('localStorageWatchlistsChanged', onCustom);
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('localStorageWatchlistsChanged', onCustom);
-    };
-  }, [isAuthenticated, reload]);
 
   const editableWatchlists = useMemo(
     () => myWatchlists.filter(w => w.isOwner || w.isCollaborator),

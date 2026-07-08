@@ -3,7 +3,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Image as ImageIcon, Upload, X } from 'lucide-react';
 import { Img as Image } from '@/components/ui/Img';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,7 +24,6 @@ interface CreateListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: (watchlist?: Watchlist) => void;
-  offline?: boolean;
 }
 
 /**
@@ -42,7 +41,7 @@ export function CreateListDialog(props: CreateListDialogProps) {
 // -------------------------------------------------------------------------
 // Shell modale (desktop) — inchangé par rapport à l'existant.
 // -------------------------------------------------------------------------
-function CreateListModalShell({ open, onOpenChange, onSuccess, offline = false }: CreateListDialogProps) {
+function CreateListModalShell({ open, onOpenChange, onSuccess }: CreateListDialogProps) {
   const { content } = useLanguageStore();
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -58,11 +57,7 @@ function CreateListModalShell({ open, onOpenChange, onSuccess, offline = false }
             </DialogPrimitive.Description>
           </div>
 
-          <CreateListForm
-            onClose={() => onOpenChange(false)}
-            onSuccess={onSuccess}
-            offline={offline}
-          />
+          <CreateListForm onClose={() => onOpenChange(false)} onSuccess={onSuccess} />
 
           <DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
             <X className="h-4 w-4" />
@@ -77,7 +72,7 @@ function CreateListModalShell({ open, onOpenChange, onSuccess, offline = false }
 // -------------------------------------------------------------------------
 // Shell drawer (mobile) — vaul, bottom sheet.
 // -------------------------------------------------------------------------
-function CreateListDrawerShell({ open, onOpenChange, onSuccess, offline = false }: CreateListDialogProps) {
+function CreateListDrawerShell({ open, onOpenChange, onSuccess }: CreateListDialogProps) {
   const { content } = useLanguageStore();
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -94,12 +89,7 @@ function CreateListDrawerShell({ open, onOpenChange, onSuccess, offline = false 
           {content.watchlists.createWatchlistDescription}
         </DrawerDescription>
         <div className="overflow-y-auto px-4 pt-1 pb-[calc(2.25rem+env(safe-area-inset-bottom))]">
-          <CreateListForm
-            onClose={() => onOpenChange(false)}
-            onSuccess={onSuccess}
-            offline={offline}
-            stacked
-          />
+          <CreateListForm onClose={() => onOpenChange(false)} onSuccess={onSuccess} stacked />
         </div>
       </DrawerContent>
     </Drawer>
@@ -113,18 +103,15 @@ function CreateListDrawerShell({ open, onOpenChange, onSuccess, offline = false 
 function CreateListForm({
   onClose,
   onSuccess,
-  offline = false,
   stacked = false,
 }: {
   onClose: () => void;
   onSuccess: (watchlist?: Watchlist) => void;
-  offline?: boolean;
   stacked?: boolean;
 }) {
   const { content } = useLanguageStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [isPublic, setIsPublic] = useState(false);
   const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -136,15 +123,6 @@ function CreateListForm({
       prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
     );
   };
-
-  // Clear genres when watchlist becomes private
-  useEffect(() => {
-    if (!isPublic) {
-      if (genreCategories.length > 0) {
-        setGenreCategories([]);
-      }
-    }
-  }, [isPublic, genreCategories.length]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -187,71 +165,38 @@ function CreateListForm({
       // Build genres array
       const genresData = genreCategories.length > 0 ? genreCategories : undefined;
 
-      if (offline) {
-        // Offline mode: create in localStorage
-        const newWatchlist: Watchlist = {
-          id: `offline-${Date.now()}`,
-          ownerId: 'offline',
-          name: name.trim(),
-          description: description.trim() || null,
-          imageUrl: imagePreview || null,
-          thumbnailUrl: null,
-          dominantColor: null,
-          isPublic: false,
-          genres: [],
-          collaborators: [],
-          items: [],
-          likedBy: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+      const created = await watchlistsApi.create({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        genres: genresData,
+      });
+      let watchlist: Watchlist = {
+        ...created.watchlist,
+        collaborators: [],
+      };
 
-        // Reset form
-        setName('');
-        setDescription('');
-        setIsPublic(false);
-        setGenreCategories([]);
-        setImagePreview(null);
-
-        onSuccess(newWatchlist);
-        onClose();
-      } else {
-        // Online mode: create via API
-        const created = await watchlistsApi.create({
-          name: name.trim(),
-          description: description.trim() || undefined,
-          isPublic,
-          genres: genresData,
-        });
-        let watchlist: Watchlist = {
-          ...created.watchlist,
-          collaborators: [],
-        };
-
-        // Upload cover image if provided and update watchlist with imageUrl
-        if (imagePreview) {
-          const uploadResult = await watchlistsApi.uploadCover(watchlist.id, imagePreview);
-          if (uploadResult.watchlist) {
-            watchlist = { ...watchlist, ...uploadResult.watchlist };
-          }
+      // Upload cover image if provided and update watchlist with imageUrl
+      if (imagePreview) {
+        const uploadResult = await watchlistsApi.uploadCover(watchlist.id, imagePreview);
+        if (uploadResult.watchlist) {
+          watchlist = { ...watchlist, ...uploadResult.watchlist };
         }
-
-        // Reset form
-        setName('');
-        setDescription('');
-        setIsPublic(false);
-        setGenreCategories([]);
-        setImagePreview(null);
-
-        // Add ownership flags for optimistic update (these are normally added by getMine)
-        onSuccess({
-          ...watchlist,
-          isOwner: true,
-          isCollaborator: false,
-          isSaved: false,
-        });
-        onClose();
       }
+
+      // Reset form
+      setName('');
+      setDescription('');
+      setGenreCategories([]);
+      setImagePreview(null);
+
+      // Add ownership flags for optimistic update (these are normally added by getMine)
+      onSuccess({
+        ...watchlist,
+        isOwner: true,
+        isCollaborator: false,
+        isSaved: false,
+      });
+      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create watchlist');
     } finally {
@@ -262,7 +207,6 @@ function CreateListForm({
   const handleCancel = () => {
     setName('');
     setDescription('');
-    setIsPublic(false);
     setGenreCategories([]);
     setImagePreview(null);
     setError(null);
@@ -304,56 +248,29 @@ function CreateListForm({
         />
       </div>
 
-      {/* Public Checkbox - Only shown for authenticated users */}
-      {!offline && (
-        <>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="isPublic"
-              checked={isPublic}
-              onChange={e => setIsPublic(e.target.checked)}
+      {/* Genre Categories (les listes sont toutes publiques) */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium">
+          {content.watchlists.genreCategories || 'Catégories par genre'}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {GENRE_CATEGORIES.map(category => (
+            <button
+              type="button"
+              key={category}
+              onClick={() => toggleGenreCategory(category)}
               disabled={loading}
-              className="border-input bg-background text-primary focus-visible:ring-ring h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <label
-              htmlFor="isPublic"
-              className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                genreCategories.includes(category)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
             >
-              {content.watchlists.makePublic}
-            </label>
-          </div>
-
-          {/* Categories Selection - Only shown if public */}
-          {isPublic && (
-            <>
-              {/* Genre Categories */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  {content.watchlists.genreCategories || 'Catégories par genre'}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {GENRE_CATEGORIES.map(category => (
-                    <button
-                      type="button"
-                      key={category}
-                      onClick={() => toggleGenreCategory(category)}
-                      disabled={loading}
-                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                        genreCategories.includes(category)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      }`}
-                    >
-                      {getCategoryInfo(category, content).name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </>
-      )}
+              {getCategoryInfo(category, content).name}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Cover Image Upload */}
       <div className="space-y-2">

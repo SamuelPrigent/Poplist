@@ -82,7 +82,6 @@ export interface Watchlist {
   imageUrl: string | null;
   thumbnailUrl: string | null;
   dominantColor: string | null;
-  isPublic: boolean | null;
   genres: string[] | null;
   createdAt: string | null;
   updatedAt: string | null;

@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import AccountPage from '@/app/account/page';
-import { getAuthStatus } from '@/server/auth';
+import { getAuthStatusFast } from '@/lib/auth-status';
 
 export const Route = createFileRoute('/account/')({
   beforeLoad: async () => {
-    const { isAuthenticated } = await getAuthStatus();
+    const { isAuthenticated } = await getAuthStatusFast();
     if (!isAuthenticated) {
       throw redirect({ to: '/home' });
     }

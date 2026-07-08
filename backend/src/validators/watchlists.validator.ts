@@ -20,16 +20,13 @@ const watchlistItemSchema = z.object({
 export const createWatchlistSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
-  isPublic: z.boolean().optional(),
   genres: z.array(z.string()).optional(),
   items: z.array(watchlistItemSchema).optional(),
-  fromLocalStorage: z.boolean().optional(),
 });
 
 export const updateWatchlistSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
-  isPublic: z.boolean().optional(),
   genres: z.array(z.string()).optional(),
   items: z.array(watchlistItemSchema).optional(),
 });

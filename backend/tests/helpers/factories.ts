@@ -50,7 +50,6 @@ export async function createUser(opts: CreateUserOptions = {}): Promise<CreatedU
 export interface CreateWatchlistOptions {
   name?: string;
   description?: string;
-  isPublic?: boolean;
   genres?: string[];
 }
 
@@ -61,7 +60,6 @@ export async function createWatchlist(ownerId: string, opts: CreateWatchlistOpti
       ownerId,
       name: opts.name ?? `Test Watchlist ${++counter}`,
       description: opts.description ?? null,
-      isPublic: opts.isPublic ?? true,
       genres: opts.genres ?? [],
     })
     .returning();

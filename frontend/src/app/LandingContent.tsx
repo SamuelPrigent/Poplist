@@ -394,15 +394,6 @@ function LandingPageInner() {
             </div>
 
             <Accordion type="single" collapsible className="mx-auto w-[90%] max-[749px]:w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
-                  {content.home.faq.questions.privateWatchlists.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {content.home.faq.questions.privateWatchlists.answer}
-                </AccordionContent>
-              </AccordionItem>
-
               <AccordionItem value="item-2">
                 <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
                   {content.home.faq.questions.pricing.question}

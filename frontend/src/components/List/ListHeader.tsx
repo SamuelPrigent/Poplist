@@ -188,14 +188,6 @@ export function ListHeader({
 
           {/* Info */}
           <div className="flex flex-1 flex-col justify-end space-y-4">
-            {/* Publique = état par défaut, on ne l'affiche pas ; seul le privé
-                est signalé */}
-            {!watchlist.isPublic && (
-              <span className="text-muted-foreground text-sm font-normal">
-                {content.watchlists.headerPrivate}
-              </span>
-            )}
-
             {/* Mobile : taille alignée sur l'app native (gain d'espace vertical) */}
             <h1 className="text-4xl font-bold text-white max-[749px]:text-2xl md:text-7xl">
               {onEdit ? (

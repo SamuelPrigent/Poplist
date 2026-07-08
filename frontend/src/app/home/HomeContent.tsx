@@ -26,7 +26,6 @@ import {
   type WatchlistItem,
 } from '@/api';
 import { tmdbQueries, watchlistsQueries } from '@/api/queries';
-import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { MoviePoster } from '@/components/Home/MoviePoster';
@@ -124,7 +123,6 @@ function HomeContentInner() {
   const [randomPage] = useState(() => Math.floor(Math.random() * 5) + 1);
 
   // Local watchlists pour les utilisateurs non-auth (localStorage)
-  const [localWatchlists, setLocalWatchlists] = useState<Watchlist[]>([]);
 
   const [selectedTrendingItem, setSelectedTrendingItem] = useState<{
     tmdbId: string;
@@ -197,19 +195,12 @@ function HomeContentInner() {
       .slice(0, 12);
   }, [allPublic]);
 
-  // Mes watchlists côté auth (TQ) ou localStorage côté non-auth
+  // Mes watchlists côté auth (TQ) ; non connecté → aucune liste
   const myWatchlistsQuery = useQuery({
     ...watchlistsQueries.mine(),
     enabled: !!user,
   });
-  useEffect(() => {
-    if (!user) {
-      setLocalWatchlists(getLocalWatchlistsWithOwnership());
-    }
-  }, [user]);
-  const userWatchlists: Watchlist[] = user
-    ? (myWatchlistsQuery.data?.watchlists ?? [])
-    : localWatchlists;
+  const userWatchlists: Watchlist[] = user ? (myWatchlistsQuery.data?.watchlists ?? []) : [];
 
   // Discover movies + TV en parallèle (1h staleTime, partagé inter-pages)
   const movieDiscoverQuery = useQuery(
@@ -306,14 +297,6 @@ function HomeContentInner() {
           ),
         };
       });
-    } else {
-      setLocalWatchlists((prev) =>
-        prev.map((wl) =>
-          wl.id === watchlistId && !wl.items.some((it) => it.tmdbId === item.tmdbId)
-            ? { ...wl, items: [...wl.items, item] }
-            : wl,
-        ),
-      );
     }
   };
 
@@ -330,14 +313,6 @@ function HomeContentInner() {
           }),
         };
       });
-    } else {
-      setLocalWatchlists((prev) =>
-        prev.map((wl) => {
-          if (wl.id !== watchlistId) return wl;
-          removed = wl.items.find((it) => it.tmdbId === tmdbId);
-          return { ...wl, items: wl.items.filter((it) => it.tmdbId !== tmdbId) };
-        }),
-      );
     }
     return removed;
   };
@@ -479,7 +454,7 @@ function HomeContentInner() {
                 <ListCardSmall
                   key={watchlist.id}
                   watchlist={watchlist}
-                  to={user ? `/lists/${watchlist.id}` : `/local/list/${watchlist.id}`}
+                  to={`/lists/${watchlist.id}`}
                 />
               ))}
             </div>
@@ -529,7 +504,6 @@ function HomeContentInner() {
               imageUrl: null,
               thumbnailUrl: null,
               dominantColor: null,
-              isPublic: true,
               genres: [],
               collaborators: [],
               items: placeholderItems,

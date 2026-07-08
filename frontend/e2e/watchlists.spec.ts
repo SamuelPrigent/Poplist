@@ -10,13 +10,12 @@ import { resetDb } from './helpers/db';
 
 async function createWatchlistViaApi(
   context: import('@playwright/test').BrowserContext,
-  data: { name?: string; description?: string; isPublic?: boolean } = {}
+  data: { name?: string; description?: string } = {}
 ) {
   const res = await context.request.post(`${FRONTEND_BASE}/api/watchlists`, {
     data: {
       name: data.name ?? `Test Watchlist ${Date.now()}`,
       description: data.description ?? 'Test',
-      isPublic: data.isPublic ?? true,
       genres: [],
     },
   });
@@ -75,7 +74,7 @@ test.describe('Watchlists CRUD (API + UI)', () => {
     const res = await context.request.put(
       `${FRONTEND_BASE}/api/watchlists/${watchlist.id}`,
       {
-        data: { name: 'New name', description: 'Updated', isPublic: true },
+        data: { name: 'New name', description: 'Updated' },
       }
     );
     expect(res.ok()).toBe(true);
@@ -135,7 +134,7 @@ test.describe('Watchlists CRUD (API + UI)', () => {
     await context.clearCookies();
 
     const res = await context.request.post(`${FRONTEND_BASE}/api/watchlists`, {
-      data: { name: 'Forbidden', description: '', isPublic: true, genres: [] },
+      data: { name: 'Forbidden', description: '', genres: [] },
       failOnStatusCode: false,
     });
     expect(res.status()).toBe(401);
@@ -154,7 +153,7 @@ test.describe('Watchlists CRUD (API + UI)', () => {
     const res = await context.request.put(
       `${FRONTEND_BASE}/api/watchlists/${watchlist.id}`,
       {
-        data: { name: 'Volée', description: '', isPublic: true },
+        data: { name: 'Volée', description: '' },
         failOnStatusCode: false,
       }
     );

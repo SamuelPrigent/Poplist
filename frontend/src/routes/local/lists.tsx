@@ -1,21 +1,19 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { ListsOfflineContent } from '@/app/local/lists/ListsOfflineContent';
-import { getAuthStatus } from '@/server/auth';
+import { ListsGuestContent } from '@/app/local/lists/ListsGuestContent';
+import { getAuthStatusFast } from '@/lib/auth-status';
 
 export const Route = createFileRoute('/local/lists')({
   beforeLoad: async () => {
-    const { isAuthenticated } = await getAuthStatus();
+    const { isAuthenticated } = await getAuthStatusFast();
     if (isAuthenticated) {
-      // Auth → bascule sur la library serveur (les listes locales seraient
-      // proposées en migration via le flow features/watchlists/localStorage)
       throw redirect({ to: '/account/lists' });
     }
   },
   head: () => ({
     meta: [
-      { title: 'Mes listes (local) | Poplist' },
-      { name: 'description', content: 'Gérez vos listes locales de films et séries' },
+      { title: 'Mes listes | Poplist' },
+      { name: 'description', content: 'Créez un compte pour créer et partager vos listes' },
     ],
   }),
-  component: ListsOfflineContent,
+  component: ListsGuestContent,
 });

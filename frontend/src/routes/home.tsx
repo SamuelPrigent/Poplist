@@ -1,13 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { HomeContent } from '@/app/home/HomeContent';
 import { tmdbQueries, watchlistsQueries } from '@/api/queries';
-import { getAuthStatus } from '@/server/auth';
+import { getAuthStatusFast } from '@/lib/auth-status';
+import { HomePending } from '@/components/skeletons/RoutePending';
 import { getMineForSSR } from '@/server/watchlists';
 import { GENRE_CATEGORIES } from '@/types/categories';
 
 export const Route = createFileRoute('/home')({
   beforeLoad: async () => {
-    const { isAuthenticated } = await getAuthStatus();
+    const { isAuthenticated } = await getAuthStatusFast();
     return { isAuthenticated };
   },
   loader: async ({ context: { queryClient, isAuthenticated } }) => {
@@ -48,5 +49,6 @@ export const Route = createFileRoute('/home')({
       { name: 'description', content: 'Découvrez les films et séries tendance' },
     ],
   }),
+  pendingComponent: HomePending,
   component: HomeContent,
 });

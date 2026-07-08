@@ -1,5 +1,4 @@
 import { Eye, EyeOff } from "lucide-react";
-import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +50,6 @@ export function AuthDrawer({
 	initialMode = "login",
 }: AuthDrawerProps) {
 	const { content } = useLanguageStore();
-	const navigate = useNavigate();
-	const pathname = useLocation({ select: (l) => l.pathname });
 	const [mode, setMode] = useState<"login" | "signup">(initialMode);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -83,11 +80,6 @@ export function AuthDrawer({
 				await login(email, password);
 			} else {
 				await signup(email, password);
-			}
-
-			// If user was on an offline list page, redirect to lists page
-			if (pathname.includes("/offline-")) {
-				navigate({ to: "/account/lists" as never });
 			}
 
 			onClose();
@@ -137,11 +129,6 @@ export function AuthDrawer({
 
 					// Close drawer after user is updated
 					onClose();
-
-					// If user was on an offline list page, redirect to lists page
-					if (pathname.includes("/offline-")) {
-						navigate({ to: "/account/lists" as never });
-					}
 				} catch (err) {
 					console.error("Failed to set OAuth tokens:", err);
 					setError("Failed to complete authentication");

@@ -1,12 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { ListsContent } from '@/app/account/lists/ListsContent';
 import { watchlistsQueries } from '@/api/queries';
-import { getAuthStatus } from '@/server/auth';
+import { getAuthStatusFast } from '@/lib/auth-status';
 import { getMineForSSR } from '@/server/watchlists';
 
 export const Route = createFileRoute('/account/lists')({
   beforeLoad: async () => {
-    const { isAuthenticated } = await getAuthStatus();
+    const { isAuthenticated } = await getAuthStatusFast();
     if (!isAuthenticated) {
       // Pas auth → bascule sur l'équivalent localStorage
       throw redirect({ to: '/local/lists' });

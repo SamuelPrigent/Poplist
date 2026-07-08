@@ -37,18 +37,18 @@ export const pt: Content = {
     createWatchlistDescription: 'Crie uma nova lista para organizar os seus filmes e séries.',
     noWatchlistsMobile: 'Nenhuma lista',
     createWatchlistDescriptionMobile: 'Crie a sua primeira lista.',
-    notLoggedInWarning: 'Modo offline',
     noWatchlists: 'Ainda não criou nenhuma lista.',
+    signupCta: {
+      title: 'Crie uma conta',
+      description: 'Crie listas de filmes e séries e compartilhe com a comunidade.',
+      button: 'Cadastre-se',
+    },
     myWatchlists: 'As minhas listas',
     followed: 'Seguidas',
     noWatchlistsInCategory: 'Nenhuma lista nesta categoria',
     adjustFilters: 'Ajuste os filtros para ver mais listas',
     items: 'itens',
     item: 'item',
-    headerPublic: 'Lista pública',
-    headerPrivate: 'Lista privada',
-    public: 'Público',
-    private: 'Privado',
     loading: 'A carregar...',
     accountDataBadge: 'Dados da conta de utilizador',
     preview: 'Pré-visualização',
@@ -67,7 +67,6 @@ export const pt: Content = {
     changeImage: 'Alterar imagem',
     imageUploadHint: 'PNG, JPG ou WEBP (máx. 5MB)',
     removeImage: 'Remover a capa',
-    makePublic: 'Tornar pública',
     cancel: 'Cancelar',
     create: 'Criar',
     creating: 'A criar...',
@@ -173,13 +172,6 @@ export const pt: Content = {
     },
     addToWatchlist: 'Adicionar a uma lista',
     noWatchlist: 'Nenhuma lista',
-    offlinePopover: {
-      title: 'Por que se registar?',
-      accessEverywhere: 'Aceda às suas listas em qualquer lugar',
-      collaborativeLists: 'Crie listas colaborativas',
-      shareWithFriends: 'Partilhe as suas listas com amigos',
-      signup: 'Registar',
-    },
     toasts: {
       linkCopied: 'Link copiado',
       linkCopyError: 'Não foi possível copiar o link',
@@ -308,11 +300,6 @@ export const pt: Content = {
       title: 'Perguntas frequentes',
       subtitle: 'Tudo o que precisa saber para começar',
       questions: {
-        privateWatchlists: {
-          question: 'Como funcionam as listas privadas?',
-          answer:
-            'As listas privadas permitem-lhe manter as suas seleções para si. São visíveis apenas para si e não podem ser partilhadas com outros utilizadores. Pode alternar entre privado e público a qualquer momento nas definições da sua lista.',
-        },
         pricing: {
           question: 'É gratuito para usar?',
           answer:

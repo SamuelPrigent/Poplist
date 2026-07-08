@@ -13,7 +13,6 @@ interface DeleteListDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   watchlist: Watchlist;
-  offline?: boolean;
 }
 
 export function DeleteListDialog({
@@ -21,7 +20,6 @@ export function DeleteListDialog({
   onOpenChange,
   onSuccess,
   watchlist,
-  offline = false,
 }: DeleteListDialogProps) {
   const { content } = useLanguageStore();
   const navigate = useNavigate();
@@ -33,28 +31,13 @@ export function DeleteListDialog({
     setError(null);
 
     try {
-      if (offline) {
-        // Offline mode: delete from localStorage
-        const watchlists = JSON.parse(localStorage.getItem('watchlists') || '[]');
-        const filtered = watchlists.filter((w: Watchlist) => w.id !== watchlist.id);
-        localStorage.setItem('watchlists', JSON.stringify(filtered));
+      await watchlistsApi.delete(watchlist.id);
 
-        onOpenChange(false);
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          navigate({ to: '/local/lists' as never });
-        }
+      onOpenChange(false);
+      if (onSuccess) {
+        onSuccess();
       } else {
-        // Online mode: delete via API
-        await watchlistsApi.delete(watchlist.id);
-
-        onOpenChange(false);
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          navigate({ to: '/account/lists' as never });
-        }
+        navigate({ to: '/account/lists' as never });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete watchlist');

@@ -12,17 +12,11 @@ import { cn } from '@/lib/cn';
  * (utile pour un gap spécifique ou un modificateur type
  * `max-[749px]:[&>*:nth-child(n+7)]:hidden`).
  */
-export function ListCardGrid({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function ListCardGrid({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
       className={cn(
-        'grid grid-cols-[repeat(auto-fill,minmax(114px,1fr))] gap-2 max-[749px]:grid-cols-3 max-[749px]:gap-y-4 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
+        'grid grid-cols-[repeat(auto-fill,minmax(85px,1fr))] gap-2 max-[749px]:grid-cols-3 max-[749px]:gap-y-4 max-[349px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
         className,
       )}
     >

@@ -56,6 +56,28 @@ const bluetv = 'landing/movies/bluetv.jpg';
 const damon = 'landing/movies/damon.jpg';
 const agentsecret = 'landing/movies/007.jpg';
 const dicap = 'landing/movies/dicap.jpg';
+const gosling = 'landing/movies/ryangoslingcar.jpg';
+
+// Candidats TMDB alternatifs à blade2 (tons chauds/ambre) — liens directs w500,
+// à valider visuellement puis récupérer/convertir en webp si OK.
+// Blade Runner 2049 — brume orange iconique, Gosling de dos
+const brume2049 = 'https://image.tmdb.org/t/p/w500/ilRyazdMJwN05exqhwK4tMKBYZs.jpg';
+// Taxi Driver — De Niro au cinéma, rouges/bruns chauds
+const taxidriver = 'https://image.tmdb.org/t/p/w500/9uddYYTNcLWpzUkl5iw1RUYhLhY.jpg';
+// Her — Joaquin Phoenix à la fenêtre, lumière dorée (proche de fenetre/blade2)
+const herFenetre = 'https://image.tmdb.org/t/p/w500/zxttikp0SNEtF4vWsg70Vs6McFi.jpg';
+// Mad Max Fury Road — Furiosa gros plan, tons chauds désert
+const furiosa = 'https://image.tmdb.org/t/p/w500/n6vWE0bXq4ImAM00iM5gWyORNSM.jpg';
+// Mad Max Fury Road — plan large désert, teal + orange lumineux
+const madmax = 'https://image.tmdb.org/t/p/w500/uT895WNwm0aIJRtGizcQhrejWUo.jpg';
+// Kill Bill — O-Ren Ishii, sombre + lueur chaude du sabre
+const oren = 'https://image.tmdb.org/t/p/w500/gPA8Th4CyuL5IeTzHE2THkxihkU.jpg';
+// Amélie — fond vert profond + rouge (rappel du vert de saw)
+const amelie = 'https://image.tmdb.org/t/p/w500/6n53UI4mX9QMfe2S0Pgt8mGebY1.jpg';
+// Export temporaire : évite l'erreur "unused" tant que les candidats ne sont
+// pas placés dans les colonnes. À supprimer (avec les constantes non retenues)
+// une fois le tri fait.
+export const TMDB_CANDIDATES = [brume2049, taxidriver, herFenetre, furiosa, madmax, oren, amelie];
 
 const FAMOUS_MOVIES_MOBILE = [
   { id: 1, title: 'Col1-Pos1', image: doa },
@@ -76,8 +98,8 @@ const FAMOUS_MOVIES_MOBILE = [
 // Passe à true le temps de placer tes images : ça coupe tous les fondus /
 // assombrissements → la grille apparaît en pleine lumière, colonnes bien
 // visibles. Remets false quand c'est fini.
-// const DEBUG_HIDE_MASKS = true;
-const DEBUG_HIDE_MASKS = false;
+const DEBUG_HIDE_MASKS = true;
+// const DEBUG_HIDE_MASKS = false;
 
 // new — colonnes ajoutées à GAUCHE, de gauche à droite à l'écran (ColG10
 // touche les colonnes V1 Hero). Dans chaque colonne : de haut en bas.
@@ -159,7 +181,7 @@ const FAMOUS_MOVIES = [
   { id: 7, title: 'Col2-Pos2', image: fenetre },
   { id: 8, title: 'Col2-Pos3', image: theFifth2 },
   { id: 9, title: 'Col2-Pos4', image: jinx },
-  { id: 10, title: 'Col2-Pos5', image: kb },
+  { id: 10, title: 'Col2-Pos5', image: gosling },
   { id: 11, title: 'Col3-Pos1', image: saw },
   { id: 12, title: 'Col3-Pos2', image: blade2 },
   {

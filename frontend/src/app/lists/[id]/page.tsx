@@ -459,7 +459,6 @@ export default function ListDetailPage() {
               onOpenChange={setAddModalOpen}
               watchlist={watchlist}
               onSuccess={() => { invalidateWatchlist(); }}
-              offline={false}
             />
           </Suspense>
         </ClientOnly>
@@ -474,7 +473,6 @@ export default function ListDetailPage() {
               onOpenChange={setEditModalOpen}
               onSuccess={() => { invalidateWatchlist(); }}
               watchlist={watchlist}
-              offline={false}
             />
           </Suspense>
         </ClientOnly>
@@ -492,7 +490,6 @@ export default function ListDetailPage() {
                 queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
                 navigate({ to: '/account/lists' as never });
               }}
-              offline={false}
             />
           </Suspense>
         </ClientOnly>

@@ -19,11 +19,10 @@ import {
 import { useBackHandler } from '@/hooks/useBackHandler';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { CompactWatchProviders, getValidProviders } from '../CompactWatchProviders';
-import { createPlaceholderItem, watchlists as watchlistsApi } from '@/api';
+import { watchlists as watchlistsApi } from '@/api';
 import type { FullMediaDetails, Watchlist, WatchlistItem } from '@/api';
 import { fetchTMDBProviders } from '@/api';
 import { cn } from '@/lib/cn';
-import { getLocalWatchlists } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion, resizeTMDBPoster } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 
@@ -32,7 +31,6 @@ interface AddItemModalProps {
   onOpenChange: (open: boolean) => void;
   watchlist: Watchlist;
   onSuccess: () => void;
-  offline?: boolean;
 }
 
 interface SearchResult {
@@ -50,7 +48,7 @@ interface SearchResult {
 // Hook partagé : recherche, sélection, ajout/retrait — consommé par les 2 shells.
 // ---------------------------------------------------------------------------
 function useAddItem(
-  { open, watchlist, onSuccess, offline = false }: AddItemModalProps,
+  { open, watchlist, onSuccess }: AddItemModalProps,
   // Hauteur d'un slot du virtualizer : doit refléter la hauteur RÉELLE de la
   // row de chaque shell (desktop : p-3 + h-24 = 120px ; drawer mobile : p-2 +
   // h-20 = 96px + 4px de respiration), sinon du vide apparaît sous chaque row.
@@ -84,16 +82,8 @@ function useAddItem(
 
     const fetchFreshItems = async () => {
       try {
-        if (offline) {
-          const localWatchlists = getLocalWatchlists();
-          const freshWatchlist = localWatchlists.find(w => w.id === watchlist.id);
-          if (freshWatchlist) {
-            setFreshWatchlistItems(freshWatchlist.items);
-          }
-        } else {
-          const { watchlist: freshWatchlist } = await watchlistsApi.getById(watchlist.id);
-          setFreshWatchlistItems(freshWatchlist.items);
-        }
+        const { watchlist: freshWatchlist } = await watchlistsApi.getById(watchlist.id);
+        setFreshWatchlistItems(freshWatchlist.items);
       } catch (error) {
         console.error('Failed to fetch fresh watchlist items:', error);
         setFreshWatchlistItems(watchlist.items);
@@ -101,7 +91,7 @@ function useAddItem(
     };
 
     fetchFreshItems();
-  }, [open, watchlist.id, offline, watchlist.items]);
+  }, [open, watchlist.id, watchlist.items]);
 
   // Call onSuccess when modal closes if items were added/removed
   useEffect(() => {
@@ -218,39 +208,12 @@ function useAddItem(
     if (isItemInWatchlist(item.id)) return;
 
     try {
-      if (offline) {
-        const STORAGE_KEY = 'watchlists';
-        const localWatchlists = localStorage.getItem(STORAGE_KEY);
-        if (!localWatchlists) return;
-
-        const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-        const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
-        if (watchlistIndex === -1) return;
-
-        const [platformList, mediaDetails] = await Promise.all([
-          fetchTMDBProviders(item.id.toString(), item.media_type, region),
-          watchlistsApi.getItemDetails(item.id.toString(), item.media_type, languageCode),
-        ]);
-
-        const newItem = createPlaceholderItem({
-          tmdbId: item.id,
-          title: item.title || item.name || '',
-          posterPath: item.poster_path,
-          mediaType: item.media_type,
-          platformList,
-          runtime: mediaDetails.details.runtime,
-        });
-
-        watchlists[watchlistIndex].items.push(newItem);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-      } else {
-        await watchlistsApi.addItem(watchlist.id, {
-          tmdbId: item.id.toString(),
-          mediaType: item.media_type,
-          language: languageCode,
-          region,
-        });
-      }
+      await watchlistsApi.addItem(watchlist.id, {
+        tmdbId: item.id.toString(),
+        mediaType: item.media_type,
+        language: languageCode,
+        region,
+      });
 
       setAddedItemIds(prev => new Set(prev).add(item.id));
       setRemovedItemIds(prev => {
@@ -265,22 +228,7 @@ function useAddItem(
 
   const handleRemoveItem = async (item: SearchResult) => {
     try {
-      if (offline) {
-        const STORAGE_KEY = 'watchlists';
-        const localWatchlists = localStorage.getItem(STORAGE_KEY);
-        if (!localWatchlists) return;
-
-        const watchlists: Watchlist[] = JSON.parse(localWatchlists);
-        const watchlistIndex = watchlists.findIndex(w => w.id === watchlist.id);
-        if (watchlistIndex === -1) return;
-
-        watchlists[watchlistIndex].items = watchlists[watchlistIndex].items.filter(
-          i => i.tmdbId !== item.id
-        );
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-      } else {
-        await watchlistsApi.removeItem(watchlist.id, item.id.toString());
-      }
+      await watchlistsApi.removeItem(watchlist.id, item.id.toString());
 
       setRemovedItemIds(prev => new Set(prev).add(item.id));
       setAddedItemIds(prev => {

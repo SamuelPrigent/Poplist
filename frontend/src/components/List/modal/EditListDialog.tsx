@@ -32,7 +32,6 @@ interface EditListDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   watchlist: Watchlist;
-  offline?: boolean;
 }
 
 export interface EditListDialogRef {
@@ -59,7 +58,7 @@ type ShellProps = EditListDialogProps & { formRef: Ref<EditListDialogRef> };
 // -------------------------------------------------------------------------
 // Shell modale (desktop) — inchangé.
 // -------------------------------------------------------------------------
-function EditListModalShell({ open, onOpenChange, onSuccess, watchlist, offline, formRef }: ShellProps) {
+function EditListModalShell({ open, onOpenChange, onSuccess, watchlist, formRef }: ShellProps) {
   const { content } = useLanguageStore();
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -81,7 +80,6 @@ function EditListModalShell({ open, onOpenChange, onSuccess, watchlist, offline,
             onClose={() => onOpenChange(false)}
             onSuccess={onSuccess}
             watchlist={watchlist}
-            offline={offline}
           />
 
           <DialogPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
@@ -97,7 +95,7 @@ function EditListModalShell({ open, onOpenChange, onSuccess, watchlist, offline,
 // -------------------------------------------------------------------------
 // Shell drawer (mobile)
 // -------------------------------------------------------------------------
-function EditListDrawerShell({ open, onOpenChange, onSuccess, watchlist, offline, formRef }: ShellProps) {
+function EditListDrawerShell({ open, onOpenChange, onSuccess, watchlist, formRef }: ShellProps) {
   const { content } = useLanguageStore();
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -120,7 +118,6 @@ function EditListDrawerShell({ open, onOpenChange, onSuccess, watchlist, offline
             onClose={() => onOpenChange(false)}
             onSuccess={onSuccess}
             watchlist={watchlist}
-            offline={offline}
             stacked
           />
         </div>
@@ -139,14 +136,12 @@ const EditListForm = forwardRef<
     onClose: () => void;
     onSuccess: () => void;
     watchlist: Watchlist;
-    offline?: boolean;
     stacked?: boolean;
   }
->(({ open, onClose, onSuccess, watchlist, offline = false, stacked = false }, ref) => {
+>(({ open, onClose, onSuccess, watchlist, stacked = false }, ref) => {
   const { content } = useLanguageStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [isPublic, setIsPublic] = useState(false);
   const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -171,20 +166,10 @@ const EditListForm = forwardRef<
     if (open && watchlist) {
       setName(watchlist.name);
       setDescription(watchlist.description || '');
-      setIsPublic(watchlist.isPublic ?? false);
       setGenreCategories((watchlist.genres || []) as GenreCategory[]);
       setImagePreview(watchlist.imageUrl || null);
     }
   }, [open, watchlist]);
-
-  // Clear genres when watchlist becomes private
-  useEffect(() => {
-    if (!isPublic) {
-      if (genreCategories.length > 0) {
-        setGenreCategories([]);
-      }
-    }
-  }, [isPublic, genreCategories.length]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -224,62 +209,36 @@ const EditListForm = forwardRef<
     try {
       const genresData = genreCategories.length > 0 ? genreCategories : undefined;
 
-      if (offline) {
-        // Offline mode: update in localStorage
-        const watchlists = JSON.parse(localStorage.getItem('watchlists') || '[]');
-        const index = watchlists.findIndex((w: Watchlist) => w.id === watchlist.id);
+      const updates: {
+        name: string;
+        description?: string;
+        genres?: string[];
+      } = {
+        name: name.trim(),
+      };
 
-        if (index !== -1) {
-          const updatedWatchlist = {
-            ...watchlists[index],
-            name: name.trim(),
-            description: description.trim() || undefined,
-            imageUrl: imagePreview || undefined,
-            isPublic,
-            genres: genresData,
-            updatedAt: new Date().toISOString(),
-          };
-          watchlists[index] = updatedWatchlist;
-          localStorage.setItem('watchlists', JSON.stringify(watchlists));
-        }
-
-        onSuccess();
-        onClose();
+      // Explicitly set description (empty string to clear it)
+      if (description.trim() === '') {
+        updates.description = '';
       } else {
-        // Online mode: update via API
-        const updates: {
-          name: string;
-          description?: string;
-          isPublic: boolean;
-          genres?: string[];
-        } = {
-          name: name.trim(),
-          isPublic,
-        };
-
-        // Explicitly set description (empty string to clear it)
-        if (description.trim() === '') {
-          updates.description = '';
-        } else {
-          updates.description = description.trim();
-        }
-
-        if (genresData) {
-          updates.genres = genresData;
-        }
-
-        await watchlistsApi.update(watchlist.id, updates);
-
-        // Handle image changes
-        if (imagePreview === null && watchlist.imageUrl) {
-          await watchlistsApi.deleteCover(watchlist.id);
-        } else if (imageFile && imagePreview && imagePreview !== watchlist.imageUrl) {
-          await watchlistsApi.uploadCover(watchlist.id, imagePreview);
-        }
-
-        onSuccess();
-        onClose();
+        updates.description = description.trim();
       }
+
+      if (genresData) {
+        updates.genres = genresData;
+      }
+
+      await watchlistsApi.update(watchlist.id, updates);
+
+      // Handle image changes
+      if (imagePreview === null && watchlist.imageUrl) {
+        await watchlistsApi.deleteCover(watchlist.id);
+      } else if (imageFile && imagePreview && imagePreview !== watchlist.imageUrl) {
+        await watchlistsApi.uploadCover(watchlist.id, imagePreview);
+      }
+
+      onSuccess();
+      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update watchlist');
     } finally {
@@ -405,27 +364,8 @@ const EditListForm = forwardRef<
         </div>
       </div>
 
-      {/* Public Checkbox */}
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="isPublic"
-          checked={isPublic}
-          onChange={e => setIsPublic(e.target.checked)}
-          disabled={loading}
-          className="border-input bg-background text-primary h-4 w-4 disabled:cursor-not-allowed disabled:opacity-50"
-        />
-        <label
-          htmlFor="isPublic"
-          className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        >
-          {content.watchlists.makePublic}
-        </label>
-      </div>
-
-      {/* Categories Selection - Only shown if public */}
-      {isPublic && (
-        <div className="space-y-2">
+      {/* Genre Categories (les listes sont toutes publiques) */}
+      <div className="space-y-2">
           <p className="text-sm font-medium">
             {content.watchlists.genreCategories || 'Catégories par genre'}
           </p>
@@ -446,8 +386,7 @@ const EditListForm = forwardRef<
               </button>
             ))}
           </div>
-        </div>
-      )}
+      </div>
 
       <div className={cn('flex gap-2', stacked ? 'flex-col' : 'justify-end')}>
         {stacked && (

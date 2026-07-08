@@ -64,7 +64,7 @@ export const getUserProfileByUsername = async (c: C) => {
         eq(userWatchlistPositions.userId, foundUser.id),
       ),
     )
-    .where(and(eq(watchlists.ownerId, foundUser.id), eq(watchlists.isPublic, true)))
+    .where(eq(watchlists.ownerId, foundUser.id))
     .orderBy(asc(userWatchlistPositions.position), asc(watchlists.createdAt));
 
   const enriched = await loadWatchlistRelations(baseWatchlists);

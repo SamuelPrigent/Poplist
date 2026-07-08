@@ -2,7 +2,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
-import { mergeLocalWatchlistsToDB } from "@/features/watchlists/localStorage";
 import { auth, setAuthErrorHandler } from "@/api";
 import { authQueries } from "@/api/queries";
 import { type Language, useLanguageStore } from "@/store/language";
@@ -150,12 +149,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setStoredAuthState(true, signedUpUser);
 		setOptimisticAuth(true);
 		setHasLocalSession(true);
-
-		try {
-			await mergeLocalWatchlistsToDB();
-		} catch (error) {
-			console.error("Failed to merge local watchlists after signup:", error);
-		}
 		queryClient.invalidateQueries({ queryKey: ['watchlists'] });
 	};
 

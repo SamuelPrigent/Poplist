@@ -125,7 +125,6 @@ interface ListItemsTableProps {
   onUpdate: (updatedWatchlist?: Watchlist) => void;
   isOwner?: boolean;
   isCollaborator?: boolean;
-  offline?: boolean;
   currentPage?: number;
   itemsPerPage?: number;
 }

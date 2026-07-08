@@ -9,7 +9,7 @@ async function createListWithItems(
   itemTmdbIds: number[] = [1000, 1001, 1002],
 ): Promise<{ id: string }> {
   const wlRes = await context.request.post(`${FRONTEND_BASE}/api/watchlists`, {
-    data: { name: 'Test List', description: '', isPublic: true, genres: [] },
+    data: { name: 'Test List', description: '', genres: [] },
   });
   const { watchlist } = (await wlRes.json()) as { watchlist: { id: string } };
 

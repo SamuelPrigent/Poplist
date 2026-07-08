@@ -56,22 +56,21 @@ describe('Users — /user/*', () => {
       expect((await anon('/user/profile/ghost_user')).status).toBe(404);
     });
 
-    it('200 + ne renvoie QUE les listes publiques du user', async () => {
+    it('200 + renvoie les listes du user', async () => {
       const u = await createUser({ username: 'publicguy' });
-      await createWatchlist(u.id, { isPublic: true, name: 'Publique' });
-      await createWatchlist(u.id, { isPublic: false, name: 'Privée' });
+      await createWatchlist(u.id, { name: 'Liste A' });
+      await createWatchlist(u.id, { name: 'Liste B' });
 
       const res = await anon('/user/profile/publicguy');
       expect(res.status).toBe(200);
       const body = (await res.json()) as {
         user: { id: string; username: string | null; avatarUrl: string | null };
-        watchlists: Array<{ name: string; isPublic: boolean | null }>;
+        watchlists: Array<{ name: string }>;
         totalPublicWatchlists: number;
       };
       expect(body.user.username).toBe('publicguy');
-      expect(body.watchlists).toHaveLength(1);
-      expect(body.watchlists[0].name).toBe('Publique');
-      expect(body.totalPublicWatchlists).toBe(1);
+      expect(body.watchlists).toHaveLength(2);
+      expect(body.totalPublicWatchlists).toBe(2);
     });
   });
 

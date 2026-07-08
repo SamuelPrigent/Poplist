@@ -145,7 +145,6 @@ export function formatWatchlistWithRelations(watchlist: WatchlistWithRelations):
     imageUrl: watchlist.imageUrl,
     thumbnailUrl: watchlist.thumbnailUrl,
     dominantColor: watchlist.dominantColor,
-    isPublic: watchlist.isPublic,
     genres: watchlist.genres,
     createdAt: watchlist.createdAt?.toISOString() ?? null,
     updatedAt: watchlist.updatedAt?.toISOString() ?? null,
@@ -302,7 +301,6 @@ export const getPublicFeatured = async (c: C) => {
   const baseWatchlists = await db
     .select()
     .from(watchlists)
-    .where(eq(watchlists.isPublic, true))
     .orderBy(desc(watchlists.createdAt))
     .limit(limit);
 
@@ -348,10 +346,6 @@ export const getPublicWatchlist = async (c: C) => {
     return c.json({ error: 'Watchlist not found' }, 404);
   }
 
-  if (!watchlist.isPublic) {
-    return c.json({ error: 'This watchlist is private' }, 403);
-  }
-
   return c.json({ watchlist: formatWatchlistWithRelations(watchlist) } satisfies WatchlistsAPI.GetPublicWatchlistResponse);
 };
 
@@ -365,7 +359,7 @@ export const getWatchlistsByGenre = async (c: C) => {
   const baseWatchlists = await db
     .select()
     .from(watchlists)
-    .where(and(eq(watchlists.isPublic, true), sql`${genre} = ANY(${watchlists.genres})`))
+    .where(sql`${genre} = ANY(${watchlists.genres})`)
     .orderBy(desc(watchlists.createdAt));
 
   const enriched = await loadWatchlistRelations(baseWatchlists, { withLikedBy: true });
@@ -383,7 +377,7 @@ export const getWatchlistCountByGenre = async (c: C) => {
   const result = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(watchlists)
-    .where(and(eq(watchlists.isPublic, true), sql`${genre} = ANY(${watchlists.genres})`));
+    .where(sql`${genre} = ANY(${watchlists.genres})`);
 
   return c.json({ genre, count: result[0]?.count ?? 0 } satisfies WatchlistsAPI.GetWatchlistCountByGenreResponse);
 };
@@ -467,14 +461,6 @@ export const getWatchlistRecommendations = async (c: C) => {
   const watchlist = await loadOneWatchlistRelations(id);
   if (!watchlist) {
     return c.json({ error: 'Watchlist not found' }, 404);
-  }
-
-  // Accès : liste publique → tout le monde ; sinon owner ou collaborateur.
-  const isOwner = !!userId && watchlist.ownerId === userId;
-  const isCollaborator =
-    !!userId && (watchlist.collaborators?.some(col => col.user.id === userId) ?? false);
-  if (!watchlist.isPublic && !isOwner && !isCollaborator) {
-    return c.json({ error: 'Access denied' }, 403);
   }
 
   // 1. Cache DB — servi tel quel si frais (< 30 j)
@@ -697,24 +683,12 @@ export const getMyWatchlists = async (c: C) => {
 export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
   const userId = c.get('user')!.sub;
 
-  if (data.fromLocalStorage) {
-    const [existing] = await db
-      .select({ id: watchlists.id })
-      .from(watchlists)
-      .where(and(eq(watchlists.ownerId, userId), eq(watchlists.name, data.name)))
-      .limit(1);
-    if (existing) {
-      data.name = `${data.name} (local)`;
-    }
-  }
-
   const [watchlist] = await db
     .insert(watchlists)
     .values({
       ownerId: userId,
       name: data.name,
       description: data.description,
-      isPublic: data.isPublic || false,
       genres: data.genres || [],
     })
     .returning();
@@ -816,11 +790,6 @@ export const getWatchlistById = async (c: C) => {
 
   const isOwner = watchlist.ownerId === userId;
   const isCollaborator = watchlist.collaborators?.some(c => c.user.id === userId) ?? false;
-  const isPublic = watchlist.isPublic;
-
-  if (!isOwner && !isCollaborator && !isPublic) {
-    return c.json({ error: 'Access denied' }, 403);
-  }
 
   const [savedCheck] = await db
     .select({ userId: savedWatchlists.userId })
@@ -866,7 +835,6 @@ export const updateWatchlist = async (c: C, data: UpdateWatchlistInput) => {
   const updateData: Partial<typeof watchlists.$inferInsert> = {};
   if (data.name) updateData.name = data.name;
   if (data.description !== undefined) updateData.description = data.description;
-  if (data.isPublic !== undefined) updateData.isPublic = data.isPublic;
   if (data.genres !== undefined) updateData.genres = data.genres;
 
   if (data.items) {
@@ -1797,17 +1765,13 @@ export const saveWatchlist = async (c: C) => {
   }
 
   const [watchlist] = await db
-    .select({ isPublic: watchlists.isPublic, ownerId: watchlists.ownerId })
+    .select({ ownerId: watchlists.ownerId })
     .from(watchlists)
     .where(eq(watchlists.id, id))
     .limit(1);
 
   if (!watchlist) {
     return c.json({ error: 'Watchlist not found' }, 404);
-  }
-
-  if (!watchlist.isPublic) {
-    return c.json({ error: 'Can only save public watchlists' }, 403);
   }
 
   if (watchlist.ownerId === userId) {
@@ -1916,11 +1880,6 @@ export const duplicateWatchlist = async (c: C) => {
     return c.json({ error: 'Watchlist not found' }, 404);
   }
 
-  const collaboratorRows = await db
-    .select({ userId: watchlistCollaborators.userId })
-    .from(watchlistCollaborators)
-    .where(eq(watchlistCollaborators.watchlistId, id));
-
   const originalItems = await db
     .select()
     .from(watchlistItems)
@@ -1928,11 +1887,6 @@ export const duplicateWatchlist = async (c: C) => {
     .orderBy(asc(watchlistItems.position));
 
   const isOwner = originalWatchlist.ownerId === userId;
-  const isCollaborator = collaboratorRows.some(c => c.userId === userId);
-
-  if (!originalWatchlist.isPublic && !isOwner && !isCollaborator) {
-    return c.json({ error: 'Access denied' }, 403);
-  }
 
   if (isOwner) {
     return c.json({ error: 'Cannot duplicate your own watchlist' }, 400);
@@ -1944,7 +1898,6 @@ export const duplicateWatchlist = async (c: C) => {
       ownerId: userId,
       name: `${originalWatchlist.name} (copy)`,
       description: originalWatchlist.description,
-      isPublic: false,
       genres: originalWatchlist.genres,
       thumbnailUrl: originalWatchlist.thumbnailUrl,
     })

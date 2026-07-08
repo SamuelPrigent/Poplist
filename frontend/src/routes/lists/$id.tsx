@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import ListDetailPage from '@/app/lists/[id]/page';
 import { watchlistsQueries } from '@/api/queries';
-import { getAuthStatus } from '@/server/auth';
+import { getAuthStatusFast } from '@/lib/auth-status';
+import { ListDetailPending } from '@/components/skeletons/RoutePending';
 import { getAuthWatchlistForMeta, getPublicWatchlistForMeta } from '@/server/watchlists';
 
 export const Route = createFileRoute('/lists/$id')({
@@ -9,7 +10,7 @@ export const Route = createFileRoute('/lists/$id')({
   // `isAuthenticated` de manière déterministe SSR + client (même cookie, même
   // valeur). On évite la divergence localStorage qu'on avait avec `useAuth()`.
   beforeLoad: async () => {
-    const { isAuthenticated } = await getAuthStatus();
+    const { isAuthenticated } = await getAuthStatusFast();
     return { isAuthenticated };
   },
   loader: async ({ params, context: { queryClient, isAuthenticated } }) => {
@@ -67,5 +68,6 @@ export const Route = createFileRoute('/lists/$id')({
       ],
     };
   },
+  pendingComponent: ListDetailPending,
   component: ListDetailPage,
 });

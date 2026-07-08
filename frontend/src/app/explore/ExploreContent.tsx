@@ -2,7 +2,6 @@
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
 import {
   Check,
   ChevronDown,
@@ -20,7 +19,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Img as Image } from '@/components/ui/Img';
 import { tmdbQueries, watchlistsQueries } from '@/api/queries';
-import { useSearchParamsCompat as useSearchParams } from '@/hooks/useSearchParamsCompat';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
 import { WatchlistPickerMenu } from '@/components/List/WatchlistPickerMenu';
 import { Button } from '@/components/ui/button';
@@ -50,7 +48,6 @@ import {
   type WatchlistItem,
 } from '@/api';
 import { cn } from '@/lib/cn';
-import { getLocalWatchlistsWithOwnership } from '@/lib/localStorageHelpers';
 import { getTMDBLanguage, getTMDBRegion, tmdbPosterSrcSet } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
@@ -108,8 +105,6 @@ export function ExploreContent() {
   const { isAuthenticated } = useAuth();
   const tmdbLanguage = getTMDBLanguage(language);
   const tmdbRegion = getTMDBRegion(language);
-  const navigate = useNavigate();
-  const searchParams = useSearchParams();
 
   // Track active grid column count (matches Tailwind breakpoints on the grid below)
   const [gridCols, setGridCols] = useState(6);
@@ -127,70 +122,25 @@ export function ExploreContent() {
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // Helper to update URL params via TanStack Router idiom : on passe une
-  // fonction `search` qui reçoit l'ancien search en argument et renvoie le
-  // nouveau. C'est la forme attendue par TanStack pour éviter les bugs de
-  // sérialisation (l'ancienne approche `to: pathname + search: { ...new }`
-  // produisait `e?page=2` au lieu de `?page=2` selon le user — sans doute un
-  // pb de cast `as never` qui faisait passer la string pathname pour un
-  // search-string).
-  const updateSearchParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      navigate({
-        to: '/explore',
-        search: (prev: Record<string, unknown>) => {
-          const next: Record<string, string> = {};
-          for (const [key, value] of Object.entries(prev ?? {})) {
-            if (value !== undefined && value !== null) next[key] = String(value);
-          }
-          for (const [key, value] of Object.entries(updates)) {
-            if (value === null) {
-              delete next[key];
-            } else {
-              next[key] = value;
-            }
-          }
-          return next;
-        },
-      });
-    },
-    [navigate],
-  );
-
-  // Use useMemo to memoize derived values from searchParams
-  const mediaType = useMemo(() => {
-    return (searchParams.get('type') || 'movie') as 'movie' | 'tv';
-  }, [searchParams]);
-
-  const filterType = useMemo(
-    () => (searchParams.get('filter') as 'popular' | 'top_rated') || 'popular',
-    [searchParams],
-  );
-
-  const selectedGenres = useMemo(() => {
-    const genres = searchParams.get('genres');
-    return genres ? genres.split(',').map(Number) : [];
-  }, [searchParams]);
-
-  // Extract year from date params (format: YYYY-MM-DD -> YYYY)
-  const yearFromParam = useMemo(() => {
-    const dateStr = searchParams.get('dateFrom') || '';
-    return dateStr ? dateStr.split('-')[0] : '';
-  }, [searchParams]);
-
-  const yearToParam = useMemo(() => {
-    const dateStr = searchParams.get('dateTo') || '';
-    return dateStr ? dateStr.split('-')[0] : '';
-  }, [searchParams]);
-
-  const page = useMemo(() => Number(searchParams.get('page')) || 1, [searchParams]);
+  // Filtres en state local (plus de query params dans l'URL) : le back
+  // handler des drawers consomme des entrées d'historique fantômes, ce qui
+  // annulait toute navigation faite pendant qu'un drawer était ouvert
+  // (appliquer un filtre → URL revertée à la fermeture). Pas besoin d'URLs
+  // de recherche partageables ici.
+  const [mediaType, setMediaTypeState] = useState<'movie' | 'tv'>('movie');
+  const [filterType, setFilterTypeState] = useState<'popular' | 'top_rated'>('popular');
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  // Années au format 'YYYY' ('' = pas de filtre)
+  const [yearFromParam, setYearFromParam] = useState('');
+  const [yearToParam, setYearToParam] = useState('');
+  const [page, setPage] = useState(1);
 
   // Recherche textuelle. > 3 caractères = on bascule sur le endpoint
   // /tmdb/search/:type (filtre genre/year/sort appliqués côté backend après
   // réception). Sinon, mode discover habituel.
-  const queryFromParams = useMemo(() => searchParams.get('q') ?? '', [searchParams]);
-  const [searchInput, setSearchInput] = useState(queryFromParams);
-  const isSearching = queryFromParams.length > 3;
+  const [query, setQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const isSearching = query.length > 3;
 
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [addingTo] = useState<number | null>(null);
@@ -201,11 +151,6 @@ export function ExploreContent() {
   } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
-  // Year picker : `yearFromParam`/`yearToParam` (dérivés de l'URL) sont la
-  // seule source de vérité. Pas de state local + useEffect de sync ici :
-  // l'ancien pattern causait une race où le useEffect réécrivait l'URL vers
-  // `/explore` quand l'utilisateur cliquait sur un lien sortant (Accueil, Mes
-  // listes…), bloquant la navigation.
   const [openYearFrom, setOpenYearFrom] = useState(false);
   const [openYearTo, setOpenYearTo] = useState(false);
   const [openGenres, setOpenGenres] = useState(false);
@@ -249,15 +194,15 @@ export function ExploreContent() {
     setYearDrawerOpen(true);
   };
   const applyYear = () => {
-    updateSearchParams({
-      dateFrom: `${settledFrom}-01-01`,
-      dateTo: `${settledTo}-12-31`,
-      page: '1',
-    });
+    setYearFromParam(String(settledFrom));
+    setYearToParam(String(settledTo));
+    setPage(1);
     setYearDrawerOpen(false);
   };
   const resetYear = () => {
-    updateSearchParams({ dateFrom: null, dateTo: null, page: '1' });
+    setYearFromParam('');
+    setYearToParam('');
+    setPage(1);
     setSettledFrom(CURRENT_YEAR);
     setSettledTo(CURRENT_YEAR);
     setYearDrawerOpen(false);
@@ -277,68 +222,44 @@ export function ExploreContent() {
     return YEARS.filter((year) => year <= toYear);
   }, [yearToParam]);
 
-  // Debounce de la search bar → écrit `q` dans les search params (300ms).
-  // Reset `page` à 1 pour ne pas pointer sur une page n d'une recherche
-  // précédente qui n'aurait plus autant de résultats.
+  // Debounce de la search bar → applique la recherche (300ms). Reset `page`
+  // à 1 pour ne pas pointer sur une page n d'une recherche précédente qui
+  // n'aurait plus autant de résultats.
   useEffect(() => {
-    if (searchInput === queryFromParams) return;
+    if (searchInput === query) return;
     const t = window.setTimeout(() => {
-      updateSearchParams({
-        q: searchInput.trim() || null,
-        page: '1',
-      });
+      setQuery(searchInput.trim());
+      setPage(1);
     }, 300);
     return () => window.clearTimeout(t);
-  }, [searchInput, queryFromParams, updateSearchParams]);
+  }, [searchInput, query]);
 
-  // Sync inverse : si l'URL change (back nav, paste link), garde l'input à jour.
-  useEffect(() => {
-    setSearchInput(queryFromParams);
-  }, [queryFromParams]);
-
-  // Helper functions to update URL params
   const setMediaType = (type: 'movie' | 'tv') => {
     if (type === mediaType) return;
-    updateSearchParams({
-      type,
-      genres: null, // Reset genres when changing media type (different genre IDs)
-      page: '1',
-    });
+    setMediaTypeState(type);
+    setSelectedGenres([]); // Reset genres when changing media type (different genre IDs)
+    setPage(1);
   };
 
   const updateFilterType = (filter: 'popular' | 'top_rated') => {
-    updateSearchParams({
-      filter,
-      page: '1',
-    });
+    setFilterTypeState(filter);
+    setPage(1);
   };
 
   const toggleGenre = (genre: number) => {
-    let newGenres = [...selectedGenres];
-
-    if (newGenres.includes(genre)) {
-      newGenres = newGenres.filter((g) => g !== genre);
-    } else {
-      newGenres.push(genre);
-    }
-
-    updateSearchParams({
-      genres: newGenres.length > 0 ? newGenres.join(',') : null,
-      page: '1',
-    });
+    setSelectedGenres((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre],
+    );
+    setPage(1);
   };
 
   const clearGenres = () => {
-    updateSearchParams({
-      genres: null,
-      page: '1',
-    });
+    setSelectedGenres([]);
+    setPage(1);
   };
 
   const updatePage = (newPage: number) => {
-    updateSearchParams({
-      page: newPage.toString(),
-    });
+    setPage(newPage);
   };
 
   // Ref to track if this is initial mount (skip animation on first load)
@@ -380,16 +301,13 @@ export function ExploreContent() {
   }, [page]);
 
   // Mes watchlists côté auth via TQ (partagé avec /home, /account/lists, etc.)
-  // Côté non-auth, on lit le localStorage.
   const myWatchlistsQuery = useQuery({
     ...watchlistsQueries.mine(),
     enabled: isAuthenticated,
   });
   useEffect(() => {
-    if (isAuthenticated) {
-      if (myWatchlistsQuery.data) setWatchlists(myWatchlistsQuery.data.watchlists);
-    } else {
-      setWatchlists(getLocalWatchlistsWithOwnership());
+    if (isAuthenticated && myWatchlistsQuery.data) {
+      setWatchlists(myWatchlistsQuery.data.watchlists);
     }
   }, [isAuthenticated, myWatchlistsQuery.data]);
 
@@ -428,7 +346,7 @@ export function ExploreContent() {
   // côté backend. 1 query = 1 round-trip qui agrège 3 pages TMDB.
   const searchExploreQuery = useQuery(
     tmdbQueries.searchExplore(mediaType, {
-      query: queryFromParams,
+      query,
       language: tmdbLanguage,
       page,
       withGenres: selectedGenres.length > 0 ? selectedGenres : undefined,
@@ -665,10 +583,8 @@ export function ExploreContent() {
                             value={year.toString()}
                             onSelect={(currentValue) => {
                               const nextYear = currentValue === yearFromParam ? '' : currentValue;
-                              updateSearchParams({
-                                dateFrom: nextYear ? `${nextYear}-01-01` : null,
-                                page: '1',
-                              });
+                              setYearFromParam(nextYear);
+                              setPage(1);
                               setOpenYearFrom(false);
                             }}
                           >
@@ -713,10 +629,8 @@ export function ExploreContent() {
                             value={year.toString()}
                             onSelect={(currentValue) => {
                               const nextYear = currentValue === yearToParam ? '' : currentValue;
-                              updateSearchParams({
-                                dateTo: nextYear ? `${nextYear}-12-31` : null,
-                                page: '1',
-                              });
+                              setYearToParam(nextYear);
+                              setPage(1);
                               setOpenYearTo(false);
                             }}
                           >
@@ -742,11 +656,9 @@ export function ExploreContent() {
                   size="sm"
                   className="cursor-pointer"
                   onClick={() => {
-                    updateSearchParams({
-                      dateFrom: null,
-                      dateTo: null,
-                      page: '1',
-                    });
+                    setYearFromParam('');
+                    setYearToParam('');
+                    setPage(1);
                   }}
                 >
                   {content.explore.filters.clearYears}
