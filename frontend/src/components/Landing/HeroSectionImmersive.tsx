@@ -74,10 +74,34 @@ const madmax = 'https://image.tmdb.org/t/p/w500/uT895WNwm0aIJRtGizcQhrejWUo.jpg'
 const oren = 'https://image.tmdb.org/t/p/w500/gPA8Th4CyuL5IeTzHE2THkxihkU.jpg';
 // Amélie — fond vert profond + rouge (rappel du vert de saw)
 const amelie = 'https://image.tmdb.org/t/p/w500/6n53UI4mX9QMfe2S0Pgt8mGebY1.jpg';
-// Export temporaire : évite l'erreur "unused" tant que les candidats ne sont
-// pas placés dans les colonnes. À supprimer (avec les constantes non retenues)
-// une fois le tri fait.
-export const TMDB_CANDIDATES = [brume2049, taxidriver, herFenetre, furiosa, madmax, oren, amelie];
+// Drive — scène du marteau, rouge sombre très moody
+const driveHammer = 'https://image.tmdb.org/t/p/w500/iymDDg4upZWgpbSeiE1JCjsSPBs.jpg';
+// Drive — Gosling devant la voiture, rue néon bleu/teal (rappel jinx/theFifth2)
+const driveNeon = 'https://image.tmdb.org/t/p/w500/hoyAALgfmjMEK7O1wZ4r8wT91RP.jpg';
+// La La Land — danse au coucher de soleil, robe jaune + ciel rose/violet
+const lalaland = 'https://image.tmdb.org/t/p/w500/2wmDyHz4gvF6m51IQZJnJzlLsnz.jpg';
+// La La Land — baiser sous le lampadaire, nuit violette
+const lalalandNight = 'https://image.tmdb.org/t/p/w500/nlPCdZlHtRNcF6C9hzUH4ebmV1w.jpg';
+// Whiplash — aplat orange vif (pop, comme le jaune Kill Bill)
+const whiplashOrange = 'https://image.tmdb.org/t/p/w500/wbQa0EnWUyRzQ5d1pHLNRlmsCUP.jpg';
+// Whiplash — scène batterie, bruns chauds
+const whiplashDrums = 'https://image.tmdb.org/t/p/w500/fRGxZuo7jJUWQsVg9PREb98Aclp.jpg';
+// The Grand Budapest Hotel — loge du concierge, rouge saturé
+const budapestRouge = 'https://image.tmdb.org/t/p/w500/xHDynIimfsgj0ZOs0j5ma8v1vmM.jpg';
+// In the Mood for Love — mur d'affiches, rouge/ambre chaud
+const inTheMood = 'https://image.tmdb.org/t/p/w500/ffQFnAUm2Uu4RU0nijpjPRf9TBT.jpg';
+// In the Mood for Love — aplat rouge profond
+const inTheMoodRed = 'https://image.tmdb.org/t/p/w500/9JZKUOQdQPTJ4OdYKttYOQCREdw.jpg';
+// Once Upon a Time in Hollywood — DiCaprio/Pitt et la Cadillac JAUNE
+const onceUpon = 'https://image.tmdb.org/t/p/w500/kKTPv9LKKs5L3oO1y5FNObxAPWI.jpg';
+// Dune 2 — Paul en capuche, tons sable chauds
+const dunePaul = 'https://image.tmdb.org/t/p/w500/eZ239CUp1d6OryZEBPnO2n87gMG.jpg';
+// Dune 2 — poster feu orange/noir
+const dune2Fire = 'https://image.tmdb.org/t/p/w500/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg';
+// Oppenheimer — silhouette dans les nuages ambre
+const oppenClouds = 'https://image.tmdb.org/t/p/w500/neeNHeXjMF5fXoCJRsOmkNGC7q.jpg';
+// Oppenheimer — noir & blanc, photographes (rappel de tes stills N&B)
+const oppenBW = 'https://image.tmdb.org/t/p/w500/ycnO0cjsAROSGJKuMODgRtWsHQw.jpg';
 
 const FAMOUS_MOVIES_MOBILE = [
   { id: 1, title: 'Col1-Pos1', image: doa },
@@ -98,8 +122,8 @@ const FAMOUS_MOVIES_MOBILE = [
 // Passe à true le temps de placer tes images : ça coupe tous les fondus /
 // assombrissements → la grille apparaît en pleine lumière, colonnes bien
 // visibles. Remets false quand c'est fini.
-const DEBUG_HIDE_MASKS = true;
-// const DEBUG_HIDE_MASKS = false;
+// const DEBUG_HIDE_MASKS = true;
+const DEBUG_HIDE_MASKS = false;
 
 // new — colonnes ajoutées à GAUCHE, de gauche à droite à l'écran (ColG10
 // touche les colonnes V1 Hero). Dans chaque colonne : de haut en bas.
@@ -135,17 +159,17 @@ const EXTRA_COLUMNS_IMAGES = [
   {
     col: 'G6',
     visibleFrom: '~1600px',
-    images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+    images: [amelie, whiplashOrange, driveHammer, lalalandNight, oppenBW, inTheMoodRed, dune2Fire],
   },
   {
     col: 'G7',
     visibleFrom: '~1150px',
-    images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+    images: [furiosa, budapestRouge, lalaland, oren, whiplashDrums, dunePaul, madmax],
   },
   {
     col: 'G8',
     visibleFrom: 'tous les écrans',
-    images: [blade2, blade2, blade2, blade2, blade2, blade2, blade2],
+    images: [brume2049, onceUpon, inTheMood, driveNeon, oppenClouds, taxidriver, herFenetre],
   },
   {
     col: 'G9',
