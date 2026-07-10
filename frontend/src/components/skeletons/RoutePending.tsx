@@ -12,11 +12,11 @@ import { ListCardGrid } from '@/components/List/ListCardGrid';
 
 function CardSkeleton() {
   return (
-    <div className="bg-muted/30 rounded-lg p-2">
-      <div className="bg-muted/50 aspect-square w-full animate-pulse rounded-md" />
-      <div className="mt-3 space-y-2">
+    <div className="bg-muted/30 rounded-lg p-2 max-[749px]:rounded-none max-[749px]:bg-transparent max-[749px]:p-0">
+      <div className="bg-muted/50 aspect-square w-full animate-pulse rounded-md max-[749px]:rounded" />
+      <div className="mt-3 space-y-2 max-[749px]:mt-2">
         <div className="bg-muted/50 h-4 w-3/4 animate-pulse rounded" />
-        <div className="bg-muted/50 h-3 w-1/2 animate-pulse rounded" />
+        <div className="bg-muted/50 h-3 w-1/2 animate-pulse rounded max-[749px]:hidden" />
       </div>
     </div>
   );
