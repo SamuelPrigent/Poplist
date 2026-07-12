@@ -51,6 +51,7 @@ import { cn } from '@/lib/cn';
 import { getTMDBLanguage, getTMDBRegion, tmdbPosterSrcSet } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
+import { Section } from '#/components/layout/Section.tsx';
 
 interface MediaItem {
   id: number;
@@ -477,8 +478,11 @@ export function ExploreContent() {
   }, [mediaType, content]);
 
   return (
-    <div className="bg-background mb-24 min-h-screen p-12 py-8 max-[749px]:mb-4 max-[749px]:p-0 max-[749px]:py-4">
-      <div className="container mx-auto px-4">
+    // Pas de padding horizontal ici : comme sur /home, c'est <Section> qui gère
+    // la largeur (93% + max-w + px-12) → alignement identique navbar/home.
+    <div className="bg-background mb-24 min-h-screen py-8 max-[749px]:mb-4 max-[749px]:py-4">
+      <Section className="pt-2">
+        {/* <div className="container mx-auto px-4"> */}
         {/* Header */}
         <div className="mb-7 text-left max-[749px]:mb-4">
           <h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-2xl">
@@ -1059,7 +1063,8 @@ export function ExploreContent() {
             )}
           </AnimatePresence>
         </LazyMotion>
-      </div>
+        {/* </div> */}
+      </Section>
 
       {/* Item Details Modal */}
       {selectedItem && (
