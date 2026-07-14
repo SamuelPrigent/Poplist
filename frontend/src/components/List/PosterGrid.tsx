@@ -8,10 +8,22 @@ interface PosterGridProps {
   items: WatchlistItem[]
   alt: string
   priority?: boolean
+  /**
+   * Priorité réseau des 4 posters, dérivée de l'ordre d'affichage de la card
+   * ('high' pour les premières, 'low' pour celles du bas) : sous contention
+   * réseau, les covers du haut de la grille chargent avant celles du bas.
+   */
+  fetchPriority?: 'high' | 'auto' | 'low'
   imageSize?: 'w92' | 'w154' | 'w185'
 }
 
-export function PosterGrid({ items, alt, priority = false, imageSize = 'w154' }: PosterGridProps) {
+export function PosterGrid({
+  items,
+  alt,
+  priority = false,
+  fetchPriority,
+  imageSize = 'w154',
+}: PosterGridProps) {
   const posters = items.slice(0, 4).map(item => item.posterPath)
 
   // Pad to 4 slots
@@ -23,12 +35,32 @@ export function PosterGrid({ items, alt, priority = false, imageSize = 'w154' }:
   const [loadedCount, setLoadedCount] = useState(0)
   const [forceReveal, setForceReveal] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Garde anti double comptage : une cellule peut être signalée par la ref
+  // (image déjà complète) ET par onLoad — on ne la compte qu'une fois.
+  const countedCells = useRef(new Set<number>())
 
   const allLoaded = forceReveal || loadedCount >= expectedCount
 
-  const handleLoaded = useCallback(() => {
+  const markLoaded = useCallback((cellIndex: number) => {
+    if (countedCells.current.has(cellIndex)) return
+    countedCells.current.add(cellIndex)
     setLoadedCount(prev => prev + 1)
   }, [])
+
+  // La grille est rendue en SSR : les <img> téléchargent AVANT l'hydratation.
+  // Quand React attache onLoad, une image peut déjà être complète → onLoad ne
+  // fire jamais. Sans ce check via la ref, loadedCount n'atteignait jamais
+  // expectedCount et TOUTES les cards attendaient leur timeout de secours de
+  // 3 s — tous montés au même rendu, donc tous expirés au même instant : tout
+  // « popait » pile en même temps, cache chaud ou pas.
+  const makeCellRef = useCallback(
+    (cellIndex: number) => (node: HTMLImageElement | null) => {
+      if (node?.complete && node.naturalWidth > 0) {
+        markLoaded(cellIndex)
+      }
+    },
+    [markLoaded],
+  )
 
   // Safety timeout — reveal after 3s regardless
   useEffect(() => {
@@ -53,15 +85,17 @@ export function PosterGrid({ items, alt, priority = false, imageSize = 'w154' }:
         <div key={index} className="relative overflow-hidden bg-[#27272a]">
           {posterPath ? (
             <Image
+              ref={makeCellRef(index)}
               src={getTMDBImageUrl(posterPath, imageSize) ?? ''}
               alt={`${alt} poster ${index + 1}`}
               fill
               sizes="(max-width: 768px) 25vw, 12vw"
               className="object-cover"
               priority={priority}
+              fetchPriority={fetchPriority}
               unoptimized
-              onLoad={handleLoaded}
-              onError={handleLoaded}
+              onLoad={() => markLoaded(index)}
+              onError={() => markLoaded(index)}
             />
           ) : null}
         </div>

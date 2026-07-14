@@ -105,7 +105,7 @@ function CommunityListsPageInner() {
         ) : watchlists.length > 0 ? (
           <>
             <ListCardGrid>
-              {paginatedWatchlists.map((watchlist) => {
+              {paginatedWatchlists.map((watchlist, index) => {
                 // Calculate isOwner by comparing user email with watchlist owner email
                 const ownerEmail = watchlist.owner?.email || null;
                 const isOwner = user?.email === ownerEmail;
@@ -128,6 +128,9 @@ function CommunityListsPageInner() {
                     showOwner={true}
                     showSavedBadge={showSavedBadge}
                     showCollaborativeBadge={showCollaborativeBadge}
+                    priority={index < 4}
+                    // Priorité réseau étagée selon l'ordre d'affichage (cf. PosterGrid).
+                    imageFetchPriority={index < 4 ? 'high' : index < 10 ? 'auto' : 'low'}
                   />
                 );
               })}

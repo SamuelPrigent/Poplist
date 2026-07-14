@@ -17,6 +17,9 @@ import { cn } from '@/lib/cn';
 type ImgProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt'> & {
   src: string;
   alt: string;
+  /** Ref vers le <img> natif (React 19 : ref = prop normale). Utile pour
+   *  lire `img.complete` quand l'image a fini de charger avant l'hydratation. */
+  ref?: React.Ref<HTMLImageElement>;
   width?: number | string;
   height?: number | string;
   priority?: boolean;

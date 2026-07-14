@@ -22,14 +22,30 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 import { PageFade } from '@/components/ui/PageFade';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGrid } from '@/components/List/ListCardGrid';
 import { LibraryEmpty } from '@/components/List/LibraryEmpty';
 import { useAuth } from '@/context/auth-context';
-import { CreateListDialog } from '@/components/List/modal/CreateListDialog';
-import { DeleteListDialog } from '@/components/List/modal/DeleteListDialog';
-import { EditListDialog } from '@/components/List/modal/EditListDialog';
+// Dialogs en lazy : importés statiquement, leurs ~870 lignes (+ deps) partaient
+// dans le chunk initial de la page et gonflaient le Total Blocking Time à
+// l'hydratation, alors qu'ils ne servent qu'à l'interaction. Le chunk ne se
+// charge qu'à la première ouverture (cf. private/lighthouse.md §7).
+const CreateListDialog = lazy(() =>
+  import('@/components/List/modal/CreateListDialog').then((m) => ({
+    default: m.CreateListDialog,
+  })),
+);
+const DeleteListDialog = lazy(() =>
+  import('@/components/List/modal/DeleteListDialog').then((m) => ({
+    default: m.DeleteListDialog,
+  })),
+);
+const EditListDialog = lazy(() =>
+  import('@/components/List/modal/EditListDialog').then((m) => ({
+    default: m.EditListDialog,
+  })),
+);
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { watchlists as watchlistsApi, type Watchlist } from '@/api';
@@ -55,6 +71,7 @@ interface SortableWatchlistCardProps {
   onEdit: (watchlist: Watchlist) => void;
   onDelete: (watchlist: Watchlist) => void;
   priority?: boolean;
+  imageFetchPriority?: 'high' | 'auto' | 'low';
 }
 
 function SortableWatchlistCard({
@@ -62,6 +79,7 @@ function SortableWatchlistCard({
   onEdit,
   onDelete,
   priority = false,
+  imageFetchPriority,
 }: SortableWatchlistCardProps) {
   const { content } = useLanguageStore();
 
@@ -93,6 +111,7 @@ function SortableWatchlistCard({
       showSavedBadge={!isOwner && !watchlist.isCollaborator && watchlist.isSaved}
       showCollaborativeBadge={(watchlist.collaborators?.length ?? 0) > 0}
       priority={priority}
+      imageFetchPriority={imageFetchPriority}
       draggableProps={{
         ref: setNodeRef,
         style,
@@ -120,6 +139,12 @@ function ListsContentInner() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedWatchlist, setSelectedWatchlist] = useState<Watchlist | null>(null);
+  // Passe à true à la 1ère ouverture du dialog de création et n'en bouge plus :
+  // garde le dialog monté après fermeture (animation de sortie + état conservés).
+  const [createDialogTouched, setCreateDialogTouched] = useState(false);
+  useEffect(() => {
+    if (dialogOpen) setCreateDialogTouched(true);
+  }, [dialogOpen]);
 
   useScrollToTopOnMount();
 
@@ -198,8 +223,15 @@ function ListsContentInner() {
   // filtres actifs (afficher toutes les listes). matchMedia évalué après mount.
   const isMobile =
     mounted && typeof window !== 'undefined' && window.matchMedia('(max-width: 749px)').matches;
-  const showOwnedEff = isMobile || showOwned;
-  const showSavedEff = isMobile || showSaved;
+  // `!mounted ||` : avant le montage (SSR + 1er rendu client), on affiche TOUT.
+  // Sinon le HTML SSR omettait les listes suivies (showSaved=false par défaut,
+  // store pas encore réhydraté) et elles s'inséraient dans la grille après
+  // l'hydratation → gros Cumulative Layout Shift dès qu'une suivie n'était pas
+  // en fin de liste (toutes les cards se décalaient). Rendre la grille complète
+  // dès le SSR = zéro insertion. Un utilisateur desktop ayant explicitement
+  // filtré verra l'ajustement au rehydrate : cas minoritaire et choix explicite.
+  const showOwnedEff = !mounted || isMobile || showOwned;
+  const showSavedEff = !mounted || isMobile || showSaved;
 
   // Filter watchlists based on selected filters
   const filteredWatchlists = watchlists.filter((watchlist) => {
@@ -270,14 +302,21 @@ function ListsContentInner() {
         </Button>
       </div>
 
-      <CreateListDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSuccess={handleCreateSuccess}
-      />
+      {/* Monté à la 1ère ouverture puis laissé monté (animation de fermeture
+          préservée). Suspense fallback null : rien à afficher pendant le
+          chargement du chunk (~1 frame). */}
+      {(dialogOpen || createDialogTouched) && (
+        <Suspense fallback={null}>
+          <CreateListDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            onSuccess={handleCreateSuccess}
+          />
+        </Suspense>
+      )}
 
       {selectedWatchlist && (
-        <>
+        <Suspense fallback={null}>
           <EditListDialog
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
@@ -290,7 +329,7 @@ function ListsContentInner() {
             onSuccess={() => queryClient.invalidateQueries({ queryKey: mineKey })}
             watchlist={selectedWatchlist}
           />
-        </>
+        </Suspense>
       )}
 
       {loading ? (
@@ -341,6 +380,9 @@ function ListsContentInner() {
                     setDeleteDialogOpen(true);
                   }}
                   priority={index < 4}
+                  // Priorité réseau étagée selon l'ordre d'affichage : les
+                  // covers du haut chargent avant celles du bas.
+                  imageFetchPriority={index < 4 ? 'high' : index < 10 ? 'auto' : 'low'}
                 />
               ))}
             </ListCardGrid>

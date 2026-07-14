@@ -14,7 +14,12 @@ export const useListFiltersStore = create<WatchlistFiltersState>()(
 	persist(
 		(set) => ({
 			showOwned: true,
-			showSaved: false,
+			// true par défaut : cohérent avec mobile (qui montre tout) et avec le
+			// SSR (qui rend toutes les cards) → pas de layout shift au rehydrate
+			// pour un utilisateur qui n'a jamais touché aux filtres. false ici
+			// faisait disparaître les listes suivies du HTML initial (CLS, cf.
+			// private/lighthouse.md §7).
+			showSaved: true,
 			setShowOwned: (show: boolean) => set({ showOwned: show }),
 			setShowSaved: (show: boolean) => set({ showSaved: show }),
 			toggleOwned: () => set((state) => ({ showOwned: !state.showOwned })),

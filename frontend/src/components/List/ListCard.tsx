@@ -24,6 +24,8 @@ interface ListCardProps {
   showCollaborativeBadge?: boolean;
   categoryGradient?: string;
   priority?: boolean;
+  /** Priorité réseau des images de cover selon l'ordre d'affichage (cf. PosterGrid). */
+  imageFetchPriority?: 'high' | 'auto' | 'low';
   draggableProps?: {
     ref: (node: HTMLElement | null) => void;
     style?: React.CSSProperties;
@@ -44,6 +46,7 @@ export function ListCard({
   showCollaborativeBadge = false,
   categoryGradient,
   priority = false,
+  imageFetchPriority,
   draggableProps,
 }: ListCardProps) {
   const navigate = useNavigate();
@@ -124,10 +127,11 @@ export function ListCard({
               sizes="(max-width: 768px) 50vw, 25vw"
               className="object-cover"
               priority={priority}
+              fetchPriority={imageFetchPriority}
               unoptimized
             />
           ) : watchlist.items?.length > 0 ? (
-            <PosterGrid items={watchlist.items} alt={watchlist.name} priority={priority} />
+            <PosterGrid items={watchlist.items} alt={watchlist.name} priority={priority} fetchPriority={imageFetchPriority} />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Film strokeWidth={1.4} className="text-muted-foreground h-12 w-12" />
@@ -155,10 +159,11 @@ export function ListCard({
               sizes="(max-width: 768px) 50vw, 25vw"
               className="object-cover"
               priority={priority}
+              fetchPriority={imageFetchPriority}
               unoptimized
             />
           ) : watchlist.items?.length > 0 ? (
-            <PosterGrid items={watchlist.items} alt={watchlist.name} priority={priority} />
+            <PosterGrid items={watchlist.items} alt={watchlist.name} priority={priority} fetchPriority={imageFetchPriority} />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Film strokeWidth={1} className="text-muted-foreground h-12 w-12" />
