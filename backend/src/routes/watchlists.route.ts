@@ -16,17 +16,49 @@ import {
   languageQuerySchema,
 } from '../validators/watchlists.validator.js';
 import type { AppEnv } from '../app.js';
+import type { Context } from 'hono';
+
+// Endpoints publics read-only NON personnalisés : cacheables par tous
+// (navigateur + CDN). 1 min fresh, 5 min shared, 1 h stale-while-revalidate.
+// Sans ces headers, chaque préload/navigation re-téléchargeait tout
+// (max-age=0), cf. private/lighthouse.md §7.
+const publicCacheHeaders = async (c: Context<AppEnv>, next: () => Promise<void>) => {
+  await next();
+  c.header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=3600');
+};
+
+// `featured` est personnalisé quand un user est connecté (isOwner/isSaved…) :
+// cache public UNIQUEMENT pour les anonymes, private sinon. `Vary: Cookie`
+// dans tous les cas pour qu'un cache partagé ne serve jamais la réponse
+// personnalisée d'un user à un autre (ni la version anonyme à un connecté).
+const featuredCacheHeaders = async (c: Context<AppEnv>, next: () => Promise<void>) => {
+  await next();
+  c.header('Vary', 'Cookie');
+  if (c.get('user')) {
+    c.header('Cache-Control', 'private, no-cache');
+  } else {
+    c.header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=3600');
+  }
+};
 
 const watchlistRoutes = new Hono<AppEnv>()
   // ========================================
   // Public routes
   // ========================================
-  .get('/public/featured', optionalAuth, zValidator('query', limitQuerySchema), c =>
-    WatchlistsController.getPublicFeatured(c)
+  .get(
+    '/public/featured',
+    optionalAuth,
+    featuredCacheHeaders,
+    zValidator('query', limitQuerySchema),
+    c => WatchlistsController.getPublicFeatured(c)
   )
   .get('/public/:id', c => WatchlistsController.getPublicWatchlist(c))
-  .get('/by-genre/:genre', c => WatchlistsController.getWatchlistsByGenre(c))
-  .get('/count-by-genre/:genre', c => WatchlistsController.getWatchlistCountByGenre(c))
+  .get('/by-genre/:genre', publicCacheHeaders, c =>
+    WatchlistsController.getWatchlistsByGenre(c)
+  )
+  .get('/count-by-genre/:genre', publicCacheHeaders, c =>
+    WatchlistsController.getWatchlistCountByGenre(c)
+  )
   .get('/search/tmdb', zValidator('query', tmdbSearchQuerySchema), c =>
     WatchlistsController.searchTMDB(c)
   )
