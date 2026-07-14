@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGrid } from '@/components/List/ListCardGrid';
 import { UserProfileHeader } from '@/components/User/UserProfileHeader';
@@ -162,14 +162,8 @@ function UserProfilePageInner() {
 
 export default function UserProfilePage() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <UserProfilePageInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }

@@ -7,7 +7,7 @@ import {
   // Plus
 } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@/components/ui/Link';
 import { ListCard } from '@/components/List/ListCard';
@@ -773,14 +773,8 @@ function HomeContentInner() {
  */
 export function HomeContent() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <HomeContentInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }

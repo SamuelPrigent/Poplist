@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { ArrowLeft, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { useMemo } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGrid } from '@/components/List/ListCardGrid';
@@ -157,14 +157,8 @@ function CategoryDetailPageInner() {
 
 export default function CategoryDetailContent() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <CategoryDetailPageInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }

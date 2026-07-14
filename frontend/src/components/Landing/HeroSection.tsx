@@ -169,7 +169,11 @@ function PosterRow({
               fill
               sizes="140px"
               className="object-cover"
-              loading="eager"
+              // Seuls les premiers posters sont dans le viewport initial :
+              // eager sur eux, lazy sur le reste (la 2e copie de la boucle ne
+              // sert qu'au défilement) → moins de contention réseau au load
+              // (cf. private/lighthouse.md, cause n°2).
+              loading={index < 6 ? 'eager' : 'lazy'}
             />
           </div>
         ))}
@@ -211,7 +215,10 @@ export function HeroSection({ content }: HeroSectionProps) {
                         fill
                         sizes="200px"
                         className="object-cover"
-                        loading="eager"
+                        // Lazy : chargées dès le 1er layout sur desktop (elles
+                        // sont dans le viewport), plus téléchargées du tout sur
+                        // mobile où le bloc est display:none.
+                        loading="lazy"
                       />
                     </div>
                   ))}
@@ -228,7 +235,10 @@ export function HeroSection({ content }: HeroSectionProps) {
                         fill
                         sizes="200px"
                         className="object-cover"
-                        loading="eager"
+                        // Lazy : chargées dès le 1er layout sur desktop (elles
+                        // sont dans le viewport), plus téléchargées du tout sur
+                        // mobile où le bloc est display:none.
+                        loading="lazy"
                       />
                     </div>
                   ))}
@@ -245,7 +255,10 @@ export function HeroSection({ content }: HeroSectionProps) {
                         fill
                         sizes="200px"
                         className="object-cover"
-                        loading="eager"
+                        // Lazy : chargées dès le 1er layout sur desktop (elles
+                        // sont dans le viewport), plus téléchargées du tout sur
+                        // mobile où le bloc est display:none.
+                        loading="lazy"
                       />
                     </div>
                   ))}

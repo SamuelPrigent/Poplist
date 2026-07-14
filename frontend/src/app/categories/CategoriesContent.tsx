@@ -3,6 +3,7 @@
 import { useQueries } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { useMemo } from 'react';
 import { ListCardGenre } from '@/components/List/ListCardGenre';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -147,14 +148,8 @@ function CategoriesPageInner() {
 
 export default function CategoriesContent() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <CategoriesPageInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }

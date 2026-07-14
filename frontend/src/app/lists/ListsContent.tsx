@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Film } from 'lucide-react';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { useEffect, useMemo, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGrid } from '@/components/List/ListCardGrid';
@@ -167,14 +167,8 @@ function CommunityListsPageInner() {
 
 export default function ListsContent() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <CommunityListsPageInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { useEffect, useMemo, useState } from 'react';
 import { Section } from '@/components/layout/Section';
 import { Pagination } from '@/components/ui/pagination';
@@ -147,14 +147,8 @@ function UsersContentInner() {
 
 export function UsersContent() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <UsersContentInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }

@@ -265,7 +265,11 @@ function PosterRow({
               fill
               sizes="140px"
               className="object-cover"
-              loading="eager"
+              // Seuls les premiers posters sont dans le viewport initial :
+              // eager sur eux, lazy sur le reste (la 2e copie de la boucle ne
+              // sert qu'au défilement) → moins de contention réseau au load
+              // (cf. private/lighthouse.md, cause n°2).
+              loading={index < 6 ? 'eager' : 'lazy'}
             />
           </div>
         ))}
@@ -329,13 +333,19 @@ export function HeroSectionImmersive({ content }: HeroSectionProps) {
                           fill
                           sizes="200px"
                           className="object-cover"
-                          loading="eager"
+                          // Lazy : colonnes décoratives largement hors écran,
+                          // et le bloc desktop entier est display:none sur
+                          // mobile (un eager forcerait quand même le download).
+                          loading="lazy"
                         />
                       </div>
                     ))}
                   </div>
                 ))}
 
+                {/* Colonnes V1 en lazy aussi : visibles → le navigateur les
+                    charge dès le 1er layout ; sur mobile (display:none) elles
+                    ne sont plus téléchargées pour rien. */}
                 <div className="hidden sm:flex flex-col gap-3 md:gap-5">
                   {col1.map((movie) => (
                     <div
@@ -348,7 +358,7 @@ export function HeroSectionImmersive({ content }: HeroSectionProps) {
                         fill
                         sizes="200px"
                         className="object-cover"
-                        loading="eager"
+                        loading="lazy"
                       />
                     </div>
                   ))}
@@ -365,7 +375,7 @@ export function HeroSectionImmersive({ content }: HeroSectionProps) {
                         fill
                         sizes="200px"
                         className="object-cover"
-                        loading="eager"
+                        loading="lazy"
                       />
                     </div>
                   ))}
@@ -382,7 +392,7 @@ export function HeroSectionImmersive({ content }: HeroSectionProps) {
                         fill
                         sizes="200px"
                         className="object-cover"
-                        loading="eager"
+                        loading="lazy"
                       />
                     </div>
                   ))}

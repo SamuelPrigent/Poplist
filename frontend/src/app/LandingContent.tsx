@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Compass, Film, ListPlus, Share, Star, UserPlus } from 'lucide-react';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { Img as Image } from '@/components/ui/Img';
 import { Link } from '@/components/ui/Link';
 import { HeroSectionImmersive, RightSectionPreviewV2 } from '@/components/Landing';
@@ -476,14 +476,8 @@ function LandingPageInner() {
 
 export default function LandingContent() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <LandingPageInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }

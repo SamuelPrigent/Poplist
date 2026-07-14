@@ -21,7 +21,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
-import { domAnimation, LazyMotion, m } from 'motion/react';
+import { PageFade } from '@/components/ui/PageFade';
 import { useEffect, useState } from 'react';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGrid } from '@/components/List/ListCardGrid';
@@ -353,14 +353,8 @@ function ListsContentInner() {
 
 export function ListsContent() {
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
+    <PageFade>
         <ListsContentInner />
-      </m.div>
-    </LazyMotion>
+    </PageFade>
   );
 }
