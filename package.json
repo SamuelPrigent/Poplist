@@ -11,6 +11,7 @@
     "dev": "concurrently -n \"hono,next\" -c \"green,blue\" \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
     "build": "turbo build",
     "kubb:generate": "npm run generate:spec --workspace=backend && kubb generate && (trash frontend/node_modules/.vite 2>/dev/null || true)",
+    "open-api": "npm run generate:spec --workspace=backend && node scripts/build-api-docs.mjs && open private/api-docs.html",
     "lint": "turbo lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
