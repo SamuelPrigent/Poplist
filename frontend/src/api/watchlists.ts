@@ -1,171 +1,91 @@
-import type { WatchlistsAPI } from '@poplist/shared';
-import { apiFetch } from './client';
+/**
+ * SDK watchlists — adaptateur fin sur les fonctions client générées par Kubb.
+ *
+ * L'interface publique (noms, signatures) est conservée : `queries.ts` et les
+ * composants ne changent pas. Les URL et le typage des réponses viennent du
+ * SDK généré (`shared/src/generated`), lui-même dérivé des schémas zod backend.
+ * Les bodies sont typés par les types de requête GÉNÉRÉS (dérivés des
+ * validators zod du backend via le spec).
+ */
+import * as gen from '@poplist/shared/generated/client/watchlistsController/index';
+import type {
+  CreateWatchlistMutationRequest,
+  UpdateWatchlistMutationRequest,
+  AddItemToWatchlistMutationRequest,
+  SearchTMDBForWatchlistQueryParams,
+} from '@poplist/shared/generated';
 
 export const watchlists = {
   // ============== Public ==============
 
   getPublicFeatured: (limit?: number) =>
-    apiFetch<WatchlistsAPI.GetPublicFeaturedResponse>('/watchlists/public/featured', {
-      query: { limit },
-    }),
+    gen.getPublicFeatured(limit === undefined ? undefined : { limit: String(limit) }),
 
-  getPublic: (id: string) =>
-    apiFetch<WatchlistsAPI.GetPublicWatchlistResponse>(
-      `/watchlists/public/${encodeURIComponent(id)}`
-    ),
+  getPublic: (id: string) => gen.getPublicWatchlist(encodeURIComponent(id)),
 
-  getByGenre: (genre: string) =>
-    apiFetch<WatchlistsAPI.GetWatchlistsByGenreResponse>(
-      `/watchlists/by-genre/${encodeURIComponent(genre)}`
-    ),
+  getByGenre: (genre: string) => gen.getWatchlistsByGenre(encodeURIComponent(genre)),
 
-  getCountByGenre: (genre: string) =>
-    apiFetch<WatchlistsAPI.GetWatchlistCountByGenreResponse>(
-      `/watchlists/count-by-genre/${encodeURIComponent(genre)}`
-    ),
+  getCountByGenre: (genre: string) => gen.getWatchlistCountByGenre(encodeURIComponent(genre)),
 
-  searchTMDB: (params: WatchlistsAPI.SearchTMDBQuery) =>
-    apiFetch<WatchlistsAPI.SearchTMDBResponse>('/watchlists/search/tmdb', {
-      query: { ...params },
-    }),
+  searchTMDB: (params: SearchTMDBForWatchlistQueryParams) => gen.searchTMDBForWatchlist(params),
 
   getItemDetails: (tmdbId: string, type: 'movie' | 'tv', language?: string) =>
-    apiFetch<WatchlistsAPI.GetItemDetailsResponse>(
-      `/watchlists/items/${encodeURIComponent(tmdbId)}/${encodeURIComponent(type)}/details`,
-      { query: { language } }
-    ),
+    gen.getItemDetails(encodeURIComponent(tmdbId), type, { language }),
 
   getRecommendations: (id: string, language?: string) =>
-    apiFetch<WatchlistsAPI.GetWatchlistRecommendationsResponse>(
-      `/watchlists/${encodeURIComponent(id)}/recommendations`,
-      { query: { language } }
-    ),
+    gen.getWatchlistRecommendations(encodeURIComponent(id), { language }),
 
   // ============== Protected ==============
 
-  getMine: () => apiFetch<WatchlistsAPI.GetMyWatchlistsResponse>('/watchlists/mine'),
+  getMine: () => gen.getMyWatchlists(),
 
-  getById: (id: string) =>
-    apiFetch<WatchlistsAPI.GetWatchlistByIdResponse>(
-      `/watchlists/${encodeURIComponent(id)}`
-    ),
+  getById: (id: string) => gen.getWatchlistById(encodeURIComponent(id)),
 
-  create: (data: WatchlistsAPI.CreateWatchlistRequest) =>
-    apiFetch<WatchlistsAPI.CreateWatchlistResponse>('/watchlists', {
-      method: 'POST',
-      body: data,
-    }),
+  create: (data: CreateWatchlistMutationRequest) => gen.createWatchlist(data),
 
-  update: (id: string, data: WatchlistsAPI.UpdateWatchlistRequest) =>
-    apiFetch<WatchlistsAPI.UpdateWatchlistResponse>(
-      `/watchlists/${encodeURIComponent(id)}`,
-      { method: 'PUT', body: data }
-    ),
+  update: (id: string, data: UpdateWatchlistMutationRequest) =>
+    gen.updateWatchlist(encodeURIComponent(id), data),
 
-  delete: (id: string) =>
-    apiFetch<WatchlistsAPI.DeleteWatchlistResponse>(
-      `/watchlists/${encodeURIComponent(id)}`,
-      { method: 'DELETE' }
-    ),
+  delete: (id: string) => gen.deleteWatchlist(encodeURIComponent(id)),
 
   reorderWatchlists: (orderedWatchlistIds: string[]) =>
-    apiFetch<WatchlistsAPI.ReorderWatchlistsResponse>('/watchlists/reorder', {
-      method: 'PUT',
-      body: { orderedWatchlistIds } satisfies WatchlistsAPI.ReorderWatchlistsRequest,
-    }),
+    gen.reorderWatchlists({ orderedWatchlistIds }),
 
   // Collaborators
   addCollaborator: (id: string, username: string) =>
-    apiFetch<WatchlistsAPI.AddCollaboratorResponse>(
-      `/watchlists/${encodeURIComponent(id)}/collaborators`,
-      {
-        method: 'POST',
-        body: { username } satisfies WatchlistsAPI.AddCollaboratorRequest,
-      }
-    ),
+    gen.addCollaborator(encodeURIComponent(id), { username }),
 
   removeCollaborator: (id: string, collaboratorId: string) =>
-    apiFetch<WatchlistsAPI.RemoveCollaboratorResponse>(
-      `/watchlists/${encodeURIComponent(id)}/collaborators/${encodeURIComponent(collaboratorId)}`,
-      { method: 'DELETE' }
-    ),
+    gen.removeCollaborator(encodeURIComponent(id), encodeURIComponent(collaboratorId)),
 
-  leave: (id: string) =>
-    apiFetch<WatchlistsAPI.LeaveWatchlistResponse>(
-      `/watchlists/${encodeURIComponent(id)}/leave`,
-      { method: 'POST' }
-    ),
+  leave: (id: string) => gen.leaveWatchlist(encodeURIComponent(id)),
 
   // Items
-  addItem: (id: string, data: WatchlistsAPI.AddItemRequest) =>
-    apiFetch<WatchlistsAPI.AddItemResponse>(
-      `/watchlists/${encodeURIComponent(id)}/items`,
-      { method: 'POST', body: data }
-    ),
+  addItem: (id: string, data: AddItemToWatchlistMutationRequest) =>
+    gen.addItemToWatchlist(encodeURIComponent(id), data),
 
   removeItem: (id: string, tmdbId: string) =>
-    apiFetch<WatchlistsAPI.RemoveItemResponse>(
-      `/watchlists/${encodeURIComponent(id)}/items/${encodeURIComponent(tmdbId)}`,
-      { method: 'DELETE' }
-    ),
+    gen.removeItemFromWatchlist(encodeURIComponent(id), encodeURIComponent(tmdbId)),
 
   moveItem: (id: string, tmdbId: string, position: 'first' | 'last') =>
-    apiFetch<WatchlistsAPI.MoveItemResponse>(
-      `/watchlists/${encodeURIComponent(id)}/items/${encodeURIComponent(tmdbId)}/position`,
-      {
-        method: 'PUT',
-        body: { position } satisfies WatchlistsAPI.MoveItemRequest,
-      }
-    ),
+    gen.moveItemPosition(encodeURIComponent(id), encodeURIComponent(tmdbId), { position }),
 
   reorderItems: (id: string, orderedTmdbIds: string[]) =>
-    apiFetch<WatchlistsAPI.ReorderItemsResponse>(
-      `/watchlists/${encodeURIComponent(id)}/items/reorder`,
-      {
-        method: 'PUT',
-        body: { orderedTmdbIds } satisfies WatchlistsAPI.ReorderItemsRequest,
-      }
-    ),
+    gen.reorderItems(encodeURIComponent(id), { orderedTmdbIds }),
 
   // Cover
   uploadCover: (id: string, imageData: string) =>
-    apiFetch<WatchlistsAPI.UploadCoverResponse>(
-      `/watchlists/${encodeURIComponent(id)}/upload-cover`,
-      {
-        method: 'POST',
-        body: { imageData } satisfies WatchlistsAPI.UploadCoverRequest,
-      }
-    ),
+    gen.uploadCover(encodeURIComponent(id), { imageData }),
 
-  deleteCover: (id: string) =>
-    apiFetch<WatchlistsAPI.DeleteCoverResponse>(
-      `/watchlists/${encodeURIComponent(id)}/cover`,
-      { method: 'DELETE' }
-    ),
+  deleteCover: (id: string) => gen.deleteCover(encodeURIComponent(id)),
 
   // Thumbnail
-  generateThumbnail: (id: string) =>
-    apiFetch<WatchlistsAPI.GenerateThumbnailResponse>(
-      `/watchlists/${encodeURIComponent(id)}/generate-thumbnail`,
-      { method: 'POST' }
-    ),
+  generateThumbnail: (id: string) => gen.generateWatchlistThumbnail(encodeURIComponent(id)),
 
   // Save / Unsave / Duplicate
-  save: (id: string) =>
-    apiFetch<WatchlistsAPI.SaveWatchlistResponse>(
-      `/watchlists/${encodeURIComponent(id)}/like-and-save`,
-      { method: 'POST' }
-    ),
+  save: (id: string) => gen.saveWatchlist(encodeURIComponent(id)),
 
-  unsave: (id: string) =>
-    apiFetch<WatchlistsAPI.UnsaveWatchlistResponse>(
-      `/watchlists/${encodeURIComponent(id)}/unlike-and-unsave`,
-      { method: 'DELETE' }
-    ),
+  unsave: (id: string) => gen.unsaveWatchlist(encodeURIComponent(id)),
 
-  duplicate: (id: string) =>
-    apiFetch<WatchlistsAPI.DuplicateWatchlistResponse>(
-      `/watchlists/${encodeURIComponent(id)}/duplicate`,
-      { method: 'POST' }
-    ),
+  duplicate: (id: string) => gen.duplicateWatchlist(encodeURIComponent(id)),
 };

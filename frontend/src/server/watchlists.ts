@@ -1,6 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
 import { getRequestHeader } from '@tanstack/react-start/server';
-import type { WatchlistsAPI } from '@poplist/shared';
+import type {
+  GetPublicWatchlistResponse,
+  GetWatchlistByIdResponse,
+  GetMyWatchlistsResponse,
+} from '@poplist/shared/generated';
 
 const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:3456';
 
@@ -10,11 +14,11 @@ const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:3456';
  */
 export const getPublicWatchlistForMeta = createServerFn({ method: 'GET' })
   .inputValidator((data: { id: string }) => data)
-  .handler(async ({ data }): Promise<WatchlistsAPI.GetPublicWatchlistResponse | null> => {
+  .handler(async ({ data }): Promise<GetPublicWatchlistResponse | null> => {
     try {
       const res = await fetch(`${BACKEND_URL}/watchlists/public/${data.id}`);
       if (!res.ok) return null;
-      return (await res.json()) as WatchlistsAPI.GetPublicWatchlistResponse;
+      return (await res.json()) as GetPublicWatchlistResponse;
     } catch {
       return null;
     }
@@ -31,7 +35,7 @@ export const getPublicWatchlistForMeta = createServerFn({ method: 'GET' })
  */
 export const getAuthWatchlistForMeta = createServerFn({ method: 'GET' })
   .inputValidator((data: { id: string }) => data)
-  .handler(async ({ data }): Promise<WatchlistsAPI.GetWatchlistByIdResponse | null> => {
+  .handler(async ({ data }): Promise<GetWatchlistByIdResponse | null> => {
     const cookie = getRequestHeader('cookie') ?? '';
     if (!cookie) return null;
     try {
@@ -39,7 +43,7 @@ export const getAuthWatchlistForMeta = createServerFn({ method: 'GET' })
         headers: { cookie },
       });
       if (!res.ok) return null;
-      return (await res.json()) as WatchlistsAPI.GetWatchlistByIdResponse;
+      return (await res.json()) as GetWatchlistByIdResponse;
     } catch {
       return null;
     }
@@ -54,7 +58,7 @@ export const getAuthWatchlistForMeta = createServerFn({ method: 'GET' })
  * ce qui provoque un 401 et un dehydrate en erreur côté client.
  */
 export const getMineForSSR = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<WatchlistsAPI.GetMyWatchlistsResponse | null> => {
+  async (): Promise<GetMyWatchlistsResponse | null> => {
     const cookie = getRequestHeader('cookie') ?? '';
     if (!cookie) return null;
     try {
@@ -62,9 +66,9 @@ export const getMineForSSR = createServerFn({ method: 'GET' }).handler(
         headers: { cookie },
       });
       if (!res.ok) return null;
-      return (await res.json()) as WatchlistsAPI.GetMyWatchlistsResponse;
+      return (await res.json()) as GetMyWatchlistsResponse;
     } catch {
       return null;
     }
-  }
+  },
 );

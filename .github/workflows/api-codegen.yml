@@ -1,0 +1,43 @@
+name: API codegen drift
+
+# Garde-fou anti-drift du SDK généré par Kubb.
+# Régénère le spec OpenAPI + les types/hooks depuis le backend, puis échoue si
+# le résultat diffère de ce qui est commité. Empêche le cas dangereux « un schéma
+# zod backend a changé mais le SDK généré n'a pas été régénéré » (le front
+# resterait vert avec un contrat périmé).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  codegen-drift:
+    name: Vérifier que le SDK généré est à jour
+    runs-on: ubuntu-latest
+    # Valeurs factices (format-valide) : la génération importe l'app Hono pour
+    # lire les routes, mais n'exécute aucun handler et ne se connecte pas à la DB
+    # (postgres-js est lazy). `env.ts` exige seulement que ces vars parsent.
+    env:
+      DATABASE_URL: postgres://user:pass@localhost:5432/db
+      JWT_ACCESS_SECRET: ci-dummy
+      JWT_REFRESH_SECRET: ci-dummy
+      GOOGLE_CLIENT_ID: ci-dummy
+      GOOGLE_CLIENT_SECRET: ci-dummy
+      CLOUDINARY_URL: cloudinary://key:secret@democloud
+      TMDB_API: ci-dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm ci --legacy-peer-deps
+      - name: Régénérer le SDK
+        run: npm run kubb:generate
+      - name: Échouer si le SDK généré n'est pas à jour
+        run: |
+          if ! git diff --exit-code shared/openapi.json shared/src/generated; then
+            echo "::error::Le SDK généré est périmé. Lance 'npm run kubb:generate' en local et commit shared/openapi.json + shared/src/generated."
+            exit 1
+          fi

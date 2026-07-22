@@ -51,6 +51,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useAuth } from '@/context/auth-context';
+import { invalidateMyWatchlists } from '@/api/invalidations';
 import { watchlists as watchlistsApi } from '@/api';
 import { createPlaceholderItem, type Watchlist, type WatchlistItem } from '@/api';
 import { cn } from '@/lib/cn';
@@ -438,49 +439,51 @@ function SortableMobileCard({
           onClick={onOpenDetails}
           className="bg-muted relative w-[52px] shrink-0 cursor-pointer self-stretch overflow-hidden rounded-md"
         >
-        {posterUrl ? (
-          <Image
-            src={posterUrl}
-            alt={item.title ?? ''}
-            fill
-            sizes="52px"
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
-        )}
-      </button>
-
-      <div className="min-w-0 flex-1 pr-8">
-        <button
-          type="button"
-          onClick={onOpenDetails}
-          className="block max-w-full cursor-pointer truncate text-left font-semibold text-white"
-        >
-          {item.title}
-        </button>
-        <span
-          className={cn(
-            'mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
-            item.mediaType === 'movie'
-              ? 'bg-blue-500/10 text-blue-400'
-              : 'bg-purple-500/10 text-purple-400',
+          {posterUrl ? (
+            <Image
+              src={posterUrl}
+              alt={item.title ?? ''}
+              fill
+              sizes="52px"
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="from-muted to-muted/30 h-full w-full bg-linear-to-br" />
           )}
-        >
-          {item.mediaType === 'movie'
-            ? content.watchlists.contentTypes.movie
-            : content.watchlists.contentTypes.series}
-        </span>
-        <div className="text-muted-foreground mt-2 flex items-end gap-2 pt-2 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="shrink-0">{duration}</span>
-            {hasRealDuration && hasPlatforms && (
-              <span className="text-muted-foreground/70 text-2xl leading-none">·</span>
+        </button>
+
+        <div className="min-w-0 flex-1 pr-8">
+          <button
+            type="button"
+            onClick={onOpenDetails}
+            className="block max-w-full cursor-pointer truncate text-left font-semibold text-white"
+          >
+            {item.title}
+          </button>
+          <span
+            className={cn(
+              'mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+              item.mediaType === 'movie'
+                ? 'bg-blue-500/10 text-blue-400'
+                : 'bg-purple-500/10 text-purple-400',
+            )}
+          >
+            {item.mediaType === 'movie'
+              ? content.watchlists.contentTypes.movie
+              : content.watchlists.contentTypes.series}
+          </span>
+          <div className="text-muted-foreground mt-2 flex items-end gap-2 pt-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="shrink-0">{duration}</span>
+              {hasRealDuration && hasPlatforms && (
+                <span className="text-muted-foreground/70 text-2xl leading-none">·</span>
+              )}
+            </div>
+            {hasPlatforms && (
+              <CompactWatchProviders providers={item.platformList ?? []} size={24} />
             )}
           </div>
-          {hasPlatforms && <CompactWatchProviders providers={item.platformList ?? []} size={24} />}
-        </div>
         </div>
       </div>
 
@@ -627,7 +630,7 @@ export function ListItemsTable({
       try {
         await watchlistsApi.removeItem(watchlist.id, String(tmdbId));
         onUpdate({ ...watchlist, items: newItems });
-        queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+        invalidateMyWatchlists(queryClient);
       } catch (error) {
         console.error('Failed to delete item:', error);
         setItems(currentItems);
@@ -678,7 +681,7 @@ export function ListItemsTable({
         newItems.map((it) => String(it.tmdbId)),
       );
       onUpdate({ ...watchlist, items: newItems });
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
     } catch (error) {
       console.error('Failed to undo delete:', error);
       setItems(currentItems);
@@ -764,7 +767,7 @@ export function ListItemsTable({
         language: tmdbLanguage,
         region: tmdbRegion,
       });
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
       if (watchlistId === watchlist.id) {
         onUpdate();
       }
@@ -803,7 +806,7 @@ export function ListItemsTable({
     );
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
       toast.success('Retiré de la liste');
     } catch (error) {
       console.error('Failed to remove from watchlist:', error);

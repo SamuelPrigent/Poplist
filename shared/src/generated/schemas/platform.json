@@ -1,0 +1,1 @@
+{"type":"object","properties":{"name":{"type":"string"},"logoPath":{"type":"string"}},"required":["name","logoPath"],"x-readme-ref-name":"Platform"}

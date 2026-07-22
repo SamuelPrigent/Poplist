@@ -4,15 +4,11 @@ import { authAPI, setAuthErrorHandler } from '../lib/api-client'
 import { saveTokens, clearTokens } from '../services/auth-storage'
 import { type Language, useLanguageStore } from '../store/language'
 
-export interface User {
-  id: string
-  email: string
-  username: string
-  language?: string
-  avatarUrl?: string
-  roles: string[]
-  hasPassword?: boolean
-}
+// Type User du contrat généré (schémas zod backend). L'ancien type local
+// mentait : `roles` n'existe pas dans les réponses API (jamais renvoyé), et
+// username/language/avatarUrl sont nullables.
+export type { User } from '../types'
+import type { User } from '../types'
 
 export interface AuthContextValue {
   user: User | null

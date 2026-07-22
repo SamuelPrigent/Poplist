@@ -7,7 +7,16 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./entities/*": "./src/entities/*.ts",
-    "./api/*": "./src/api/*.ts"
+    "./client-runtime": "./src/client-runtime.ts",
+    "./generated": "./src/generated/index.ts",
+    "./generated/*": "./src/generated/*.ts"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-query": {
+      "optional": true
+    }
   }
 }

@@ -1,0 +1,1 @@
+{"type":"object","properties":{"id":{"type":"string"},"username":{"anyOf":[{"type":"string"},{"type":"null"}]},"avatarUrl":{"anyOf":[{"type":"string"},{"type":"null"}]}},"required":["id","username","avatarUrl"],"x-readme-ref-name":"UserProfilePublic"}

@@ -1,34 +1,13 @@
 /**
- * @poplist/shared — Types partagés entre backend et frontend.
+ * @poplist/shared — SDK partagé entre backend, frontend et mobile.
  *
- * Convention : `entities/` contient les shapes des objets du domaine,
- * `api/` contient les contrats Request/Response par endpoint.
+ * Tout le contrat API est GÉNÉRÉ par Kubb depuis le spec OpenAPI
+ * (`shared/openapi.json`), lui-même dérivé des schémas zod du backend
+ * (`backend/src/schemas/*.schemas.ts`). Ne rien écrire à la main ici :
+ * `npm run kubb:generate` régénère tout.
  *
- * Re-exports propres pour les usages courants.
+ * Points d'entrée :
+ *   - `@poplist/shared/generated`      → types, clients, hooks react-query
+ *   - `@poplist/shared/client-runtime` → transport injectable (setApiTransport)
  */
-
-// Entities
-export type { User, UserProfilePublic } from './entities/user.js';
-export type {
-  Collaborator,
-  Platform,
-  RecommendedItem,
-  Watchlist,
-  WatchlistItem,
-  WatchlistOwner,
-} from './entities/watchlist.js';
-export type {
-  FullMediaDetails,
-  TMDBGenresResponse,
-  TMDBListResponse,
-  TMDBMediaItem,
-  TMDBProvider,
-  TMDBProvidersResponse,
-} from './entities/tmdb.js';
-
-// API contracts
-export * as AuthAPI from './api/auth.js';
-export * as AuthMobileAPI from './api/auth-mobile.js';
-export * as UsersAPI from './api/users.js';
-export * as WatchlistsAPI from './api/watchlists.js';
-export * as TMDBAPI from './api/tmdb.js';
+export * from './generated/index';

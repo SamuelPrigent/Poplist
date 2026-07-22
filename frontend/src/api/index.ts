@@ -17,15 +17,10 @@ export { tmdb } from './tmdb';
 
 // Helpers
 export { createPlaceholderItem } from './placeholders';
-export {
-  fetchTMDBProviders,
-  getWatchProviderLogo,
-  type ProviderLogo,
-} from './tmdb-helpers';
+export { fetchTMDBProviders, getWatchProviderLogo, type ProviderLogo } from './tmdb-helpers';
 
-// Types ré-exportés depuis @poplist/shared (commodité d'import)
+// Types ré-exportés depuis le SDK généré (commodité d'import)
 export type {
-  Collaborator,
   FullMediaDetails,
   Platform,
   RecommendedItem,
@@ -34,4 +29,6 @@ export type {
   Watchlist,
   WatchlistItem,
   WatchlistOwner,
-} from '@poplist/shared';
+} from '@poplist/shared/generated';
+// Alias sémantique (identique à WatchlistOwner, comme dans l'ancien contrat)
+export type { WatchlistOwner as Collaborator } from '@poplist/shared/generated';

@@ -1,0 +1,1 @@
+{"type":"object","properties":{"thumbnailUrl":{"type":"string"}},"required":["thumbnailUrl"],"x-readme-ref-name":"GenerateThumbnailResponse"}

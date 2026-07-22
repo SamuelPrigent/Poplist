@@ -1,20 +1,15 @@
-import type { UsersAPI } from '@poplist/shared';
-import { apiFetch } from './client';
+/**
+ * SDK users — adaptateur fin sur les fonctions client générées par Kubb.
+ * Interface publique conservée.
+ */
+import * as gen from '@poplist/shared/generated/client/usersController/index';
 
 export const users = {
-  getProfile: () => apiFetch<UsersAPI.GetProfileResponse>('/user/profile'),
+  getProfile: () => gen.getProfile(),
 
-  getByUsername: (username: string) =>
-    apiFetch<UsersAPI.GetUserProfileByUsernameResponse>(
-      `/user/profile/${encodeURIComponent(username)}`
-    ),
+  getByUsername: (username: string) => gen.getUserProfileByUsername(encodeURIComponent(username)),
 
-  uploadAvatar: (imageData: string) =>
-    apiFetch<UsersAPI.UploadAvatarResponse>('/user/upload-avatar', {
-      method: 'POST',
-      body: { imageData } satisfies UsersAPI.UploadAvatarRequest,
-    }),
+  uploadAvatar: (imageData: string) => gen.uploadAvatar({ imageData }),
 
-  deleteAvatar: () =>
-    apiFetch<UsersAPI.DeleteAvatarResponse>('/user/avatar', { method: 'DELETE' }),
+  deleteAvatar: () => gen.deleteAvatar(),
 };

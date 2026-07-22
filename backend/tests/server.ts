@@ -22,7 +22,7 @@ config({
 // 2. Safety check
 if (!process.env.DATABASE_URL?.includes('poplist-db-test')) {
   console.error(
-    `🛑 SAFETY: DATABASE_URL doit pointer sur "poplist-db-test", reçu: ${process.env.DATABASE_URL}`
+    `🛑 SAFETY: DATABASE_URL doit pointer sur "poplist-db-test", reçu: ${process.env.DATABASE_URL}`,
   );
   process.exit(1);
 }
@@ -31,7 +31,7 @@ if (!process.env.DATABASE_URL?.includes('poplist-db-test')) {
 //    'warn' au lieu de 'bypass' pour repérer les endpoints TMDB non mockés
 const { server } = await import('./helpers/mock-external.js');
 server.listen({
-  onUnhandledRequest: req => {
+  onUnhandledRequest: (req) => {
     const url = new URL(req.url);
     // Ignore les calls vers le backend lui-même
     if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return;
@@ -54,9 +54,18 @@ const { db, client } = dbModule;
 // 5. Ajouter les endpoints de test (seulement en mode test)
 //    /_test/reset : truncate toutes les tables (utilisé par Playwright entre tests)
 //    /_test/seed/* : create test data (optionnel)
-app.post('/_test/reset', async c => {
+app.post('/_test/reset', async (c) => {
   await resetDb();
   return c.json({ status: 'reset' });
+});
+
+// Sonde inoffensive (GET, zéro effet de bord) : permet au garde-fou e2e
+// (frontend/e2e/global-setup.ts) de vérifier que le proxy du front de test
+// atteint bien CE serveur (DB de test) et pas le backend de dev — qui, lui,
+// répond 404 sur cette route.
+app.get('/_test/health', (c) => {
+  const dbName = new URL(env.DATABASE_URL).pathname.slice(1);
+  return c.json({ testServer: true, db: dbName });
 });
 
 async function main() {
@@ -84,7 +93,7 @@ async function main() {
   process.on('SIGINT', shutdown);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('[test-server] failed to start:', err);
   process.exit(1);
 });

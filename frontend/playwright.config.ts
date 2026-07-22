@@ -11,6 +11,11 @@ const BACKEND_URL = process.env.E2E_BACKEND_URL ?? 'http://localhost:4005';
 export default defineConfig({
   testDir: './e2e',
 
+  // Garde-fou anti « mauvais backend » : vérifie que le proxy /api du front de
+  // test atteint le backend de TEST avant de lancer quoi que ce soit.
+  // (S'exécute après le démarrage des webServers.)
+  globalSetup: './e2e/global-setup.ts',
+
   // Pas de parallélisme : tests partagent la DB de test (poplist-db-test)
   fullyParallel: false,
   workers: 1,

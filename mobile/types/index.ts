@@ -1,100 +1,34 @@
+/**
+ * Types de l'app mobile.
+ *
+ * Les types API sont des re-exports du SDK généré par Kubb
+ * (`shared/src/generated`, dérivé des schémas zod du backend) : plus de
+ * duplication manuelle, plus de drift avec le contrat réel.
+ *
+ * IMPORTANT : `import type` uniquement — résolu par le path `@poplist/shared`
+ * du tsconfig, effacé à la compilation. Rien de `shared/` n'entre dans le
+ * bundle Metro/EAS.
+ */
 export type { Content } from './content'
 export type { GenreCategory, CategoryInfo } from './categories'
 
-export interface User {
-  id: string
-  email: string
-  username: string
-  language?: string
-  avatarUrl?: string
-  roles: string[]
-  hasPassword?: boolean
-}
+export type {
+  User,
+  UserProfilePublic,
+  Platform,
+  WatchlistItem,
+  WatchlistOwner,
+  Watchlist,
+  FullMediaDetails,
+} from '@poplist/shared/generated'
 
-export interface Platform {
-  name: string
-  logoPath: string
-}
+import type {
+  WatchlistOwner as _WatchlistOwner,
+  GetUserProfileByUsernameResponse,
+} from '@poplist/shared/generated'
 
-export interface WatchlistItem {
-  tmdbId: number
-  title: string
-  posterPath: string | null
-  mediaType: 'movie' | 'tv'
-  platformList: Platform[]
-  runtime?: number
-  numberOfSeasons?: number
-  numberOfEpisodes?: number
-  addedAt: string
-}
+/** Alias sémantique (identique à WatchlistOwner, comme dans shared). */
+export type Collaborator = _WatchlistOwner
 
-export interface WatchlistOwner {
-  id?: string
-  email: string
-  username?: string
-  avatarUrl?: string
-  [key: string]: unknown
-}
-
-export interface Collaborator {
-  id: string
-  email: string
-  username: string
-  avatarUrl?: string
-}
-
-export interface UserProfilePublic {
-  id: string
-  username: string
-  avatarUrl?: string
-}
-
-export interface UserProfileResponse {
-  user: UserProfilePublic
-  watchlists: Watchlist[]
-  totalPublicWatchlists: number
-}
-
-export interface Watchlist {
-  id: string
-  ownerId: string
-  owner?: WatchlistOwner
-  name: string
-  description?: string
-  imageUrl?: string
-  thumbnailUrl?: string
-  dominantColor?: string
-  isPublic: boolean
-  genres?: string[]
-  collaborators: Collaborator[]
-  items: WatchlistItem[]
-  createdAt: string
-  updatedAt: string
-  followersCount?: number
-  likedBy?: Collaborator[]
-  isSaved?: boolean
-  isOwner?: boolean
-  isCollaborator?: boolean
-}
-
-export interface FullMediaDetails {
-  tmdbId: string
-  title: string
-  overview: string
-  posterUrl: string
-  backdropUrl: string
-  releaseDate: string
-  runtime?: number
-  rating: number
-  voteCount: number
-  genres: string[]
-  cast: Array<{
-    name: string
-    character: string
-    profileUrl: string
-  }>
-  director?: string
-  type: 'movie' | 'tv'
-  numberOfSeasons?: number
-  numberOfEpisodes?: number
-}
+/** Réponse de GET /user/profile/:username. */
+export type UserProfileResponse = GetUserProfileByUsernameResponse

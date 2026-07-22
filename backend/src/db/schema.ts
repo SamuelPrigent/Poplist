@@ -13,7 +13,7 @@ import {
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import type { RecommendedItem } from '@poplist/shared';
+import type { RecommendedItem } from '@poplist/shared/generated';
 import type { Platform } from '../types/index.js';
 
 // ========================================
@@ -22,7 +22,9 @@ import type { Platform } from '../types/index.js';
 export const users = pgTable(
   'users',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     email: varchar('email', { length: 255 }).notNull(),
     username: varchar('username', { length: 50 }),
     passwordHash: varchar('password_hash', { length: 255 }),
@@ -38,7 +40,7 @@ export const users = pgTable(
     uniqueIndex('users_google_id_key').on(t.googleId),
     index('idx_users_email').on(t.email),
     index('idx_users_google_id').on(t.googleId),
-  ]
+  ],
 );
 
 // ========================================
@@ -47,14 +49,16 @@ export const users = pgTable(
 export const refreshTokens = pgTable(
   'refresh_tokens',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
     tokenHash: varchar('token_hash', { length: 255 }).notNull(),
     userAgent: text('user_agent'),
     issuedAt: timestamp('issued_at', { mode: 'date' }).defaultNow(),
     expiresAt: timestamp('expires_at', { mode: 'date' }),
   },
-  (t) => [index('idx_refresh_tokens_user').on(t.userId)]
+  (t) => [index('idx_refresh_tokens_user').on(t.userId)],
 );
 
 // ========================================
@@ -63,7 +67,9 @@ export const refreshTokens = pgTable(
 export const watchlists = pgTable(
   'watchlists',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 255 }).notNull(),
     description: text('description'),
@@ -74,7 +80,7 @@ export const watchlists = pgTable(
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow(),
   },
-  (t) => [index('idx_watchlists_owner').on(t.ownerId)]
+  (t) => [index('idx_watchlists_owner').on(t.ownerId)],
 );
 
 // ========================================
@@ -83,7 +89,9 @@ export const watchlists = pgTable(
 export const watchlistItems = pgTable(
   'watchlist_items',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     watchlistId: uuid('watchlist_id').references(() => watchlists.id, { onDelete: 'cascade' }),
     tmdbId: integer('tmdb_id').notNull(),
     mediaType: varchar('media_type', { length: 10 }).notNull(),
@@ -105,9 +113,9 @@ export const watchlistItems = pgTable(
     uniqueIndex('watchlist_items_watchlist_id_tmdb_id_media_type_key').on(
       t.watchlistId,
       t.tmdbId,
-      t.mediaType
+      t.mediaType,
     ),
-  ]
+  ],
 );
 
 // ========================================
@@ -129,7 +137,7 @@ export const watchlistCollaborators = pgTable(
       name: 'watchlist_collaborators_pkey',
       columns: [t.watchlistId, t.userId],
     }),
-  ]
+  ],
 );
 
 // ========================================
@@ -151,7 +159,7 @@ export const watchlistLikes = pgTable(
       name: 'watchlist_likes_pkey',
       columns: [t.watchlistId, t.userId],
     }),
-  ]
+  ],
 );
 
 // ========================================
@@ -173,7 +181,7 @@ export const savedWatchlists = pgTable(
       name: 'saved_watchlists_pkey',
       columns: [t.watchlistId, t.userId],
     }),
-  ]
+  ],
 );
 
 // ========================================
@@ -199,7 +207,7 @@ export const userWatchlistPositions = pgTable(
       columns: [t.watchlistId, t.userId],
     }),
     index('user_watchlist_positions_user_id_position_index').on(t.userId, t.position),
-  ]
+  ],
 );
 
 // ========================================
@@ -208,7 +216,9 @@ export const userWatchlistPositions = pgTable(
 export const apiCaches = pgTable(
   'api_caches',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     requestUrl: varchar('request_url', { length: 2048 }).notNull(),
     responseData: jsonb('response_data').notNull(),
     cachedAt: timestamp('cached_at', { mode: 'date' }).defaultNow(),
@@ -218,7 +228,7 @@ export const apiCaches = pgTable(
     uniqueIndex('api_caches_request_url_key').on(t.requestUrl),
     index('idx_api_caches_expires').on(t.expiresAt),
     index('idx_api_caches_url').on(t.requestUrl),
-  ]
+  ],
 );
 
 // ========================================
@@ -230,7 +240,9 @@ export const apiCaches = pgTable(
 export const watchlistRecommendations = pgTable(
   'watchlist_recommendations',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     watchlistId: uuid('watchlist_id')
       .notNull()
       .references(() => watchlists.id, { onDelete: 'cascade' }),
@@ -238,7 +250,5 @@ export const watchlistRecommendations = pgTable(
     sourceItemIds: jsonb('source_item_ids').$type<number[]>().notNull().default([]),
     generatedAt: timestamp('generated_at', { mode: 'date' }).defaultNow(),
   },
-  (t) => [
-    uniqueIndex('watchlist_recommendations_watchlist_id_key').on(t.watchlistId),
-  ]
+  (t) => [uniqueIndex('watchlist_recommendations_watchlist_id_key').on(t.watchlistId)],
 );

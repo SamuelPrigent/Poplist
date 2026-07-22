@@ -1,6 +1,8 @@
 secrets
 notes
 -notes
+-api
+-entities
 prompt
 frontend/public/landing/movies/unused
 .env

@@ -2,7 +2,13 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    // Résolution TYPES-ONLY de @poplist/shared (`import type` uniquement) :
+    // aucune config Metro nécessaire, rien du package n'entre dans le bundle.
+    "paths": {
+      "@poplist/shared": ["../shared/src/index.ts"],
+      "@poplist/shared/*": ["../shared/src/*"]
+    }
   },
   "exclude": ["node_modules", "expo-image"]
 }

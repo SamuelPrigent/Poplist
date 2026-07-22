@@ -1,9 +1,8 @@
-import type { Context } from "hono";
-import bcrypt from "bcrypt";
-import { and, asc, eq, lt, or } from "drizzle-orm";
-import type { AuthMobileAPI } from "@poplist/shared";
-import { db } from "../db/index.js";
-import { refreshTokens, users } from "../db/schema.js";
+import type { Context } from 'hono';
+import bcrypt from 'bcrypt';
+import { and, asc, eq, lt, or } from 'drizzle-orm';
+import { db } from '../db/index.js';
+import { refreshTokens, users } from '../db/schema.js';
 import {
   signAccessToken,
   signRefreshToken,
@@ -11,16 +10,24 @@ import {
   hashToken,
   generateTokenId,
   REFRESH_TOKEN_EXPIRY_DAYS,
-} from "../services/jwt.service.js";
-import { exchangeGoogleCodeMobile } from "../services/google-oauth.service.js";
-import { generateUniqueUsername } from "../services/username.service.js";
+} from '../services/jwt.service.js';
+import { exchangeGoogleCodeMobile } from '../services/google-oauth.service.js';
+import { generateUniqueUsername } from '../services/username.service.js';
 import {
   googleMobileSchema,
   refreshMobileSchema,
   loginSchema,
   signupSchema,
-} from "../validators/auth.validator.js";
-import type { AppEnv } from "../app.js";
+} from '../validators/auth.validator.js';
+import type { AppEnv } from '../app.js';
+import type { z } from 'zod';
+import type {
+  googleAuthMobileResponseSchema,
+  loginMobileResponseSchema,
+  logoutMobileResponseSchema,
+  refreshMobileResponseSchema,
+  signupMobileResponseSchema,
+} from '../schemas/auth-mobile.schemas.js';
 
 type C = Context<AppEnv>;
 
@@ -31,9 +38,7 @@ async function cleanupAndCreateToken(
 ) {
   await db
     .delete(refreshTokens)
-    .where(
-      and(eq(refreshTokens.userId, userId), lt(refreshTokens.expiresAt, new Date())),
-    );
+    .where(and(eq(refreshTokens.userId, userId), lt(refreshTokens.expiresAt, new Date())));
 
   const existingTokens = await db
     .select({ id: refreshTokens.id })
@@ -62,18 +67,15 @@ export const googleAuthMobile = async (c: C) => {
     const body = await c.req.json();
     const parsed = googleMobileSchema.safeParse(body);
     if (!parsed.success) {
-      return c.json({ error: "Validation failed", details: parsed.error.flatten() }, 422);
+      return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422);
     }
 
-    const googleInfo = await exchangeGoogleCodeMobile(
-      parsed.data.code,
-      parsed.data.redirectUri,
-    );
+    const googleInfo = await exchangeGoogleCodeMobile(parsed.data.code, parsed.data.redirectUri);
     const { googleId } = googleInfo;
-    const email = googleInfo.email || "";
+    const email = googleInfo.email || '';
 
     if (!email) {
-      return c.json({ error: "Could not retrieve email from Google" }, 400);
+      return c.json({ error: 'Could not retrieve email from Google' }, 400);
     }
 
     let [user] = await db
@@ -86,7 +88,7 @@ export const googleAuthMobile = async (c: C) => {
       const username = await generateUniqueUsername(email);
       const [created] = await db
         .insert(users)
-        .values({ email, username, googleId, language: "fr" })
+        .values({ email, username, googleId, language: 'fr' })
         .returning();
       user = created;
     } else {
@@ -107,11 +109,7 @@ export const googleAuthMobile = async (c: C) => {
     const accessToken = signAccessToken({ sub: user.id, email: user.email });
     const refreshToken = signRefreshToken({ sub: user.id, tokenId });
 
-    await cleanupAndCreateToken(
-      user.id,
-      refreshToken,
-      c.req.header("user-agent") || null,
-    );
+    await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null);
 
     return c.json({
       accessToken,
@@ -120,14 +118,14 @@ export const googleAuthMobile = async (c: C) => {
         id: user.id,
         email: user.email,
         username: user.username,
-        language: user.language || "fr",
+        language: user.language || 'fr',
         avatarUrl: user.avatarUrl,
         hasPassword: !!user.passwordHash,
       },
-    } satisfies AuthMobileAPI.GoogleAuthMobileResponse);
+    } satisfies z.infer<typeof googleAuthMobileResponseSchema>);
   } catch (error) {
-    console.error("Google OAuth mobile error:", error);
-    return c.json({ error: "Authentication failed" }, 401);
+    console.error('Google OAuth mobile error:', error);
+    return c.json({ error: 'Authentication failed' }, 401);
   }
 };
 
@@ -136,32 +134,26 @@ export const refreshMobile = async (c: C) => {
     const body = await c.req.json();
     const parsed = refreshMobileSchema.safeParse(body);
     if (!parsed.success) {
-      return c.json({ error: "Refresh token required" }, 401);
+      return c.json({ error: 'Refresh token required' }, 401);
     }
 
     const { refreshToken } = parsed.data;
     const payload = verifyRefreshToken(refreshToken);
     const tokenHash = hashToken(refreshToken);
 
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, payload.sub))
-      .limit(1);
+    const [user] = await db.select().from(users).where(eq(users.id, payload.sub)).limit(1);
     if (!user) {
-      return c.json({ error: "User not found" }, 401);
+      return c.json({ error: 'User not found' }, 401);
     }
 
     const [existingToken] = await db
       .select({ id: refreshTokens.id })
       .from(refreshTokens)
-      .where(
-        and(eq(refreshTokens.userId, user.id), eq(refreshTokens.tokenHash, tokenHash)),
-      )
+      .where(and(eq(refreshTokens.userId, user.id), eq(refreshTokens.tokenHash, tokenHash)))
       .limit(1);
 
     if (!existingToken) {
-      return c.json({ error: "Invalid refresh token" }, 401);
+      return c.json({ error: 'Invalid refresh token' }, 401);
     }
 
     await db.delete(refreshTokens).where(eq(refreshTokens.id, existingToken.id));
@@ -175,15 +167,15 @@ export const refreshMobile = async (c: C) => {
       tokenHash: hashToken(newRefreshToken),
       issuedAt: new Date(),
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
-      userAgent: c.req.header("user-agent") || null,
+      userAgent: c.req.header('user-agent') || null,
     });
 
     return c.json({
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
-    } satisfies AuthMobileAPI.RefreshMobileResponse);
+    } satisfies z.infer<typeof refreshMobileResponseSchema>);
   } catch {
-    return c.json({ error: "Invalid or expired refresh token" }, 401);
+    return c.json({ error: 'Invalid or expired refresh token' }, 401);
   }
 };
 
@@ -193,8 +185,8 @@ export const logoutMobile = async (c: C) => {
     const parsed = refreshMobileSchema.safeParse(body);
     if (!parsed.success) {
       return c.json({
-        message: "Logged out",
-      } satisfies AuthMobileAPI.LogoutMobileResponse);
+        message: 'Logged out',
+      } satisfies z.infer<typeof logoutMobileResponseSchema>);
     }
 
     const { refreshToken } = parsed.data;
@@ -204,21 +196,16 @@ export const logoutMobile = async (c: C) => {
       const payload = verifyRefreshToken(refreshToken);
       await db
         .delete(refreshTokens)
-        .where(
-          and(
-            eq(refreshTokens.userId, payload.sub),
-            eq(refreshTokens.tokenHash, tokenHash),
-          ),
-        );
+        .where(and(eq(refreshTokens.userId, payload.sub), eq(refreshTokens.tokenHash, tokenHash)));
     } catch {
       // Token invalid or expired, continue with logout
     }
 
     return c.json({
-      message: "Logged out successfully",
-    } satisfies AuthMobileAPI.LogoutMobileResponse);
+      message: 'Logged out successfully',
+    } satisfies z.infer<typeof logoutMobileResponseSchema>);
   } catch {
-    return c.json({ message: "Logged out" } satisfies AuthMobileAPI.LogoutMobileResponse);
+    return c.json({ message: 'Logged out' } satisfies z.infer<typeof logoutMobileResponseSchema>);
   }
 };
 
@@ -226,18 +213,18 @@ export const loginMobile = async (c: C) => {
   const body = await c.req.json();
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: "Validation failed", details: parsed.error.flatten() }, 422);
+    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422);
   }
   const { email, password } = parsed.data;
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (!user || !user.passwordHash) {
-    return c.json({ error: "Invalid credentials" }, 401);
+    return c.json({ error: 'Invalid credentials' }, 401);
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
   if (!isValid) {
-    return c.json({ error: "Invalid credentials" }, 401);
+    return c.json({ error: 'Invalid credentials' }, 401);
   }
 
   if (!user.username) {
@@ -250,7 +237,7 @@ export const loginMobile = async (c: C) => {
   const accessToken = signAccessToken({ sub: user.id, email: user.email });
   const refreshToken = signRefreshToken({ sub: user.id, tokenId });
 
-  await cleanupAndCreateToken(user.id, refreshToken, c.req.header("user-agent") || null);
+  await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null);
 
   return c.json({
     accessToken,
@@ -259,18 +246,18 @@ export const loginMobile = async (c: C) => {
       id: user.id,
       email: user.email,
       username: user.username,
-      language: user.language || "fr",
+      language: user.language || 'fr',
       avatarUrl: user.avatarUrl,
       hasPassword: !!user.passwordHash,
     },
-  } satisfies AuthMobileAPI.LoginMobileResponse);
+  } satisfies z.infer<typeof loginMobileResponseSchema>);
 };
 
 export const signupMobile = async (c: C) => {
   const body = await c.req.json();
   const parsed = signupSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: "Validation failed", details: parsed.error.flatten() }, 422);
+    return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 422);
   }
   const { email, password } = parsed.data;
 
@@ -280,7 +267,7 @@ export const signupMobile = async (c: C) => {
     .where(eq(users.email, email))
     .limit(1);
   if (existingUser) {
-    return c.json({ error: "User already exists" }, 409);
+    return c.json({ error: 'User already exists' }, 409);
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
@@ -288,14 +275,14 @@ export const signupMobile = async (c: C) => {
 
   const [user] = await db
     .insert(users)
-    .values({ email, username, passwordHash, language: "fr" })
+    .values({ email, username, passwordHash, language: 'fr' })
     .returning();
 
   const tokenId = generateTokenId();
   const accessToken = signAccessToken({ sub: user.id, email: user.email });
   const refreshToken = signRefreshToken({ sub: user.id, tokenId });
 
-  await cleanupAndCreateToken(user.id, refreshToken, c.req.header("user-agent") || null);
+  await cleanupAndCreateToken(user.id, refreshToken, c.req.header('user-agent') || null);
 
   return c.json(
     {
@@ -305,11 +292,11 @@ export const signupMobile = async (c: C) => {
         id: user.id,
         email: user.email,
         username: user.username,
-        language: user.language || "fr",
+        language: user.language || 'fr',
         avatarUrl: user.avatarUrl,
         hasPassword: !!user.passwordHash,
       },
-    } satisfies AuthMobileAPI.SignupMobileResponse,
+    } satisfies z.infer<typeof signupMobileResponseSchema>,
     201,
   );
 };

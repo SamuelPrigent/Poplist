@@ -1,53 +1,31 @@
-import type { AuthAPI } from '@poplist/shared';
-import { apiFetch } from './client';
+/**
+ * SDK auth — adaptateur fin sur les fonctions client générées par Kubb.
+ * Interface publique conservée. Les bodies sont typés par les types de
+ * requête générés.
+ */
+import * as gen from '@poplist/shared/generated/client/authController/index';
+import type { UpdateLanguageMutationRequest } from '@poplist/shared/generated';
 
 export const auth = {
-  signup: (email: string, password: string) =>
-    apiFetch<AuthAPI.SignupResponse>('/auth/signup', {
-      method: 'POST',
-      body: { email, password } satisfies AuthAPI.SignupRequest,
-    }),
+  signup: (email: string, password: string) => gen.signup({ email, password }),
 
-  login: (email: string, password: string) =>
-    apiFetch<AuthAPI.LoginResponse>('/auth/login', {
-      method: 'POST',
-      body: { email, password } satisfies AuthAPI.LoginRequest,
-    }),
+  login: (email: string, password: string) => gen.login({ email, password }),
 
-  logout: () =>
-    apiFetch<AuthAPI.LogoutResponse>('/auth/logout', { method: 'POST' }),
+  logout: () => gen.logout(),
 
-  me: () => apiFetch<AuthAPI.MeResponse>('/auth/me'),
+  me: () => gen.me(),
 
-  refresh: () =>
-    apiFetch<AuthAPI.RefreshResponse>('/auth/refresh', { method: 'POST' }),
+  refresh: () => gen.refresh(),
 
-  checkUsername: (username: string) =>
-    apiFetch<AuthAPI.CheckUsernameResponse>(
-      `/auth/username/check/${encodeURIComponent(username)}`
-    ),
+  checkUsername: (username: string) => gen.checkUsernameAvailability(encodeURIComponent(username)),
 
-  updateUsername: (username: string) =>
-    apiFetch<AuthAPI.UpdateUsernameResponse>('/auth/profile/username', {
-      method: 'PUT',
-      body: { username } satisfies AuthAPI.UpdateUsernameRequest,
-    }),
+  updateUsername: (username: string) => gen.updateUsername({ username }),
 
   changePassword: (oldPassword: string, newPassword: string) =>
-    apiFetch<AuthAPI.ChangePasswordResponse>('/auth/profile/password', {
-      method: 'PUT',
-      body: { oldPassword, newPassword } satisfies AuthAPI.ChangePasswordRequest,
-    }),
+    gen.changePassword({ oldPassword, newPassword }),
 
-  updateLanguage: (language: AuthAPI.UpdateLanguageRequest['language']) =>
-    apiFetch<AuthAPI.UpdateLanguageResponse>('/auth/profile/language', {
-      method: 'PUT',
-      body: { language } satisfies AuthAPI.UpdateLanguageRequest,
-    }),
+  updateLanguage: (language: UpdateLanguageMutationRequest['language']) =>
+    gen.updateLanguage({ language }),
 
-  deleteAccount: (confirmation: 'confirmer') =>
-    apiFetch<AuthAPI.DeleteAccountResponse>('/auth/profile/account', {
-      method: 'DELETE',
-      body: { confirmation } satisfies AuthAPI.DeleteAccountRequest,
-    }),
+  deleteAccount: (confirmation: 'confirmer') => gen.deleteAccount({ confirmation }),
 };

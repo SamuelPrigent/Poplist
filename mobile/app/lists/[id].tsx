@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker'
 import Toast from 'react-native-toast-message'
 import Sortable from 'react-native-sortables'
 import * as Haptics from 'expo-haptics'
-import { mutate } from 'swr'
+import { mutate } from '../../hooks/queries'
 import { watchlistAPI } from '../../lib/api-client'
 import { useAuth } from '../../context/auth-context'
 import { colors, fontSize, spacing } from '../../constants/theme'
@@ -309,9 +309,14 @@ export default function ListDetailScreen() {
     editSheetRef.current?.present({
       id: watchlist.id,
       name: watchlist.name,
-      description: watchlist.description,
-      isPublic: watchlist.isPublic,
-      genres: watchlist.genres,
+      description: watchlist.description ?? undefined,
+      // ⚠️ Bug préexistant révélé par les types générés : le backend ne renvoie
+      // PAS de champ isPublic (l'ancien type mobile mentait). Ce toggle était
+      // donc toujours initialisé à « privée » (undefined → falsy). On préserve
+      // ce comportement à l'identique ; à décider : dériver de
+      // (watchlist.genres?.length > 0) comme indicateur de liste publique.
+      isPublic: false,
+      genres: watchlist.genres ?? undefined,
     })
   }
 

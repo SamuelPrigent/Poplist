@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { Alert } from 'react-native'
 import Toast from 'react-native-toast-message'
-import { mutate } from 'swr'
+import { mutate } from '../hooks/queries'
 import { watchlistAPI } from '../lib/api-client'
 import type { Watchlist, WatchlistItem } from '../types'
 
@@ -108,7 +108,7 @@ export function useReorderActions({
 
       buttons.push({ text: 'Annuler', style: 'cancel' })
 
-      Alert.alert(item.title, undefined, buttons)
+      Alert.alert(item.title ?? '', undefined, buttons)
     },
     [watchlist, moveToTop, moveToBottom],
   )

@@ -19,6 +19,10 @@ interface ListCardGenreProps {
   /** Garde l'aspect quasi carré du desktop aussi sur mobile (carrousel home).
       Par défaut mobile = portrait 4/5 (page /categories). */
   desktopAspectOnMobile?: boolean;
+  /** Nombre de listes du badge. `'pending'` = donnée pas encore chargée →
+      badge masqué (la card, entièrement statique, s'affiche quand même).
+      Absent → fallback sur watchlist.items.length (compat /categories). */
+  itemCount?: number | 'pending';
 }
 
 interface CategoryVisuals {
@@ -49,9 +53,12 @@ export function ListCardGenre({
   titleMobile,
   desktopAspectOnMobile = false,
   index: _index = 0,
+  itemCount: itemCountProp,
 }: ListCardGenreProps) {
   const visuals = (genreId && CATEGORY_VISUALS[genreId]) || DEFAULT_VISUALS;
-  const itemCount = watchlist.items.length;
+  // Prop explicite prioritaire ('pending' = chargement → badge masqué) ;
+  // fallback sur items.length pour les usages sans prop (/categories).
+  const itemCount = itemCountProp ?? watchlist.items.length;
   const [hover, setHover] = useState(false);
 
   // NB : l'aspect ratio est en className (responsive) — presque carré sur
@@ -81,10 +88,13 @@ export function ListCardGenre({
       onMouseLeave={() => setHover(false)}
       className="group block cursor-pointer"
     >
+      {/* `initial={false}` : pas de fade-in au montage. Avec initial opacity 0,
+          le SSR rendait la card invisible jusqu'à l'hydratation (JS différé) —
+          les cards catégories restaient blanches pendant que les skeletons des
+          autres sections s'affichaient. La card est 100 % statique (gradient,
+          cutout, titre) : elle doit se peindre dès le premier paint SSR. */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
+        initial={false}
         className={cn(
           'relative aspect-[21/20] w-full overflow-hidden rounded-xl max-[749px]:rounded-lg',
           !desktopAspectOnMobile && 'max-[749px]:aspect-[4/4.1]',
@@ -113,17 +123,21 @@ export function ListCardGenre({
           }}
         />
 
-        {/* Count badge — top right, backdrop-blur */}
-        <div
-          className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/95 max-[749px]:top-2 max-[749px]:right-2 max-[749px]:px-2 max-[749px]:py-0.5 max-[749px]:text-[10px]"
-          style={{
-            background: 'rgba(0,0,0,0.30)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-          }}
-        >
-          {itemCount} {itemCount === 1 ? 'liste' : 'listes'}
-        </div>
+        {/* Count badge — top right, backdrop-blur. Masqué tant que le count
+            n'est pas chargé : la card s'affiche instantanément, le badge
+            apparaît quand la donnée arrive. */}
+        {itemCount !== 'pending' && (
+          <div
+            className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/95 max-[749px]:top-2 max-[749px]:right-2 max-[749px]:px-2 max-[749px]:py-0.5 max-[749px]:text-[10px]"
+            style={{
+              background: 'rgba(0,0,0,0.30)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
+          >
+            {itemCount} {itemCount === 1 ? 'liste' : 'listes'}
+          </div>
+        )}
 
         {/* Title bottom-left */}
         <div className="absolute inset-0 flex flex-col justify-end px-[18px] pt-[18px] pb-[22px] max-[749px]:px-2.5 max-[749px]:pt-2.5 max-[749px]:pb-3">

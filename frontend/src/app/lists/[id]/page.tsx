@@ -10,6 +10,11 @@ import { ClientOnly } from '@/components/ui/ClientOnly';
 import { toast } from 'sonner';
 
 import { watchlists as watchlistsApi, type Collaborator, type Watchlist } from '@/api';
+import {
+  invalidateMyWatchlists,
+  invalidateWatchlist as invalidateWatchlistViews,
+  removeWatchlist,
+} from '@/api/invalidations';
 import { watchlistsQueries } from '@/api/queries';
 import { AddCollaboratorPopover } from '@/components/List/AddCollaboratorPopover';
 import {
@@ -30,10 +35,18 @@ import { useListPaginationStore } from '@/store/listPagination';
 // Lazy : ces modals ne sont rendus que lorsque ouverts. Pas de SSR (par défaut
 // de React.lazy, ils chargent côté client uniquement quand le composant tente
 // de se rendre).
-const AddItemModal = lazy(() => import('@/components/List/modal/AddItemModal').then(m => ({ default: m.AddItemModal })));
-const DeleteListDialog = lazy(() => import('@/components/List/modal/DeleteListDialog').then(m => ({ default: m.DeleteListDialog })));
-const EditListDialog = lazy(() => import('@/components/List/modal/EditListDialog').then(m => ({ default: m.EditListDialog })));
-const LeaveListDialog = lazy(() => import('@/components/List/modal/LeaveListDialog').then(m => ({ default: m.LeaveListDialog })));
+const AddItemModal = lazy(() =>
+  import('@/components/List/modal/AddItemModal').then((m) => ({ default: m.AddItemModal })),
+);
+const DeleteListDialog = lazy(() =>
+  import('@/components/List/modal/DeleteListDialog').then((m) => ({ default: m.DeleteListDialog })),
+);
+const EditListDialog = lazy(() =>
+  import('@/components/List/modal/EditListDialog').then((m) => ({ default: m.EditListDialog })),
+);
+const LeaveListDialog = lazy(() =>
+  import('@/components/List/modal/LeaveListDialog').then((m) => ({ default: m.LeaveListDialog })),
+);
 
 export default function ListDetailPage() {
   const params = useParams({ strict: false }) as { id: string };
@@ -60,7 +73,9 @@ export default function ListDetailPage() {
     enabled: !!id,
     retry: false,
   } as never) as {
-    data: { watchlist: Watchlist; isOwner?: boolean; isCollaborator?: boolean; isSaved?: boolean } | undefined;
+    data:
+      | { watchlist: Watchlist; isOwner?: boolean; isCollaborator?: boolean; isSaved?: boolean }
+      | undefined;
     isPending: boolean;
     isError: boolean;
   };
@@ -100,8 +115,7 @@ export default function ListDetailPage() {
 
   // Helper pour invalider les deux queries après mutation
   const invalidateWatchlist = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['watchlists', id] });
-    queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+    invalidateWatchlistViews(queryClient, id);
   }, [queryClient, id]);
 
   // Helper pour update direct du cache TQ (après edit/add item/etc.)
@@ -118,7 +132,7 @@ export default function ListDetailPage() {
         queryClient.setQueryData(authKey, { ...currentAuth, watchlist: updated });
       }
     },
-    [queryClient, id]
+    [queryClient, id],
   );
 
   const handleWatchlistUpdate = useCallback(
@@ -128,9 +142,9 @@ export default function ListDetailPage() {
       } else {
         invalidateWatchlist();
       }
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
     },
-    [setCachedWatchlist, invalidateWatchlist]
+    [setCachedWatchlist, invalidateWatchlist],
   );
 
   if (stillPending) {
@@ -222,7 +236,7 @@ export default function ListDetailPage() {
               avatarUrl: user?.avatarUrl ?? null,
             },
           ]
-        : currentLikedBy.filter(u => u.id !== user?.id),
+        : currentLikedBy.filter((u) => u.id !== user?.id),
     };
 
     // Optimistic update du cache
@@ -243,7 +257,7 @@ export default function ListDetailPage() {
         await watchlistsApi.save(id);
         toast.success(content.watchlists.toasts?.listSaved || 'List added');
       }
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
     } catch (error) {
       console.error('Failed to toggle save watchlist:', error);
       toast.error(content.watchlists.toasts?.listSaveError || 'Failed to update list');
@@ -263,7 +277,7 @@ export default function ListDetailPage() {
       toast.success(content.watchlists.toasts?.listDuplicated || 'List duplicated', {
         id: loadingToast,
       });
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
       if (duplicatedWatchlist) {
         navigate({ to: `/lists/${duplicatedWatchlist.id}` as never });
       }
@@ -278,7 +292,7 @@ export default function ListDetailPage() {
   const getCollaborators = (): Collaborator[] => {
     if (!watchlist || !watchlist.collaborators) return [];
     return watchlist.collaborators.filter(
-      (c): c is Collaborator => typeof c === 'object' && c !== null
+      (c): c is Collaborator => typeof c === 'object' && c !== null,
     );
   };
 
@@ -315,7 +329,7 @@ export default function ListDetailPage() {
                 <DropdownMenu.Content
                   className="border-border bg-background z-50 min-w-[200px] overflow-hidden rounded-md border p-1 shadow-md"
                   sideOffset={5}
-                  onCloseAutoFocus={e => {
+                  onCloseAutoFocus={(e) => {
                     e.preventDefault();
                   }}
                 >
@@ -351,9 +365,9 @@ export default function ListDetailPage() {
             <AddCollaboratorPopover
               watchlistId={id}
               collaborators={getCollaborators()}
-              onCollaboratorsChange={collaborators => {
+              onCollaboratorsChange={(collaborators) => {
                 setCachedWatchlist({ ...watchlist, collaborators });
-                queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+                invalidateMyWatchlists(queryClient);
               }}
             >
               <button
@@ -415,19 +429,19 @@ export default function ListDetailPage() {
                   // pas creuser un vide entre les items et les recommandations.
                   className={totalPages <= 1 ? 'max-[749px]:hidden' : undefined}
                 >
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                  itemsPerPage={effectiveItemsPerPage}
-                  totalItems={totalItems}
-                  onItemsPerPageChange={newItemsPerPage => {
-                    // Click sur "Tout" → Pagination renvoie totalItems → on stocke 'all'
-                    // pour préserver la sémantique sur les futures listes consultées.
-                    setItemsPerPagePref(newItemsPerPage === totalItems ? 'all' : newItemsPerPage);
-                    setCurrentPage(1);
-                  }}
-                />
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={effectiveItemsPerPage}
+                    totalItems={totalItems}
+                    onItemsPerPageChange={(newItemsPerPage) => {
+                      // Click sur "Tout" → Pagination renvoie totalItems → on stocke 'all'
+                      // pour préserver la sémantique sur les futures listes consultées.
+                      setItemsPerPagePref(newItemsPerPage === totalItems ? 'all' : newItemsPerPage);
+                      setCurrentPage(1);
+                    }}
+                  />
                 </div>
               )}
             </>
@@ -458,7 +472,9 @@ export default function ListDetailPage() {
               open={addModalOpen}
               onOpenChange={setAddModalOpen}
               watchlist={watchlist}
-              onSuccess={() => { invalidateWatchlist(); }}
+              onSuccess={() => {
+                invalidateWatchlist();
+              }}
             />
           </Suspense>
         </ClientOnly>
@@ -471,7 +487,9 @@ export default function ListDetailPage() {
               ref={editDialogRef}
               open={editModalOpen}
               onOpenChange={setEditModalOpen}
-              onSuccess={() => { invalidateWatchlist(); }}
+              onSuccess={() => {
+                invalidateWatchlist();
+              }}
               watchlist={watchlist}
             />
           </Suspense>
@@ -486,8 +504,8 @@ export default function ListDetailPage() {
               onOpenChange={setDeleteDialogOpen}
               watchlist={watchlist}
               onSuccess={() => {
-                queryClient.removeQueries({ queryKey: ['watchlists', id] });
-                queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+                removeWatchlist(queryClient, id);
+                invalidateMyWatchlists(queryClient);
                 navigate({ to: '/account/lists' as never });
               }}
             />

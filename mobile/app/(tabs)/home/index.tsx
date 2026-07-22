@@ -90,7 +90,7 @@ export default function HomeScreen() {
           } else {
             creatorsMap.set(w.owner.username, {
               username: w.owner.username,
-              avatarUrl: w.owner.avatarUrl,
+              avatarUrl: w.owner.avatarUrl ?? undefined,
               listCount: 1,
             });
           }
@@ -111,9 +111,20 @@ export default function HomeScreen() {
   const categories = GENRE_CATEGORIES.map(id => getCategoryInfo(id, content));
 
   const trendingSheetItems: WatchlistItem[] = trending.map(t => ({
+    // Item UI éphémère (pas encore en base) : les champs DB sont neutres.
+    id: `tmdb-${t.id}`,
+    watchlistId: null,
     tmdbId: t.id,
     title: t.title || t.name || '',
     posterPath: t.poster_path || null,
+    backdropPath: null,
+    overview: null,
+    releaseDate: null,
+    voteAverage: null,
+    runtime: null,
+    numberOfSeasons: null,
+    numberOfEpisodes: null,
+    position: null,
     mediaType: t.media_type,
     platformList: [],
     addedAt: new Date().toISOString(),

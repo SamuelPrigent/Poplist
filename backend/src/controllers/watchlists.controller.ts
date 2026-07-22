@@ -4,8 +4,7 @@ import type {
   RecommendedItem,
   Watchlist as SharedWatchlist,
   WatchlistItem as SharedWatchlistItem,
-  WatchlistsAPI,
-} from '@poplist/shared';
+} from '@poplist/shared/generated';
 import { db } from '../db/index.js';
 import {
   savedWatchlists,
@@ -51,6 +50,32 @@ import {
 } from '../validators/watchlists.validator.js';
 import type { AppEnv } from '../app.js';
 import type { Platform } from '../types/index.js';
+import type {
+  addCollaboratorResponseSchema,
+  addItemResponseSchema,
+  createWatchlistResponseSchema,
+  deleteCoverResponseSchema,
+  deleteWatchlistResponseSchema,
+  duplicateWatchlistResponseSchema,
+  generateThumbnailResponseSchema,
+  getMyWatchlistsResponseSchema,
+  getPublicFeaturedResponseSchema,
+  getPublicWatchlistResponseSchema,
+  getWatchlistByIdResponseSchema,
+  getWatchlistCountByGenreResponseSchema,
+  getWatchlistRecommendationsResponseSchema,
+  getWatchlistsByGenreResponseSchema,
+  leaveWatchlistResponseSchema,
+  moveItemResponseSchema,
+  removeCollaboratorResponseSchema,
+  removeItemResponseSchema,
+  reorderItemsResponseSchema,
+  reorderWatchlistsResponseSchema,
+  saveWatchlistResponseSchema,
+  unsaveWatchlistResponseSchema,
+  updateWatchlistResponseSchema,
+  uploadCoverResponseSchema,
+} from '../schemas/watchlists.schemas.js';
 
 type C = Context<AppEnv>;
 
@@ -125,10 +150,7 @@ function formatItem(item: DBWatchlistItem): SharedWatchlistItem {
  * Formatte une watchlist Drizzle (sans relations chargées) + ses items en shape JSON-ready.
  * Utilisé par les endpoints de mutation qui ne rechargent pas owner/collaborators/likedBy.
  */
-function formatWatchlistRowWithItems(
-  row: DBWatchlist,
-  items: DBWatchlistItem[]
-): SharedWatchlist {
+function formatWatchlistRowWithItems(row: DBWatchlist, items: DBWatchlistItem[]): SharedWatchlist {
   return formatWatchlistWithRelations({ ...row, items, collaborators: [], owner: null });
 }
 
@@ -156,14 +178,14 @@ export function formatWatchlistWithRelations(watchlist: WatchlistWithRelations):
           avatarUrl: watchlist.owner.avatarUrl,
         }
       : undefined,
-    collaborators: (watchlist.collaborators ?? []).map(c => ({
+    collaborators: (watchlist.collaborators ?? []).map((c) => ({
       id: c.user.id,
       email: c.user.email,
       username: c.user.username,
       avatarUrl: c.user.avatarUrl,
     })),
     items: (watchlist.items ?? []).map(formatItem),
-    likedBy: watchlist.likedBy?.map(l => ({
+    likedBy: watchlist.likedBy?.map((l) => ({
       id: l.user.id,
       email: l.user.email,
       username: l.user.username,
@@ -190,19 +212,21 @@ const userColumnsSelect = {
  */
 export async function loadWatchlistRelations(
   base: DBWatchlist[],
-  options: { withLikedBy?: boolean } = {}
+  options: { withLikedBy?: boolean } = {},
 ): Promise<WatchlistWithRelations[]> {
   if (base.length === 0) return [];
 
-  const watchlistIds = base.map(w => w.id);
-  const ownerIds = [...new Set(base.map(w => w.ownerId).filter((id): id is string => id !== null))];
+  const watchlistIds = base.map((w) => w.id);
+  const ownerIds = [
+    ...new Set(base.map((w) => w.ownerId).filter((id): id is string => id !== null)),
+  ];
 
   // 1. Owners
   const owners =
     ownerIds.length > 0
       ? await db.select(userColumnsSelect).from(users).where(inArray(users.id, ownerIds))
       : [];
-  const ownerMap = new Map(owners.map(u => [u.id, u]));
+  const ownerMap = new Map(owners.map((u) => [u.id, u]));
 
   // 2. Items
   const itemRows = await db
@@ -211,7 +235,7 @@ export async function loadWatchlistRelations(
     .where(inArray(watchlistItems.watchlistId, watchlistIds))
     .orderBy(asc(watchlistItems.position));
   const itemsByWatchlist = new Map<string, DBWatchlistItem[]>();
-  itemRows.forEach(i => {
+  itemRows.forEach((i) => {
     if (i.watchlistId === null) return;
     if (!itemsByWatchlist.has(i.watchlistId)) itemsByWatchlist.set(i.watchlistId, []);
     itemsByWatchlist.get(i.watchlistId)!.push(i);
@@ -230,7 +254,7 @@ export async function loadWatchlistRelations(
     .innerJoin(users, eq(watchlistCollaborators.userId, users.id))
     .where(inArray(watchlistCollaborators.watchlistId, watchlistIds));
   const collabsByWatchlist = new Map<string, FormattedUser[]>();
-  collabRows.forEach(r => {
+  collabRows.forEach((r) => {
     if (!collabsByWatchlist.has(r.watchlistId)) collabsByWatchlist.set(r.watchlistId, []);
     collabsByWatchlist.get(r.watchlistId)!.push({
       id: r.id,
@@ -254,7 +278,7 @@ export async function loadWatchlistRelations(
       .from(watchlistLikes)
       .innerJoin(users, eq(watchlistLikes.userId, users.id))
       .where(inArray(watchlistLikes.watchlistId, watchlistIds));
-    likeRows.forEach(r => {
+    likeRows.forEach((r) => {
       if (!likesByWatchlist.has(r.watchlistId)) likesByWatchlist.set(r.watchlistId, []);
       likesByWatchlist.get(r.watchlistId)!.push({
         id: r.id,
@@ -265,15 +289,15 @@ export async function loadWatchlistRelations(
     });
   }
 
-  return base.map(w => {
+  return base.map((w) => {
     const result: WatchlistWithRelations = {
       ...w,
-      owner: w.ownerId ? ownerMap.get(w.ownerId) ?? null : null,
+      owner: w.ownerId ? (ownerMap.get(w.ownerId) ?? null) : null,
       items: itemsByWatchlist.get(w.id) ?? [],
-      collaborators: (collabsByWatchlist.get(w.id) ?? []).map(user => ({ user })),
+      collaborators: (collabsByWatchlist.get(w.id) ?? []).map((user) => ({ user })),
     };
     if (options.withLikedBy) {
-      result.likedBy = (likesByWatchlist.get(w.id) ?? []).map(user => ({ user }));
+      result.likedBy = (likesByWatchlist.get(w.id) ?? []).map((user) => ({ user }));
     }
     return result;
   });
@@ -282,7 +306,7 @@ export async function loadWatchlistRelations(
 /** Charge UNE watchlist + ses relations (raccourci pour le helper plural). */
 async function loadOneWatchlistRelations(
   watchlistId: string,
-  options: { withLikedBy?: boolean } = {}
+  options: { withLikedBy?: boolean } = {},
 ): Promise<WatchlistWithRelations | null> {
   const [base] = await db.select().from(watchlists).where(eq(watchlists.id, watchlistId)).limit(1);
   if (!base) return null;
@@ -307,7 +331,7 @@ export const getPublicFeatured = async (c: C) => {
   const enriched = await loadWatchlistRelations(baseWatchlists, { withLikedBy: true });
 
   const sortedWatchlists = enriched
-    .map(w => ({
+    .map((w) => ({
       ...formatWatchlistWithRelations(w),
       followersCount: w.likedBy?.length || 0,
     }))
@@ -318,19 +342,23 @@ export const getPublicFeatured = async (c: C) => {
       .select({ watchlistId: savedWatchlists.watchlistId })
       .from(savedWatchlists)
       .where(eq(savedWatchlists.userId, userId));
-    const savedIdsSet = new Set(savedRows.map(r => r.watchlistId));
+    const savedIdsSet = new Set(savedRows.map((r) => r.watchlistId));
 
-    const watchlistsWithFlags = sortedWatchlists.map(w => ({
+    const watchlistsWithFlags = sortedWatchlists.map((w) => ({
       ...w,
       isOwner: w.ownerId === userId,
-      isCollaborator: w.collaborators?.some(col => col.id === userId) || false,
+      isCollaborator: w.collaborators?.some((col) => col.id === userId) || false,
       isSaved: savedIdsSet.has(w.id),
     }));
 
-    return c.json({ watchlists: watchlistsWithFlags } satisfies WatchlistsAPI.GetPublicFeaturedResponse);
+    return c.json({ watchlists: watchlistsWithFlags } satisfies z.infer<
+      typeof getPublicFeaturedResponseSchema
+    >);
   }
 
-  return c.json({ watchlists: sortedWatchlists } satisfies WatchlistsAPI.GetPublicFeaturedResponse);
+  return c.json({ watchlists: sortedWatchlists } satisfies z.infer<
+    typeof getPublicFeaturedResponseSchema
+  >);
 };
 
 export const getPublicWatchlist = async (c: C) => {
@@ -346,7 +374,9 @@ export const getPublicWatchlist = async (c: C) => {
     return c.json({ error: 'Watchlist not found' }, 404);
   }
 
-  return c.json({ watchlist: formatWatchlistWithRelations(watchlist) } satisfies WatchlistsAPI.GetPublicWatchlistResponse);
+  return c.json({ watchlist: formatWatchlistWithRelations(watchlist) } satisfies z.infer<
+    typeof getPublicWatchlistResponseSchema
+  >);
 };
 
 export const getWatchlistsByGenre = async (c: C) => {
@@ -364,7 +394,9 @@ export const getWatchlistsByGenre = async (c: C) => {
 
   const enriched = await loadWatchlistRelations(baseWatchlists, { withLikedBy: true });
 
-  return c.json({ watchlists: enriched.map(formatWatchlistWithRelations) } satisfies WatchlistsAPI.GetWatchlistsByGenreResponse);
+  return c.json({ watchlists: enriched.map(formatWatchlistWithRelations) } satisfies z.infer<
+    typeof getWatchlistsByGenreResponseSchema
+  >);
 };
 
 export const getWatchlistCountByGenre = async (c: C) => {
@@ -379,7 +411,9 @@ export const getWatchlistCountByGenre = async (c: C) => {
     .from(watchlists)
     .where(sql`${genre} = ANY(${watchlists.genres})`);
 
-  return c.json({ genre, count: result[0]?.count ?? 0 } satisfies WatchlistsAPI.GetWatchlistCountByGenreResponse);
+  return c.json({ genre, count: result[0]?.count ?? 0 } satisfies z.infer<
+    typeof getWatchlistCountByGenreResponseSchema
+  >);
 };
 
 export const searchTMDB = async (c: C) => {
@@ -470,27 +504,24 @@ export const getWatchlistRecommendations = async (c: C) => {
     .where(eq(watchlistRecommendations.watchlistId, id))
     .limit(1);
 
-  if (
-    existing?.generatedAt &&
-    Date.now() - existing.generatedAt.getTime() < RECO_TTL_MS
-  ) {
+  if (existing?.generatedAt && Date.now() - existing.generatedAt.getTime() < RECO_TTL_MS) {
     return c.json({
       items: existing.items,
       generatedAt: existing.generatedAt.toISOString(),
-    } satisfies WatchlistsAPI.GetWatchlistRecommendationsResponse);
+    } satisfies z.infer<typeof getWatchlistRecommendationsResponseSchema>);
   }
 
   // 2. Recalcul
   const items = watchlist.items ?? [];
-  const movieSeeds = items.filter(it => it.mediaType === 'movie');
-  const tvSeeds = items.filter(it => it.mediaType === 'tv');
-  const ownedKeys = new Set(items.map(it => `${it.mediaType}:${it.tmdbId}`));
+  const movieSeeds = items.filter((it) => it.mediaType === 'movie');
+  const tvSeeds = items.filter((it) => it.mediaType === 'tv');
+  const ownedKeys = new Set(items.map((it) => `${it.mediaType}:${it.tmdbId}`));
   const usedSeedIds: number[] = [];
 
   // Récupère des tmdbId candidats pour un type, avec repli si une graine renvoie 0.
   const collectForType = async (
     seeds: DBWatchlistItem[],
-    type: 'movie' | 'tv'
+    type: 'movie' | 'tv',
   ): Promise<number[]> => {
     const pool = [...seeds];
     const collected = new Set<number>();
@@ -501,7 +532,7 @@ export const getWatchlistRecommendations = async (c: C) => {
         type,
         String(seed.tmdbId),
         language,
-        RECO_PAGES_PER_SEED
+        RECO_PAGES_PER_SEED,
       );
       for (const recId of recIds) {
         if (!ownedKeys.has(`${type}:${recId}`)) collected.add(recId);
@@ -518,7 +549,7 @@ export const getWatchlistRecommendations = async (c: C) => {
   // 3. Enrichissement (runtime / saisons / épisodes) — 1 appel détails par item
   const enrichIds = async (ids: number[], type: 'movie' | 'tv'): Promise<RecommendedItem[]> => {
     const results = await Promise.all(
-      ids.map(async recId => {
+      ids.map(async (recId) => {
         const details =
           type === 'movie'
             ? await getMovieDetails(String(recId), language)
@@ -533,7 +564,7 @@ export const getWatchlistRecommendations = async (c: C) => {
           numberOfSeasons: details.numberOfSeasons ?? null,
           numberOfEpisodes: details.numberOfEpisodes ?? null,
         } satisfies RecommendedItem;
-      })
+      }),
     );
     return results.filter((r): r is RecommendedItem => r !== null);
   };
@@ -564,7 +595,7 @@ export const getWatchlistRecommendations = async (c: C) => {
   return c.json({
     items: finalItems,
     generatedAt: now.toISOString(),
-  } satisfies WatchlistsAPI.GetWatchlistRecommendationsResponse);
+  } satisfies z.infer<typeof getWatchlistRecommendationsResponseSchema>);
 };
 
 // ========================================
@@ -574,11 +605,7 @@ export const getWatchlistRecommendations = async (c: C) => {
 export const getMyWatchlists = async (c: C) => {
   const userId = c.get('user')!.sub;
 
-  const [user] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
   if (!user) {
     return c.json({ error: 'User not found' }, 404);
   }
@@ -591,7 +618,7 @@ export const getMyWatchlists = async (c: C) => {
     .from(userWatchlistPositions)
     .where(eq(userWatchlistPositions.userId, userId))
     .orderBy(asc(userWatchlistPositions.position));
-  const positionMap = new Map(userPositions.map(r => [r.watchlistId, r.position]));
+  const positionMap = new Map(userPositions.map((r) => [r.watchlistId, r.position]));
 
   const ownedBase = await db.select().from(watchlists).where(eq(watchlists.ownerId, userId));
 
@@ -599,7 +626,7 @@ export const getMyWatchlists = async (c: C) => {
     .select({ watchlistId: watchlistCollaborators.watchlistId })
     .from(watchlistCollaborators)
     .where(eq(watchlistCollaborators.userId, userId));
-  const collabIds = collabRecords.map(r => r.watchlistId);
+  const collabIds = collabRecords.map((r) => r.watchlistId);
 
   const collaborativeBase =
     collabIds.length > 0
@@ -610,7 +637,7 @@ export const getMyWatchlists = async (c: C) => {
     .select({ watchlistId: savedWatchlists.watchlistId })
     .from(savedWatchlists)
     .where(eq(savedWatchlists.userId, userId));
-  const savedIds = savedRecords.map(r => r.watchlistId);
+  const savedIds = savedRecords.map((r) => r.watchlistId);
 
   const savedBase =
     savedIds.length > 0
@@ -619,11 +646,11 @@ export const getMyWatchlists = async (c: C) => {
 
   // Bulk-fetch des relations en une seule passe (déduplication par id)
   const allBaseMap = new Map<string, DBWatchlist>();
-  ownedBase.forEach(w => allBaseMap.set(w.id, w));
-  collaborativeBase.forEach(w => allBaseMap.set(w.id, w));
-  savedBase.forEach(w => allBaseMap.set(w.id, w));
+  ownedBase.forEach((w) => allBaseMap.set(w.id, w));
+  collaborativeBase.forEach((w) => allBaseMap.set(w.id, w));
+  savedBase.forEach((w) => allBaseMap.set(w.id, w));
   const allEnriched = await loadWatchlistRelations(Array.from(allBaseMap.values()));
-  const enrichedMap = new Map(allEnriched.map(w => [w.id, w]));
+  const enrichedMap = new Map(allEnriched.map((w) => [w.id, w]));
 
   type MyWatchlist = SharedWatchlist & {
     isOwner: boolean;
@@ -635,7 +662,7 @@ export const getMyWatchlists = async (c: C) => {
   const savedIdsSet = new Set(savedIds);
   const collabIdsSet = new Set(collabIds);
 
-  ownedBase.forEach(w => {
+  ownedBase.forEach((w) => {
     const enriched = enrichedMap.get(w.id);
     if (!enriched) return;
     watchlistsMap.set(w.id, {
@@ -647,7 +674,7 @@ export const getMyWatchlists = async (c: C) => {
     });
   });
 
-  collaborativeBase.forEach(w => {
+  collaborativeBase.forEach((w) => {
     if (watchlistsMap.has(w.id)) return;
     const enriched = enrichedMap.get(w.id);
     if (!enriched) return;
@@ -660,7 +687,7 @@ export const getMyWatchlists = async (c: C) => {
     });
   });
 
-  savedBase.forEach(w => {
+  savedBase.forEach((w) => {
     if (watchlistsMap.has(w.id)) return;
     const enriched = enrichedMap.get(w.id);
     if (!enriched) return;
@@ -674,10 +701,10 @@ export const getMyWatchlists = async (c: C) => {
   });
 
   const result = Array.from(watchlistsMap.values()).sort(
-    (a, b) => (a.libraryPosition ?? 9999) - (b.libraryPosition ?? 9999)
+    (a, b) => (a.libraryPosition ?? 9999) - (b.libraryPosition ?? 9999),
   );
 
-  return c.json({ watchlists: result } satisfies WatchlistsAPI.GetMyWatchlistsResponse);
+  return c.json({ watchlists: result } satisfies z.infer<typeof getMyWatchlistsResponseSchema>);
 };
 
 export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
@@ -711,7 +738,7 @@ export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
         mediaType: item.mediaType,
         title: item.title,
         posterPath: item.posterPath,
-        platformList: (item.platformList || []).map(p => ({
+        platformList: (item.platformList || []).map((p) => ({
           name: p.name || '',
           logoPath: p.logoPath || '',
         })),
@@ -724,12 +751,12 @@ export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
 
     const posterUrls = data.items
       .slice(0, 4)
-      .map(item => getTMDBImageUrl(item.posterPath))
+      .map((item) => getTMDBImageUrl(item.posterPath))
       .filter((url): url is string => url !== null);
 
     if (posterUrls.length > 0) {
       regenerateThumbnail(watchlist.id, posterUrls)
-        .then(async thumbnailUrl => {
+        .then(async (thumbnailUrl) => {
           if (thumbnailUrl) {
             await db
               .update(watchlists)
@@ -747,7 +774,12 @@ export const createWatchlist = async (c: C, data: CreateWatchlistInput) => {
     return c.json({ error: 'Watchlist creation failed' }, 500);
   }
 
-  return c.json({ watchlist: formatWatchlistWithRelations(fullWatchlist) } satisfies WatchlistsAPI.CreateWatchlistResponse, 201);
+  return c.json(
+    { watchlist: formatWatchlistWithRelations(fullWatchlist) } satisfies z.infer<
+      typeof createWatchlistResponseSchema
+    >,
+    201,
+  );
 };
 
 export const reorderWatchlists = async (c: C, data: ReorderWatchlistsInput) => {
@@ -771,7 +803,9 @@ export const reorderWatchlists = async (c: C, data: ReorderWatchlistsInput) => {
       });
   }
 
-  return c.json({ message: 'Watchlists reordered successfully' } satisfies WatchlistsAPI.ReorderWatchlistsResponse);
+  return c.json({ message: 'Watchlists reordered successfully' } satisfies z.infer<
+    typeof reorderWatchlistsResponseSchema
+  >);
 };
 
 export const getWatchlistById = async (c: C) => {
@@ -789,7 +823,7 @@ export const getWatchlistById = async (c: C) => {
   }
 
   const isOwner = watchlist.ownerId === userId;
-  const isCollaborator = watchlist.collaborators?.some(c => c.user.id === userId) ?? false;
+  const isCollaborator = watchlist.collaborators?.some((c) => c.user.id === userId) ?? false;
 
   const [savedCheck] = await db
     .select({ userId: savedWatchlists.userId })
@@ -803,7 +837,7 @@ export const getWatchlistById = async (c: C) => {
     isSaved,
     isOwner,
     isCollaborator,
-  } satisfies WatchlistsAPI.GetWatchlistByIdResponse);
+  } satisfies z.infer<typeof getWatchlistByIdResponseSchema>);
 };
 
 export const updateWatchlist = async (c: C, data: UpdateWatchlistInput) => {
@@ -826,7 +860,7 @@ export const updateWatchlist = async (c: C, data: UpdateWatchlistInput) => {
     .where(eq(watchlistCollaborators.watchlistId, id));
 
   const isOwner = watchlist.ownerId === userId;
-  const isCollaborator = collaboratorRows.some(c => c.userId === userId);
+  const isCollaborator = collaboratorRows.some((c) => c.userId === userId);
 
   if (!isOwner && !isCollaborator) {
     return c.json({ error: 'Forbidden' }, 403);
@@ -891,7 +925,9 @@ export const updateWatchlist = async (c: C, data: UpdateWatchlistInput) => {
     .where(eq(watchlistItems.watchlistId, id))
     .orderBy(asc(watchlistItems.position));
 
-  return c.json({ watchlist: formatWatchlistRowWithItems(updated, items) } satisfies WatchlistsAPI.UpdateWatchlistResponse);
+  return c.json({ watchlist: formatWatchlistRowWithItems(updated, items) } satisfies z.infer<
+    typeof updateWatchlistResponseSchema
+  >);
 };
 
 export const deleteWatchlist = async (c: C) => {
@@ -939,14 +975,16 @@ export const deleteWatchlist = async (c: C) => {
       .where(
         and(
           eq(userWatchlistPositions.userId, record.userId),
-          gt(userWatchlistPositions.position, record.position)
-        )
+          gt(userWatchlistPositions.position, record.position),
+        ),
       );
   }
 
   await db.delete(watchlists).where(eq(watchlists.id, id));
 
-  return c.json({ message: 'Watchlist deleted successfully' } satisfies WatchlistsAPI.DeleteWatchlistResponse);
+  return c.json({ message: 'Watchlist deleted successfully' } satisfies z.infer<
+    typeof deleteWatchlistResponseSchema
+  >);
 };
 
 export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
@@ -986,8 +1024,8 @@ export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
     .where(
       and(
         eq(watchlistCollaborators.watchlistId, id),
-        eq(watchlistCollaborators.userId, collaborator.id)
-      )
+        eq(watchlistCollaborators.userId, collaborator.id),
+      ),
     )
     .limit(1);
   if (alreadyCollab) {
@@ -1007,8 +1045,8 @@ export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
     .where(
       and(
         eq(userWatchlistPositions.userId, collaborator.id),
-        eq(userWatchlistPositions.watchlistId, id)
-      )
+        eq(userWatchlistPositions.watchlistId, id),
+      ),
     )
     .limit(1);
 
@@ -1018,8 +1056,8 @@ export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
       .where(
         and(
           eq(userWatchlistPositions.userId, collaborator.id),
-          eq(userWatchlistPositions.watchlistId, id)
-        )
+          eq(userWatchlistPositions.watchlistId, id),
+        ),
       );
     await db
       .update(userWatchlistPositions)
@@ -1027,8 +1065,8 @@ export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
       .where(
         and(
           eq(userWatchlistPositions.userId, collaborator.id),
-          gt(userWatchlistPositions.position, existingPosition.position)
-        )
+          gt(userWatchlistPositions.position, existingPosition.position),
+        ),
       );
   }
 
@@ -1056,13 +1094,13 @@ export const addCollaborator = async (c: C, data: AddCollaboratorInput) => {
     .where(eq(watchlistCollaborators.watchlistId, id));
 
   return c.json({
-    collaborators: collabRows.map(r => ({
+    collaborators: collabRows.map((r) => ({
       id: r.id,
       username: r.username,
       email: r.email,
       avatarUrl: r.avatarUrl || null,
     })),
-  } satisfies WatchlistsAPI.AddCollaboratorResponse);
+  } satisfies z.infer<typeof addCollaboratorResponseSchema>);
 };
 
 export const removeCollaborator = async (c: C) => {
@@ -1092,8 +1130,8 @@ export const removeCollaborator = async (c: C) => {
     .where(
       and(
         eq(watchlistCollaborators.watchlistId, id),
-        eq(watchlistCollaborators.userId, collaboratorId)
-      )
+        eq(watchlistCollaborators.userId, collaboratorId),
+      ),
     )
     .returning({ userId: watchlistCollaborators.userId });
 
@@ -1107,8 +1145,8 @@ export const removeCollaborator = async (c: C) => {
     .where(
       and(
         eq(userWatchlistPositions.userId, collaboratorId),
-        eq(userWatchlistPositions.watchlistId, id)
-      )
+        eq(userWatchlistPositions.watchlistId, id),
+      ),
     )
     .limit(1);
 
@@ -1118,8 +1156,8 @@ export const removeCollaborator = async (c: C) => {
       .where(
         and(
           eq(userWatchlistPositions.userId, collaboratorId),
-          eq(userWatchlistPositions.watchlistId, id)
-        )
+          eq(userWatchlistPositions.watchlistId, id),
+        ),
       );
     await db
       .update(userWatchlistPositions)
@@ -1127,8 +1165,8 @@ export const removeCollaborator = async (c: C) => {
       .where(
         and(
           eq(userWatchlistPositions.userId, collaboratorId),
-          gt(userWatchlistPositions.position, positionRecord.position)
-        )
+          gt(userWatchlistPositions.position, positionRecord.position),
+        ),
       );
   }
 
@@ -1144,13 +1182,13 @@ export const removeCollaborator = async (c: C) => {
     .where(eq(watchlistCollaborators.watchlistId, id));
 
   return c.json({
-    collaborators: collabRows.map(r => ({
+    collaborators: collabRows.map((r) => ({
       id: r.id,
       username: r.username,
       email: r.email,
       avatarUrl: r.avatarUrl || null,
     })),
-  } satisfies WatchlistsAPI.RemoveCollaboratorResponse);
+  } satisfies z.infer<typeof removeCollaboratorResponseSchema>);
 };
 
 export const leaveWatchlist = async (c: C) => {
@@ -1164,7 +1202,7 @@ export const leaveWatchlist = async (c: C) => {
   const deleted = await db
     .delete(watchlistCollaborators)
     .where(
-      and(eq(watchlistCollaborators.watchlistId, id), eq(watchlistCollaborators.userId, userId))
+      and(eq(watchlistCollaborators.watchlistId, id), eq(watchlistCollaborators.userId, userId)),
     )
     .returning({ userId: watchlistCollaborators.userId });
 
@@ -1176,10 +1214,7 @@ export const leaveWatchlist = async (c: C) => {
     .select({ position: userWatchlistPositions.position })
     .from(userWatchlistPositions)
     .where(
-      and(
-        eq(userWatchlistPositions.userId, userId),
-        eq(userWatchlistPositions.watchlistId, id)
-      )
+      and(eq(userWatchlistPositions.userId, userId), eq(userWatchlistPositions.watchlistId, id)),
     )
     .limit(1);
 
@@ -1187,10 +1222,7 @@ export const leaveWatchlist = async (c: C) => {
     await db
       .delete(userWatchlistPositions)
       .where(
-        and(
-          eq(userWatchlistPositions.userId, userId),
-          eq(userWatchlistPositions.watchlistId, id)
-        )
+        and(eq(userWatchlistPositions.userId, userId), eq(userWatchlistPositions.watchlistId, id)),
       );
     await db
       .update(userWatchlistPositions)
@@ -1198,12 +1230,14 @@ export const leaveWatchlist = async (c: C) => {
       .where(
         and(
           eq(userWatchlistPositions.userId, userId),
-          gt(userWatchlistPositions.position, positionRecord.position)
-        )
+          gt(userWatchlistPositions.position, positionRecord.position),
+        ),
       );
   }
 
-  return c.json({ message: 'Left watchlist successfully' } satisfies WatchlistsAPI.LeaveWatchlistResponse);
+  return c.json({ message: 'Left watchlist successfully' } satisfies z.infer<
+    typeof leaveWatchlistResponseSchema
+  >);
 };
 
 export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
@@ -1232,14 +1266,14 @@ export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
     .orderBy(asc(watchlistItems.position));
 
   const isOwner = watchlist.ownerId === userId;
-  const isCollaborator = collaboratorRows.some(c => c.userId === userId);
+  const isCollaborator = collaboratorRows.some((c) => c.userId === userId);
 
   if (!isOwner && !isCollaborator) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
   const tmdbIdNum = parseInt(data.tmdbId, 10);
-  const itemExists = items.some(item => item.tmdbId === tmdbIdNum);
+  const itemExists = items.some((item) => item.tmdbId === tmdbIdNum);
   if (itemExists) {
     return c.json({ error: 'Item already exists in watchlist' }, 400);
   }
@@ -1248,14 +1282,14 @@ export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
     data.tmdbId,
     data.mediaType,
     data.language || 'fr-FR',
-    data.region || 'FR'
+    data.region || 'FR',
   );
 
   if (!enrichedData) {
     return c.json({ error: 'Failed to fetch media details from TMDB' }, 500);
   }
 
-  const maxPosItem = items.length > 0 ? Math.max(...items.map(i => i.position ?? 0)) : -1;
+  const maxPosItem = items.length > 0 ? Math.max(...items.map((i) => i.position ?? 0)) : -1;
   const newPosition = maxPosItem + 1;
 
   await db.insert(watchlistItems).values({
@@ -1286,11 +1320,11 @@ export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
 
   const posterUrls = updatedItems
     .slice(0, 4)
-    .map(item => getTMDBImageUrl(item.posterPath))
+    .map((item) => getTMDBImageUrl(item.posterPath))
     .filter((url): url is string => url !== null);
 
   regenerateThumbnail(id, posterUrls)
-    .then(async thumbnailUrl => {
+    .then(async (thumbnailUrl) => {
       if (thumbnailUrl) {
         await db.update(watchlists).set({ thumbnailUrl }).where(eq(watchlists.id, id));
       }
@@ -1302,14 +1336,16 @@ export const addItemToWatchlist = async (c: C, data: AddItemInput) => {
     const posterUrl = getTMDBImageUrl(enrichedData.posterPath);
     if (posterUrl) {
       extractDominantColorFromUrl(posterUrl)
-        .then(async dominantColor => {
+        .then(async (dominantColor) => {
           await db.update(watchlists).set({ dominantColor }).where(eq(watchlists.id, id));
         })
-        .catch(err => console.error('Failed to extract dominant color:', err));
+        .catch((err) => console.error('Failed to extract dominant color:', err));
     }
   }
 
-  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.AddItemResponse);
+  return c.json({
+    watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems),
+  } satisfies z.infer<typeof addItemResponseSchema>);
 };
 
 export const removeItemFromWatchlist = async (c: C) => {
@@ -1329,7 +1365,7 @@ export const removeItemFromWatchlist = async (c: C) => {
     .where(eq(watchlistCollaborators.watchlistId, id));
 
   const isOwner = watchlist.ownerId === userId;
-  const isCollaborator = collaboratorRows.some(c => c.userId === userId);
+  const isCollaborator = collaboratorRows.some((c) => c.userId === userId);
 
   if (!isOwner && !isCollaborator) {
     return c.json({ error: 'Forbidden' }, 403);
@@ -1358,11 +1394,11 @@ export const removeItemFromWatchlist = async (c: C) => {
 
   const posterUrls = updatedItems
     .slice(0, 4)
-    .map(item => getTMDBImageUrl(item.posterPath))
+    .map((item) => getTMDBImageUrl(item.posterPath))
     .filter((url): url is string => url !== null);
 
   regenerateThumbnail(id, posterUrls)
-    .then(async thumbnailUrl => {
+    .then(async (thumbnailUrl) => {
       if (thumbnailUrl) {
         await db.update(watchlists).set({ thumbnailUrl }).where(eq(watchlists.id, id));
       } else if (posterUrls.length === 0) {
@@ -1378,10 +1414,10 @@ export const removeItemFromWatchlist = async (c: C) => {
       const posterUrl = getTMDBImageUrl(firstItem.posterPath);
       if (posterUrl) {
         extractDominantColorFromUrl(posterUrl)
-          .then(async dominantColor => {
+          .then(async (dominantColor) => {
             await db.update(watchlists).set({ dominantColor }).where(eq(watchlists.id, id));
           })
-          .catch(err => console.error('Failed to extract dominant color:', err));
+          .catch((err) => console.error('Failed to extract dominant color:', err));
       }
     } else {
       db.update(watchlists)
@@ -1391,7 +1427,9 @@ export const removeItemFromWatchlist = async (c: C) => {
     }
   }
 
-  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.RemoveItemResponse);
+  return c.json({
+    watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems),
+  } satisfies z.infer<typeof removeItemResponseSchema>);
 };
 
 export const moveItemPosition = async (c: C, data: MoveItemInput) => {
@@ -1417,14 +1455,14 @@ export const moveItemPosition = async (c: C, data: MoveItemInput) => {
     .orderBy(asc(watchlistItems.position));
 
   const isOwner = watchlist.ownerId === userId;
-  const isCollaborator = collaboratorRows.some(c => c.userId === userId);
+  const isCollaborator = collaboratorRows.some((c) => c.userId === userId);
 
   if (!isOwner && !isCollaborator) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
   const tmdbIdNum = parseInt(tmdbId, 10);
-  const item = items.find(i => i.tmdbId === tmdbIdNum);
+  const item = items.find((i) => i.tmdbId === tmdbIdNum);
   if (!item) {
     return c.json({ error: 'Item not found in watchlist' }, 404);
   }
@@ -1435,18 +1473,14 @@ export const moveItemPosition = async (c: C, data: MoveItemInput) => {
     await db
       .update(watchlistItems)
       .set({ position: sql`${watchlistItems.position} + 1` })
-      .where(
-        and(eq(watchlistItems.watchlistId, id), lt(watchlistItems.position, itemPosition))
-      );
+      .where(and(eq(watchlistItems.watchlistId, id), lt(watchlistItems.position, itemPosition)));
     await db.update(watchlistItems).set({ position: 0 }).where(eq(watchlistItems.id, item.id));
   } else {
     const maxPos = items.length - 1;
     await db
       .update(watchlistItems)
       .set({ position: sql`${watchlistItems.position} - 1` })
-      .where(
-        and(eq(watchlistItems.watchlistId, id), gt(watchlistItems.position, itemPosition))
-      );
+      .where(and(eq(watchlistItems.watchlistId, id), gt(watchlistItems.position, itemPosition)));
     await db.update(watchlistItems).set({ position: maxPos }).where(eq(watchlistItems.id, item.id));
   }
 
@@ -1463,7 +1497,7 @@ export const moveItemPosition = async (c: C, data: MoveItemInput) => {
 
   const posterUrls = updatedItems
     .slice(0, 4)
-    .map(item => getTMDBImageUrl(item.posterPath))
+    .map((item) => getTMDBImageUrl(item.posterPath))
     .filter((url): url is string => url !== null);
 
   if (posterUrls.length > 0) {
@@ -1487,15 +1521,17 @@ export const moveItemPosition = async (c: C, data: MoveItemInput) => {
       const posterUrl = getTMDBImageUrl(firstItem.posterPath);
       if (posterUrl) {
         extractDominantColorFromUrl(posterUrl)
-          .then(async dominantColor => {
+          .then(async (dominantColor) => {
             await db.update(watchlists).set({ dominantColor }).where(eq(watchlists.id, id));
           })
-          .catch(err => console.error('Failed to extract dominant color:', err));
+          .catch((err) => console.error('Failed to extract dominant color:', err));
       }
     }
   }
 
-  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.MoveItemResponse);
+  return c.json({
+    watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems),
+  } satisfies z.infer<typeof moveItemResponseSchema>);
 };
 
 export const reorderItems = async (c: C, data: ReorderItemsInput) => {
@@ -1524,7 +1560,7 @@ export const reorderItems = async (c: C, data: ReorderItemsInput) => {
     .orderBy(asc(watchlistItems.position));
 
   const isOwner = watchlist.ownerId === userId;
-  const isCollaborator = collaboratorRows.some(c => c.userId === userId);
+  const isCollaborator = collaboratorRows.some((c) => c.userId === userId);
 
   if (!isOwner && !isCollaborator) {
     return c.json({ error: 'Forbidden' }, 403);
@@ -1555,7 +1591,7 @@ export const reorderItems = async (c: C, data: ReorderItemsInput) => {
 
   const posterUrls = updatedItems
     .slice(0, 4)
-    .map(item => getTMDBImageUrl(item.posterPath))
+    .map((item) => getTMDBImageUrl(item.posterPath))
     .filter((url): url is string => url !== null);
 
   if (posterUrls.length > 0) {
@@ -1579,15 +1615,17 @@ export const reorderItems = async (c: C, data: ReorderItemsInput) => {
       const posterUrl = getTMDBImageUrl(firstItem.posterPath);
       if (posterUrl) {
         extractDominantColorFromUrl(posterUrl)
-          .then(async dominantColor => {
+          .then(async (dominantColor) => {
             await db.update(watchlists).set({ dominantColor }).where(eq(watchlists.id, id));
           })
-          .catch(err => console.error('Failed to extract dominant color:', err));
+          .catch((err) => console.error('Failed to extract dominant color:', err));
       }
     }
   }
 
-  return c.json({ watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems) } satisfies WatchlistsAPI.ReorderItemsResponse);
+  return c.json({
+    watchlist: formatWatchlistRowWithItems(updatedWatchlistRow, updatedItems),
+  } satisfies z.infer<typeof reorderItemsResponseSchema>);
 };
 
 export const uploadCover = async (c: C, data: UploadCoverInput) => {
@@ -1639,7 +1677,7 @@ export const uploadCover = async (c: C, data: UploadCoverInput) => {
     return c.json({
       watchlist: formatWatchlistRowWithItems(updated, updatedItems),
       imageUrl: result.secure_url,
-    } satisfies WatchlistsAPI.UploadCoverResponse);
+    } satisfies z.infer<typeof uploadCoverResponseSchema>);
   } catch (error) {
     return c.json({ msg: 'Failed to upload image to Cloudinary', error }, 500);
   }
@@ -1700,7 +1738,7 @@ export const deleteCover = async (c: C) => {
   return c.json({
     message: 'Cover image deleted successfully',
     watchlist: formatWatchlistRowWithItems(updated, updatedItems),
-  } satisfies WatchlistsAPI.DeleteCoverResponse);
+  } satisfies z.infer<typeof deleteCoverResponseSchema>);
 };
 
 export const generateWatchlistThumbnail = async (c: C) => {
@@ -1733,7 +1771,7 @@ export const generateWatchlistThumbnail = async (c: C) => {
     .orderBy(asc(watchlistItems.position));
 
   const isOwner = watchlist.ownerId === userId;
-  const isCollaborator = collaboratorRows.some(c => c.userId === userId);
+  const isCollaborator = collaboratorRows.some((c) => c.userId === userId);
 
   if (!isOwner && !isCollaborator) {
     return c.json({ error: 'Forbidden' }, 403);
@@ -1741,7 +1779,7 @@ export const generateWatchlistThumbnail = async (c: C) => {
 
   const posterUrls = items
     .slice(0, 4)
-    .map(item => getTMDBImageUrl(item.posterPath))
+    .map((item) => getTMDBImageUrl(item.posterPath))
     .filter((url): url is string => url !== null);
 
   if (posterUrls.length === 0) {
@@ -1753,7 +1791,7 @@ export const generateWatchlistThumbnail = async (c: C) => {
 
   await db.update(watchlists).set({ thumbnailUrl }).where(eq(watchlists.id, id));
 
-  return c.json({ thumbnailUrl } satisfies WatchlistsAPI.GenerateThumbnailResponse);
+  return c.json({ thumbnailUrl } satisfies z.infer<typeof generateThumbnailResponseSchema>);
 };
 
 export const saveWatchlist = async (c: C) => {
@@ -1808,7 +1846,9 @@ export const saveWatchlist = async (c: C) => {
 
   await db.insert(userWatchlistPositions).values({ userId, watchlistId: id, position: 0 });
 
-  return c.json({ message: 'Watchlist saved successfully' } satisfies WatchlistsAPI.SaveWatchlistResponse);
+  return c.json({ message: 'Watchlist saved successfully' } satisfies z.infer<
+    typeof saveWatchlistResponseSchema
+  >);
 };
 
 export const unsaveWatchlist = async (c: C) => {
@@ -1832,10 +1872,7 @@ export const unsaveWatchlist = async (c: C) => {
     .select({ position: userWatchlistPositions.position })
     .from(userWatchlistPositions)
     .where(
-      and(
-        eq(userWatchlistPositions.userId, userId),
-        eq(userWatchlistPositions.watchlistId, id)
-      )
+      and(eq(userWatchlistPositions.userId, userId), eq(userWatchlistPositions.watchlistId, id)),
     )
     .limit(1);
 
@@ -1843,10 +1880,7 @@ export const unsaveWatchlist = async (c: C) => {
     await db
       .delete(userWatchlistPositions)
       .where(
-        and(
-          eq(userWatchlistPositions.userId, userId),
-          eq(userWatchlistPositions.watchlistId, id)
-        )
+        and(eq(userWatchlistPositions.userId, userId), eq(userWatchlistPositions.watchlistId, id)),
       );
     await db
       .update(userWatchlistPositions)
@@ -1854,12 +1888,14 @@ export const unsaveWatchlist = async (c: C) => {
       .where(
         and(
           eq(userWatchlistPositions.userId, userId),
-          gt(userWatchlistPositions.position, positionRecord.position)
-        )
+          gt(userWatchlistPositions.position, positionRecord.position),
+        ),
       );
   }
 
-  return c.json({ message: 'Watchlist removed from library' } satisfies WatchlistsAPI.UnsaveWatchlistResponse);
+  return c.json({ message: 'Watchlist removed from library' } satisfies z.infer<
+    typeof unsaveWatchlistResponseSchema
+  >);
 };
 
 export const duplicateWatchlist = async (c: C) => {
@@ -1937,12 +1973,12 @@ export const duplicateWatchlist = async (c: C) => {
 
   const posterUrls = fullDuplicatedItems
     .slice(0, 4)
-    .map(item => getTMDBImageUrl(item.posterPath))
+    .map((item) => getTMDBImageUrl(item.posterPath))
     .filter((url): url is string => url !== null);
 
   if (posterUrls.length > 0) {
     regenerateThumbnail(duplicatedWatchlist.id, posterUrls)
-      .then(async thumbnailUrl => {
+      .then(async (thumbnailUrl) => {
         if (thumbnailUrl) {
           await db
             .update(watchlists)
@@ -1956,7 +1992,7 @@ export const duplicateWatchlist = async (c: C) => {
   return c.json(
     {
       watchlist: formatWatchlistRowWithItems(duplicatedWatchlist, fullDuplicatedItems),
-    } satisfies WatchlistsAPI.DuplicateWatchlistResponse,
-    201
+    } satisfies z.infer<typeof duplicateWatchlistResponseSchema>,
+    201,
   );
 };

@@ -262,9 +262,20 @@ export default function ExploreScreen() {
   // Convert results to WatchlistItem[] for the detail sheet
   const sheetItems: WatchlistItem[] = useMemo(() =>
     results.map((r) => ({
+      // Item UI éphémère (pas encore en base) : les champs DB sont neutres.
+      id: `tmdb-${r.id}`,
+      watchlistId: null,
       tmdbId: r.id,
       title: r.title || r.name || '',
       posterPath: r.poster_path || null,
+      backdropPath: null,
+      overview: null,
+      releaseDate: null,
+      voteAverage: null,
+      runtime: null,
+      numberOfSeasons: null,
+      numberOfEpisodes: null,
+      position: null,
       mediaType,
       platformList: [],
       addedAt: new Date().toISOString(),

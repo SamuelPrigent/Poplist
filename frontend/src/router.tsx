@@ -4,14 +4,15 @@ import type { ReactNode } from 'react';
 import { getQueryClient } from '@/lib/query-client';
 import { CardGridPending } from '@/components/skeletons/RoutePending';
 import { routeTree } from './routeTree.gen';
+// Effet de bord : enregistre le transport du SDK généré par Kubb avant tout
+// loader/render (SSR + client).
+import '@/api/kubb-transport';
 
 function NotFoundPage() {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
       <h1 className="text-foreground mb-3 text-3xl font-bold">404</h1>
-      <p className="text-muted-foreground mb-6">
-        Cette page n'existe pas ou a été déplacée.
-      </p>
+      <p className="text-muted-foreground mb-6">Cette page n'existe pas ou a été déplacée.</p>
       <Link
         to="/"
         className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm font-medium transition-colors"

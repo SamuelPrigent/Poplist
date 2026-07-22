@@ -14,7 +14,7 @@ import {
 } from '@gorhom/bottom-sheet'
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import Toast from 'react-native-toast-message'
-import { mutate } from 'swr'
+import { mutate } from '../../hooks/queries'
 import { watchlistAPI } from '../../lib/api-client'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
@@ -85,8 +85,10 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
       id: `temp-${Date.now()}`,
       ownerId: '',
       name: trimmedName,
-      description: description.trim() || undefined,
-      isPublic,
+      description: description.trim() || null,
+      imageUrl: null,
+      thumbnailUrl: null,
+      dominantColor: null,
       genres: genresData,
       collaborators: [],
       items: [],

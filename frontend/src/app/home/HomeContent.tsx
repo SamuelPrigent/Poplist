@@ -65,7 +65,8 @@ interface FeaturedCategory {
   nameMobile?: string;
   description: string;
   gradient?: string;
-  itemCount: number;
+  /** undefined = count pas encore chargé (badge masqué sur la card). */
+  itemCount: number | undefined;
   username: string;
 }
 
@@ -249,13 +250,15 @@ function HomeContentInner() {
       select: (data: { watchlists: Watchlist[] }) => data.watchlists?.length ?? 0,
     })),
   });
-  const categoryCounts = useMemo<Record<string, number>>(() => {
+  // `undefined` tant que la query n'a pas résolu → badge masqué sur la card
+  // (au lieu d'un « 0 listes » mensonger pendant le chargement).
+  const categoryCounts = useMemo<Record<string, number | undefined>>(() => {
     return GENRE_CATEGORIES.reduce(
       (acc, genreId, i) => {
-        acc[genreId] = categoryCountQueries[i]?.data ?? 0;
+        acc[genreId] = categoryCountQueries[i]?.data;
         return acc;
       },
-      {} as Record<string, number>,
+      {} as Record<string, number | undefined>,
     );
   }, [categoryCountQueries]);
 
@@ -389,7 +392,7 @@ function HomeContentInner() {
       nameMobile: categoryInfo.nameMobile,
       description: categoryInfo.description,
       gradient: categoryInfo.cardGradient,
-      itemCount: categoryCounts[categoryId] || 0,
+      itemCount: categoryCounts[categoryId],
       username: 'Poplist',
     };
   });
@@ -480,7 +483,7 @@ function HomeContentInner() {
           {categories.map((category, index) => {
             const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
             const placeholderItems: WatchlistItem[] = Array.from(
-              { length: category.itemCount },
+              { length: category.itemCount ?? 0 },
               (_, idx) =>
                 createPlaceholderItem({
                   tmdbId: idx,
@@ -522,6 +525,7 @@ function HomeContentInner() {
                 titleMobile={category.nameMobile}
                 desktopAspectOnMobile
                 index={index}
+                itemCount={category.itemCount ?? 'pending'}
               />
             );
           })}
@@ -774,7 +778,7 @@ function HomeContentInner() {
 export function HomeContent() {
   return (
     <PageFade>
-        <HomeContentInner />
+      <HomeContentInner />
     </PageFade>
   );
 }

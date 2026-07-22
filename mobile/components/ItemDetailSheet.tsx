@@ -16,11 +16,11 @@ import { getTMDBImageUrl, getTMDBRegion } from '../lib/utils';
 import { watchlistAPI } from '../lib/api-client';
 import { useLanguageStore } from '../store/language';
 import { useTheme } from '../hooks/useTheme';
-import { mutate } from 'swr';
+import { mutate } from '../hooks/queries';
 import Toast from 'react-native-toast-message';
 import ProviderIcon, { type ProviderKey } from './ProviderIcon';
 import PosterGrid from './PosterGrid';
-import { useMyWatchlists } from '../hooks/swr';
+import { useMyWatchlists } from '../hooks/queries';
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import type { WatchlistItem, FullMediaDetails, Platform } from '../types';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
@@ -188,7 +188,7 @@ function ListPickerRow({
   isAdded,
   onToggle,
 }: {
-  list: { id: string; name: string; items: any[]; imageUrl?: string };
+  list: { id: string; name: string; items: any[]; imageUrl?: string | null };
   isAdded: boolean;
   onToggle: (listId: string) => void;
 }) {
@@ -383,7 +383,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
           } else {
             await watchlistAPI.addItem(listId, {
               tmdbId: item.tmdbId.toString(),
-              mediaType: item.mediaType,
+              mediaType: item.mediaType as 'movie' | 'tv',
               language: langMap[language] || 'fr-FR',
             });
           }
@@ -423,14 +423,14 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
       try {
         const detailsPromise = watchlistAPI.getItemDetails(
           item.tmdbId.toString(),
-          item.mediaType,
+          item.mediaType as 'movie' | 'tv',
           langMap[language] || 'fr-FR'
         );
         const providersPromise =
-          item.platformList.length === 0
+          (item.platformList ?? []).length === 0
             ? watchlistAPI.fetchTMDBProviders(
                 item.tmdbId.toString(),
-                item.mediaType,
+                item.mediaType as 'movie' | 'tv',
                 getTMDBRegion(language)
               )
             : Promise.resolve([]);
@@ -488,7 +488,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
     const metaText = metaParts.join(' \u00B7 ');
 
     const matchedProviders = getMatchedProviders(
-      providers.length > 0 ? providers : item.platformList
+      providers.length > 0 ? providers : (item.platformList ?? [])
     );
     const cast = details?.cast?.slice(0, 3) ?? [];
 

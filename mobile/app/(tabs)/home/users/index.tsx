@@ -42,7 +42,7 @@ export default function AllCreatorsScreen() {
           } else {
             creatorsMap.set(w.owner.username, {
               username: w.owner.username,
-              avatarUrl: w.owner.avatarUrl,
+              avatarUrl: w.owner.avatarUrl ?? undefined,
               listCount: 1,
             });
           }

@@ -1,0 +1,1 @@
+{"type":"object","properties":{"genres":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"name":{"type":"string"}},"required":["id","name"]}}},"required":["genres"],"x-readme-ref-name":"TMDBGenresResponse"}

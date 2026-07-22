@@ -173,7 +173,7 @@ export const watchlistAPI = {
   getMine: (): Promise<{ watchlists: Watchlist[] }> =>
     request('/watchlists/mine'),
 
-  getById: (id: string): Promise<{ watchlist: Watchlist; isSaved: boolean; isCollaborator: boolean }> =>
+  getById: (id: string): Promise<{ watchlist: Watchlist; isSaved: boolean; isOwner: boolean; isCollaborator: boolean }> =>
     request(`/watchlists/${id}`),
 
   create: (data: {

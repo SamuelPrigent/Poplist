@@ -10,6 +10,8 @@ coverage
 -frontend-next
 -archives
 mobile
+shared/src/generated
+shared/openapi.json
 package-lock.json
 pnpm-lock.yaml
 *.md

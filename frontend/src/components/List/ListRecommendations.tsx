@@ -13,6 +13,7 @@ import {
   type RecommendedItem,
   type Watchlist,
 } from '@/api';
+import { invalidateMyWatchlists } from '@/api/invalidations';
 import { watchlistsQueries } from '@/api/queries';
 import { buildPickerWatchlists, useMyWatchlists } from '@/hooks/useMyWatchlists';
 import { cn } from '@/lib/cn';
@@ -66,7 +67,7 @@ export function ListRecommendations({
   const pickerWatchlists = buildPickerWatchlists(
     editableWatchlists,
     canEdit ? { ...watchlist, items: watchlist.items } : null,
-    canEdit
+    canEdit,
   );
 
   // Update optimiste de la LISTE COURANTE : l'entrée courante du picker (et la
@@ -75,9 +76,7 @@ export function ListRecommendations({
   // check du drawer restait vert après un retrait (et l'item restait affiché
   // dans la liste), poussant à re-taper → 2e DELETE sur un item déjà supprimé
   // → erreur.
-  const patchCurrentWatchlistCache = (
-    patch: (items: Watchlist['items']) => Watchlist['items']
-  ) => {
+  const patchCurrentWatchlistCache = (patch: (items: Watchlist['items']) => Watchlist['items']) => {
     for (const queryKey of [
       watchlistsQueries.byId(watchlist.id).queryKey,
       watchlistsQueries.publicById(watchlist.id).queryKey,
@@ -95,8 +94,8 @@ export function ListRecommendations({
     const key = `${item.mediaType}:${item.tmdbId}`;
     setAddingId(item.tmdbId);
     if (wid === watchlist.id) {
-      patchCurrentWatchlistCache(items =>
-        items.some(it => it.tmdbId === item.tmdbId)
+      patchCurrentWatchlistCache((items) =>
+        items.some((it) => it.tmdbId === item.tmdbId)
           ? items
           : [
               ...items,
@@ -106,12 +105,12 @@ export function ListRecommendations({
                 posterPath: item.posterPath,
                 mediaType: item.mediaType,
               }),
-            ]
+            ],
       );
     }
-    setMyWatchlists(prev =>
-      prev.map(wl =>
-        wl.id === wid && !wl.items.some(it => it.tmdbId === item.tmdbId)
+    setMyWatchlists((prev) =>
+      prev.map((wl) =>
+        wl.id === wid && !wl.items.some((it) => it.tmdbId === item.tmdbId)
           ? {
               ...wl,
               items: [
@@ -124,10 +123,10 @@ export function ListRecommendations({
                 }),
               ],
             }
-          : wl
-      )
+          : wl,
+      ),
     );
-    if (wid === watchlist.id) setRemoved(prev => new Set(prev).add(key));
+    if (wid === watchlist.id) setRemoved((prev) => new Set(prev).add(key));
     try {
       await watchlistsApi.addItem(wid, {
         tmdbId: String(item.tmdbId),
@@ -135,7 +134,7 @@ export function ListRecommendations({
         language: tmdbLanguage,
         region: tmdbRegion,
       });
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
       if (wid === watchlist.id) {
         queryClient.invalidateQueries({ queryKey: watchlistsQueries.byId(watchlist.id).queryKey });
         queryClient.invalidateQueries({
@@ -145,15 +144,15 @@ export function ListRecommendations({
       toast.success('Ajouté à la liste');
     } catch (error) {
       console.error('Failed to add recommendation:', error);
-      setMyWatchlists(prev =>
-        prev.map(wl =>
-          wl.id === wid ? { ...wl, items: wl.items.filter(it => it.tmdbId !== item.tmdbId) } : wl
-        )
+      setMyWatchlists((prev) =>
+        prev.map((wl) =>
+          wl.id === wid ? { ...wl, items: wl.items.filter((it) => it.tmdbId !== item.tmdbId) } : wl,
+        ),
       );
       if (wid === watchlist.id) {
         // Rollback du patch optimiste du cache de la page
-        patchCurrentWatchlistCache(items => items.filter(it => it.tmdbId !== item.tmdbId));
-        setRemoved(prev => {
+        patchCurrentWatchlistCache((items) => items.filter((it) => it.tmdbId !== item.tmdbId));
+        setRemoved((prev) => {
           const next = new Set(prev);
           next.delete(key);
           return next;
@@ -169,23 +168,23 @@ export function ListRecommendations({
     const key = `${item.mediaType}:${item.tmdbId}`;
     const isCurrent = wid === watchlist.id;
     let restored: Watchlist['items'][number] | undefined;
-    setMyWatchlists(prev =>
-      prev.map(wl => {
+    setMyWatchlists((prev) =>
+      prev.map((wl) => {
         if (wl.id !== wid) return wl;
-        restored = wl.items.find(it => it.tmdbId === item.tmdbId);
-        return { ...wl, items: wl.items.filter(it => it.tmdbId !== item.tmdbId) };
-      })
+        restored = wl.items.find((it) => it.tmdbId === item.tmdbId);
+        return { ...wl, items: wl.items.filter((it) => it.tmdbId !== item.tmdbId) };
+      }),
     );
     let removedFromCache: Watchlist['items'][number] | undefined;
     if (isCurrent) {
       // Optimistic : l'item disparaît de la liste (prop `watchlist`) et le
       // check du drawer se décoche immédiatement.
-      patchCurrentWatchlistCache(items => {
-        removedFromCache ??= items.find(it => it.tmdbId === item.tmdbId);
-        return items.filter(it => it.tmdbId !== item.tmdbId);
+      patchCurrentWatchlistCache((items) => {
+        removedFromCache ??= items.find((it) => it.tmdbId === item.tmdbId);
+        return items.filter((it) => it.tmdbId !== item.tmdbId);
       });
       // La reco redevient proposable dans la section (symétrie de l'ajout).
-      setRemoved(prev => {
+      setRemoved((prev) => {
         const next = new Set(prev);
         next.delete(key);
         return next;
@@ -193,7 +192,7 @@ export function ListRecommendations({
     }
     try {
       await watchlistsApi.removeItem(wid, String(item.tmdbId));
-      queryClient.invalidateQueries({ queryKey: ['watchlists', 'mine'] });
+      invalidateMyWatchlists(queryClient);
       if (isCurrent) {
         // Resync serveur de la liste courante (symétrie avec handleAddToList —
         // c'était le maillon manquant : sans ça la page gardait l'item).
@@ -207,18 +206,18 @@ export function ListRecommendations({
       console.error('Failed to remove from list:', error);
       if (restored) {
         const r = restored;
-        setMyWatchlists(prev =>
-          prev.map(wl => (wl.id === wid ? { ...wl, items: [...wl.items, r] } : wl))
+        setMyWatchlists((prev) =>
+          prev.map((wl) => (wl.id === wid ? { ...wl, items: [...wl.items, r] } : wl)),
         );
       }
       if (isCurrent) {
         if (removedFromCache) {
           const r = removedFromCache;
-          patchCurrentWatchlistCache(items =>
-            items.some(it => it.tmdbId === r.tmdbId) ? items : [...items, r]
+          patchCurrentWatchlistCache((items) =>
+            items.some((it) => it.tmdbId === r.tmdbId) ? items : [...items, r],
           );
         }
-        setRemoved(prev => new Set(prev).add(key));
+        setRemoved((prev) => new Set(prev).add(key));
       }
       toast.error('Erreur lors du retrait');
     }
@@ -250,7 +249,7 @@ export function ListRecommendations({
     );
   }
 
-  const items = (data?.items ?? []).filter(it => !removed.has(`${it.mediaType}:${it.tmdbId}`));
+  const items = (data?.items ?? []).filter((it) => !removed.has(`${it.mediaType}:${it.tmdbId}`));
 
   // Échec ou plus aucune reco → on n'affiche rien (ne casse pas la page).
   if (isError || items.length === 0) return null;
@@ -265,7 +264,7 @@ export function ListRecommendations({
   // modal, bornée aux 10 éléments affichés).
   const selectedIndex = selectedItem
     ? displayItems.findIndex(
-        it => it.tmdbId === selectedItem.tmdbId && it.mediaType === selectedItem.mediaType
+        (it) => it.tmdbId === selectedItem.tmdbId && it.mediaType === selectedItem.mediaType,
       )
     : -1;
 
@@ -276,7 +275,7 @@ export function ListRecommendations({
       <div className="mt-6 overflow-x-auto max-[749px]:hidden">
         <table className="w-full table-fixed">
           <tbody>
-            {displayItems.map(item => (
+            {displayItems.map((item) => (
               <RecommendationRow
                 key={`${item.mediaType}-${item.tmdbId}`}
                 item={item}
@@ -286,8 +285,8 @@ export function ListRecommendations({
                 inMyLists={isInAnyOfMyLists(item.tmdbId)}
                 pickerWatchlists={pickerWatchlists}
                 onAddDirect={() => handleAddToList(watchlist.id, item)}
-                onPickerAdd={wid => handleAddToList(wid, item)}
-                onPickerRemove={wid => handleRemoveFromList(wid, item)}
+                onPickerAdd={(wid) => handleAddToList(wid, item)}
+                onPickerRemove={(wid) => handleRemoveFromList(wid, item)}
                 onOpenDetails={() => openDetails(item)}
               />
             ))}
@@ -297,7 +296,7 @@ export function ListRecommendations({
 
       {/* Vue cartes mobile (< 750px) */}
       <div className="mt-2 min-[750px]:hidden">
-        {displayItems.map(item => {
+        {displayItems.map((item) => {
           const posterUrl = getTMDBImageUrl(item.posterPath, 'w185');
           const inMyLists = isInAnyOfMyLists(item.tmdbId);
           return (
@@ -338,7 +337,7 @@ export function ListRecommendations({
                       'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
                       item.mediaType === 'movie'
                         ? 'bg-blue-500/10 text-blue-400'
-                        : 'bg-purple-500/10 text-purple-400'
+                        : 'bg-purple-500/10 text-purple-400',
                     )}
                   >
                     {item.mediaType === 'movie'
@@ -391,7 +390,7 @@ export function ListRecommendations({
         <div className="mt-4 flex justify-end">
           <button
             type="button"
-            onClick={() => setPage(p => p + 1)}
+            onClick={() => setPage((p) => p + 1)}
             className="text-muted-foreground cursor-pointer px-[21px] py-1 text-sm font-semibold transition-colors hover:text-white"
           >
             {content.watchlists.recommendations.refresh}
@@ -429,8 +428,8 @@ export function ListRecommendations({
               ? () => setSelectedItem(displayItems[selectedIndex + 1])
               : undefined
           }
-          onAddToWatchlist={wid => handleAddToList(wid, selectedItem)}
-          onRemoveFromWatchlist={wid => handleRemoveFromList(wid, selectedItem)}
+          onAddToWatchlist={(wid) => handleAddToList(wid, selectedItem)}
+          onRemoveFromWatchlist={(wid) => handleRemoveFromList(wid, selectedItem)}
         />
       )}
     </section>
@@ -523,7 +522,7 @@ function RecommendationRow({
             'inline-block rounded-full px-2 py-1 text-xs font-medium',
             item.mediaType === 'movie'
               ? 'bg-blue-500/10 text-blue-400'
-              : 'bg-purple-500/10 text-purple-400'
+              : 'bg-purple-500/10 text-purple-400',
           )}
         >
           {item.mediaType === 'movie'

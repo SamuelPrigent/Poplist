@@ -2,6 +2,26 @@
 
 - Never use `rm` to delete files or directories. Always use `trash` instead, to allow recovery in case of mistakes.
 
+## ⛔ Base de données : ne JAMAIS toucher la DB de dev
+
+**Tu ne dois JAMAIS créer, modifier ou supprimer de données dans la base de dev
+locale (`poplist-db`), sous aucun prétexte.** Toute exécution susceptible
+d'écrire (tests, scripts, requêtes de vérification, serveurs que tu lances)
+doit passer par la base de TEST :
+`postgresql://samuel:@localhost:5432/poplist-db-test`.
+
+Concrètement :
+- Backend pour tester : `npm run test:server` (charge `.env.test` → port 4005 +
+  DB de test), JAMAIS `tsx src/index.ts`/`npm run dev` si des écritures sont
+  possibles.
+- E2E : laisser Playwright lancer sa stack. ⚠️ Piège vécu : un serveur front
+  résiduel sur 3005 lancé sans l'env de test proxie `/api` vers le backend DEV
+  (3456) et `reuseExistingServer` le réutilise → les tests écrivent dans la DB
+  de dev. Un garde-fou (`frontend/e2e/global-setup.ts`) fait échouer le run si
+  le proxy n'atteint pas le backend de test ; s'il échoue : tuer les ports
+  3005/4005 et relancer.
+- Lire la DB de dev (SELECT) pour du debug est toléré ; écrire, jamais.
+
 ## Stack
 
 - **Frontend** : TanStack Start (React en SSR via **Vite 8 + Nitro 3**). Ce n'est plus Next.js. Point d'entrée config : `frontend/vite.config.ts`. Dev : `vite dev` (port 3001).
@@ -28,20 +48,56 @@ Rappel patterns SSR-safe : pas de `window`/`localStorage`/`Date.now()`/`Math.ran
 
 ## Types API partagés (`@poplist/shared`)
 
-Le repo utilise un workspace npm `@poplist/shared` qui définit les types partagés entre backend et frontend.
+Le workspace `@poplist/shared` expose le SDK **généré** (cf. section Kubb
+ci-dessous) : `@poplist/shared/generated` (types, clients, hooks react-query,
+consommés par front ET mobile) et `@poplist/shared/client-runtime` (transport
+injectable par app). Les anciens dossiers manuels `shared/src/entities/` et
+`shared/src/api/` n'existent plus.
 
-**Structure** :
-- `shared/src/entities/` : types des entités du domaine (User, Watchlist, WatchlistItem, Platform, etc.)
-- `shared/src/api/` : contracts Request/Response par endpoint, namespaced (`AuthAPI`, `WatchlistsAPI`, etc.)
+**Côté frontend** : les modules `frontend/src/api/` (`auth`, `users`,
+`watchlists`, `tmdb`) sont des adaptateurs fins sur les clients générés ; les
+composants importent `import { watchlists as watchlistsApi, type Watchlist } from '@/api'`
+(aliaser à l'import pour éviter le shadowing avec les variables locales).
 
-**Côté backend** : importer les types depuis `@poplist/shared` et utiliser `satisfies XxxResponse` sur les `c.json(...)` pour garantir la conformité contractuelle.
+## SDK généré par Kubb (OpenAPI → types + hooks)
 
-**Côté frontend** : SDK manuel dans `frontend/src/api/` (modules `auth`, `users`, `watchlists`, `tmdb`) qui utilise `apiFetch<T>` (throw on error). Les composants importent `import { watchlists as watchlistsApi, type Watchlist } from '@/api'`.
+Le contrat API n'est plus écrit à la main : il est **généré** depuis les schémas
+zod du backend, via un spec OpenAPI (`hono-openapi`) consommé par Kubb.
 
-**Convention de nommage** : pour éviter le shadowing avec les variables locales (`const watchlists = ...`), aliaser à l'import : `watchlists as watchlistsApi`, `users as usersApi`, etc.
+**Chaîne** : schémas zod de réponse (`backend/src/schemas/<domain>.schemas.ts`) +
+`describeRoute` sur les routes → `shared/openapi.json` → Kubb → types + hooks
+react-query + client dans `shared/src/generated/` (commité). Le transport HTTP est
+injecté par chaque app (`frontend/src/api/kubb-transport.ts` délègue à `apiFetch`).
+
+**Une seule commande** : `npm run kubb:generate` (régénère spec + SDK).
+
+**Tu es explicitement autorisé à lancer `npm run kubb:generate` toi-même**, sans
+demander, dès qu'un changement de schéma le nécessite. C'est une commande locale,
+idempotente et sans effet de bord (pas un commit, pas un deploy) : elle fait
+partie de la définition de fini d'une modif de contrat, au même titre que le
+typecheck. Le job CI `.github/workflows/api-codegen.yml` régénère et fait
+`git diff --exit-code` : oublier de régénérer après avoir changé un schéma fait
+échouer la CI (garde-fou anti-drift).
 
 **Quand ajouter ou modifier une route backend** :
-1. Définir le type Request/Response dans `shared/src/api/<domain>.ts`
-2. Implémenter le handler backend en typant le retour avec `satisfies XxxResponse`
-3. Ajouter la méthode dans le SDK frontend correspondant (`frontend/src/api/<domain>.ts`)
-4. Si la route est consommée par mobile uniquement, pas besoin de l'ajouter au SDK frontend
+1. Écrire/ajuster le schéma zod : input dans `backend/src/validators/<domain>.validator.ts`,
+   réponse dans `backend/src/schemas/<domain>.schemas.ts` (avec `.meta({ ref })` pour
+   les composants réutilisables).
+2. Annoter la route avec `describeRoute` (tags, `operationId`, `responses`, et les
+   `request.query`/`params` sinon les query params disparaissent du spec).
+3. Typer le retour du controller avec `satisfies z.infer<typeof xxxResponseSchema>`.
+4. `npm run kubb:generate`, puis vérifier `npm run typecheck` (front + back).
+5. Consommer le hook généré (`useXxx`) depuis `@poplist/shared/generated`. Ne pas
+   réécrire de méthode SDK ni de type à la main.
+
+**Invalidations** : les query keys générées par Kubb sont par endpoint (pas de
+matching par préfixe comme l'ancienne convention `['watchlists', id]`). Utiliser
+les helpers de `frontend/src/api/invalidations.ts` (un par domaine) qui regroupent
+explicitement les keys générées à invalider. Tout nouveau endpoint GET d'un domaine
+doit être ajouté au helper correspondant.
+
+**Ne jamais éditer à la main** `shared/src/generated/**` ni `shared/openapi.json`
+(régénérés). L'ancien contrat manuel (`shared/src/api/`, `shared/src/entities/`)
+a été supprimé : tout le contrat vit dans les schémas zod backend, le reste est
+généré. Pour un nouveau endpoint avec body : annoter aussi `requestBody:
+jsonBody(inputSchema)` dans le describeRoute (types de requête générés).

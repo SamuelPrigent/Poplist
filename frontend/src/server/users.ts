@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
-import type { UsersAPI } from '@poplist/shared';
+import type { GetUserProfileByUsernameResponse } from '@poplist/shared/generated';
 
 const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:3456';
 
@@ -9,11 +9,11 @@ const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:3456';
  */
 export const getUserProfileForMeta = createServerFn({ method: 'GET' })
   .inputValidator((data: { username: string }) => data)
-  .handler(async ({ data }): Promise<UsersAPI.GetUserProfileByUsernameResponse | null> => {
+  .handler(async ({ data }): Promise<GetUserProfileByUsernameResponse | null> => {
     try {
       const res = await fetch(`${BACKEND_URL}/user/${encodeURIComponent(data.username)}`);
       if (!res.ok) return null;
-      return (await res.json()) as UsersAPI.GetUserProfileByUsernameResponse;
+      return (await res.json()) as GetUserProfileByUsernameResponse;
     } catch {
       return null;
     }

@@ -1,4 +1,4 @@
-import type { Platform, WatchlistItem } from '@poplist/shared';
+import type { Platform, WatchlistItem } from '@poplist/shared/generated';
 
 /**
  * Crée un item placeholder (utilisé pour les updates optimistes côté UI

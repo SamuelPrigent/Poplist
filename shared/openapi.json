@@ -1,0 +1,3748 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Poplist API",
+    "description": "Spec généré automatiquement depuis les routes Hono (hono-openapi).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "avatarUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hasPassword": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "language",
+          "avatarUrl"
+        ]
+      },
+      "SignupResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "SetTokensResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "CheckUsernameResponse": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "username"
+        ]
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "UpdateUsernameResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "ChangePasswordResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "UpdateLanguageResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "DeleteAccountResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "UserProfilePublic": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "avatarUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "avatarUrl"
+        ]
+      },
+      "WatchlistOwner": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "avatarUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "avatarUrl"
+        ]
+      },
+      "Platform": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "logoPath": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "logoPath"
+        ]
+      },
+      "WatchlistItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "watchlistId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tmdbId": {
+            "type": "number"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "posterPath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "backdropPath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "releaseDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "voteAverage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runtime": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "numberOfSeasons": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "numberOfEpisodes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "platformList": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Platform"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "addedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "watchlistId",
+          "tmdbId",
+          "mediaType",
+          "title",
+          "posterPath",
+          "backdropPath",
+          "overview",
+          "releaseDate",
+          "voteAverage",
+          "runtime",
+          "numberOfSeasons",
+          "numberOfEpisodes",
+          "platformList",
+          "position",
+          "addedAt"
+        ]
+      },
+      "Watchlist": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ownerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "imageUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "thumbnailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dominantColor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "genres": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "owner": {
+            "$ref": "#/components/schemas/WatchlistOwner"
+          },
+          "collaborators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchlistOwner"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchlistItem"
+            }
+          },
+          "likedBy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchlistOwner"
+            }
+          },
+          "isOwner": {
+            "type": "boolean"
+          },
+          "isCollaborator": {
+            "type": "boolean"
+          },
+          "isSaved": {
+            "type": "boolean"
+          },
+          "followersCount": {
+            "type": "number"
+          },
+          "libraryPosition": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "ownerId",
+          "name",
+          "description",
+          "imageUrl",
+          "thumbnailUrl",
+          "dominantColor",
+          "genres",
+          "createdAt",
+          "updatedAt",
+          "collaborators",
+          "items"
+        ]
+      },
+      "GetUserProfileByUsernameResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserProfilePublic"
+          },
+          "watchlists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Watchlist"
+            }
+          },
+          "totalPublicWatchlists": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "user",
+          "watchlists",
+          "totalPublicWatchlists"
+        ]
+      },
+      "GetProfileResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "UploadAvatarResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "avatarUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "avatarUrl"
+        ]
+      },
+      "DeleteAvatarResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "message",
+          "user"
+        ]
+      },
+      "TMDBMediaItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "media_type": {
+            "type": "string",
+            "enum": [
+              "movie",
+              "tv"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "poster_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "backdrop_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overview": {
+            "type": "string"
+          },
+          "vote_average": {
+            "type": "number"
+          },
+          "vote_count": {
+            "type": "number"
+          },
+          "release_date": {
+            "type": "string"
+          },
+          "first_air_date": {
+            "type": "string"
+          },
+          "genre_ids": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "runtime": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "TMDBListResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TMDBMediaItem"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "total_pages": {
+            "type": "number"
+          },
+          "total_results": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "results",
+          "page",
+          "total_pages",
+          "total_results"
+        ]
+      },
+      "TMDBGenresResponse": {
+        "type": "object",
+        "properties": {
+          "genres": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "genres"
+        ]
+      },
+      "TMDBProvider": {
+        "type": "object",
+        "properties": {
+          "logo_path": {
+            "type": "string"
+          },
+          "provider_id": {
+            "type": "number"
+          },
+          "provider_name": {
+            "type": "string"
+          },
+          "display_priority": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "logo_path",
+          "provider_id",
+          "provider_name",
+          "display_priority"
+        ]
+      },
+      "TMDBProvidersResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "results": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "link": {
+                  "type": "string"
+                },
+                "flatrate": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TMDBProvider"
+                  }
+                },
+                "buy": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TMDBProvider"
+                  }
+                },
+                "rent": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TMDBProvider"
+                  }
+                }
+              },
+              "required": [
+                "link"
+              ]
+            }
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
+      "GetPublicFeaturedResponse": {
+        "type": "object",
+        "properties": {
+          "watchlists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Watchlist"
+            }
+          }
+        },
+        "required": [
+          "watchlists"
+        ]
+      },
+      "GetPublicWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "GetWatchlistsByGenreResponse": {
+        "type": "object",
+        "properties": {
+          "watchlists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Watchlist"
+            }
+          }
+        },
+        "required": [
+          "watchlists"
+        ]
+      },
+      "GetWatchlistCountByGenreResponse": {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "genre",
+          "count"
+        ]
+      },
+      "CastMember": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "character": {
+            "type": "string"
+          },
+          "profileUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "character",
+          "profileUrl"
+        ]
+      },
+      "FullMediaDetails": {
+        "type": "object",
+        "properties": {
+          "tmdbId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "overview": {
+            "type": "string"
+          },
+          "posterUrl": {
+            "type": "string"
+          },
+          "backdropUrl": {
+            "type": "string"
+          },
+          "releaseDate": {
+            "type": "string"
+          },
+          "runtime": {
+            "type": "number"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "voteCount": {
+            "type": "number"
+          },
+          "genres": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cast": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CastMember"
+            }
+          },
+          "director": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "movie",
+              "tv"
+            ]
+          },
+          "numberOfSeasons": {
+            "type": "number"
+          },
+          "numberOfEpisodes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "tmdbId",
+          "title",
+          "overview",
+          "posterUrl",
+          "backdropUrl",
+          "releaseDate",
+          "rating",
+          "voteCount",
+          "genres",
+          "cast",
+          "type"
+        ]
+      },
+      "GetItemDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "details": {
+            "$ref": "#/components/schemas/FullMediaDetails"
+          }
+        },
+        "required": [
+          "details"
+        ]
+      },
+      "RecommendedItem": {
+        "type": "object",
+        "properties": {
+          "tmdbId": {
+            "type": "number"
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": [
+              "movie",
+              "tv"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "posterPath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runtime": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "numberOfSeasons": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "numberOfEpisodes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "tmdbId",
+          "mediaType",
+          "title",
+          "posterPath",
+          "runtime",
+          "numberOfSeasons",
+          "numberOfEpisodes"
+        ]
+      },
+      "GetWatchlistRecommendationsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendedItem"
+            }
+          },
+          "generatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "generatedAt"
+        ]
+      },
+      "GetMyWatchlistsResponse": {
+        "type": "object",
+        "properties": {
+          "watchlists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Watchlist"
+            }
+          }
+        },
+        "required": [
+          "watchlists"
+        ]
+      },
+      "CreateWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "ReorderWatchlistsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "GetWatchlistByIdResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          },
+          "isSaved": {
+            "type": "boolean"
+          },
+          "isOwner": {
+            "type": "boolean"
+          },
+          "isCollaborator": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "watchlist",
+          "isSaved",
+          "isOwner",
+          "isCollaborator"
+        ]
+      },
+      "UpdateWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "DeleteWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "AddCollaboratorResponse": {
+        "type": "object",
+        "properties": {
+          "collaborators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchlistOwner"
+            }
+          }
+        },
+        "required": [
+          "collaborators"
+        ]
+      },
+      "RemoveCollaboratorResponse": {
+        "type": "object",
+        "properties": {
+          "collaborators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchlistOwner"
+            }
+          }
+        },
+        "required": [
+          "collaborators"
+        ]
+      },
+      "LeaveWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "AddItemResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "RemoveItemResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "MoveItemResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "ReorderItemsResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "UploadCoverResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          },
+          "imageUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "watchlist",
+          "imageUrl"
+        ]
+      },
+      "DeleteCoverResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "message",
+          "watchlist"
+        ]
+      },
+      "GenerateThumbnailResponse": {
+        "type": "object",
+        "properties": {
+          "thumbnailUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "thumbnailUrl"
+        ]
+      },
+      "SaveWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "UnsaveWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "DuplicateWatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "watchlist": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        },
+        "required": [
+          "watchlist"
+        ]
+      },
+      "AuthTokensMobileResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "RefreshMobileResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken"
+        ]
+      },
+      "LogoutMobileResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "operationId": "signup",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "format": "email",
+                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Compte créé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "login",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connexion réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "refresh",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Token rafraîchi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Déconnecté",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/set-tokens": {
+      "post": {
+        "operationId": "setTokens",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "accessToken": {
+                    "type": "string"
+                  },
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accessToken",
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens posés en cookies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetTokensResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/username/check/{username}": {
+      "get": {
+        "operationId": "checkUsernameAvailability",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Disponibilité du username",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckUsernameResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "username",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "me",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "User connecté",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/profile/username": {
+      "put": {
+        "operationId": "updateUsername",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 20,
+                    "pattern": "^[a-zA-Z0-9_]+$"
+                  }
+                },
+                "required": [
+                  "username"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Username mis à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUsernameResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/profile/password": {
+      "put": {
+        "operationId": "changePassword",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "oldPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "oldPassword",
+                  "newPassword"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mot de passe changé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/profile/language": {
+      "put": {
+        "operationId": "updateLanguage",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "fr",
+                      "en",
+                      "de",
+                      "es",
+                      "it",
+                      "pt"
+                    ]
+                  }
+                },
+                "required": [
+                  "language"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Langue mise à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateLanguageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/profile/account": {
+      "delete": {
+        "operationId": "deleteAccount",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "confirmation": {
+                    "type": "string",
+                    "const": "confirmer"
+                  }
+                },
+                "required": [
+                  "confirmation"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Compte supprimé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAccountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/profile/{username}": {
+      "get": {
+        "operationId": "getUserProfileByUsername",
+        "tags": [
+          "users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil public + watchlists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUserProfileByUsernameResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "username",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "operationId": "getProfile",
+        "tags": [
+          "users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil du user connecté",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/upload-avatar": {
+      "post": {
+        "operationId": "uploadAvatar",
+        "tags": [
+          "users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "imageData": {
+                    "type": "string",
+                    "pattern": "^data:image\\/.*"
+                  }
+                },
+                "required": [
+                  "imageData"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar uploadé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadAvatarResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/avatar": {
+      "delete": {
+        "operationId": "deleteAvatar",
+        "tags": [
+          "users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Avatar supprimé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAvatarResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/trending/{timeWindow}": {
+      "get": {
+        "operationId": "getTrending",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "timeWindow",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tendances TMDB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/discover/{type}": {
+      "get": {
+        "operationId": "discover",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "with_genres",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vote_count.gte",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vote_average.gte",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "primary_release_date.gte",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "primary_release_date.lte",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "first_air_date.gte",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "first_air_date.lte",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Discover TMDB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/search/{type}": {
+      "get": {
+        "operationId": "searchExplore",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "with_genres",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recherche TMDB (Explore)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/genre/{type}/list": {
+      "get": {
+        "operationId": "getGenres",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des genres TMDB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBGenresResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/{type}/popular": {
+      "get": {
+        "operationId": "getPopular",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Populaires TMDB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/{type}/top_rated": {
+      "get": {
+        "operationId": "getTopRated",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mieux notés TMDB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/{type}/{id}/providers": {
+      "get": {
+        "operationId": "getProviders",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plateformes de streaming",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBProvidersResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tmdb/{type}/{id}/similar": {
+      "get": {
+        "operationId": "getSimilar",
+        "tags": [
+          "tmdb"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Titres similaires TMDB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/public/featured": {
+      "get": {
+        "operationId": "getPublicFeatured",
+        "tags": [
+          "watchlists"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlists publiques mises en avant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPublicFeaturedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/public/{id}": {
+      "get": {
+        "operationId": "getPublicWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlist publique par id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPublicWatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/by-genre/{genre}": {
+      "get": {
+        "operationId": "getWatchlistsByGenre",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlists publiques d'un genre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetWatchlistsByGenreResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "genre",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/count-by-genre/{genre}": {
+      "get": {
+        "operationId": "getWatchlistCountByGenre",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Nombre de watchlists d'un genre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetWatchlistCountByGenreResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "genre",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/search/tmdb": {
+      "get": {
+        "operationId": "searchTMDBForWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recherche TMDB (ajout d'item)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TMDBListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/items/{tmdbId}/{type}/details": {
+      "get": {
+        "operationId": "getItemDetails",
+        "tags": [
+          "watchlists"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "tmdbId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "type",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Détails enrichis d'un media",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetItemDetailsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/{id}/recommendations": {
+      "get": {
+        "operationId": "getWatchlistRecommendations",
+        "tags": [
+          "watchlists"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recommandations pour une watchlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetWatchlistRecommendationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/mine": {
+      "get": {
+        "operationId": "getMyWatchlists",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlists du user (owned + collab + saved)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMyWatchlistsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists": {
+      "post": {
+        "operationId": "createWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "genres": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tmdbId": {
+                          "type": "number"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "posterPath": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "mediaType": {
+                          "type": "string",
+                          "enum": [
+                            "movie",
+                            "tv"
+                          ]
+                        },
+                        "platformList": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "logoPath": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ]
+                          }
+                        },
+                        "runtime": {
+                          "type": "number"
+                        },
+                        "numberOfSeasons": {
+                          "type": "number"
+                        },
+                        "numberOfEpisodes": {
+                          "type": "number"
+                        },
+                        "addedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tmdbId",
+                        "title",
+                        "mediaType"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Watchlist créée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateWatchlistResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/reorder": {
+      "put": {
+        "operationId": "reorderWatchlists",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "orderedWatchlistIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "orderedWatchlistIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ordre des watchlists mis à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderWatchlistsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/{id}": {
+      "get": {
+        "operationId": "getWatchlistById",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Détail d'une watchlist + flags",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetWatchlistByIdResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      },
+      "put": {
+        "operationId": "updateWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "genres": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tmdbId": {
+                          "type": "number"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "posterPath": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "mediaType": {
+                          "type": "string",
+                          "enum": [
+                            "movie",
+                            "tv"
+                          ]
+                        },
+                        "platformList": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "logoPath": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ]
+                          }
+                        },
+                        "runtime": {
+                          "type": "number"
+                        },
+                        "numberOfSeasons": {
+                          "type": "number"
+                        },
+                        "numberOfEpisodes": {
+                          "type": "number"
+                        },
+                        "addedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tmdbId",
+                        "title",
+                        "mediaType"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Watchlist mise à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateWatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlist supprimée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteWatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/collaborators": {
+      "post": {
+        "operationId": "addCollaborator",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 20
+                  }
+                },
+                "required": [
+                  "username"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Collaborateur ajouté",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddCollaboratorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/collaborators/{collaboratorId}": {
+      "delete": {
+        "operationId": "removeCollaborator",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Collaborateur retiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveCollaboratorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "collaboratorId",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/leave": {
+      "post": {
+        "operationId": "leaveWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Le user a quitté la watchlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaveWatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/items": {
+      "post": {
+        "operationId": "addItemToWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "tmdbId": {
+                    "type": "string"
+                  },
+                  "mediaType": {
+                    "type": "string",
+                    "enum": [
+                      "movie",
+                      "tv"
+                    ]
+                  },
+                  "language": {
+                    "type": "string"
+                  },
+                  "region": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "tmdbId",
+                  "mediaType"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item ajouté",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/items/{tmdbId}": {
+      "delete": {
+        "operationId": "removeItemFromWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Item retiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "tmdbId",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/items/{tmdbId}/position": {
+      "put": {
+        "operationId": "moveItemPosition",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "position": {
+                    "type": "string",
+                    "enum": [
+                      "first",
+                      "last"
+                    ]
+                  }
+                },
+                "required": [
+                  "position"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item déplacé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoveItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "tmdbId",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/items/reorder": {
+      "put": {
+        "operationId": "reorderItems",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "orderedTmdbIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "orderedTmdbIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Items réordonnés",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderItemsResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/upload-cover": {
+      "post": {
+        "operationId": "uploadCover",
+        "tags": [
+          "watchlists"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "imageData": {
+                    "type": "string",
+                    "pattern": "^data:image\\/.*"
+                  }
+                },
+                "required": [
+                  "imageData"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cover uploadée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadCoverResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/cover": {
+      "delete": {
+        "operationId": "deleteCover",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Cover supprimée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteCoverResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/generate-thumbnail": {
+      "post": {
+        "operationId": "generateWatchlistThumbnail",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Thumbnail générée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateThumbnailResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/like-and-save": {
+      "post": {
+        "operationId": "saveWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlist sauvegardée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveWatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/unlike-and-unsave": {
+      "delete": {
+        "operationId": "unsaveWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlist retirée des sauvegardes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsaveWatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/watchlists/{id}/duplicate": {
+      "post": {
+        "operationId": "duplicateWatchlist",
+        "tags": [
+          "watchlists"
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlist dupliquée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateWatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/auth/mobile/google": {
+      "post": {
+        "operationId": "googleAuthMobile",
+        "tags": [
+          "authMobile"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "redirectUri": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "redirectUri"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens + user via Google OAuth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensMobileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/mobile/login": {
+      "post": {
+        "operationId": "loginMobile",
+        "tags": [
+          "authMobile"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens + user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensMobileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/mobile/signup": {
+      "post": {
+        "operationId": "signupMobile",
+        "tags": [
+          "authMobile"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens + user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensMobileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/mobile/refresh": {
+      "post": {
+        "operationId": "refreshMobile",
+        "tags": [
+          "authMobile"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nouveaux tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshMobileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/mobile/logout": {
+      "post": {
+        "operationId": "logoutMobile",
+        "tags": [
+          "authMobile"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refresh token révoqué",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutMobileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
