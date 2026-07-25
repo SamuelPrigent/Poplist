@@ -480,15 +480,22 @@ export function ExploreContent() {
   return (
     // Pas de padding horizontal ici : comme sur /home, c'est <Section> qui gère
     // la largeur (93% + max-w + px-12) → alignement identique navbar/home.
-    <div className="bg-background mb-24 min-h-screen py-8 max-[749px]:mb-4 max-[749px]:py-4">
+    // Mobile : pas de py sur ce wrapper — le padding vertical vient déjà de
+    // `Section` (py-7). Le cumul des deux donnait ~44px de padding top, soit
+    // 16px de plus que les autres pages (ex. Bibliothèque).
+    <div className="bg-background mb-24 min-h-screen py-8 max-[749px]:mb-4 max-[749px]:py-0">
       <Section className="pt-2">
         {/* <div className="container mx-auto px-4"> */}
         {/* Header */}
         <div className="mb-7 text-left max-[749px]:mb-4">
-          <h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-2xl">
+          {/* text-[28px] en mobile : aligné sur les titres de page des autres
+              écrans (« Bibliothèque »), qui étaient plus gros. */}
+          <h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-[28px]">
             {content.explore.title}
           </h1>
-          <p className="text-muted-foreground text-normal max-[749px]:text-sm">
+          {/* Description masquée en mobile : redondante avec le titre sur une
+              page dont les filtres sont l'essentiel. */}
+          <p className="text-muted-foreground text-normal max-[749px]:hidden max-[749px]:text-sm">
             {content.explore.subtitle}
           </p>
         </div>

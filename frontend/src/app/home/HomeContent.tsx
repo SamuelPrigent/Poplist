@@ -465,58 +465,6 @@ function HomeContentInner() {
         </Section>
       )}
 
-      {/* Popular Watchlists Section */}
-      <Section>
-        <SectionHeader
-          title={content.home.popularWatchlists.title}
-          subtitle={content.home.popularWatchlists.subtitle}
-          to="/lists"
-          action={content.home.popularWatchlists.seeMore}
-        />
-
-        {loading ? (
-          // Aperçu accueil : max 6 items sur mobile (le reste via "Voir tout").
-          <ListCardGrid className="max-[749px]:[&>*:nth-child(n+7)]:hidden">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <ListCardSkeleton key={i} />
-            ))}
-          </ListCardGrid>
-        ) : publicWatchlists.length > 0 ? (
-          <ListCardGrid className="max-[749px]:[&>*:nth-child(n+7)]:hidden">
-            {publicWatchlists.slice(0, 12).map((watchlist, index) => {
-              const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
-              const isOwner = userWatchlist?.isOwner ?? false;
-              const isCollaborator = userWatchlist?.isCollaborator ?? false;
-              const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
-
-              const showSavedBadge = !isOwner && !isCollaborator && isSaved;
-              const showCollaborativeBadge = (watchlist.collaborators?.length ?? 0) > 0;
-
-              return (
-                <ListCard
-                  key={watchlist.id}
-                  watchlist={watchlist}
-                  content={content}
-                  href={`/lists/${watchlist.id}`}
-                  showMenu={false}
-                  showOwner={true}
-                  showSavedBadge={showSavedBadge}
-                  showCollaborativeBadge={showCollaborativeBadge}
-                  priority={index < 5}
-                />
-              );
-            })}
-          </ListCardGrid>
-        ) : (
-          <div className="border-border bg-card rounded-lg border p-12 text-center">
-            <Film strokeWidth={1.4} className="text-muted-foreground mx-auto h-16 w-16" />
-            <p className="text-muted-foreground mt-4">
-              {content.home.popularWatchlists.noWatchlists}
-            </p>
-          </div>
-        )}
-      </Section>
-
       {/* Categories Section */}
       <Section className="">
         <SectionHeader
@@ -582,6 +530,58 @@ function HomeContentInner() {
             );
           })}
         </div>
+      </Section>
+
+      {/* Popular Watchlists Section */}
+      <Section>
+        <SectionHeader
+          title={content.home.popularWatchlists.title}
+          subtitle={content.home.popularWatchlists.subtitle}
+          to="/lists"
+          action={content.home.popularWatchlists.seeMore}
+        />
+
+        {loading ? (
+          // Aperçu accueil : max 6 items sur mobile (le reste via "Voir tout").
+          <ListCardGrid className="max-[749px]:[&>*:nth-child(n+7)]:hidden">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <ListCardSkeleton key={i} />
+            ))}
+          </ListCardGrid>
+        ) : publicWatchlists.length > 0 ? (
+          <ListCardGrid className="max-[749px]:[&>*:nth-child(n+7)]:hidden">
+            {publicWatchlists.slice(0, 12).map((watchlist, index) => {
+              const userWatchlist = userWatchlists.find((uw) => uw.id === watchlist.id);
+              const isOwner = userWatchlist?.isOwner ?? false;
+              const isCollaborator = userWatchlist?.isCollaborator ?? false;
+              const isSaved = userWatchlist && !userWatchlist.isOwner && !isCollaborator;
+
+              const showSavedBadge = !isOwner && !isCollaborator && isSaved;
+              const showCollaborativeBadge = (watchlist.collaborators?.length ?? 0) > 0;
+
+              return (
+                <ListCard
+                  key={watchlist.id}
+                  watchlist={watchlist}
+                  content={content}
+                  href={`/lists/${watchlist.id}`}
+                  showMenu={false}
+                  showOwner={true}
+                  showSavedBadge={showSavedBadge}
+                  showCollaborativeBadge={showCollaborativeBadge}
+                  priority={index < 5}
+                />
+              );
+            })}
+          </ListCardGrid>
+        ) : (
+          <div className="border-border bg-card rounded-lg border p-12 text-center">
+            <Film strokeWidth={1.4} className="text-muted-foreground mx-auto h-16 w-16" />
+            <p className="text-muted-foreground mt-4">
+              {content.home.popularWatchlists.noWatchlists}
+            </p>
+          </div>
+        )}
       </Section>
 
       {/* Creators Section */}

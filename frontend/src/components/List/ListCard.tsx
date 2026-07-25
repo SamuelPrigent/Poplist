@@ -53,6 +53,17 @@ export function ListCard({
   const editButtonRef = useRef<HTMLDivElement>(null);
   const deleteButtonRef = useRef<HTMLDivElement>(null);
 
+  // Métrique affichée sous le titre : dès qu'une liste a été sauvegardée au
+  // moins une fois, le nombre de sauvegardes est plus parlant que le nombre
+  // d'éléments (signal social > inventaire). Sinon, fallback sur les éléments.
+  // `followersCount` est fourni par /public/featured, `likedBy` par les détails.
+  const saveCount = watchlist.likedBy?.length ?? watchlist.followersCount ?? 0;
+  const itemCount = watchlist.items?.length ?? 0;
+  const countLabel =
+    saveCount >= 1
+      ? `${saveCount} ${saveCount === 1 ? 'sauvegarde' : 'sauvegardes'}`
+      : `${itemCount} ${itemCount === 1 ? content.watchlists.item : content.watchlists.items}`;
+
   // Only add onClick handlers for draggable cards
   // Non-draggable cards use Link wrapper for navigation
   const handleClick = draggableProps
@@ -231,18 +242,10 @@ export function ListCard({
             className="text-muted-foreground cursor-pointer"
             tabIndex={-1}
           >
-            {watchlist.items?.length ?? 0}{' '}
-            {(watchlist.items?.length ?? 0) === 1
-              ? content.watchlists.item
-              : content.watchlists.items}
+            {countLabel}
           </button>
         ) : (
-          <span className="text-muted-foreground">
-            {watchlist.items?.length ?? 0}{' '}
-            {(watchlist.items?.length ?? 0) === 1
-              ? content.watchlists.item
-              : content.watchlists.items}
-          </span>
+          <span className="text-muted-foreground">{countLabel}</span>
         )}
 
         {/* More Menu */}
