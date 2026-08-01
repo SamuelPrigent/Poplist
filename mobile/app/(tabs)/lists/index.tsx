@@ -11,23 +11,25 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { User as UserIcon } from 'lucide-react-native';
+import { User as UserIcon, Plus } from 'lucide-react-native';
 import Sortable from 'react-native-sortables';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
-import { mutate } from '../../hooks/queries';
-import { useMyWatchlists } from '../../hooks/queries';
-import { watchlistAPI } from '../../lib/api-client';
-import { useLanguageStore } from '../../store/language';
-import { usePreferencesStore } from '../../store/preferences';
-import { useAuth } from '../../context/auth-context';
-import { colors, fontSize, spacing, borderRadius } from '../../constants/theme';
-import { useTheme } from '../../hooks/useTheme';
-import WatchlistCard from '../../components/WatchlistCard';
-import EmptyState from '../../components/EmptyState';
-import CreateListSheet, { type CreateListSheetRef } from '../../components/sheets/CreateListSheet';
-import DeleteListSheet, { type DeleteListSheetRef } from '../../components/sheets/DeleteListSheet';
-import type { Watchlist } from '../../types';
+import { mutate } from '../../../hooks/queries';
+import { useMyWatchlists } from '../../../hooks/queries';
+import { watchlistAPI } from '../../../lib/api-client';
+import { useLanguageStore } from '../../../store/language';
+import { useAuth } from '../../../context/auth-context';
+import UserMenuPopover, { type UserMenuPopoverRef } from '../../../components/UserMenuPopover';
+import { colors, fontSize, spacing, borderRadius } from '../../../constants/theme';
+import { GRID_COLUMNS } from '../../../constants/layout';
+import { useTheme } from '../../../hooks/useTheme';
+import WatchlistCard from '../../../components/WatchlistCard';
+import PrimaryButton from '../../../components/PrimaryButton';
+import EmptyState from '../../../components/EmptyState';
+import CreateListSheet, { type CreateListSheetRef } from '../../../components/sheets/CreateListSheet';
+import DeleteListSheet, { type DeleteListSheetRef } from '../../../components/sheets/DeleteListSheet';
+import type { Watchlist } from '../../../types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -36,17 +38,18 @@ function getCardWidth(cols: number) {
   return (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * (cols - 1)) / cols;
 }
 
-type FilterKey = 'mine' | 'saved';
 
 export default function ListsScreen() {
   const { content } = useLanguageStore();
-  const { columns } = usePreferencesStore();
+  // Affichage TOUJOURS en grille : l'option grille/liste a été retirée
+  // des préférences (demande explicite).
   const { user } = useAuth();
   const theme = useTheme();
-  const cardWidth = getCardWidth(columns);
+  const cardWidth = getCardWidth(GRID_COLUMNS);
   const router = useRouter();
+  const userMenuRef = useRef<UserMenuPopoverRef>(null)
+  const avatarRef = useRef<View>(null);
   const { data, isLoading } = useMyWatchlists();
-  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set(['mine', 'saved']));
 
   // Local state for ordering (optimistic updates)
   const [orderedWatchlists, setOrderedWatchlists] = useState<Watchlist[]>([]);
@@ -79,10 +82,6 @@ export default function ListsScreen() {
     },
   });
 
-  const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: buttonTranslateY.value }],
-  }));
-
   // Sheet refs
   const createListRef = useRef<CreateListSheetRef>(null);
   const deleteListRef = useRef<DeleteListSheetRef>(null);
@@ -95,33 +94,11 @@ export default function ListsScreen() {
     deleteListRef.current?.present({ id: watchlist.id, name: watchlist.name });
   }, []);
 
-  const toggleFilter = (key: FilterKey) => {
-    setActiveFilters(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
-  };
-
-  const filteredWatchlists = useMemo(() => {
-    return orderedWatchlists.filter((w: Watchlist) => {
-      const isOwner = w.isOwner === true || w.ownerId === user?.id;
-      const isCollab = w.isCollaborator === true;
-      const isSaved = w.isSaved === true && !isOwner && !isCollab;
-
-      if (activeFilters.size === 0) return true;
-      if (activeFilters.has('mine') && (isOwner || isCollab)) return true;
-      if (activeFilters.has('saved') && isSaved) return true;
-      return false;
-    });
-  }, [orderedWatchlists, activeFilters, user?.id]);
-
-  // Sorting only enabled when showing all items (no subset filtering)
-  const isSortEnabled = activeFilters.size === 0 || activeFilters.size === 2;
+  // Plus de filtres « Mes listes / Suivies » (cf. redesignMobile.md § 6) :
+  // un clic inutile. On affiche toujours l'intégralité de la bibliothèque,
+  // donc le tri par glisser-déposer est toujours disponible.
+  const filteredWatchlists = orderedWatchlists;
+  const isSortEnabled = true;
 
   const handleDragStart = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -144,7 +121,7 @@ export default function ListsScreen() {
     [orderedWatchlists]
   );
 
-  const isListMode = columns === 1;
+  // Plus de mode liste : l'app est toujours en grille.
 
   const renderItem = useCallback(
     ({ item }: { item: Watchlist }) => (
@@ -152,18 +129,12 @@ export default function ListsScreen() {
         watchlist={item}
         showOwner={false}
         width={cardWidth}
-        layout={isListMode ? 'list' : 'grid'}
       />
     ),
-    [cardWidth, isListMode]
+    [cardWidth]
   );
 
   const keyExtractor = useCallback((item: Watchlist) => item.id, []);
-
-  const filters: { key: FilterKey; label: string }[] = [
-    { key: 'mine', label: content.watchlists.myWatchlists },
-    { key: 'saved', label: content.watchlists.followed },
-  ];
 
   if (isLoading) {
     return (
@@ -182,7 +153,11 @@ export default function ListsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.avatarButton}>
+        <Pressable ref={avatarRef} style={styles.avatarButton} onPress={() =>
+              avatarRef.current?.measureInWindow((x, y, width, height) =>
+                userMenuRef.current?.present({ x, y, width, height }),
+              )
+            }>
           {user?.avatarUrl ? (
             <Image
               source={{ uri: user.avatarUrl }}
@@ -193,36 +168,26 @@ export default function ListsScreen() {
           ) : (
             <UserIcon size={16} color={colors.mutedForeground} />
           )}
-        </View>
-        <Text style={styles.title}>{content.watchlists.myWatchlists}</Text>
+        </Pressable>
+        <Text style={styles.title}>Bibliothèque</Text>
       </View>
 
-      {/* Filter chips (multi-select) */}
-      <View style={[styles.filters, isListMode && styles.filtersCompact]}>
-        {filters.map(filter => {
-          const isActive = activeFilters.has(filter.key);
-          return (
-            <Pressable
-              key={filter.key}
-              style={[styles.filterChip, isActive && styles.filterChipActive]}
-              onPress={() => toggleFilter(filter.key)}
-            >
-              <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
-                {filter.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+      {/* Création : bouton pleine largeur en haut (plus de bouton flottant, § 2.6) */}
+      <View style={styles.createButtonWrap}>
+        <PrimaryButton
+          label="Nouvelle liste"
+          onPress={handleCreateList}
+          icon={<Plus size={16} color={colors.primaryForeground} />}
+        />
       </View>
 
-      {/* Watchlists grid */}
       {filteredWatchlists.length === 0 ? (
         <View style={styles.emptyContainer}>
           <EmptyState title={content.watchlists.noWatchlists} />
         </View>
       ) : (
         <Animated.ScrollView
-          key={columns}
+          key={GRID_COLUMNS}
           ref={scrollViewRef}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
@@ -232,7 +197,7 @@ export default function ListsScreen() {
           <Sortable.Grid
             data={filteredWatchlists}
             renderItem={renderItem}
-            columns={isListMode ? 1 : columns}
+            columns={GRID_COLUMNS}
             keyExtractor={keyExtractor}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
@@ -240,10 +205,10 @@ export default function ListsScreen() {
             dragActivationDelay={600}
             hapticsEnabled={false}
             strategy="insert"
-            activeItemScale={isListMode ? 1.01 : 1.05}
+            activeItemScale={1.05}
             activeItemOpacity={0.9}
             inactiveItemOpacity={0.6}
-            rowGap={isListMode ? 0 : spacing.xl}
+            rowGap={spacing.xl}
             columnGap={spacing.sm}
             scrollableRef={scrollViewRef}
             autoScrollEnabled
@@ -251,16 +216,12 @@ export default function ListsScreen() {
         </Animated.ScrollView>
       )}
 
-      {/* Sticky bottom button */}
-      <Animated.View style={[styles.createButton, fabAnimatedStyle]}>
-        <Pressable style={styles.createButtonInner} onPress={handleCreateList}>
-          <Text style={styles.createButtonText}>Créer une liste</Text>
-        </Pressable>
-      </Animated.View>
-
       {/* Sheets */}
       <CreateListSheet ref={createListRef} />
       <DeleteListSheet ref={deleteListRef} />
+    
+      {/* Popover de la bulle d'avatar (PWA : MobileHeader) */}
+      <UserMenuPopover ref={userMenuRef} />
     </SafeAreaView>
   );
 }
@@ -298,7 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 17,
   },
   title: {
-    fontSize: fontSize['2xl'],
+    fontSize: fontSize.pageTitle,
     fontWeight: '700',
     color: colors.foreground,
   },
@@ -340,10 +301,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  createButton: {
-    position: 'absolute',
-    bottom: 110,
-    alignSelf: 'center',
+  createButtonWrap: {
+    paddingHorizontal: spacing.lg,
+    // Respiration entre le titre de la page et le bouton (il était collé).
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
   },
   createButtonInner: {
     height: 48,

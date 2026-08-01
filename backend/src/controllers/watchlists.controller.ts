@@ -322,20 +322,41 @@ export const getPublicFeatured = async (c: C) => {
   const limit = Math.min(parseInt(c.req.query('limit') || '6', 10), 1000);
   const userId = c.get('user')?.sub;
 
+  // Classement en SQL, pas en JS : le tri doit porter sur TOUTES les listes
+  // avant le `limit`. Trier après avoir limité ne classait que les N plus
+  // récentes, ce qui excluait du palmarès une liste ancienne très suivie.
+  // Ordre : suivis ↓, puis nombre d'éléments ↓, puis création ↓.
+  const followersCountSql = sql<number>`(
+    select count(*) from ${watchlistLikes}
+    where ${watchlistLikes.watchlistId} = ${watchlists.id}
+  )`;
+  const itemsCountSql = sql<number>`(
+    select count(*) from ${watchlistItems}
+    where ${watchlistItems.watchlistId} = ${watchlists.id}
+  )`;
+
   const baseWatchlists = await db
     .select()
     .from(watchlists)
-    .orderBy(desc(watchlists.createdAt))
+    .orderBy(desc(followersCountSql), desc(itemsCountSql), desc(watchlists.createdAt))
     .limit(limit);
 
   const enriched = await loadWatchlistRelations(baseWatchlists, { withLikedBy: true });
 
+  // `loadWatchlistRelations` ne garantit pas l'ordre du `select` initial : on
+  // réapplique le même classement sur les données enrichies.
   const sortedWatchlists = enriched
     .map((w) => ({
       ...formatWatchlistWithRelations(w),
       followersCount: w.likedBy?.length || 0,
     }))
-    .sort((a, b) => b.followersCount - a.followersCount);
+    .sort(
+      (a, b) =>
+        b.followersCount - a.followersCount ||
+        (b.items?.length ?? 0) - (a.items?.length ?? 0) ||
+        (b.createdAt ? new Date(b.createdAt).getTime() : 0) -
+          (a.createdAt ? new Date(a.createdAt).getTime() : 0),
+    );
 
   if (userId) {
     const savedRows = await db

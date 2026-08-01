@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./client-runtime": "./src/client-runtime.ts",
     "./generated": "./src/generated/index.ts",
-    "./generated/*": "./src/generated/*.ts"
+    "./generated/*": "./src/generated/*.ts",
+    "./content": "./src/content/index.ts"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5"

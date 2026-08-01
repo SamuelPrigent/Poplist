@@ -215,6 +215,7 @@ export const pt: Content = {
         name: 'Prime Video',
         description: 'Exclusivos Amazon Prime',
       },
+      animation: { name: 'Animação', description: 'As melhores séries e filmes de animação' },
       'disney-plus': {
         name: 'Disney+',
         description: 'O universo Disney, Pixar, Marvel e Star Wars',
@@ -251,13 +252,11 @@ export const pt: Content = {
         name: 'Rakuten TV',
         description: 'Filmes e séries no Rakuten TV',
       },
-      anime: {
-        name: 'Animação',
-        description: 'As melhores séries animadas e filmes de mangá adaptados',
-      },
+      anime: { name: 'Anime', description: 'Animes japoneses e mangás adaptados' },
       action: { name: 'Ação', description: 'Clássicos e novos filmes de ação' },
       documentaries: {
         name: 'Documentários',
+nameMobile: 'Docu',
         description: 'Documentários cativantes e educativos',
       },
       enfant: {

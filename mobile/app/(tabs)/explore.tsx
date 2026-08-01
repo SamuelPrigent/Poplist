@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  TextInput,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
@@ -14,11 +15,12 @@ import { useAuth } from '../../context/auth-context'
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet'
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import WheelPicker from '@quidone/react-native-wheel-picker'
-import { ChevronDown, X, Check, User as UserIcon } from 'lucide-react-native'
+import { ChevronDown, X, Check, User as UserIcon, Search as SearchIcon } from 'lucide-react-native'
 import { tmdbAPI } from '../../lib/api-client'
 import { useLanguageStore } from '../../store/language'
-import { usePreferencesStore } from '../../store/preferences'
+import { EXPLORE_COLUMNS } from '../../constants/layout'
 import { getTMDBImageUrl, getTMDBLanguage } from '../../lib/utils'
+import UserMenuPopover, { type UserMenuPopoverRef } from '../../components/UserMenuPopover';
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import ItemDetailSheet from '../../components/ItemDetailSheet'
@@ -82,7 +84,7 @@ interface DiscoverResult {
 
 export default function ExploreScreen() {
   const { content, language } = useLanguageStore()
-  const { exploreColumns } = usePreferencesStore()
+  const exploreColumns = EXPLORE_COLUMNS
   const { user } = useAuth()
   const theme = useTheme()
 
@@ -98,6 +100,8 @@ export default function ExploreScreen() {
   const [yearTo, setYearTo] = useState<number | null>(null)
 
   // Bottom sheet refs
+  const userMenuRef = useRef<UserMenuPopoverRef>(null)
+  const avatarRef = useRef<View>(null)
   const genreSheetRef = useRef<BottomSheetModal>(null)
   const yearSheetRef = useRef<BottomSheetModal>(null)
   const insets = useSafeAreaInsets()
@@ -143,6 +147,11 @@ export default function ExploreScreen() {
   const yearMax = yearTo ? String(yearTo) : ''
 
   // Data
+  // Recherche (portée depuis la PWA — cf. redesignMobile.md § 2.3).
+  // `searchQuery` = saisie brute ; `activeSearch` = valeur debouncée réellement
+  // envoyée à l'API. Seuil de 3 caractères, comme la PWA.
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeSearch, setActiveSearch] = useState('')
   const [results, setResults] = useState<DiscoverResult[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -156,11 +165,19 @@ export default function ExploreScreen() {
   const tmdbLang = getTMDBLanguage(language)
 
   useEffect(() => {
+    const t = setTimeout(() => {
+      const q = searchQuery.trim()
+      setActiveSearch(q.length > 3 ? q : '')
+    }, 350)
+    return () => clearTimeout(t)
+  }, [searchQuery])
+
+  useEffect(() => {
     setResults([])
     setPage(1)
     setTotalPages(1)
     fetchDiscover(1, true)
-  }, [mediaType, sortBy, selectedGenres, yearMin, yearMax])
+  }, [mediaType, sortBy, selectedGenres, yearMin, yearMax, activeSearch])
 
   const fetchDiscover = async (pageNum: number, isReset: boolean) => {
     if (isReset) {
@@ -175,16 +192,23 @@ export default function ExploreScreen() {
         ? Array.from(selectedGenres).join('|')
         : undefined
 
-      const response = await tmdbAPI.getDiscover(mediaType, {
-        page: pageNum,
-        language: tmdbLang,
-        sortBy,
-        voteCountGte: 100,
-        voteAverageGte: 5,
-        releaseDateGte: yearMin ? `${yearMin}-01-01` : undefined,
-        releaseDateLte: yearMax ? `${yearMax}-12-31` : undefined,
-        withGenres: genresStr,
-      })
+      // Une recherche active court-circuite les filtres discover (comme la PWA).
+      const response = activeSearch
+        ? await tmdbAPI.searchExplore(mediaType, {
+            query: activeSearch,
+            language: tmdbLang,
+            page: pageNum,
+          })
+        : await tmdbAPI.getDiscover(mediaType, {
+            page: pageNum,
+            language: tmdbLang,
+            sortBy,
+            voteCountGte: 100,
+            voteAverageGte: 5,
+            releaseDateGte: yearMin ? `${yearMin}-01-01` : undefined,
+            releaseDateLte: yearMax ? `${yearMax}-12-31` : undefined,
+            withGenres: genresStr,
+          })
 
       if (isReset) {
         setResults(response.results)
@@ -205,7 +229,7 @@ export default function ExploreScreen() {
   const loadMore = useCallback(() => {
     if (isLoadingMoreRef.current || page >= totalPages) return
     fetchDiscover(page + 1, false)
-  }, [page, totalPages, mediaType, sortBy, selectedGenres, yearMin, yearMax])
+  }, [page, totalPages, mediaType, sortBy, selectedGenres, yearMin, yearMax, activeSearch])
 
   const renderGenreBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -332,13 +356,17 @@ export default function ExploreScreen() {
       <View style={[styles.filtersContainer, { borderBottomColor: theme.border }]}>
         {/* Title */}
         <View style={styles.titleRow}>
-          <View style={styles.avatarButton}>
+          <Pressable ref={avatarRef} style={styles.avatarButton} onPress={() =>
+              avatarRef.current?.measureInWindow((x, y, width, height) =>
+                userMenuRef.current?.present({ x, y, width, height }),
+              )
+            }>
             {user?.avatarUrl ? (
               <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} contentFit="cover" transition={0} />
             ) : (
               <UserIcon size={16} color={colors.mutedForeground} />
             )}
-          </View>
+          </Pressable>
           <Text style={styles.pageTitle}>{content.explore.title}</Text>
         </View>
 
@@ -399,11 +427,11 @@ export default function ExploreScreen() {
 
           {/* Year filter button */}
           <Pressable
-            style={[styles.selectBtn, { borderColor: theme.border }, (yearFrom || yearTo) && styles.selectBtnActive]}
+            style={[styles.selectBtn, { borderColor: theme.border }, Boolean(yearFrom || yearTo) && styles.selectBtnActive]}
             onPress={openYearPicker}
           >
             <Text
-              style={[styles.selectBtnText, (yearFrom || yearTo) && styles.selectBtnTextActive]}
+              style={[styles.selectBtnText, Boolean(yearFrom || yearTo) && styles.selectBtnTextActive]}
               numberOfLines={1}
             >
               {yearFrom && yearTo
@@ -424,6 +452,25 @@ export default function ExploreScreen() {
               onPress={() => { setYearFrom(null); setYearTo(null) }}
             >
               <X size={14} color={colors.mutedForeground} />
+            </Pressable>
+          )}
+        </View>
+        {/* Barre de recherche (portée depuis la PWA) */}
+        <View style={[styles.searchBar, { borderColor: theme.border }]}>
+          <SearchIcon size={18} color={colors.mutedForeground} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher un film ou une série..."
+            placeholderTextColor={colors.mutedForeground}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+              <X size={16} color={colors.mutedForeground} />
             </Pressable>
           )}
         </View>
@@ -576,6 +623,9 @@ export default function ExploreScreen() {
         currentIndex={selectedIndex ?? 0}
         onNavigate={setSelectedIndex}
       />
+    
+      {/* Popover de la bulle d'avatar (PWA : MobileHeader) */}
+      <UserMenuPopover ref={userMenuRef} />
     </SafeAreaView>
   )
 }
@@ -613,9 +663,29 @@ const styles = StyleSheet.create({
     borderRadius: 17,
   },
   pageTitle: {
-    fontSize: fontSize['2xl'],
+    fontSize: fontSize.pageTitle,
     fontWeight: '700',
     color: colors.foreground,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    height: 44,
+    // Aligné sur le padding container des autres blocs (titleRow / filterRow),
+    // sinon la barre est collée aux bords de l'écran.
+    marginHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderRadius: borderRadius.button,
+    backgroundColor: colors.card,
+    marginTop: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    color: colors.foreground,
+    padding: 0,
   },
   filterRow: {
     flexDirection: 'row',

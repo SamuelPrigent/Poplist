@@ -8,12 +8,20 @@ import {
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
+import { AlertTriangle } from 'lucide-react-native';
+import { useLanguageStore } from '../../store/language';
 import { useAuth } from '../../context/auth-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize, borderRadius } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 
-const CONFIRMATION_WORD = 'SUPPRIMER';
+/**
+ * Mot exigé par le backend : `confirmation: z.literal('confirmer')`
+ * (`backend/src/validators/auth.validator.ts`). Le mobile envoyait
+ * « SUPPRIMER » — la suppression échouait donc systématiquement à la
+ * validation, alors que le libellé affiché demandait déjà « confirmer ».
+ */
+const CONFIRMATION_WORD = 'confirmer';
 
 export interface DeleteAccountSheetRef {
   present: () => void;
@@ -23,6 +31,7 @@ export interface DeleteAccountSheetRef {
 const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(
   function DeleteAccountSheet(_props, ref) {
     const theme = useTheme();
+    const { content } = useLanguageStore();
     const insets = useSafeAreaInsets();
     const { deleteAccount } = useAuth();
     const router = useRouter();
@@ -48,7 +57,7 @@ const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.7}
+          opacity={0.8}
           pressBehavior="close"
         />
       ),
@@ -71,18 +80,20 @@ const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(
     return (
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={['92%']}
+        snapPoints={['85%']}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{
-          backgroundColor: 'rgba(255,255,255,0.25)',
-          width: 36,
-        }}
+        backgroundColor: 'rgba(124, 135, 152, 0.4)',
+        width: 44,
+        height: 6,
+        borderRadius: 999,
+      }}
         backgroundStyle={{
-          backgroundColor: theme.panel,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
+        backgroundColor: colors.background,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+      }}
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
@@ -90,34 +101,37 @@ const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(
         <BottomSheetScrollView
           style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}
         >
-          <Text style={styles.title}>Supprimer le compte</Text>
+          {/* En-tête : rond d'alerte + titre rouge (PWA : ConfirmDialog) */}
+          <View style={styles.headerRow}>
+            <View style={styles.iconCircle}>
+              <AlertTriangle size={20} color="#ef4444" />
+            </View>
+            <Text style={styles.title}>{content.profile.deleteSection.dialogTitle}</Text>
+          </View>
 
-          <Text style={styles.warning}>
-            Cette action est irréversible. Toutes vos listes, données et informations personnelles
-            seront définitivement supprimées.
-          </Text>
+          <Text style={styles.warning}>{content.profile.deleteSection.dialogDescription}</Text>
 
-          <Text style={styles.label}>
-            Tapez <Text style={styles.confirmWord}>{CONFIRMATION_WORD}</Text> pour confirmer
-          </Text>
+          <Text style={styles.label}>{content.profile.deleteSection.confirmationLabel}</Text>
           <BottomSheetTextInput
-            style={[styles.textInput, { backgroundColor: theme.input, color: colors.foreground }]}
-            placeholder={CONFIRMATION_WORD}
+            style={styles.textInput}
+            placeholder=""
             placeholderTextColor={colors.mutedForeground}
             value={confirmation}
             onChangeText={setConfirmation}
-            autoCapitalize="characters"
+            autoCapitalize="none"
             autoCorrect={false}
             autoFocus
           />
 
-          <View style={styles.buttonRow}>
+          {/* Boutons EMPILÉS (PWA mobile) : Annuler en outline, puis l'action
+              destructive, désactivée tant que le mot n'est pas saisi. */}
+          <View style={styles.buttonColumn}>
             <Pressable
-              style={[styles.button, styles.cancelBtn, { backgroundColor: theme.secondary }]}
+              style={[styles.button, styles.cancelBtn]}
               onPress={() => bottomSheetRef.current?.dismiss()}
               disabled={isDeleting}
             >
-              <Text style={styles.cancelBtnText}>Annuler</Text>
+              <Text style={styles.cancelBtnText}>{content.profile.deleteSection.cancel}</Text>
             </Pressable>
 
             <Pressable
@@ -132,7 +146,9 @@ const DeleteAccountSheet = forwardRef<DeleteAccountSheetRef>(
               {isDeleting ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.deleteBtnText}>Supprimer</Text>
+                <Text style={styles.deleteBtnText}>
+                  {content.profile.deleteSection.deleteButton}
+                </Text>
               )}
             </Pressable>
           </View>
@@ -180,6 +196,25 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  iconCircle: {
+    // PWA : h-10 w-10 rounded-full bg-red-500/10
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  buttonColumn: {
+    gap: spacing.sm,
+    marginTop: spacing.lg,
   },
   buttonRow: {
     flexDirection: 'row',

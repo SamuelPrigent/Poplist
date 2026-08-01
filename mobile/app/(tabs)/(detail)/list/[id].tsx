@@ -7,37 +7,54 @@ import * as ImagePicker from 'expo-image-picker'
 import Toast from 'react-native-toast-message'
 import Sortable from 'react-native-sortables'
 import * as Haptics from 'expo-haptics'
-import { mutate } from '../../hooks/queries'
-import { watchlistAPI } from '../../lib/api-client'
-import { useAuth } from '../../context/auth-context'
-import { colors, fontSize, spacing } from '../../constants/theme'
-import ListHeader from '../../components/ListHeader'
-import WatchlistItemRow from '../../components/WatchlistItemRow'
-import { useReorderActions } from '../../components/DraggableList'
-import ItemDetailSheet from '../../components/ItemDetailSheet'
-import EmptyState from '../../components/EmptyState'
-import EditListSheet from '../../components/sheets/EditListSheet'
-import CollaboratorSheet from '../../components/sheets/CollaboratorSheet'
-import LeaveListSheet from '../../components/sheets/LeaveListSheet'
-import DeleteListSheet from '../../components/sheets/DeleteListSheet'
-import ItemActionsSheet from '../../components/sheets/ItemActionsSheet'
-import SearchSheet from '../../components/sheets/SearchSheet'
-import ConfirmDeleteSheet from '../../components/sheets/ConfirmDeleteSheet'
-import ListMenuSheet from '../../components/sheets/ListMenuSheet'
-import type { EditListSheetRef } from '../../components/sheets/EditListSheet'
-import type { CollaboratorSheetRef } from '../../components/sheets/CollaboratorSheet'
-import type { LeaveListSheetRef } from '../../components/sheets/LeaveListSheet'
-import type { DeleteListSheetRef } from '../../components/sheets/DeleteListSheet'
-import type { ItemActionsSheetRef } from '../../components/sheets/ItemActionsSheet'
-import type { SearchSheetRef } from '../../components/sheets/SearchSheet'
-import type { ConfirmDeleteSheetRef } from '../../components/sheets/ConfirmDeleteSheet'
-import type { ListMenuSheetRef } from '../../components/sheets/ListMenuSheet'
-import type { Watchlist, WatchlistItem } from '../../types'
-import { useLanguageStore } from '../../store/language'
-import { useTheme } from '../../hooks/useTheme'
+import { mutate } from '../../../../hooks/queries'
+import { watchlistAPI } from '../../../../lib/api-client'
+import { useAuth } from '../../../../context/auth-context'
+import { WEB_APP_URL } from '../../../../constants/api'
+import { colors, fontSize, spacing } from '../../../../constants/theme'
+import ListHeader from '../../../../components/ListHeader'
+import WatchlistItemRow from '../../../../components/WatchlistItemRow'
+import { useReorderActions } from '../../../../components/DraggableList'
+import ItemDetailSheet from '../../../../components/ItemDetailSheet'
+import EmptyState from '../../../../components/EmptyState'
+import ListRecommendations from '../../../../components/ListRecommendations'
+import EditListSheet from '../../../../components/sheets/EditListSheet'
+import CollaboratorSheet from '../../../../components/sheets/CollaboratorSheet'
+import LeaveListSheet from '../../../../components/sheets/LeaveListSheet'
+import DeleteListSheet from '../../../../components/sheets/DeleteListSheet'
+import ItemActionsSheet from '../../../../components/sheets/ItemActionsSheet'
+import SearchSheet from '../../../../components/sheets/SearchSheet'
+import ConfirmDeleteSheet from '../../../../components/sheets/ConfirmDeleteSheet'
+import ListMenuSheet from '../../../../components/sheets/ListMenuSheet'
+import type { EditListSheetRef } from '../../../../components/sheets/EditListSheet'
+import type { CollaboratorSheetRef } from '../../../../components/sheets/CollaboratorSheet'
+import type { LeaveListSheetRef } from '../../../../components/sheets/LeaveListSheet'
+import type { DeleteListSheetRef } from '../../../../components/sheets/DeleteListSheet'
+import type { ItemActionsSheetRef } from '../../../../components/sheets/ItemActionsSheet'
+import type { SearchSheetRef } from '../../../../components/sheets/SearchSheet'
+import type { ConfirmDeleteSheetRef } from '../../../../components/sheets/ConfirmDeleteSheet'
+import type { ListMenuSheetRef } from '../../../../components/sheets/ListMenuSheet'
+import type { Watchlist, WatchlistItem } from '../../../../types'
+import { useLanguageStore } from '../../../../store/language'
+import { useTheme } from '../../../../hooks/useTheme'
 
 
-export default function ListDetailScreen() {
+/**
+ * Route : remonte l'`id` en `key` pour FORCER un remontage à chaque liste.
+ *
+ * React Navigation réutilise l'instance d'écran quand seul le paramètre change
+ * (`/list/a` → `/list/b`). L'état restait donc celui de la liste précédente, et
+ * la purger dans un `useEffect` ne suffit pas : l'effet ne s'exécute qu'APRÈS
+ * la première peinture, si bien que l'ancienne liste s'affichait une frame
+ * avant la nouvelle. Le `key` règle le problème à la racine : nouvelle liste =
+ * nouvelle instance, donc aucun état résiduel (état, scroll, sheets, animations).
+ */
+export default function ListDetailRoute() {
+  const { id } = useLocalSearchParams<{ id: string }>()
+  return <ListDetailScreen key={id} />
+}
+
+function ListDetailScreen() {
   const theme = useTheme()
   const { id } = useLocalSearchParams<{ id: string }>()
   const navigation = useNavigation()
@@ -51,6 +68,12 @@ export default function ListDetailScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [openAddToList, setOpenAddToList] = useState(false)
+  // Recommandation ouverte : l'élément n'appartient pas à la liste, on
+  // construit un WatchlistItem éphémère pour la fiche détail.
+  const [recoSheetOpen, setRecoSheetOpen] = useState(false)
+  const recoItemRef = useRef<{ tmdbId: number; mediaType: 'movie' | 'tv'; title: string } | null>(
+    null,
+  )
   const [titleBottomY, setTitleBottomY] = useState(0)
 
   // Sheet refs
@@ -111,10 +134,6 @@ export default function ListDetailScreen() {
   })
 
   // Animated style for the bottom button
-  const animatedButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: buttonTranslateY.value }],
-  }))
-
   // All hooks MUST be called before any early return (Rules of Hooks)
   const handleDeleteItem = useCallback(async (tmdbId: number) => {
     if (!watchlist || !id) return
@@ -147,20 +166,29 @@ export default function ListDetailScreen() {
     navigation.setOptions({ headerTitle: '' })
   }, [navigation])
 
+  // Garde-fou anti-réponse obsolète : deux chargements rapprochés peuvent
+  // revenir dans le désordre et écraser la bonne liste par l'ancienne.
+  // (La purge d'état, elle, est assurée par le remontage via `key`.)
+  const requestedIdRef = useRef<string | undefined>(undefined)
+
   useEffect(() => {
-    if (id) loadWatchlist()
+    if (!id) return
+    requestedIdRef.current = id
+    loadWatchlist(id)
   }, [id])
 
-  const loadWatchlist = async () => {
+  const loadWatchlist = async (targetId: string | undefined = id) => {
+    if (!targetId) return
     try {
-      const response = await watchlistAPI.getById(id!)
+      const response = await watchlistAPI.getById(targetId)
+      if (requestedIdRef.current !== targetId) return
       setWatchlist(response.watchlist)
       setIsSaved(response.isSaved)
       setIsCollaborator(response.isCollaborator)
     } catch (error) {
       console.error('Failed to load watchlist:', error)
     } finally {
-      setIsLoading(false)
+      if (requestedIdRef.current === targetId) setIsLoading(false)
     }
   }
 
@@ -235,7 +263,7 @@ export default function ListDetailScreen() {
   }
 
   const handleShare = async () => {
-    const url = `https://poplist.me/lists/${id}`
+    const url = `${WEB_APP_URL}/lists/${id}`
     const message = `Découvre la liste "${watchlist.name}" sur Poplist !\n${url}`
     try {
       await Share.share(
@@ -295,7 +323,7 @@ export default function ListDetailScreen() {
       const { watchlist: newList } = await watchlistAPI.duplicateWatchlist(id)
       mutate('/watchlists/mine')
       Toast.show({ type: 'success', text1: 'Liste dupliquée' })
-      router.push(`/lists/${newList.id}`)
+      router.push(`/list/${newList.id}`)
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -310,12 +338,6 @@ export default function ListDetailScreen() {
       id: watchlist.id,
       name: watchlist.name,
       description: watchlist.description ?? undefined,
-      // ⚠️ Bug préexistant révélé par les types générés : le backend ne renvoie
-      // PAS de champ isPublic (l'ancien type mobile mentait). Ce toggle était
-      // donc toujours initialisé à « privée » (undefined → falsy). On préserve
-      // ce comportement à l'identique ; à décider : dériver de
-      // (watchlist.genres?.length > 0) comme indicateur de liste publique.
-      isPublic: false,
       genres: watchlist.genres ?? undefined,
     })
   }
@@ -373,6 +395,7 @@ export default function ListDetailScreen() {
             onSave={handleSaveToggle}
             onMenu={() => listMenuRef.current?.present()}
             onDuplicate={handleDuplicate}
+            onAddElement={canEdit ? handleAddElement : undefined}
             onAddCollaborator={handleAddCollaborator}
             onLeave={handleLeave}
             onTitleLayout={handleTitleLayout}
@@ -392,15 +415,19 @@ export default function ListDetailScreen() {
               <WatchlistItemRow
                 item={item}
                 onPress={() => setSelectedIndex(index)}
-                onOptionsPress={() =>
-                  itemActionsSheetRef.current?.present({
-                    item,
-                    index,
-                    totalItems: watchlist.items?.length ?? 0,
-                    canEdit,
-                    watchlistId: id!,
-                  })
-                }
+                // Remplace l'ancien menu « … » : ouvre directement le
+                // sélecteur de listes, comme le « + » de la PWA.
+                onPickerPress={() => {
+                  setOpenAddToList(true)
+                  setSelectedIndex(index)
+                }}
+                // Sur une liste qui m'appartient, l'élément est par définition
+                // dans une de mes listes → coche verte. Sur la liste d'un
+                // autre utilisateur, on ne peut pas le savoir sans charger mes
+                // listes : on laisse le « + ».
+                isInMyLists={canEdit}
+                // Poignée de réordonnancement : propriétaire uniquement.
+                showGrip={isOwner}
               />
             )}
             columns={1}
@@ -419,16 +446,23 @@ export default function ListDetailScreen() {
             autoScrollEnabled
           />
         )}
-      </Animated.ScrollView>
 
-      {/* Bottom sticky button — only if user can edit */}
-      {canEdit && (
-        <Animated.View style={[styles.bottomButtonWrapper, { bottom: insets.bottom + 16 }, animatedButtonStyle]}>
-          <Pressable style={styles.bottomButton} onPress={handleAddElement}>
-            <Text style={styles.bottomButtonText}>Ajouter un élément</Text>
-          </Pressable>
-        </Animated.View>
-      )}
+        {/* Recommandations (endpoint dédié, hook généré par Kubb) */}
+        {id && (
+          <ListRecommendations
+            watchlistId={id}
+            onOpenDetails={(tmdbId, mediaType, title) => {
+              recoItemRef.current = { tmdbId, mediaType, title }
+              setRecoSheetOpen(true)
+            }}
+            onAdd={(tmdbId, mediaType, title) => {
+              recoItemRef.current = { tmdbId, mediaType, title }
+              setRecoSheetOpen(true)
+              setOpenAddToList(true)
+            }}
+          />
+        )}
+      </Animated.ScrollView>
 
       {/* Animated fixed header overlay */}
       <Animated.View
@@ -461,6 +495,39 @@ export default function ListDetailScreen() {
         onNavigate={setSelectedIndex}
       />
 
+      {/* Fiche d'une recommandation : l'élément n'est pas dans la liste, on
+          construit un item éphémère (mêmes champs neutres que l'accueil). */}
+      <ItemDetailSheet
+        item={
+          recoSheetOpen && recoItemRef.current
+            ? {
+                id: `tmdb-${recoItemRef.current.tmdbId}`,
+                watchlistId: null,
+                tmdbId: recoItemRef.current.tmdbId,
+                title: recoItemRef.current.title,
+                posterPath: null,
+                backdropPath: null,
+                overview: null,
+                releaseDate: null,
+                voteAverage: null,
+                runtime: null,
+                numberOfSeasons: null,
+                numberOfEpisodes: null,
+                position: null,
+                mediaType: recoItemRef.current.mediaType,
+                platformList: [],
+                addedAt: new Date().toISOString(),
+              }
+            : null
+        }
+        visible={recoSheetOpen}
+        onClose={() => {
+          setRecoSheetOpen(false)
+          setOpenAddToList(false)
+        }}
+        initialShowAddToList={openAddToList}
+      />
+
       {/* Bottom sheets */}
       <EditListSheet ref={editSheetRef} onUpdated={handleEditUpdated} />
       <CollaboratorSheet ref={collaboratorSheetRef} onCollaboratorsChanged={handleCollaboratorsChanged} />
@@ -484,7 +551,7 @@ export default function ListDetailScreen() {
           }
         }}
       />
-      <SearchSheet ref={searchSheetRef} watchlistId={id} onItemAdded={loadWatchlist} />
+      <SearchSheet ref={searchSheetRef} watchlistId={id} onItemAdded={() => loadWatchlist()} />
       <ConfirmDeleteSheet ref={confirmDeleteRef} />
       <ListMenuSheet
         ref={listMenuRef}
@@ -515,35 +582,18 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 100,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingBottom: 10,
-    paddingHorizontal: 16,
+    // Titre CENTRÉ dans la hauteur du header (44px) : la flèche de retour
+    // native l'est aussi, donc les deux s'alignent. Avec `flex-end` +
+    // paddingBottom, le titre tombait plus bas que la flèche.
+    justifyContent: 'center',
+    // Marge à gauche/droite pour ne pas passer sous la flèche ni le bouton.
+    paddingHorizontal: 56,
   },
   fixedHeaderTitle: {
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  bottomButtonWrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 50,
-  },
-  bottomButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-  },
-  bottomButtonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '700',
   },
   loading: {
     flex: 1,

@@ -1,4 +1,8 @@
+// Effet de bord : enregistre le transport HTTP du SDK généré (Kubb) AVANT
+// tout rendu. Sans lui, les hooks générés jettent au premier appel.
+import '../lib/kubb-transport';
 import { Stack } from 'expo-router';
+import { ThemeProvider, DarkTheme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, StyleSheet, LogBox } from 'react-native';
 
@@ -62,6 +66,19 @@ const styles = StyleSheet.create({
   },
 });
 
+/** Thème de navigation aligné sur nos tokens (fonds sombres, pas de blanc). */
+const navigationTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: colors.background,
+    card: colors.card,
+    border: colors.border,
+    text: colors.foreground,
+    primary: colors.primary,
+  },
+};
+
 export default function RootLayout() {
   const theme = useTheme()
 
@@ -72,6 +89,9 @@ export default function RootLayout() {
         <AuthProvider>
           <BottomSheetModalProvider>
             <StatusBar style="light" />
+            {/* Sans ThemeProvider, React Navigation applique son thème CLAIR :
+                le fond blanc apparaissait pendant les transitions. */}
+            <ThemeProvider value={navigationTheme}>
             <Stack
               screenOptions={{
                 headerShown: false,
@@ -85,19 +105,17 @@ export default function RootLayout() {
               <Stack.Screen name="login" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen
-                name="lists/[id]"
+                name="privacy"
                 options={{
-                  animation: 'slide_from_right',
-                  animationDuration: 120,
                   headerShown: true,
                   headerTitle: '',
                   headerBackTitle: 'Retour',
-                  headerTransparent: true,
-                  headerStyle: { backgroundColor: 'transparent' },
-                  headerShadowVisible: false,
+                  animation: 'slide_from_right',
+                  animationDuration: 120,
                 }}
               />
             </Stack>
+            </ThemeProvider>
             <Toast config={toastConfig} position="top" topOffset={60} />
           </BottomSheetModalProvider>
         </AuthProvider>

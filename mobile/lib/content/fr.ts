@@ -216,6 +216,10 @@ export const fr: Content = {
             name: "Séries",
             description: "Les séries à ne pas manquer",
          },
+         animation: {
+            name: 'Animation',
+            description: "Les meilleurs séries et films d'animation",
+         },
          netflix: {
             name: "Netflix",
             description: "Les pépites Netflix",
@@ -261,8 +265,8 @@ export const fr: Content = {
             description: "Films et séries sur Rakuten TV",
          },
          anime: {
-            name: "Animation",
-            description: "Les meilleurs séries et films d'animation et manga adaptés",
+            name: 'Anime',
+            description: 'Animes japonais et mangas adaptés',
          },
          action: {
             name: "Action",
@@ -270,6 +274,7 @@ export const fr: Content = {
          },
          documentaries: {
             name: "Docu",
+            nameMobile: 'Docu',
             description: "Documentaires captivants et éducatifs",
          },
          enfant: {

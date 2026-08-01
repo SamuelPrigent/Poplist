@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Film } from 'lucide-react-native';
-import { colors, spacing, fontSize } from '../constants/theme';
+import { colors, spacing, fontSize, fontWeight } from '../constants/theme';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.base,
-    fontWeight: 'bold',
+    fontWeight: fontWeight.semibold,
     color: colors.foreground,
     textAlign: 'center',
   },

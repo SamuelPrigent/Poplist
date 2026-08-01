@@ -27,7 +27,6 @@ interface EditListData {
   id: string
   name: string
   description?: string
-  isPublic: boolean
   genres?: string[]
 }
 
@@ -52,7 +51,6 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
     const [targetId, setTargetId] = useState<string | null>(null)
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
-    const [isPublic, setIsPublic] = useState(false)
     const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -61,7 +59,6 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
         setTargetId(watchlist.id)
         setName(watchlist.name)
         setDescription(watchlist.description ?? '')
-        setIsPublic(watchlist.isPublic)
         setGenreCategories((watchlist.genres ?? []) as GenreCategory[])
         setIsSubmitting(false)
         bottomSheetRef.current?.present()
@@ -80,7 +77,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.7}
+          opacity={0.8}
           pressBehavior="close"
         />
       ),
@@ -94,11 +91,10 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
       setIsSubmitting(true)
 
       try {
-        const genresData = isPublic && genreCategories.length > 0 ? genreCategories : undefined
+        const genresData = genreCategories.length > 0 ? genreCategories : undefined
         const { watchlist } = await watchlistAPI.update(targetId, {
           name: trimmedName,
           description: description.trim() || undefined,
-          isPublic,
           genres: genresData,
         })
 
@@ -119,23 +115,25 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
       } finally {
         setIsSubmitting(false)
       }
-    }, [name, description, isPublic, genreCategories, targetId, isSubmitting, onUpdated])
+    }, [name, description, genreCategories, targetId, isSubmitting, onUpdated])
 
     return (
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={['92%']}
+        snapPoints={['85%']}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{
-          backgroundColor: 'rgba(255,255,255,0.25)',
-          width: 36,
-        }}
+        backgroundColor: 'rgba(124, 135, 152, 0.4)',
+        width: 44,
+        height: 6,
+        borderRadius: 999,
+      }}
         backgroundStyle={{
-          backgroundColor: theme.panel,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
+        backgroundColor: colors.background,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+      }}
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
@@ -176,50 +174,10 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
             textAlignVertical="top"
           />
 
-          {/* Public/Private toggle */}
-          <Text style={[styles.label, { marginTop: spacing.lg }]}>Visibilité</Text>
-          <View style={styles.toggleRow}>
-            <Pressable
-              style={[
-                styles.toggleBtn,
-                { backgroundColor: theme.secondary },
-                !isPublic && styles.toggleBtnActive,
-              ]}
-              onPress={() => setIsPublic(false)}
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  !isPublic && styles.toggleTextActive,
-                ]}
-              >
-                Privée
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.toggleBtn,
-                { backgroundColor: theme.secondary },
-                isPublic && styles.toggleBtnActive,
-              ]}
-              onPress={() => setIsPublic(true)}
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  isPublic && styles.toggleTextActive,
-                ]}
-              >
-                Publique
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Genre categories — only when public */}
-          {isPublic && (
-            <>
+          {/* Catégories par genre (toujours proposées : plus de listes privées) */}
+          <>
               <Text style={[styles.label, { marginTop: spacing.lg }]}>
-                {content.watchlists.genreCategories || 'Catégories'}
+                Catégories par genre
               </Text>
               <View style={styles.genreRow}>
                 {GENRE_CATEGORIES.map((category) => {
@@ -252,8 +210,7 @@ const EditListSheet = forwardRef<EditListSheetRef, EditListSheetProps>(
                   )
                 })}
               </View>
-            </>
-          )}
+          </>
 
           {/* Save button */}
           <Pressable
@@ -297,17 +254,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   textInput: {
-    borderRadius: borderRadius.lg,
+    // PWA : h-10 rounded-md px-3 py-2 text-sm
+    height: 40,
+    borderRadius: borderRadius.button,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: fontSize.base,
+    paddingVertical: spacing.sm,
+    fontSize: fontSize.sm,
     color: colors.foreground,
     borderWidth: 1,
     borderColor: colors.border,
   },
   textArea: {
-    minHeight: 80,
-    paddingTop: spacing.md,
+    height: undefined,
+    minHeight: 88,
+    paddingTop: spacing.sm,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -340,7 +300,7 @@ const styles = StyleSheet.create({
   },
   genrePill: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -358,10 +318,10 @@ const styles = StyleSheet.create({
     color: colors.primaryForeground,
   },
   saveBtn: {
-    marginTop: spacing['2xl'],
+    marginTop: spacing.lg,
     backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: borderRadius.lg,
+    height: 36,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
   },

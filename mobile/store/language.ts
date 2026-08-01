@@ -30,6 +30,21 @@ export const useLanguageStore = create<LanguageState>()(
     {
       name: 'language-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      // ⚠️ On ne persiste QUE la langue.
+      //
+      // Persister `content` figeait une COPIE du fichier de traductions dans
+      // AsyncStorage : à la réhydratation, ce cliché écrasait l'import frais.
+      // Toute clé ajoutée depuis l'installation restait donc introuvable sur
+      // les appareils existants (crash « Cannot read property 'name' of
+      // undefined » au premier rendu après l'ajout de la catégorie
+      // `animation`). Le contenu est désormais TOUJOURS dérivé de la langue.
+      partialize: (state) => ({ language: state.language }),
+      merge: (persisted, current) => {
+        const language = (persisted as Partial<LanguageState> | undefined)?.language
+        return language && contentMap[language]
+          ? { ...current, language, content: contentMap[language] }
+          : current
+      },
     },
   ),
 )

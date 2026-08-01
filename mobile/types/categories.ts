@@ -4,10 +4,11 @@ import type { Content } from './content';
 export const GENRE_CATEGORIES = [
   'movies',
   'series',
-  'anime',
+  'animation',
   'enfant',
-  'documentaries',
   'jeunesse',
+  'documentaries',
+  'anime',
   'action',
 ] as const;
 
@@ -16,6 +17,8 @@ export type GenreCategory = (typeof GENRE_CATEGORIES)[number];
 export interface CategoryInfo {
   id: GenreCategory;
   name: string;
+  /** Label court pour l'affichage compact. Absent → fallback sur `name`. */
+  nameMobile?: string;
   description: string;
   gradient: string;
   cardGradient: string;
@@ -31,6 +34,7 @@ export const getCategoryInfo = (categoryId: GenreCategory, content: Content): Ca
   return {
     id: categoryId,
     name: translations.name,
+    nameMobile: translations.nameMobile,
     description: translations.description,
     gradient: baseInfo.gradient,
     cardGradient: baseInfo.cardGradient,
@@ -59,9 +63,18 @@ export const CATEGORY_INFO: Record<GenreCategory, Omit<CategoryInfo, 'id'>> = {
       'linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)',
     sectionGradient: 'linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)',
   },
-  anime: {
+  animation: {
     name: 'Animation',
-    description: "Les meilleurs séries et films d'animation et manga adaptés",
+    description: "Les meilleurs séries et films d'animation",
+    gradient: 'linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)',
+    cardGradient: 'linear-gradient(135deg, #4A90E2, #667EEA)',
+    headerGradient:
+      'linear-gradient(168deg, rgb(74 144 226) 0%, rgb(102 126 234) 60%, rgb(74 144 226) 100%)',
+    sectionGradient: 'linear-gradient(rgb(74 144 226 / 32%) 0%, transparent 120px)',
+  },
+  anime: {
+    name: 'Anime',
+    description: 'Animes japonais et mangas adaptés',
     gradient: 'linear-gradient(135deg, #4A90E2 0%, #667EEA 100%)',
     cardGradient: 'linear-gradient(135deg, #4A90E2, #667EEA)',
     headerGradient:

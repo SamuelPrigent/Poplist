@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -19,10 +20,21 @@ import Toast from 'react-native-toast-message';
 import { useAuth } from '../../context/auth-context';
 import { userAPI } from '../../lib/api-client';
 import { useLanguageStore } from '../../store/language';
-import { usePreferencesStore, type ColumnCount } from '../../store/preferences';
+import { WEB_APP_URL, BUY_ME_A_COFFEE_URL } from '../../constants/api';
 import { colors, fontSize, spacing, borderRadius } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
-import { LogOut, User as UserIcon, ChevronDown, Trash2, Camera, List } from 'lucide-react-native';
+import {
+  LogOut,
+  User as UserIcon,
+  ChevronDown,
+  Trash2,
+  Camera,
+  Upload,
+  List,
+  Shield,
+  Coffee,
+  ExternalLink,
+} from 'lucide-react-native';
 import type { Language } from '../../store/language';
 import DeleteAccountSheet, {
   type DeleteAccountSheetRef,
@@ -40,84 +52,18 @@ const LANGUAGES = [
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 /** Mini phone mockup showing a grid layout */
-function PhoneMockup({
-  cols,
-  isActive,
-  theme,
-}: {
-  cols: number;
-  isActive: boolean;
-  theme: import('../../hooks/useTheme').ThemeColors;
-}) {
-  const phoneW = 64;
-  const phoneH = 104;
-  const borderW = 2;
-  const innerPad = 5;
-  const contentW = phoneW - borderW * 2 - innerPad * 2;
-  const gap = 3;
-  const cellW = Math.floor((contentW - gap * (cols - 1)) / cols);
-  const cellH = Math.round(cellW * 1.4);
-  const rows = 3;
-
-  return (
-    <View
-      style={[
-        mockupStyles.phone,
-        { width: phoneW, height: phoneH, borderColor: theme.border, backgroundColor: theme.panel },
-        isActive && mockupStyles.phoneActive,
-      ]}
-    >
-      {/* Notch */}
-      <View style={[mockupStyles.notch, { backgroundColor: theme.border }]} />
-      {/* Grid */}
-      <View style={{ paddingHorizontal: innerPad, paddingTop: 7, alignItems: 'center', gap }}>
-        {Array.from({ length: rows }, (_, row) => (
-          <View key={row} style={{ flexDirection: 'row', gap }}>
-            {Array.from({ length: cols }, (_, col) => (
-              <View
-                key={col}
-                style={{
-                  width: cellW,
-                  height: cellH,
-                  borderRadius: 3,
-                  backgroundColor: isActive ? 'rgba(99,102,241,0.35)' : theme.secondary,
-                }}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-const mockupStyles = StyleSheet.create({
-  phone: {
-    borderRadius: 12,
-    borderWidth: 2,
-    overflow: 'hidden',
-  },
-  phoneActive: {
-    borderColor: colors.primary,
-  },
-  notch: {
-    alignSelf: 'center',
-    width: 20,
-    height: 3,
-    borderRadius: 2,
-    marginTop: 5,
-  },
-});
-
+/**
+ * Paramètres du profil — la déconnexion et les liens (Privacy, Buy me a
+ * coffee) sont désormais dans le menu de la bulle d'avatar (UserMenuSheet),
+ * comme sur la PWA. Cette page ne garde que : personnalisation du profil
+ * (bento), langue, suppression du compte.
+ */
 export default function AccountScreen() {
   const { user, logout, refetch, updateUsername } = useAuth();
   const { content, language, setLanguage } = useLanguageStore();
-  const { columns, setColumns } = usePreferencesStore();
   const theme = useTheme();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'preferences' | 'account'>('preferences');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
 
   // Inline username editing
   const [isEditingUsername, setIsEditingUsername] = useState(false);
@@ -128,11 +74,6 @@ export default function AccountScreen() {
   const deleteAccountRef = useRef<DeleteAccountSheetRef>(null);
 
   const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
-
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/login');
-  };
 
   const handleUsernameConfirm = async () => {
     const trimmed = editedUsername.trim();
@@ -219,166 +160,58 @@ export default function AccountScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      {/* Fixed header + tabs */}
-      <View style={styles.headerSection}>
-        <View style={styles.headerRow}>
-          <Pressable
-            style={[styles.avatar, { backgroundColor: theme.secondary }]}
-            onPress={handleAvatarPress}
-            onLongPress={handleAvatarLongPress}
-          >
+      {/* Copie de la maquette PWA (`frontend/src/app/account/page.tsx`) :
+          titre + sous-titre, puis une CARTE par section (photo, pseudo, langue,
+          suppression). UN SEUL ScrollView : deux zones scrollables imbriquées
+          coupaient le contenu. */}
+      <ScrollView contentContainerStyle={styles.pageContent} showsVerticalScrollIndicator={false}>
+        <Text style={styles.pageTitle}>Paramètres du profil</Text>
+        <Text style={styles.pageSubtitle}>
+          Gérez les paramètres et préférences de votre compte
+        </Text>
+
+        {/* Carte : photo de profil */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Photo de profil</Text>
+          <Text style={styles.cardDescription}>
+            Téléchargez une photo de profil pour personnaliser votre compte
+          </Text>
+
+          <View style={styles.avatarBlock}>
             {user?.avatarUrl ? (
               <Image
                 source={{ uri: user.avatarUrl }}
-                style={styles.avatarImage}
+                style={styles.avatarLarge}
                 contentFit="cover"
                 recyclingKey="account-avatar"
                 transition={0}
               />
             ) : (
-              <UserIcon size={24} color={colors.mutedForeground} />
+              <View style={[styles.avatarLarge, styles.avatarPlaceholder]}>
+                <UserIcon size={48} color={colors.mutedForeground} />
+              </View>
             )}
-            <View style={styles.avatarBadge}>
-              <Camera size={10} color={colors.foreground} />
-            </View>
-          </Pressable>
-          <View style={styles.headerInfo}>
-            <Text style={styles.username} numberOfLines={1}>
-              {user?.username || 'User'}
-            </Text>
-            <Text style={styles.email} numberOfLines={1}>
-              {user?.email}
-            </Text>
-          </View>
-          <Pressable
-            style={[styles.logoutBtn, { backgroundColor: theme.container }]}
-            onPress={handleLogout}
-          >
-            <LogOut size={20} color={colors.mutedForeground} />
-          </Pressable>
-        </View>
 
-        <View style={[styles.tabsRow, { borderBottomColor: theme.border }]}>
-          {(['preferences', 'account'] as const).map(tab => {
-            const label = tab === 'preferences' ? 'Préférences' : 'Compte';
-            return (
-              <Pressable
-                key={tab}
-                style={[styles.tab, activeTab === tab && styles.tabActive]}
-                onPress={() => {
-                  setActiveTab(tab);
-                  scrollRef.current?.scrollTo({
-                    x: tab === 'preferences' ? 0 : SCREEN_WIDTH,
-                    animated: true,
-                  });
-                }}
-              >
-                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                  {label}
-                </Text>
+            <View style={styles.avatarActions}>
+              <Pressable style={styles.outlineButton} onPress={handleAvatarPress}>
+                <Upload size={16} color={colors.foreground} />
+                <Text style={styles.outlineButtonText}>Modifier</Text>
               </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={e => {
-          const page = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-          setActiveTab(page === 0 ? 'preferences' : 'account');
-        }}
-        scrollEventThrottle={16}
-      >
-        {/* Page: Préférences */}
-        <ScrollView
-          style={{ width: SCREEN_WIDTH }}
-          contentContainerStyle={styles.pageContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Affichage des listes */}
-          <Text style={styles.sectionTitle}>Affichage des listes</Text>
-          <View style={styles.columnsRow}>
-            {([3, 1] as const).map(col => {
-              const isActive = columns === col;
-              return (
-                <Pressable
-                  key={col}
-                  style={styles.columnOption}
-                  onPress={() => setColumns(col as ColumnCount)}
-                >
-                  {col === 1 ? (
-                    <View
-                      style={[
-                        mockupStyles.phone,
-                        {
-                          width: 64,
-                          height: 104,
-                          borderColor: theme.border,
-                          backgroundColor: theme.panel,
-                        },
-                        isActive && mockupStyles.phoneActive,
-                      ]}
-                    >
-                      <View style={[mockupStyles.notch, { backgroundColor: theme.border }]} />
-                      <View style={{ paddingHorizontal: 5, paddingTop: 7, gap: 4 }}>
-                        {[0, 1, 2].map(i => (
-                          <View
-                            key={i}
-                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                          >
-                            <View
-                              style={{
-                                width: 16,
-                                height: 16,
-                                borderRadius: 3,
-                                backgroundColor: isActive
-                                  ? 'rgba(99,102,241,0.35)'
-                                  : theme.secondary,
-                              }}
-                            />
-                            <View style={{ flex: 1, gap: 2 }}>
-                              <View
-                                style={{
-                                  height: 3,
-                                  width: '80%',
-                                  borderRadius: 1,
-                                  backgroundColor: isActive
-                                    ? 'rgba(99,102,241,0.35)'
-                                    : theme.secondary,
-                                }}
-                              />
-                              <View
-                                style={{
-                                  height: 2,
-                                  width: '50%',
-                                  borderRadius: 1,
-                                  backgroundColor: isActive
-                                    ? 'rgba(99,102,241,0.2)'
-                                    : theme.secondary,
-                                }}
-                              />
-                            </View>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  ) : (
-                    <PhoneMockup cols={col} isActive={isActive} theme={theme} />
-                  )}
-                  <Text style={[styles.columnLabel, isActive && styles.columnLabelActive]}>
-                    {col === 1 ? 'Liste' : 'Colonne'}
-                  </Text>
+              {user?.avatarUrl ? (
+                <Pressable style={styles.outlineButton} onPress={handleAvatarLongPress}>
+                  <Trash2 size={16} color={colors.foreground} />
+                  <Text style={styles.outlineButtonText}>Supprimer</Text>
                 </Pressable>
-              );
-            })}
+              ) : null}
+            </View>
           </View>
 
-          {/* Nom d'utilisateur */}
-          <Text style={[styles.sectionTitle, { marginTop: spacing['3xl'] }]}>
+          <Text style={styles.cardHint}>Recommandé : Image carrée, 5 Mo maximum</Text>
+        </View>
+
+        {/* Carte : nom d'utilisateur */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>
             Nom d'utilisateur
           </Text>
           <View
@@ -426,8 +259,13 @@ export default function AccountScreen() {
             </Pressable>
           </View>
 
+
           {/* Langue */}
-          <Text style={[styles.sectionTitle, { marginTop: spacing['3xl'] }]}>Langue</Text>
+        </View>
+
+        {/* Carte : langue (absente de la PWA, qui la met dans son header) */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Langue</Text>
           <View style={{ zIndex: 10 }}>
             <Pressable
               style={[
@@ -481,34 +319,21 @@ export default function AccountScreen() {
               </Pressable>
             </Modal>
           </View>
-        </ScrollView>
+        </View>
 
-        {/* Page: Compte */}
-        <ScrollView
-          style={{ width: SCREEN_WIDTH }}
-          contentContainerStyle={styles.pageContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Supprimer le compte
-          </Text>
-          <Text style={styles.dangerDesc}>{content.profile.deleteSection.description}</Text>
+        {/* Carte : suppression du compte (bordure rouge, comme la PWA) */}
+        <View style={[styles.card, styles.cardDanger]}>
+          <Text style={styles.cardTitleDanger}>Supprimer le compte</Text>
+          <Text style={styles.cardDescription}>{content.profile.deleteSection.description}</Text>
           <Pressable
-            style={[
-              styles.actionRow,
-              { backgroundColor: theme.container, borderColor: theme.border },
-            ]}
+            style={styles.destructiveButton}
             onPress={() => deleteAccountRef.current?.present()}
           >
-            <Trash2 size={18} color="#d52222" />
-            <View style={styles.actionRowContent}>
-              <Text style={[styles.actionRowLabel, { color: colors.foreground }]}>
-                Supprimer le compte
-              </Text>
-            </View>
+            <Text style={styles.destructiveButtonText}>Supprimer le compte</Text>
           </Pressable>
-        </ScrollView>
+        </View>
       </ScrollView>
+
 
       {/* Bottom sheets */}
       <DeleteAccountSheet ref={deleteAccountRef} />
@@ -517,6 +342,129 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
+  /** Carte de section — PWA : <Card> bordée, fond `card`, padding 24. */
+  card: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  cardDanger: {
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+  },
+  cardTitle: {
+    fontSize: fontSize.base,
+    fontWeight: '600',
+    color: colors.foreground,
+  },
+  cardTitleDanger: {
+    fontSize: fontSize.base,
+    fontWeight: '600',
+    color: '#ef4444',
+  },
+  cardDescription: {
+    fontSize: fontSize.sm,
+    color: colors.mutedForeground,
+    marginTop: spacing.xs,
+  },
+  cardHint: {
+    fontSize: fontSize.xs,
+    color: colors.mutedForeground,
+    marginTop: spacing.md,
+  },
+  pageSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors.mutedForeground,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  /** Bloc avatar : image 96 + actions (PWA : colonne en mobile). */
+  avatarBlock: {
+    marginTop: spacing.lg,
+    gap: spacing.md,
+  },
+  avatarLarge: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.muted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  outlineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    height: 36,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.button,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  outlineButtonText: {
+    fontSize: fontSize.sm,
+    fontWeight: '500',
+    color: colors.foreground,
+  },
+  destructiveButton: {
+    height: 36,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.button,
+    backgroundColor: '#7f1d1d',
+    marginTop: spacing.lg,
+  },
+  destructiveButtonText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: '#fef2f2',
+  },
+  pageTitle: {
+    fontSize: fontSize.pageTitle,
+    fontWeight: '700',
+    color: colors.foreground,
+    marginBottom: spacing.xl,
+  },
+  /** Bloc « bento » de personnalisation du profil (PWA). */
+  bento: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    marginBottom: spacing['2xl'],
+  },
+  bentoAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
+  bentoAvatarImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+  },
+  bentoInfo: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -657,14 +605,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   // Columns
-  columnsRow: {
-    flexDirection: 'row',
-    gap: spacing.xl,
-  },
-  columnOption: {
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
   columnLabel: {
     fontSize: fontSize.sm,
     fontWeight: '600',

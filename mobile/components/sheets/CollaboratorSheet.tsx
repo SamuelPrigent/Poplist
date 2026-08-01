@@ -50,7 +50,9 @@ const CollaboratorSheet = forwardRef<CollaboratorSheetRef, CollaboratorSheetProp
     const [isAdding, setIsAdding] = useState(false)
     const [removingId, setRemovingId] = useState<string | null>(null)
     const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'found' | 'not_found'>('idle')
-    const debounceRef = useRef<NodeJS.Timeout | null>(null)
+    // RN renvoie un `number` (pas un `NodeJS.Timeout`) : on type via le retour
+    // de setTimeout pour rester juste sur les deux plateformes.
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     useImperativeHandle(ref, () => ({
       present: (data: CollaboratorSheetData) => {
@@ -96,7 +98,7 @@ const CollaboratorSheet = forwardRef<CollaboratorSheetRef, CollaboratorSheetProp
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.7}
+          opacity={0.8}
           pressBehavior="close"
         />
       ),
@@ -196,14 +198,16 @@ const CollaboratorSheet = forwardRef<CollaboratorSheetRef, CollaboratorSheetProp
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{
-          backgroundColor: 'rgba(255,255,255,0.25)',
-          width: 36,
-        }}
+        backgroundColor: 'rgba(124, 135, 152, 0.4)',
+        width: 44,
+        height: 6,
+        borderRadius: 999,
+      }}
         backgroundStyle={{
-          backgroundColor: theme.panel,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
+        backgroundColor: colors.background,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+      }}
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"

@@ -1,130 +1,171 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import Svg, { Circle, Rect, Polygon, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
-import { useTheme } from '../hooks/useTheme';
+import { View, Text, Pressable, StyleSheet, ImageSourcePropType } from 'react-native';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { spacing, fontSize, fontWeight, borderRadius } from '../constants/theme';
 
 interface GenreCardProps {
   categoryId: string;
   name: string;
   onPress: () => void;
+  /** Nombre de listes du genre. `undefined` = pas encore chargé → badge masqué. */
+  listCount?: number;
 }
 
-// Deep, darker, more desaturated color palette per category
-const CATEGORY_COLORS: Record<string, { bg: string; accent: string }> = {
-  movies: { bg: '#0f1f3d', accent: '#3d6bb5' },
-  series: { bg: '#3d0f1a', accent: '#b5243d' },
-  anime: { bg: '#4a0f30', accent: '#cc4d80' },
-  enfant: { bg: '#0f3d27', accent: '#1a8a4a' },
-  documentaries: { bg: '#3d2d10', accent: '#b8862d' },
-  jeunesse: { bg: '#270f4a', accent: '#8a4dcc' },
-  action: { bg: '#4a1111', accent: '#cc3333' },
+/**
+ * Card de catégorie — portage de la PWA
+ * (`frontend/src/components/List/ListCardGenre.tsx`), cf. redesignMobile.md § 3.1 :
+ * dégradé vif par genre, image découpée centrée en bas, badge « N listes » en
+ * haut à droite, titre en bas à gauche. Ratio 21/20.
+ */
+
+/** Dégradés PWA (vivid → deep) + cutout, par catégorie. */
+const CATEGORY_VISUALS: Record<
+  string,
+  { vivid: string; deep: string; cutout: ImageSourcePropType | null }
+> = {
+  movies: { vivid: '#005ef4', deep: '#24a7cf', cutout: require('../assets/categories/avatar.png') },
+  series: { vivid: '#ffb700', deep: '#e5e22a', cutout: require('../assets/categories/friends.png') },
+  animation: {
+    vivid: '#ff0c49',
+    deep: '#e02076',
+    cutout: require('../assets/categories/spider.png'),
+  },
+  enfant: { vivid: '#0b6dff', deep: '#0e8dc8', cutout: require('../assets/categories/yeti.png') },
+  jeunesse: { vivid: '#00d0ff', deep: '#33a261', cutout: require('../assets/categories/brian.png') },
+  documentaries: {
+    vivid: '#0055FF',
+    deep: '#076498',
+    cutout: require('../assets/categories/perroquet.png'),
+  },
+  // `anime` et `action` ont désormais leurs propres visuels (assets convertis
+  // depuis `frontend/public/categories/`), à l'identique de la PWA.
+  anime: { vivid: '#451ee5', deep: '#ba5df0', cutout: require('../assets/categories/solo.png') },
+  action: { vivid: '#00ba28', deep: '#32e058', cutout: require('../assets/categories/action.png') },
 };
 
-// Different geometric shapes per category
-type ShapeType = 'circle' | 'diamond' | 'triangle' | 'hexagon' | 'square' | 'oval' | 'parallelogram';
+const DEFAULT_VISUALS = CATEGORY_VISUALS.movies;
 
-const CATEGORY_SHAPES: Record<string, ShapeType> = {
-  movies: 'circle',
-  series: 'diamond',
-  anime: 'triangle',
-  enfant: 'circle',
-  documentaries: 'hexagon',
-  jeunesse: 'oval',
-  action: 'square',
-};
-
-function GeometricShape({ shape, color, size, uniqueId }: { shape: ShapeType; color: string; size: number; uniqueId: string }) {
-  const gradientId = `grad-${uniqueId}`;
+export default function GenreCard({ categoryId, name, onPress, listCount }: GenreCardProps) {
+  const visuals = CATEGORY_VISUALS[categoryId] || DEFAULT_VISUALS;
 
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Defs>
-        <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={color} stopOpacity="0" />
-          <Stop offset="0.5" stopColor={color} stopOpacity="0.25" />
-          <Stop offset="1" stopColor={color} stopOpacity="0.7" />
-        </LinearGradient>
-      </Defs>
-      {shape === 'circle' && (
-        <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={`url(#${gradientId})`} />
-      )}
-      {shape === 'diamond' && (
-        <Polygon
-          points={`${size / 2},0 ${size},${size / 2} ${size / 2},${size} 0,${size / 2}`}
-          fill={`url(#${gradientId})`}
+    <Pressable onPress={onPress} style={styles.pressable}>
+      <LinearGradient
+        colors={[visuals.vivid, visuals.deep]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.card}
+      >
+        {/* Voile sombre haut (lisibilité du badge) */}
+        <LinearGradient
+          colors={['rgba(0,0,0,0.18)', 'transparent']}
+          style={styles.topScrim}
+          pointerEvents="none"
         />
-      )}
-      {shape === 'triangle' && (
-        <Polygon
-          points={`${size / 2},0 ${size},${size} 0,${size}`}
-          fill={`url(#${gradientId})`}
-        />
-      )}
-      {shape === 'hexagon' && (
-        <Polygon
-          points={`${size * 0.25},0 ${size * 0.75},0 ${size},${size * 0.5} ${size * 0.75},${size} ${size * 0.25},${size} 0,${size * 0.5}`}
-          fill={`url(#${gradientId})`}
-        />
-      )}
-      {shape === 'square' && (
-        <Rect x={0} y={0} width={size} height={size} rx={size * 0.1} fill={`url(#${gradientId})`} />
-      )}
-      {shape === 'oval' && (
-        <Circle cx={size / 2} cy={size * 0.6} r={size * 0.45} fill={`url(#${gradientId})`} />
-      )}
-      {shape === 'parallelogram' && (
-        <Polygon
-          points={`${size * 0.2},0 ${size},0 ${size * 0.8},${size} 0,${size}`}
-          fill={`url(#${gradientId})`}
-        />
-      )}
-    </Svg>
-  );
-}
 
-export default function GenreCard({
-  categoryId,
-  name,
-  onPress,
-}: GenreCardProps) {
-  const theme = useTheme();
-  const palette = CATEGORY_COLORS[categoryId] || { bg: theme.secondary, accent: '#64748b' };
-  const shape = CATEGORY_SHAPES[categoryId] || 'circle';
+        {/* Cutout centré en bas, 85 % de la hauteur (comme la PWA) */}
+        {visuals.cutout && (
+          <View style={styles.cutoutWrap} pointerEvents="none">
+            <Image
+              source={visuals.cutout}
+              style={styles.cutout}
+              // PWA : objectFit contain + objectPosition center bottom.
+              // (`cover` rognait les côtés du personnage.)
+              contentFit="contain"
+              contentPosition="bottom center"
+              transition={0}
+            />
+          </View>
+        )}
 
-  return (
-    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: palette.bg }]}>
-      {/* Geometric shape in bottom-right corner */}
-      <View style={styles.shapeContainer}>
-        <GeometricShape shape={shape} color={palette.accent} size={90} uniqueId={categoryId} />
-      </View>
+        {/* Voile sombre bas (lisibilité du titre) */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.32)']}
+          style={styles.bottomScrim}
+          pointerEvents="none"
+        />
 
-      {/* Category name */}
-      <Text style={styles.name}>{name}</Text>
+        {/* Badge « N listes » — masqué tant que la donnée n'est pas chargée */}
+        {listCount !== undefined && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              {listCount} {listCount === 1 ? 'liste' : 'listes'}
+            </Text>
+          </View>
+        )}
+
+        {/* Titre en bas à gauche */}
+        <Text style={styles.name} numberOfLines={2}>
+          {name}
+        </Text>
+      </LinearGradient>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  pressable: {
+    flex: 1,
+  },
   card: {
     flex: 1,
-    aspectRatio: 1,
+    // PWA : aspect-[21/20]
+    aspectRatio: 21 / 20,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-end',
     padding: spacing.md,
-    position: 'relative',
+  },
+  topScrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+  },
+  bottomScrim: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+  },
+  cutoutWrap: {
+    position: 'absolute',
+    // PWA : conteneur à 85 % de la hauteur, aligné en bas. (Le passage à
+    // pleine hauteur + débord latéral rendait les personnages trop gros.)
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '88%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  cutout: {
+    height: '100%',
+    width: '100%',
+  },
+  badge: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(0,0,0,0.30)',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: fontWeight.semibold,
+    color: 'rgba(255,255,255,0.95)',
   },
   name: {
-    color: colors.foreground,
-    fontSize: fontSize.base,
-    fontWeight: 'bold',
-    zIndex: 1,
-  },
-  shapeContainer: {
-    position: 'absolute',
-    bottom: -10,
-    right: -10,
-    transform: [{ rotate: '15deg' }],
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
   },
 });

@@ -15,7 +15,7 @@ import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
 import { Plus, Trash2, ArrowUpToLine, ArrowDownToLine } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { spacing } from '../../constants/theme'
+import { colors, spacing } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import { useLanguageStore } from '../../store/language'
 import { getTMDBImageUrl } from '../../lib/utils'
@@ -64,7 +64,7 @@ const ItemActionsSheet = forwardRef<ItemActionsSheetRef, ItemActionsSheetProps>(
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.7}
+          opacity={0.8}
           pressBehavior="close"
         />
       ),
@@ -117,14 +117,16 @@ const ItemActionsSheet = forwardRef<ItemActionsSheetRef, ItemActionsSheetProps>(
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{
-          backgroundColor: 'rgba(255,255,255,0.25)',
-          width: 36,
-        }}
+        backgroundColor: 'rgba(124, 135, 152, 0.4)',
+        width: 44,
+        height: 6,
+        borderRadius: 999,
+      }}
         backgroundStyle={{
-          backgroundColor: theme.panel,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
+        backgroundColor: colors.background,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+      }}
       >
         <BottomSheetView style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
           {/* Header */}

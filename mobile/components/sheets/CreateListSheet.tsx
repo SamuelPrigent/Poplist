@@ -41,7 +41,6 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [isPublic, setIsPublic] = useState(false)
   const [genreCategories, setGenreCategories] = useState<GenreCategory[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -50,7 +49,6 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
       // Reset form state when opening
       setName('')
       setDescription('')
-      setIsPublic(false)
       setGenreCategories([])
       setIsSubmitting(false)
       nameRef.current?.clear()
@@ -66,7 +64,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
         {...props}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
-        opacity={0.7}
+        opacity={0.8}
         pressBehavior="close"
       />
     ),
@@ -80,7 +78,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
     setIsSubmitting(true)
 
     // Build optimistic watchlist
-    const genresData = isPublic && genreCategories.length > 0 ? [...genreCategories] : []
+    const genresData = genreCategories.length > 0 ? [...genreCategories] : []
     const optimisticWatchlist: Watchlist = {
       id: `temp-${Date.now()}`,
       ownerId: '',
@@ -111,7 +109,6 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
       await watchlistAPI.create({
         name: trimmedName,
         description: description.trim() || undefined,
-        isPublic,
         genres: genresData.length > 0 ? genresData : undefined,
       })
 
@@ -130,22 +127,24 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
     } finally {
       setIsSubmitting(false)
     }
-  }, [name, description, isPublic, genreCategories, isSubmitting])
+  }, [name, description, genreCategories, isSubmitting])
 
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      snapPoints={['92%']}
+      snapPoints={['85%']}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{
-        backgroundColor: 'rgba(255,255,255,0.25)',
-        width: 36,
+        backgroundColor: 'rgba(124, 135, 152, 0.4)',
+        width: 44,
+        height: 6,
+        borderRadius: 999,
       }}
       backgroundStyle={{
-        backgroundColor: theme.panel,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        backgroundColor: colors.background,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
       }}
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
@@ -186,50 +185,10 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
           textAlignVertical="top"
         />
 
-        {/* Public/Private toggle */}
-        <Text style={[styles.label, { marginTop: spacing.lg }]}>Visibilité</Text>
-        <View style={styles.toggleRow}>
-          <Pressable
-            style={[
-              styles.toggleBtn,
-              { backgroundColor: theme.secondary },
-              !isPublic && styles.toggleBtnActive,
-            ]}
-            onPress={() => setIsPublic(false)}
-          >
-            <Text
-              style={[
-                styles.toggleText,
-                !isPublic && styles.toggleTextActive,
-              ]}
-            >
-              Privée
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.toggleBtn,
-              { backgroundColor: theme.secondary },
-              isPublic && styles.toggleBtnActive,
-            ]}
-            onPress={() => setIsPublic(true)}
-          >
-            <Text
-              style={[
-                styles.toggleText,
-                isPublic && styles.toggleTextActive,
-              ]}
-            >
-              Publique
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Genre categories — only when public */}
-        {isPublic && (
-          <>
+        {/* Catégories par genre (toujours proposées : plus de listes privées) */}
+        <>
             <Text style={[styles.label, { marginTop: spacing.lg }]}>
-              {content.watchlists.genreCategories || 'Catégories'}
+              Catégories par genre
             </Text>
             <View style={styles.genreRow}>
               {GENRE_CATEGORIES.map((category) => {
@@ -262,8 +221,7 @@ const CreateListSheet = forwardRef<CreateListSheetRef>(function CreateListSheet(
                 )
               })}
             </View>
-          </>
-        )}
+        </>
 
         {/* Create button */}
         <Pressable
@@ -306,17 +264,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   textInput: {
-    borderRadius: borderRadius.lg,
+    // PWA : h-10 rounded-md px-3 py-2 text-sm
+    height: 40,
+    borderRadius: borderRadius.button,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: fontSize.base,
+    paddingVertical: spacing.sm,
+    fontSize: fontSize.sm,
     color: colors.foreground,
     borderWidth: 1,
     borderColor: colors.border,
   },
   textArea: {
-    minHeight: 80,
-    paddingTop: spacing.md,
+    height: undefined,
+    minHeight: 88,
+    paddingTop: spacing.sm,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -349,7 +310,7 @@ const styles = StyleSheet.create({
   },
   genrePill: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -367,10 +328,10 @@ const styles = StyleSheet.create({
     color: colors.primaryForeground,
   },
   createBtn: {
-    marginTop: spacing['2xl'],
+    marginTop: spacing.lg,
     backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: borderRadius.lg,
+    height: 36,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
   },

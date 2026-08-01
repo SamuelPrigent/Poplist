@@ -213,6 +213,7 @@ export const de: Content = {
         name: 'Serien',
         description: 'Serien, die Sie nicht verpassen sollten',
       },
+      animation: { name: 'Animation', description: 'Die besten Animationsserien und -filme' },
       netflix: { name: 'Netflix', description: 'Netflix-Perlen' },
       'prime-video': {
         name: 'Prime Video',
@@ -254,13 +255,11 @@ export const de: Content = {
         name: 'Rakuten TV',
         description: 'Filme und Serien auf Rakuten TV',
       },
-      anime: {
-        name: 'Animation',
-        description: 'Die besten Animationsserien und adaptierten Manga-Filme',
-      },
+      anime: { name: 'Anime', description: 'Japanische Animes und adaptierte Mangas' },
       action: { name: 'Action', description: 'Klassiker und neue Actionfilme' },
       documentaries: {
         name: 'Dokumentarfilme',
+nameMobile: 'Doku',
         description: 'Fesselnde und lehrreiche Dokumentarfilme',
       },
       enfant: { name: 'Kinder', description: 'Filme und Serien für Kinder' },

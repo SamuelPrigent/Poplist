@@ -3,9 +3,21 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { UsersRound, CircleCheck } from 'lucide-react-native';
-import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../constants/theme';
 import type { Watchlist } from '../types';
 import PosterGrid from './PosterGrid';
+
+/**
+ * Métrique sous le titre, alignée sur la PWA : dès qu'une liste a été
+ * sauvegardée au moins une fois, le nombre de sauvegardes prime sur le nombre
+ * d'éléments (signal social > inventaire).
+ */
+function countLabel(watchlist: Watchlist): string {
+  const saves = watchlist.likedBy?.length ?? watchlist.followersCount ?? 0;
+  if (saves >= 1) return `${saves} ${saves === 1 ? 'sauvegarde' : 'sauvegardes'}`;
+  const items = watchlist.items?.length ?? 0;
+  return `${items} ${items === 1 ? 'élément' : 'éléments'}`;
+}
 
 interface WatchlistCardProps {
   watchlist: Watchlist;
@@ -27,7 +39,7 @@ export default function WatchlistCard({
     return (
       <Pressable
         style={[styles.listContainer, width != null ? { width } : undefined]}
-        onPress={() => router.push(`/lists/${watchlist.id}`)}
+        onPress={() => router.push(`/list/${watchlist.id}`)}
       >
         {watchlist.imageUrl ? (
           <Image
@@ -54,7 +66,7 @@ export default function WatchlistCard({
             </Text>
           </View>
           <Text style={styles.listMeta}>
-            {watchlist.items?.length ?? 0} {(watchlist.items?.length ?? 0) === 1 ? 'élément' : 'éléments'}
+            {countLabel(watchlist)}
             {showOwner && watchlist.owner?.username ? ` · ${watchlist.owner.username}` : ''}
           </Text>
           {watchlist.description ? (
@@ -70,7 +82,7 @@ export default function WatchlistCard({
   return (
     <Pressable
       style={[styles.container, width != null ? { width } : undefined]}
-      onPress={() => router.push(`/lists/${watchlist.id}`)}
+      onPress={() => router.push(`/list/${watchlist.id}`)}
     >
       {watchlist.imageUrl ? (
         <Image
@@ -99,10 +111,10 @@ export default function WatchlistCard({
             {watchlist.name}
           </Text>
         </View>
-        {showOwner && watchlist.owner?.username && (
-          <Text style={styles.owner}>
-            par {watchlist.owner.username}
-          </Text>
+        {showOwner && watchlist.owner?.username ? (
+          <Text style={styles.owner}>par {watchlist.owner.username}</Text>
+        ) : (
+          <Text style={styles.owner}>{countLabel(watchlist)}</Text>
         )}
       </View>
     </Pressable>
@@ -128,8 +140,9 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   name: {
+    // PWA : titre de card en 14 medium
     fontSize: fontSize.sm,
-    fontWeight: '600',
+    fontWeight: fontWeight.medium,
     color: colors.foreground,
   },
   owner: {

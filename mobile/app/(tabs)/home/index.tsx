@@ -8,7 +8,9 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useRef, useMemo, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
+import { toCreators } from '../../../lib/creators';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { User } from 'lucide-react-native';
@@ -17,8 +19,8 @@ import { getTMDBImageUrl } from '../../../lib/utils';
 import { useLanguageStore } from '../../../store/language';
 import ItemDetailSheet from '../../../components/ItemDetailSheet';
 import type { WatchlistItem } from '../../../types';
-import { usePreferencesStore } from '../../../store/preferences';
 import { useAuth } from '../../../context/auth-context';
+import UserMenuPopover, { type UserMenuPopoverRef } from '../../../components/UserMenuPopover';
 import { colors, fontSize, spacing } from '../../../constants/theme';
 import { useTheme } from '../../../hooks/useTheme';
 import { GENRE_CATEGORIES, getCategoryInfo } from '../../../types/categories';
@@ -27,11 +29,19 @@ import WatchlistCard from '../../../components/WatchlistCard';
 import GenreCard from '../../../components/GenreCard';
 import UserBubble from '../../../components/UserBubble';
 import SectionHeader from '../../../components/SectionHeader';
+import { GRID_COLUMNS } from '../../../constants/layout';
+import ListCardSmall from '../../../components/ListCardSmall';
+import TrendingCard from '../../../components/TrendingCard';
 import HorizontalList from '../../../components/HorizontalList';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GENRE_ITEM_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 3.2;
+// Cards de genre : base ~2,2 par écran, puis -10 % de largeur et +10 % de gap
+// après revue sur device (trois passes : 0.85 trop petit, 2.05 trop grand).
+const GENRE_GAP = spacing.sm * 1.1;
+const GENRE_ITEM_WIDTH = ((SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 2.2) * 0.9;
 const CREATOR_CARD_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 2;
+/** PWA mobile : items du carrousel « Nos créateurs » en 92px de large. */
+const CREATOR_ITEM_WIDTH = 78;
 const TRENDING_3COL_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 2) / 3;
 
 interface TrendingItem {
@@ -40,6 +50,8 @@ interface TrendingItem {
   title?: string;
   name?: string;
   poster_path?: string;
+  backdrop_path?: string;
+  vote_average?: number;
 }
 
 function getCardWidth(cols: number) {
@@ -49,66 +61,83 @@ function getCardWidth(cols: number) {
 
 export default function HomeScreen() {
   const { content } = useLanguageStore();
-  const { columns } = usePreferencesStore();
   const { user } = useAuth();
   const theme = useTheme();
   const router = useRouter();
-  const isListMode = columns === 1;
-  const gridCols = isListMode ? 1 : columns;
-  const cardWidth = getCardWidth(isListMode ? 2 : columns);
-  const [popularWatchlists, setPopularWatchlists] = useState<Watchlist[]>([]);
-  const [trending, setTrending] = useState<TrendingItem[]>([]);
+  const userMenuRef = useRef<UserMenuPopoverRef>(null)
+  const avatarRef = useRef<View>(null);
+  const gridCols = GRID_COLUMNS;
+  const cardWidth = getCardWidth(GRID_COLUMNS);
+  // Fiche « tendance » ouverte (index dans le carrousel).
   const [selectedTrendingIndex, setSelectedTrendingIndex] = useState<number | null>(null);
-  const [creators, setCreators] = useState<
-    { username: string; avatarUrl?: string; listCount: number }[]
-  >([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // react-query plutôt que `useState` + `Promise.all` : les quatre appels sont
+  // mutualisés avec les autres écrans (l'appel à 500 listes est le MÊME que
+  // celui de Populaires et de Créateurs), et revenir sur l'accueil réaffiche le
+  // cache au lieu de tout recharger derrière un spinner.
+  const [popularQuery, allPublicQuery, trendingQuery, mineQuery] = useQueries({
+    queries: [
+      {
+        queryKey: ['/watchlists/public/featured', 9],
+        queryFn: async () => (await watchlistAPI.getPublicWatchlists(9)).watchlists,
+        staleTime: 30_000,
+      },
+      {
+        queryKey: ['/watchlists/public/featured', 500],
+        queryFn: async () => (await watchlistAPI.getPublicWatchlists(500)).watchlists,
+        staleTime: 30_000,
+      },
+      {
+        queryKey: ['/tmdb/trending', 'day'],
+        queryFn: async () => (await tmdbAPI.getTrending('day')).results,
+        staleTime: 5 * 60_000,
+      },
+      {
+        queryKey: ['/watchlists/mine'],
+        queryFn: async () => (await watchlistAPI.getMine().catch(() => ({ watchlists: [] }))).watchlists ?? [],
+        staleTime: 30_000,
+      },
+    ],
+  });
 
-  const loadData = async () => {
-    try {
-      const [popularRes, creatorsRes, trendingRes] = await Promise.all([
-        watchlistAPI.getPublicWatchlists(9),
-        watchlistAPI.getPublicWatchlists(500),
-        tmdbAPI.getTrending('day'),
-      ]);
+  const popularWatchlists = popularQuery.data ?? [];
+  const myWatchlists = mineQuery.data ?? [];
+  const isLoading =
+    popularQuery.isPending || allPublicQuery.isPending || trendingQuery.isPending;
 
-      setPopularWatchlists(popularRes.watchlists);
+  // 30 créateurs les plus actifs (le carrousel n'en montrait que 6).
+  const creators = useMemo(
+    () => toCreators(allPublicQuery.data ?? []).slice(0, 30),
+    [allPublicQuery.data],
+  );
 
-      const creatorsMap = new Map<
-        string,
-        { username: string; avatarUrl?: string; listCount: number }
-      >();
-      creatorsRes.watchlists.forEach((w: Watchlist) => {
-        if (w.owner?.username) {
-          const existing = creatorsMap.get(w.owner.username);
-          if (existing) {
-            existing.listCount++;
-          } else {
-            creatorsMap.set(w.owner.username, {
-              username: w.owner.username,
-              avatarUrl: w.owner.avatarUrl ?? undefined,
-              listCount: 1,
-            });
-          }
-        }
-      });
-      const sortedCreators = Array.from(creatorsMap.values())
-        .sort((a, b) => b.listCount - a.listCount)
-        .slice(0, 6);
-      setCreators(sortedCreators);
-      setTrending(trendingRes.results.filter((r: TrendingItem) => r.poster_path).slice(0, 6));
-    } catch (error) {
-      console.error('Failed to load home data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const trending = useMemo(
+    () => (trendingQuery.data ?? []).filter((r: TrendingItem) => r.poster_path).slice(0, 6),
+    [trendingQuery.data],
+  );
 
-  const categories = GENRE_CATEGORIES.map(id => getCategoryInfo(id, content));
+  const categories = useMemo(
+    () => GENRE_CATEGORIES.map(id => getCategoryInfo(id, content)),
+    [content],
+  );
+
+  // Nombre de listes par catégorie (badge des cards) — mêmes queries que la
+  // page Catégories, donc cache partagé : pas de requêtes en double.
+  const categoryCountQueries = useQueries({
+    queries: GENRE_CATEGORIES.map(genre => ({
+      queryKey: [`/watchlists/by-genre/${genre}`],
+      queryFn: () => watchlistAPI.getWatchlistsByGenre(genre),
+      staleTime: 5 * 60_000,
+      select: (data: { watchlists: unknown[] }) => data.watchlists?.length ?? 0,
+    })),
+  });
+  const categoryCounts = GENRE_CATEGORIES.reduce<Record<string, number | undefined>>(
+    (acc, genre, i) => {
+      acc[genre] = categoryCountQueries[i]?.data;
+      return acc;
+    },
+    {},
+  );
 
   const trendingSheetItems: WatchlistItem[] = trending.map(t => ({
     // Item UI éphémère (pas encore en base) : les champs DB sont neutres.
@@ -149,7 +178,15 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={[styles.avatarButton, { backgroundColor: theme.secondary }]}>
+          <Pressable
+            ref={avatarRef}
+            style={[styles.avatarButton, { backgroundColor: theme.secondary }]}
+            onPress={() =>
+              avatarRef.current?.measureInWindow((x, y, width, height) =>
+                userMenuRef.current?.present({ x, y, width, height }),
+              )
+            }
+          >
             {user?.avatarUrl ? (
               <Image
                 source={{ uri: user.avatarUrl }}
@@ -161,26 +198,66 @@ export default function HomeScreen() {
             ) : (
               <User size={18} color={colors.mutedForeground} />
             )}
-          </View>
+          </Pressable>
           <Text style={styles.appTitle}>{content.header.appName}</Text>
           <View style={{ flex: 1 }} />
         </View>
 
+        {/* Bibliothèque — mes listes (PWA : 1re section de l'accueil, 4 max) */}
+        {myWatchlists.length > 0 && (
+          <View style={styles.sectionFirst}>
+            <SectionHeader
+              title="Bibliothèque"
+              onSeeAll={() => router.push('/(tabs)/lists')}
+            />
+            <View style={styles.libraryGrid}>
+              {myWatchlists.slice(0, 4).map(wl => (
+                <View key={wl.id} style={styles.libraryCell}>
+                  <ListCardSmall watchlist={wl} onPress={() => router.push(`/list/${wl.id}`)} />
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Categories */}
+        <View style={styles.section}>
+          <SectionHeader
+            title={content.home.categories.title}
+            onSeeAll={() => router.push('/categories')}
+          />
+        </View>
+        <HorizontalList
+          data={categories}
+          keyExtractor={item => item.id}
+          itemWidth={GENRE_ITEM_WIDTH}
+          gap={GENRE_GAP}
+          renderItem={item => (
+            <View style={{ width: GENRE_ITEM_WIDTH }}>
+              <GenreCard
+                categoryId={item.id}
+                name={item.name}
+                listCount={categoryCounts[item.id]}
+                onPress={() => router.push(`/categories/${item.id}`)}
+              />
+            </View>
+          )}
+        />
+
         {/* Popular Watchlists */}
-        <View style={styles.sectionFirst}>
+        <View style={myWatchlists.length > 0 ? styles.section : styles.sectionFirst}>
           <SectionHeader
             title={content.home.popularWatchlists.title}
-            onSeeAll={() => router.push('/home/popular')}
+            onSeeAll={() => router.push('/popular')}
           />
           {popularWatchlists.length > 0 ? (
-            <View style={isListMode ? styles.list : styles.grid}>
-              {popularWatchlists.slice(0, isListMode ? 6 : gridCols * 3).map(watchlist => (
+            <View style={styles.grid}>
+              {popularWatchlists.slice(0, gridCols * 3).map(watchlist => (
                 <WatchlistCard
                   key={watchlist.id}
                   watchlist={watchlist}
                   showOwner
-                  width={isListMode ? undefined : cardWidth}
-                  layout={isListMode ? 'list' : 'grid'}
+                  width={cardWidth}
                 />
               ))}
             </View>
@@ -189,49 +266,31 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Categories */}
-        <View style={styles.section}>
-          <SectionHeader
-            title={content.home.categories.title}
-            onSeeAll={() => router.push('/home/categories')}
-          />
-        </View>
-        <HorizontalList
-          data={categories}
-          keyExtractor={item => item.id}
-          itemWidth={GENRE_ITEM_WIDTH}
-          gap={spacing.sm}
-          renderItem={item => (
-            <View style={{ width: GENRE_ITEM_WIDTH }}>
-              <GenreCard
-                categoryId={item.id}
-                name={item.name}
-                onPress={() => router.push(`/home/categories/${item.id}`)}
-              />
-            </View>
-          )}
-        />
-
         {/* Creators */}
         <View style={styles.sectionCreators}>
           <SectionHeader
             title={content.home.creators.title}
-            onSeeAll={() => router.push('/home/users')}
+            onSeeAll={() => router.push('/users')}
           />
-          {creators.length > 0 ? (
-            <View style={styles.creatorsGrid}>
-              {creators.map(creator => (
-                <View key={creator.username} style={styles.creatorCard}>
-                  <UserBubble
-                    user={{ username: creator.username, avatarUrl: creator.avatarUrl }}
-                    listCount={creator.listCount}
-                    onPress={() => router.push(`/home/user/${creator.username}`)}
-                  />
-                </View>
-              ))}
-            </View>
-          ) : null}
         </View>
+        {/* Carrousel horizontal (PWA : items 92px, gap 8) — pas une grille */}
+        {creators.length > 0 ? (
+          <HorizontalList
+            data={creators}
+            keyExtractor={item => item.username}
+            itemWidth={CREATOR_ITEM_WIDTH}
+            gap={spacing.sm}
+            renderItem={item => (
+              <View style={{ width: CREATOR_ITEM_WIDTH }}>
+                <UserBubble
+                  user={{ username: item.username, avatarUrl: item.avatarUrl }}
+                  listCount={item.listCount}
+                  onPress={() => router.push(`/user/${item.username}`)}
+                />
+              </View>
+            )}
+          />
+        ) : null}
 
         {/* Trending */}
         {trending.length > 0 && (
@@ -240,31 +299,28 @@ export default function HomeScreen() {
               title={content.home.trending.title}
               onSeeAll={() => router.push('/(tabs)/explore')}
             />
-            <View style={styles.trending3ColGrid}>
-              {trending.slice(0, 6).map((item, index) => {
-                const posterUrl = getTMDBImageUrl(item.poster_path, 'w342');
-                return (
-                  <Pressable key={item.id} style={{ width: TRENDING_3COL_WIDTH }} onPress={() => setSelectedTrendingIndex(index)}>
-                    {posterUrl && (
-                      <Image
-                        source={{ uri: posterUrl }}
-                        style={[styles.trending3ColPoster, { backgroundColor: theme.secondary }]}
-                        contentFit="cover"
-                        transition={0}
-                      />
-                    )}
-                    <Text style={styles.trendingTitle} numberOfLines={1}>
-                      {item.title || item.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+            {/* PWA : 4 cartes pleine largeur en format paysage (backdrop) */}
+            <View style={styles.trendingList}>
+              {trending.slice(0, 4).map((item, index) => (
+                <TrendingCard
+                  key={item.id}
+                  title={item.title || item.name || ''}
+                  backdropUrl={getTMDBImageUrl(item.backdrop_path ?? null, 'w780')}
+                  typeLabel={
+                    item.media_type === 'movie'
+                      ? content.watchlists.contentTypes.movie
+                      : content.watchlists.contentTypes.series
+                  }
+                  voteAverage={item.vote_average}
+                  onPress={() => setSelectedTrendingIndex(index)}
+                />
+              ))}
             </View>
           </View>
         )}
 
         {/* Bottom spacing */}
-        <View style={{ height: spacing['3xl'] }} />
+        <View style={{ height: spacing.sm }} />
       </ScrollView>
 
       {/* Trending detail sheet */}
@@ -276,6 +332,9 @@ export default function HomeScreen() {
         currentIndex={selectedTrendingIndex ?? 0}
         onNavigate={setSelectedTrendingIndex}
       />
+    
+      {/* Popover de la bulle d'avatar (PWA : MobileHeader) */}
+      <UserMenuPopover ref={userMenuRef} />
     </SafeAreaView>
   );
 }
@@ -289,7 +348,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 80,
+    // La tab bar gère déjà son propre espace : 80 laissait un grand vide.
+    paddingBottom: spacing.lg,
   },
   loading: {
     flex: 1,
@@ -326,18 +386,15 @@ const styles = StyleSheet.create({
   },
   sectionFirst: {
     paddingHorizontal: spacing.lg,
-    marginTop: 10,
-    marginBottom: spacing.md,
+    marginTop: spacing.md,
   },
   section: {
     paddingHorizontal: spacing.lg,
-    marginTop: 43,
-    marginBottom: spacing.md,
+    marginTop: spacing['4xl'],
   },
   sectionCreators: {
     paddingHorizontal: spacing.lg,
-    marginTop: 56,
-    marginBottom: spacing.md,
+    marginTop: 28,
   },
   grid: {
     flexDirection: 'row',
@@ -360,6 +417,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   creatorCard: {
+    width: CREATOR_CARD_WIDTH,
+  },
+  trendingList: {
+    gap: spacing.md,
+  },
+  /** PWA : grille 2 colonnes, gap-x 4 / gap-y 11 en mobile. */
+  libraryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    rowGap: 11,
+  },
+  libraryCell: {
     width: CREATOR_CARD_WIDTH,
   },
   trending3ColGrid: {

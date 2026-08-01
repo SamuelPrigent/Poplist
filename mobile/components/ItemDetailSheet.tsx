@@ -22,38 +22,15 @@ import ProviderIcon, { type ProviderKey } from './ProviderIcon';
 import PosterGrid from './PosterGrid';
 import { useMyWatchlists } from '../hooks/queries';
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { getMatchedProviders } from '../lib/providers';
 import type { WatchlistItem, FullMediaDetails, Platform } from '../types';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
-const PROVIDER_MAP: Record<string, ProviderKey> = {
-  Netflix: 'netflix',
-  'Amazon Prime Video': 'primevideo',
-  'Prime Video': 'primevideo',
-  YouTube: 'youtube',
-  'YouTube Premium': 'youtube',
-  'Disney Plus': 'disneyplus',
-  'Disney+': 'disneyplus',
-  Crunchyroll: 'crunchyroll',
-  Max: 'hbomax',
-  'HBO Max': 'hbomax',
-  'Max Amazon Channel': 'hbomax',
-};
 
-function getMatchedProviders(platforms: Platform[]): ProviderKey[] {
-  const seen = new Set<ProviderKey>();
-  const result: ProviderKey[] = [];
-  for (const p of platforms) {
-    const key = PROVIDER_MAP[p.name];
-    if (key && !seen.has(key)) {
-      seen.add(key);
-      result.push(key);
-    }
-  }
-  return result.slice(0, 3);
-}
 
-const POSTER_WIDTH = 120;
-const POSTER_HEIGHT = 180; // 2:3 aspect ratio
+// PWA (ItemDetailsModal, vue mobile) : h-36 w-24 → 96×144
+const POSTER_WIDTH = 96;
+const POSTER_HEIGHT = 144;
 
 export interface ItemDetailSheetRef {
   present: () => void;
@@ -206,7 +183,15 @@ function ListPickerRow({
   }, [isAdded]);
 
   return (
-    <View style={styles.listPickerRow}>
+    // PWA (AddToListDrawer) : la ligne ENTIÈRE est un bouton, pas seulement
+    // l'icône à droite — celle-ci devient un simple indicateur d'état.
+    <Pressable
+      // Pas de feedback de fond : au défilement, `pressed` s'active avant que
+      // le scroll ne prenne la main et la ligne « flashe ». Le seul retour
+      // visuel est l'animation de l'icône à droite, déclenchée par `isAdded`.
+      style={styles.listPickerRow}
+      onPress={() => onToggle(list.id)}
+    >
       {list.imageUrl ? (
         <Image
           source={{ uri: list.imageUrl }}
@@ -225,7 +210,7 @@ function ListPickerRow({
         </Text>
         <Text style={styles.listPickerCount}>{list.items.length} éléments</Text>
       </View>
-      <Pressable onPress={() => onToggle(list.id)} hitSlop={8}>
+      <View pointerEvents="none">
         <Animated.View
           style={{
             transform: [{ scale }],
@@ -250,8 +235,8 @@ function ListPickerRow({
             )}
           </View>
         </Animated.View>
-      </Pressable>
-    </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -304,7 +289,7 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.7}
+          opacity={0.8}
           pressBehavior="close"
         />
       ),
@@ -495,17 +480,22 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
     return (
       <BottomSheetModal
         ref={bottomSheetModalRef}
-        snapPoints={['85%']}
+        snapPoints={['78%']}
         enableDynamicSizing={false}
         enablePanDownToClose
         onDismiss={handleDismiss}
         backdropComponent={renderBackdrop}
-        handleIndicatorStyle={{ backgroundColor: 'rgba(255,255,255,0.25)', width: 36 }}
+        handleIndicatorStyle={{
+        backgroundColor: 'rgba(124, 135, 152, 0.4)',
+        width: 44,
+        height: 6,
+        borderRadius: 999,
+      }}
         backgroundStyle={{
-          backgroundColor: theme.panel,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
+        backgroundColor: colors.background,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+      }}
       >
         <BottomSheetScrollView
           style={{ flex: 1 }}
@@ -556,23 +546,17 @@ const ItemDetailSheet = forwardRef<ItemDetailSheetRef, ItemDetailSheetProps>(
                   </View>
                 ) : (
                   <View style={styles.infoColumn}>
+                    {/* Ordre PWA : titre → méta → note. Les genres ne sont pas
+                        affichés (retirés côté PWA au profit de la note). */}
                     <Text style={styles.titleText} numberOfLines={2}>
                       {details?.title || item.title}
                     </Text>
+                    <Text style={styles.metaText}>{metaText}</Text>
                     {rating != null && rating > 0 && (
                       <View style={styles.ratingRow}>
-                        <Star size={14} color="#fbbf24" fill="#fbbf24" />
-                        <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
-                      </View>
-                    )}
-                    <Text style={styles.metaText}>{metaText}</Text>
-                    {genres.length > 0 && (
-                      <View style={styles.genreRow}>
-                        {genres.map(genre => (
-                          <View key={genre} style={styles.genreBadge}>
-                            <Text style={styles.genreBadgeText}>{genre}</Text>
-                          </View>
-                        ))}
+                        <Star size={16} color="#facc15" fill="#facc15" />
+                        {/* PWA : note ramenée sur 5 (rating / 2) */}
+                        <Text style={styles.ratingText}>{(rating / 2).toFixed(1)}</Text>
                       </View>
                     )}
                   </View>
@@ -709,15 +693,16 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   titleText: {
-    fontSize: 18,
+    // PWA : text-xl font-bold leading-tight
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.foreground,
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
+    gap: 6,
+    marginTop: spacing.sm,
   },
   ratingText: {
     fontSize: fontSize.sm,
@@ -727,7 +712,7 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: fontSize.sm,
     color: 'rgba(255,255,255,0.7)',
-    marginTop: spacing.sm,
+    marginTop: 6,
   },
   // Genre badges
   genreRow: {

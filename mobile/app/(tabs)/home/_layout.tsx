@@ -17,58 +17,6 @@ export default function HomeLayout() {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen
-        name="categories/index"
-        options={{
-          headerShown: true,
-          headerTitle: 'Catégories',
-          headerBackTitle: 'Retour',
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: colors.foreground,
-        }}
-      />
-      <Stack.Screen
-        name="categories/[id]"
-        options={{
-          headerShown: true,
-          headerTitle: '',
-          headerBackTitle: 'Retour',
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: colors.foreground,
-        }}
-      />
-      <Stack.Screen
-        name="users/index"
-        options={{
-          headerShown: true,
-          headerTitle: 'Créateurs',
-          headerBackTitle: 'Retour',
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: colors.foreground,
-        }}
-      />
-      <Stack.Screen
-        name="user/[username]"
-        options={{
-          headerShown: true,
-          headerTitle: '',
-          headerBackTitle: 'Retour',
-          headerTransparent: true,
-          headerStyle: { backgroundColor: 'transparent' },
-          headerTintColor: colors.foreground,
-          headerShadowVisible: false,
-        }}
-      />
-      <Stack.Screen
-        name="popular/index"
-        options={{
-          headerShown: true,
-          headerTitle: 'Listes communautaires',
-          headerBackTitle: 'Retour',
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: colors.foreground,
-        }}
-      />
     </Stack>
     </View>
   )

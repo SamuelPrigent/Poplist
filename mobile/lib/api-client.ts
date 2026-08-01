@@ -179,7 +179,6 @@ export const watchlistAPI = {
   create: (data: {
     name: string
     description?: string
-    isPublic?: boolean
     genres?: string[]
     items?: WatchlistItem[]
   }): Promise<{ watchlist: Watchlist }> =>
@@ -188,7 +187,6 @@ export const watchlistAPI = {
   update: (id: string, data: {
     name?: string
     description?: string
-    isPublic?: boolean
     genres?: string[]
     items?: WatchlistItem[]
   }): Promise<{ watchlist: Watchlist }> =>
@@ -367,6 +365,33 @@ export const tmdbAPI = {
       total_pages: number
       total_results: number
     }>(`/tmdb/trending/${timeWindow}?${searchParams.toString()}`)
+  },
+
+  /** Recherche TMDB pour l'écran Explore (même endpoint que la PWA). */
+  searchExplore: (
+    mediaType: 'movie' | 'tv',
+    options: { query: string; language?: string; page?: number },
+  ) => {
+    const searchParams = new URLSearchParams({ query: options.query })
+    searchParams.set('language', options.language || 'fr-FR')
+    if (options.page) searchParams.set('page', options.page.toString())
+    return request<{
+      results: Array<{
+        id: number
+        title?: string
+        name?: string
+        poster_path?: string
+        backdrop_path?: string
+        overview?: string
+        vote_average?: number
+        vote_count?: number
+        release_date?: string
+        first_air_date?: string
+      }>
+      page: number
+      total_pages: number
+      total_results: number
+    }>(`/tmdb/search/${mediaType}?${searchParams.toString()}`)
   },
 
   getDiscover: (

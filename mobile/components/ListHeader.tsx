@@ -9,7 +9,8 @@ import Animated, {
   Extrapolation,
   type SharedValue,
 } from 'react-native-reanimated';
-import { User, UserPlus, Users, Share, EllipsisVertical, Copy, LogOut } from 'lucide-react-native';
+import { User, UserPlus, Users, Share, EllipsisVertical, Copy, LogOut, Plus } from 'lucide-react-native';
+import PrimaryButton from './PrimaryButton';
 import { colors, spacing, fontSize, borderRadius } from '../constants/theme';
 import { useLanguageStore } from '../store/language';
 import type { Watchlist, Collaborator } from '../types';
@@ -28,6 +29,8 @@ interface ListHeaderProps {
   isCollaborator?: boolean;
   scrollY?: SharedValue<number>;
   onAddCollaborator?: () => void;
+  /** Ajout d'un élément — bouton du header (remplace l'ancien bouton flottant). */
+  onAddElement?: () => void;
   onShare?: () => void;
   onMenu?: () => void;
   onSave?: () => void;
@@ -38,6 +41,7 @@ interface ListHeaderProps {
 
 export default function ListHeader({
   watchlist,
+  onAddElement,
   isOwner = false,
   isSaved = false,
   isCollaborator = false,
@@ -135,7 +139,7 @@ export default function ListHeader({
         {watchlist.owner?.username && (
           <Pressable
             style={styles.ownerInline}
-            onPress={() => router.push(`/home/user/${watchlist.owner?.username}`)}
+            onPress={() => router.push(`/user/${watchlist.owner?.username}`)}
           >
             {watchlist.owner.avatarUrl ? (
               <Image
@@ -210,32 +214,42 @@ export default function ListHeader({
       <View style={styles.actionsRow}>
         {isOwner ? (
           <>
+
             <Pressable style={styles.actionBtn} onPress={onAddCollaborator}>
               {(watchlist.collaborators?.length ?? 0) > 0 ? (
-                <Users size={26} color={colors.foreground} strokeWidth={1.8} />
+                <Users size={22} color={colors.foreground} strokeWidth={1.8} />
               ) : (
-                <UserPlus size={26} color={colors.foreground} strokeWidth={1.8} />
+                <UserPlus size={22} color={colors.foreground} strokeWidth={1.8} />
               )}
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Share size={26} color={colors.foreground} strokeWidth={1.8} />
+              <Share size={22} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onMenu}>
-              <EllipsisVertical size={26} color={colors.foreground} strokeWidth={1.8} />
+              <EllipsisVertical size={22} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
+            {onAddElement && (
+              <View style={styles.addButtonWrap}>
+                <PrimaryButton
+                  label="Ajouter"
+                  onPress={onAddElement}
+                  icon={<Plus size={16} color={colors.primaryForeground} />}
+                />
+              </View>
+            )}
           </>
         ) : (
           <>
             <SaveButton isSaved={isSaved} onToggle={onSave ?? (() => {})} />
             <Pressable style={styles.actionBtn} onPress={onDuplicate}>
-              <Copy size={26} color={colors.foreground} strokeWidth={1.8} />
+              <Copy size={22} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={onShare}>
-              <Share size={26} color={colors.foreground} strokeWidth={1.8} />
+              <Share size={22} color={colors.foreground} strokeWidth={1.8} />
             </Pressable>
             {isCollaborator && (
               <Pressable style={styles.actionBtn} onPress={onLeave}>
-                <LogOut size={26} color={colors.destructive} strokeWidth={1.8} />
+                <LogOut size={22} color={colors.destructive} strokeWidth={1.8} />
               </Pressable>
             )}
           </>
@@ -362,6 +376,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     color: colors.mutedForeground,
+  },
+  addButtonWrap: {
+    // Poussé à droite de la rangée d'actions, comme sur la PWA.
+    marginLeft: 'auto',
   },
   actionsRow: {
     flexDirection: 'row',
