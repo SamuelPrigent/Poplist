@@ -16,15 +16,15 @@ export const de: Content = {
   // Auth Drawer
   auth: {
     loginTitle: 'Anmelden',
-    loginDescription: 'Willkommen zurück! Melden Sie sich an, um auf Ihre Listen zuzugreifen.',
+    loginDescription: 'Willkommen zurück! Melde dich an, um auf deine Listen zuzugreifen.',
     signupTitle: 'Registrieren',
-    signupDescription: 'Erstellen Sie ein Konto, um Ihre Listen zu speichern.',
+    signupDescription: 'Erstelle ein Konto, um deine Listen zu speichern.',
     continueWithGoogle: 'Mit Google fortfahren',
     or: 'Oder',
     email: 'E-Mail',
     emailPlaceholder: 'ihre@email.de',
     password: 'Passwort',
-    passwordPlaceholder: 'Ihr Passwort',
+    passwordPlaceholder: 'Dein Passwort',
     processing: 'Wird verarbeitet...',
     dontHaveAccount: 'Noch kein Konto?',
     alreadyHaveAccount: 'Bereits ein Konto?',
@@ -35,10 +35,10 @@ export const de: Content = {
     title: 'Bibliothek',
     createWatchlist: 'Neue Liste',
     createWatchlistDescription:
-      'Erstellen Sie eine neue Liste, um Ihre Filme und Serien zu organisieren.',
+      'Erstelle eine neue Liste, um deine Filme und Serien zu organisieren.',
     noWatchlistsMobile: 'Keine Liste',
     createWatchlistDescriptionMobile: 'Erstelle deine erste Liste.',
-    noWatchlists: 'Sie haben noch keine Listen erstellt.',
+    noWatchlists: 'Du hast noch keine Listen erstellt.',
     signupCta: {
       title: 'Erstelle ein Konto',
       description: 'Erstelle Film- und Serienlisten und teile sie mit der Community.',
@@ -47,22 +47,25 @@ export const de: Content = {
     myWatchlists: 'Meine Listen',
     followed: 'Gefolgt',
     noWatchlistsInCategory: 'Keine Listen in dieser Kategorie',
-    adjustFilters: 'Passen Sie die Filter an, um mehr Listen zu sehen',
+    adjustFilters: 'Passe die Filter an, um mehr Listen zu sehen',
     items: 'Elemente',
     item: 'Element',
+    by: 'von',
+    saveCount: 'Speicherung',
+    savesCount: 'Speicherungen',
     loading: 'Lädt...',
     accountDataBadge: 'Benutzerkontodaten',
     preview: 'Vorschau',
     categories: 'Kategorien / Tags',
     categoriesDescription:
-      'Wählen Sie eine oder mehrere Kategorien aus, um Ihre Liste leichter auffindbar zu machen',
+      'Wähle eine oder mehrere Kategorien aus, um deine Liste leichter auffindbar zu machen',
     genreCategories: 'Genre-Kategorien',
     platformCategories: 'Streaming-Plattformen',
-    platformsDescription: 'Wählen Sie die Plattformen aus, auf denen Ihre Liste verfügbar ist',
+    platformsDescription: 'Wähle die Plattformen aus, auf denen deine Liste verfügbar ist',
     name: 'Name',
     namePlaceholder: 'Meine Liste',
     description: 'Beschreibung',
-    descriptionPlaceholder: 'Beschreibung Ihrer Liste',
+    descriptionPlaceholder: 'Beschreibung deiner Liste',
     coverImage: 'Titelbild',
     uploadImage: 'Bild hochladen',
     changeImage: 'Bild ändern',
@@ -74,13 +77,13 @@ export const de: Content = {
     back: 'Zurück',
     noItemsYet: 'Noch keine Elemente',
     noItemsDescription:
-      'Beginnen Sie damit, Filme und Serien zu Ihrer Liste hinzuzufügen, um Ihre Warteschlange zu organisieren.',
+      'Beginne damit, Filme und Serien zu deiner Liste hinzuzufügen, um deine Warteschlange zu organisieren.',
     edit: 'Bearbeiten',
     editWatchlist: 'Liste bearbeiten',
-    editWatchlistDescription: 'Bearbeiten Sie die Informationen Ihrer Liste.',
+    editWatchlistDescription: 'Bearbeite die Informationen deiner Liste.',
     deleteWatchlist: 'Liste löschen',
     deleteWatchlistConfirm:
-      'Möchten Sie "{name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+      'Möchtest du "{name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
     deleteWatchlistWarning:
       'Diese Liste enthält {count} Element(e), die ebenfalls gelöscht werden.',
     saving: 'Wird gespeichert...',
@@ -88,11 +91,11 @@ export const de: Content = {
     deleting: 'Wird gelöscht...',
     delete: 'Löschen',
     addItem: 'Hinzufügen',
-    searchMoviesAndSeries: 'Suchen und fügen Sie Filme oder Serien zu Ihrer Liste hinzu',
+    searchMoviesAndSeries: 'Suche Filme oder Serien und füge sie deiner Liste hinzu',
     searchPlaceholder: 'Nach einem Film oder einer Serie suchen...',
     searching: 'Sucht...',
     noResults: 'Keine Ergebnisse gefunden',
-    startSearching: 'Beginnen Sie mit der Eingabe, um nach Filmen und Serien zu suchen',
+    startSearching: 'Beginne mit der Eingabe, um nach Filmen und Serien zu suchen',
     add: 'Hinzufügen',
     added: 'Hinzugefügt',
     inWatchlist: 'In Liste',
@@ -166,10 +169,10 @@ export const de: Content = {
       removeError: 'Mitarbeiter konnte nicht entfernt werden',
       leaveTitle: 'Liste verlassen?',
       leaveDescription:
-        'Möchten Sie diese Liste wirklich verlassen? Sie verlieren Ihre Mitarbeiterrechte.',
+        'Möchtest du diese Liste wirklich verlassen? Du verlierst deine Mitarbeiterrechte.',
       leave: 'Verlassen',
       leaving: 'Wird verlassen...',
-      leaveSuccess: 'Sie haben die Liste verlassen',
+      leaveSuccess: 'Du hast die Liste verlassen',
       leaveError: 'Liste konnte nicht verlassen werden',
     },
     addToWatchlist: 'Zu einer Liste hinzufügen',
@@ -183,52 +186,56 @@ export const de: Content = {
       duplicating: 'Wird dupliziert...',
       listDuplicated: 'Liste dupliziert',
       duplicateError: 'Liste konnte nicht dupliziert werden',
+      itemAdded: 'Zur Liste hinzugefügt',
+      itemRemoved: 'Von der Liste entfernt',
+      itemAddError: 'Hinzufügen fehlgeschlagen, bitte erneut versuchen',
+      itemRemoveError: 'Entfernen fehlgeschlagen, bitte erneut versuchen',
     },
   },
 
   landing: {
     hero: {
-      title: 'Erstellen und teilen Sie Listen Ihrer Lieblingsfilme und -serien',
+      title: 'Erstelle und teile Listen deiner Lieblingsinhalte',
       subtitle:
-        'Organisieren Sie Ihre TV-Abende und teilen Sie Ihre Entdeckungen mit Ihren Freunden',
-      titleMobile: 'Erstelle Listen deiner Lieblingsfilme und -serien',
+        'Organisiere deine TV-Abende und teile deine Entdeckungen mit deinen Freunden',
+      titleMobile: 'Erstelle Listen deiner Lieblingsinhalte',
       subtitleMobile: 'Plane deine TV-Abende',
     },
     features: {
-      sectionTitle: 'Teilen Sie Ihr Filmuniversum',
+      sectionTitle: 'Teile dein Filmuniversum',
       sectionTitleMobile: 'Unsere Funktionen',
-      sectionSubtitle: 'Entdecken Sie alle unsere Funktionen',
+      sectionSubtitle: 'Entdecke alle unsere Funktionen',
       organize: {
         tagline: 'Organisation',
         title: 'Listen erstellen',
-        description: 'Erstellen Sie persönliche Listen von Filmen und Serien.',
+        description: 'Erstelle persönliche Listen von Filmen und Serien.',
       },
       collaborate: {
         tagline: 'Zusammenarbeit',
         title: 'Mitarbeiter hinzufügen',
-        description: 'Laden Sie Freunde ein, in Echtzeit zu Ihren Listen beizutragen.',
+        description: 'Lade Freunde ein, in Echtzeit zu deinen Listen beizutragen.',
       },
       share: {
         tagline: 'Teilen',
         title: 'Listen teilen',
-        description: 'Teilen Sie Ihre Listen mit einem einfachen Link an Freunde.',
+        description: 'Teile deine Listen mit einem einfachen Link an Freunde.',
       },
       discover: {
         tagline: 'Entdeckung',
         title: 'Community-Listen folgen',
-        description: 'Entdecken und folgen Sie Listen anderer Benutzer.',
+        description: 'Entdecke und folge Listen anderer Benutzer.',
       },
     },
     startInSeconds: {
       title: 'In Sekunden starten',
-      subtitle: 'Keine komplizierte Einrichtung, nur Sie und Ihre Lieblingsinhalte',
+      subtitle: 'Keine komplizierte Einrichtung, nur du und deine Lieblingsinhalte',
       step1: {
-        title: 'Erstellen Sie Ihre Liste',
-        description: 'Benennen Sie Ihre Liste und beginnen Sie zu organisieren.',
+        title: 'Erstelle deine Liste',
+        description: 'Benenne deine Liste und beginne zu organisieren.',
       },
       step2: {
         title: 'Filme hinzufügen',
-        description: 'Fügen Sie Filme und Serien mit wenigen Klicks hinzu.',
+        description: 'Füge Filme und Serien mit wenigen Klicks hinzu.',
       },
       step3: {
         title: 'Mit Freunden teilen',
@@ -238,7 +245,7 @@ export const de: Content = {
     testimonials: {
       title: 'Beliebt bei Enthusiasten',
       titleMobile: 'Erfahrungsberichte',
-      subtitle: 'Treten Sie einer Gemeinschaft zufriedener Nutzer bei',
+      subtitle: 'Werde Teil einer Gemeinschaft zufriedener Nutzer',
       testimonial1: {
         text: 'Perfekte App zum Organisieren meiner Listen. Klare und intuitive Benutzeroberfläche.',
         author: 'Marie L.',
@@ -254,12 +261,27 @@ export const de: Content = {
         author: 'Julie M.',
         pseudo: '@juliem',
       },
+      testimonial4: {
+        text: 'Das Teilen per Link hat mich überzeugt. Meine Freunde sehen meine Liste ohne Konto.',
+        author: 'Karim B.',
+        pseudo: '@karimb',
+      },
+      testimonial5: {
+        text: 'Wir planen unsere Serienabende gemeinsam, jeder fügt der gleichen Liste etwas hinzu.',
+        author: 'Léa P.',
+        pseudo: '@leapasc',
+      },
+      testimonial6: {
+        text: 'Endlich ein Ort für alles, was mir empfohlen wurde. Kein langes Suchen mehr.',
+        author: 'Antoine R.',
+        pseudo: '@antoiner',
+      },
     },
     finalCta: {
-      title: 'Beginnen Sie einfach mit der Erstellung Ihrer Listen',
+      title: 'Beginne einfach mit der Erstellung deiner Listen',
       titleMobile: 'Werde Teil des Abenteuers',
       subtitle:
-        'Treten Sie Poplist bei und organisieren Sie Ihre Lieblingsinhalte mit nur wenigen Klicks.',
+        'Komm zu Poplist und organisiere deine Lieblingsinhalte mit nur wenigen Klicks.',
       subtitleMobile: 'Tritt unserer Community bei',
       button: 'Meine Liste erstellen',
       disclaimer: 'Kostenlose Anwendung • Keine Karte erforderlich',
@@ -269,29 +291,31 @@ export const de: Content = {
   // Home Page
   home: {
     hero: {
-      title: 'Ihre Listen perfekt organisiert',
-      subtitle: 'Ihr Film-Universum, organisiert und mit Freunden geteilt.',
+      title: 'Deine Listen perfekt organisiert',
+      subtitle: 'Dein Film-Universum, organisiert und mit Freunden geteilt.',
       cta: 'Entdecken',
       ctaSecondary: 'Mehr erfahren',
       pills: {
-        organize: 'Organisieren Sie Ihre Filme',
+        organize: 'Organisiere deine Filme',
         share: 'Mit Freunden teilen',
-        discover: 'Entdecken Sie Perlen',
+        discover: 'Entdecke Perlen',
       },
     },
     library: {
       title: 'Bibliothek',
-      subtitle: 'Ihre persönlichen Listen',
+      subtitle: 'Deine persönlichen Listen',
       seeAll: 'Alle anzeigen',
     },
     categories: {
       title: 'Listen nach Kategorie',
       subtitle: 'Poplist-Auswahl',
       seeMore: 'Mehr sehen',
+      list: 'Liste',
+      lists: 'Listen',
     },
     platformsSection: {
       title: 'Listen nach Plattform',
-      subtitle: 'Ihre Lieblingsplattformen',
+      subtitle: 'Deine Lieblingsplattformen',
       seeAll: 'Alle anzeigen',
     },
     popularWatchlists: {
@@ -299,30 +323,32 @@ export const de: Content = {
       subtitle: 'Von der Community geteilt',
       seeMore: 'Mehr sehen',
       noWatchlists: 'Momentan keine öffentlichen Listen',
+      loadError: 'Die Listen konnten nicht geladen werden',
+      retry: 'Erneut versuchen',
     },
     faq: {
       title: 'Häufig gestellte Fragen',
-      subtitle: 'Alles, was Sie wissen müssen, um loszulegen',
+      subtitle: 'Die häufigsten Fragen zur Plattform: das Prinzip, unser Mehrwert und wie sie funktioniert.',
       questions: {
         pricing: {
           question: 'Ist die Nutzung kostenlos?',
           answer:
-            'Ja, die App ist völlig kostenlos! Sie können so viele Listen erstellen, wie Sie möchten, sie mit Ihren Freunden teilen und Tausende von Filmen und Serien ohne Gebühren erkunden.',
+            'Ja, die App ist völlig kostenlos! Du kannst so viele Listen erstellen, wie du möchtest, sie mit deinen Freunden teilen und Tausende von Filmen und Serien ohne Gebühren erkunden.',
         },
         exploreSection: {
           question: 'Wofür ist der Bereich Erkunden?',
           answer:
-            'Der Bereich Erkunden ermöglicht es Ihnen, neue Inhalte zu entdecken, indem Sie aktuelle Trends, die beliebtesten oder am besten bewerteten Filme und Serien durchsuchen. Sie können nach Genre filtern, um genau das zu finden, was Sie suchen, und Elemente direkt zu Ihren Listen hinzufügen.',
+            'Der Bereich Erkunden ermöglicht es dir, neue Inhalte zu entdecken, indem du aktuelle Trends, die beliebtesten oder am besten bewerteten Filme und Serien durchsuchst. Du kannst nach Genre filtern, um genau das zu finden, was du suchst, und Elemente direkt zu deinen Listen hinzufügen.',
         },
         whatMakesDifferent: {
           question: 'Was macht diese App anders?',
           answer:
-            'Diese Anwendung zielt darauf ab, einfach zu bleiben mit wenigen Funktionen und Seiten, um klar und einfach zu bedienen zu sein. Die Erfahrung soll natürlich und intuitiv sein, ohne unnötige Komplexität. Wir konzentrieren uns auf das Wesentliche: Ihre Lieblingsfilme und -serien organisieren und teilen.',
+            'Diese Anwendung zielt darauf ab, einfach zu bleiben mit wenigen Funktionen und Seiten, um klar und einfach zu bedienen zu sein. Die Erfahrung soll natürlich und intuitiv sein, ohne unnötige Komplexität. Wir konzentrieren uns auf das Wesentliche: deine Lieblingsfilme und -serien organisieren und teilen.',
         },
         streaming: {
           question: 'Kann ich Serien oder Filme ansehen?',
           answer:
-            'Nein, der Zweck dieser Anwendung ist nicht das Streaming, sondern das einfache Teilen von Inhalten, die Ihnen auf Ihren Lieblingsplattformen gefallen haben. Wir helfen Ihnen, zu organisieren, was Sie sehen möchten, und es mit Ihrer Community zu teilen, aber um den Inhalt anzusehen, müssen Sie zu den entsprechenden Streaming-Plattformen gehen.',
+            'Nein, der Zweck dieser Anwendung ist nicht das Streaming, sondern das einfache Teilen von Inhalten, die dir auf deinen Lieblingsplattformen gefallen haben. Wir helfen dir, zu organisieren, was du sehen möchtest, und es mit deiner Community zu teilen, aber um den Inhalt anzusehen, musst du zu den entsprechenden Streaming-Plattformen gehen.',
         },
       },
     },
@@ -330,6 +356,7 @@ export const de: Content = {
       title: 'Heute im Trend',
       subtitle: 'Beliebte Filme und Serien des Moments',
       noImage: 'Kein Bild',
+      seeMore: 'Alle anzeigen',
     },
     recommendations: {
       title: 'Gerade im Trend',
@@ -343,13 +370,13 @@ export const de: Content = {
     },
     communityWatchlists: {
       title: 'Community-Listen',
-      subtitle: 'Entdecken Sie von unseren Nutzern geteilte Sammlungen',
+      subtitle: 'Entdecke von unseren Nutzern geteilte Sammlungen',
     },
   },
 
   explore: {
     title: 'Erkunden',
-    subtitle: 'Entdecken Sie neue Listen, die von der Community geteilt werden',
+    subtitle: 'Entdecke neue Listen, die von der Community geteilt werden',
     searchPlaceholder: 'Nach einem Film oder einer Serie suchen...',
     filters: {
       all: 'Alle',
@@ -399,17 +426,17 @@ export const de: Content = {
       pageOf: 'Seite {page} von {totalPages}',
     },
     noResults: 'Keine Listen gefunden',
-    noResultsDescription: 'Versuchen Sie, Ihre Filter oder Suche anzupassen',
+    noResultsDescription: 'Versuche, deine Filter oder Suche anzupassen',
   },
 
   categories: {
     title: 'Kategorien',
-    subtitle: 'Erkunden Sie Listen nach Thema',
+    subtitle: 'Erkunde Listen nach Thema',
     list: {
       movies: { name: 'Filme', description: 'Die besten Filme des Moments' },
       series: {
         name: 'Serien',
-        description: 'Serien, die Sie nicht verpassen sollten',
+        description: 'Serien, die du nicht verpassen solltest',
       },
       animation: {
         name: 'Animation',
@@ -441,11 +468,11 @@ export const de: Content = {
   // Profile Page
   profile: {
     title: 'Profileinstellungen',
-    subtitle: 'Verwalten Sie Ihre Kontoeinstellungen und Präferenzen',
+    subtitle: 'Verwalte deine Kontoeinstellungen und Präferenzen',
     userInformation: 'Benutzerinformationen',
     avatarSection: {
       title: 'Profilbild',
-      description: 'Laden Sie ein Profilbild hoch, um Ihr Konto zu personalisieren',
+      description: 'Lade ein Profilbild hoch, um dein Konto zu personalisieren',
       uploadButton: 'Hochladen',
       changeButton: 'Ändern',
       deleteButton: 'Löschen',
@@ -453,7 +480,7 @@ export const de: Content = {
       deleting: 'Wird gelöscht...',
       hint: 'Empfohlen: Quadratisches Bild, max. 5MB',
       validation: {
-        invalidFileType: 'Bitte wählen Sie eine gültige Bilddatei',
+        invalidFileType: 'Bitte wähle eine gültige Bilddatei',
         fileTooLarge: 'Die Bildgröße muss weniger als 5MB betragen',
         uploadFailed: 'Fehler beim Hochladen des Avatars',
         deleteFailed: 'Fehler beim Löschen des Avatars',
@@ -461,16 +488,16 @@ export const de: Content = {
       },
       toasts: {
         updated: 'Avatar aktualisiert',
-        updatedDesc: 'Ihr Avatar wurde erfolgreich aktualisiert',
+        updatedDesc: 'Dein Avatar wurde erfolgreich aktualisiert',
         deleted: 'Avatar gelöscht',
-        deletedDesc: 'Ihr Avatar wurde erfolgreich gelöscht',
+        deletedDesc: 'Dein Avatar wurde erfolgreich gelöscht',
       },
     },
     usernameSection: {
       title: 'Benutzername',
-      description: 'Aktualisieren Sie Ihren Benutzernamen. So werden Sie von anderen gesehen.',
+      description: 'Aktualisiere deinen Benutzernamen. So wirst du von anderen gesehen.',
       label: 'Benutzername',
-      placeholder: 'Geben Sie Ihren Benutzernamen ein',
+      placeholder: 'Gib deinen Benutzernamen ein',
       hint: '3-20 Zeichen. Nur Buchstaben, Zahlen und Unterstriche.',
       updateButton: 'Aktualisieren',
       validation: {
@@ -482,9 +509,9 @@ export const de: Content = {
     passwordSection: {
       title: 'Passwort',
       description:
-        'Ändern Sie Ihr Passwort. Stellen Sie sicher, dass es mindestens 8 Zeichen lang ist.',
+        'Ändere dein Passwort. Stelle sicher, dass es mindestens 8 Zeichen lang ist.',
       currentPasswordLabel: 'Passwort',
-      currentPasswordPlaceholder: 'Geben Sie Ihr aktuelles Passwort ein',
+      currentPasswordPlaceholder: 'Gib dein aktuelles Passwort ein',
       newPasswordLabel: 'Neues Passwort',
       newPasswordPlaceholder: 'Neues Passwort',
       confirmPasswordLabel: 'Bestätigung',
@@ -493,10 +520,10 @@ export const de: Content = {
     },
     deleteSection: {
       title: 'Konto löschen',
-      description: 'Unwiderrufliche Aktion. Alle Ihre Daten werden gelöscht.',
-      dialogTitle: 'Ihr Konto löschen',
-      dialogDescription: 'Unwiderrufliche Aktion. Alle Ihre Daten werden gelöscht.',
-      confirmationLabel: "Geben Sie 'confirmer' ein, um fortzufahren",
+      description: 'Unwiderrufliche Aktion. Alle deine Daten werden gelöscht.',
+      dialogTitle: 'Dein Konto löschen',
+      dialogDescription: 'Unwiderrufliche Aktion. Alle deine Daten werden gelöscht.',
+      confirmationLabel: "Gib 'confirmer' ein, um fortzufahren",
       confirmationPlaceholder: 'confirmer',
       deleteButton: 'Konto löschen',
       deleting: 'Löschen...',
@@ -504,15 +531,15 @@ export const de: Content = {
     },
     toasts: {
       usernameUpdated: 'Benutzername aktualisiert',
-      usernameUpdatedDesc: 'Ihr Benutzername wurde erfolgreich aktualisiert.',
+      usernameUpdatedDesc: 'Dein Benutzername wurde erfolgreich aktualisiert.',
       passwordChanged: 'Passwort geändert',
-      passwordChangedDesc: 'Ihr Passwort wurde erfolgreich geändert.',
+      passwordChangedDesc: 'Dein Passwort wurde erfolgreich geändert.',
       error: 'Fehler',
       passwordMismatch: 'Die neuen Passwörter stimmen nicht überein',
       updateFailed: 'Fehler beim Aktualisieren des Benutzernamens',
       passwordChangeFailed: 'Fehler beim Ändern des Passworts',
       accountDeleted: 'Konto gelöscht',
-      accountDeletedDesc: 'Ihr Konto wurde erfolgreich gelöscht.',
+      accountDeletedDesc: 'Dein Konto wurde erfolgreich gelöscht.',
       accountDeleteFailed: 'Fehler beim Löschen des Kontos',
     },
   },

@@ -1,0 +1,27 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [
+      "mobile/**",
+      "shared/src/generated/**",
+      "frontend/src/components/Landing/HeroSection.tsx",
+      "frontend/src/components/Landing/HeroSectionImmersive.tsx",
+      "frontend/src/components/Landing/FeatureSections.tsx",
+      "frontend/src/components/Landing/RightSectionPreview.tsx",
+      "frontend/src/components/ui/Img.tsx",
+      "frontend/src/components/Landing/StepsShowcase.tsx",
+      "frontend/src/components/Landing/hero/HeroCopy.tsx"
+    ],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "frontend/src/styles.css"
+        ],
+        "createdAt": "2026-08-01T12:12:41.442Z",
+        "reason": "Template Strix demandé par Samuel pour la version B des steps (effect-font-gradient)"
+      }
+    ]
+  }
+}

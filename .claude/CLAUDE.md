@@ -38,6 +38,20 @@ Concrètement :
 - Tu ne dois jamais tenter de commit ou push la seul personne qui fait ça c'est moi
 - la seul commande git que tu peux utiliser c'est git history pour voir l'historique des modifications d'un fichier pour le debug
 
+## Design : DESIGN.md et PRODUCT.md font autorité
+
+Avant toute modification d'UI, lire `frontend/DESIGN.md` (typo, rôles de couleur,
+espacements, primitives, motion) et `frontend/PRODUCT.md` (positionnement, ton,
+promesse de chaque page). Ce sont les sources de vérité : ne pas introduire une
+valeur hors-système (couleur brute, gradient, taille de police ad hoc) sans
+l'avoir justifiée, et mettre à jour `DESIGN.md` quand une règle évolue.
+
+`.impeccable/config.json` (racine + `frontend/`) est le journal des exceptions
+validées au detector : chaque entrée porte un `reason`. Si tu dois déroger à une
+règle, l'exception s'ajoute là avec sa raison, pas en silence dans le code. Le
+reste de `.impeccable/` (`hook.cache.json`, `live/`, `*.png`) est du cache local
+ignoré par git — ne rien y écrire manuellement.
+
 ## Erreurs d'hydratation (TanStack Start / React SSR)
 
 Pour toute erreur `Hydration failed because the server rendered HTML didn't match the client`, suivre le protocole du skill `.claude/skills/hydration-diagnosis/SKILL.md` : lire le diff AVANT de toucher au code, distinguer cache SSR obsolète vs vrai bug.

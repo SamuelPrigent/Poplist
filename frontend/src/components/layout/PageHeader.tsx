@@ -41,7 +41,7 @@ export function PageHeader({
 					className,
 				)}
 			>
-				<h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-3xl">{title}</h1>
+				<h1 className="text-headline text-foreground mb-2">{title}</h1>
 				{subtitle && (
 					<p
 						className={cn(

@@ -1,11 +1,16 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Compass, Film, ListPlus, Share, Star, UserPlus } from 'lucide-react';
+import { Compass, ListPlus, Share, UserPlus } from 'lucide-react';
 import { PageFade } from '@/components/ui/PageFade';
-import { Img as Image } from '@/components/ui/Img';
-import { Link } from '@/components/ui/Link';
-import { HeroSectionImmersive, RightSectionPreviewV2 } from '@/components/Landing';
+import {
+  FinalCtaShowcase,
+  HeroSwitcher,
+  ListShowcase,
+  StepsShowcase,
+  TestimonialsShowcase,
+} from '@/components/Landing';
+import { Section, SectionHeading } from '@/components/Landing/primitives';
 import {
   Accordion,
   AccordionContent,
@@ -13,463 +18,118 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { tmdbQueries } from '@/api/queries';
-import { useAuth } from '@/context/auth-context';
-import { useIsMounted } from '@/hooks/useIsMounted';
 import { useLanguageStore } from '@/store/language';
+import type { Content } from '@/types/content';
 
-interface TrendingItem {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string | null;
-  backdrop_path?: string | null;
-  media_type?: 'movie' | 'tv';
+/* ────────────────────────────── Features ────────────────────────────── */
+
+const FEATURES = [
+  { key: 'organize', icon: ListPlus },
+  { key: 'collaborate', icon: UserPlus },
+  { key: 'share', icon: Share },
+  { key: 'discover', icon: Compass },
+] as const;
+
+function Features({ content }: { content: Content }) {
+  return (
+    <Section id="ensavoirplus">
+      <div className="grid items-center gap-16 lg:grid-cols-[1fr_minmax(0,440px)] max-[749px]:gap-10">
+        <div>
+          <SectionHeading>
+            <span className="max-[749px]:hidden">{content.landing.features.sectionTitle}</span>
+            <span className="hidden max-[749px]:inline">
+              {content.landing.features.sectionTitleMobile}
+            </span>
+          </SectionHeading>
+
+          {/* Uniforme : chaque feature a son titre ET sa description. */}
+          <ul className="mt-10 space-y-7 max-[749px]:mt-8 max-[749px]:space-y-6">
+            {FEATURES.map(({ key, icon: Icon }) => {
+              const feature = content.landing.features[key];
+              return (
+                <li key={key} className="flex items-start gap-4">
+                  <Icon
+                    strokeWidth={1.5}
+                    className="text-foreground/70 mt-0.5 h-5 w-5 shrink-0"
+                    aria-hidden
+                  />
+                  <div>
+                    <h3 className="text-title text-foreground">{feature.title}</h3>
+                    <p className="text-body text-copy mt-1 max-w-[62ch]">
+                      {feature.description}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <ListShowcase />
+      </div>
+    </Section>
+  );
 }
 
-const STAR_KEYS = ['star-1', 'star-2', 'star-3', 'star-4', 'star-5'];
+/* ─────────────────────────────── FAQ ────────────────────────────────── */
 
-// avatar
+const FAQ_KEYS = ['pricing', 'exploreSection', 'whatMakesDifferent', 'streaming'] as const;
+
+function Faq({ content }: { content: Content }) {
+  return (
+    <Section>
+      {/* 40% pour le titre : il tient sur une ligne, les questions prennent
+          le reste. */}
+      <div className="grid gap-12 min-[750px]:grid-cols-[minmax(0,40%)_1fr] min-[750px]:gap-16">
+        <div className="min-[750px]:sticky min-[750px]:top-28">
+          <SectionHeading className="whitespace-nowrap max-[899px]:whitespace-normal">
+            {content.home.faq.title}
+          </SectionHeading>
+          <p className="text-body text-copy mt-4 max-w-[46ch] pr-8 max-[749px]:pr-0">
+            {content.home.faq.subtitle}
+          </p>
+        </div>
+
+        <Accordion type="single" collapsible className="border-border border-t">
+          {FAQ_KEYS.map((key) => (
+            <AccordionItem key={key} value={key}>
+              <AccordionTrigger className="text-title text-foreground py-5 text-left">
+                {content.home.faq.questions[key].question}
+              </AccordionTrigger>
+              <AccordionContent className="text-body text-copy max-w-[68ch] pb-5">
+                {content.home.faq.questions[key].answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </Section>
+  );
+}
+
+/* ─────────────────────────────── Page ───────────────────────────────── */
 
 function LandingPageInner() {
   const { content } = useLanguageStore();
-  const { isAuthenticated } = useAuth();
-  const mounted = useIsMounted();
 
-  // Determine the lists URL based on authentication status
-  // Utilise /local/lists par défaut côté SSR pour éviter hydration mismatch
-  const watchlistsUrl = mounted && isAuthenticated ? '/account/lists' : '/local/lists';
+  // Les deux CTA de la landing (hero et bas de page) mènent à /home, pas
+  // directement aux listes personnelles : on fait passer le visiteur par
+  // l'interface dans son ensemble plutôt que de le parachuter sur un espace
+  // vide. Destination fixe, donc plus de dépendance à l'auth ni au montage.
+  const ctaUrl = '/home';
 
-  // Trending TMDB en arrière-plan. Cache partagé avec /home (mêmes queryKey)
-  // → la nav landing → home → landing ne refetch pas. staleTime 1h.
-  const { data: trendingData } = useQuery(tmdbQueries.trending('day'));
-  const trending: TrendingItem[] = (trendingData?.results as TrendingItem[]) ?? [];
+  // Préchauffe le cache TMDB partagé avec /home (mêmes queryKey, staleTime 1h)
+  // → la nav landing → home ne refetch pas. Le résultat n'est pas affiché ici.
+  useQuery(tmdbQueries.trending('day'));
 
   return (
     <div className="bg-background min-h-screen overflow-hidden max-[749px]:px-[7px]">
-      {/* Version plein écran (Crunchyroll-like) en test — réimporter `HeroSection` depuis '@/components/Landing' pour revenir à l'ancienne */}
-      {/* <HeroSection content={content} trending={trending} watchlistsUrl={watchlistsUrl} /> */}
-      <HeroSectionImmersive content={content} trending={trending} watchlistsUrl={watchlistsUrl} />
-
-      {/* Features Section */}
-      <section
-        id="ensavoirplus"
-        className="container mx-auto px-4 pt-[130px] pb-28 max-[749px]:pt-10 max-[749px]:pb-13"
-      >
-        <div className="mx-auto grid max-w-[88%] items-center gap-16 lg:grid-cols-[55%_45%] max-[749px]:max-w-full max-[749px]:gap-8">
-          {/* Left: Features */}
-          <div>
-            <h2 className="mb-4 text-3xl leading-tight font-bold text-white max-[749px]:text-2xl">
-              <span className="max-[749px]:hidden">{content.landing.features.sectionTitle}</span>
-              <span className="hidden max-[749px]:inline">
-                {content.landing.features.sectionTitleMobile}
-              </span>
-            </h2>
-            <p className="mb-10 text-lg text-gray-400 max-[749px]:text-base">
-              {content.landing.features.sectionSubtitle}
-            </p>
-
-            <div className="space-y-5">
-              {/* Feature 1: Création de listes */}
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                    <ListPlus strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="mb-1 text-base font-semibold text-white">
-                    {content.landing.features.organize.title}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {content.landing.features.organize.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 2: Collaborateurs */}
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                    <UserPlus strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="mb-1 text-base font-semibold text-white">
-                    {content.landing.features.collaborate.title}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {content.landing.features.collaborate.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 3: Partage */}
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                    <Share strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="mb-1 text-base font-semibold text-white">
-                    {content.landing.features.share.title}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {content.landing.features.share.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 4: Suivre */}
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 rounded-full bg-linear-to-r from-blue-500/50 to-blue-500/10 p-px">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                    <Compass strokeWidth={1.6} className="h-5 w-5 text-blue-400" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="mb-1 text-base font-semibold text-white">
-                    {content.landing.features.discover.title}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {content.landing.features.discover.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: App Screenshot with gradient fade */}
-          {/* <RightSectionPreview /> */}
-          <RightSectionPreviewV2 />
-        </div>
-      </section>
-
-      {/* Start in Seconds */}
-      <section className="container mx-auto mb-28 px-4 py-5 pt-10 max-[749px]:mb-16 max-[749px]:pt-8">
-        <div className="mb-16 text-center max-[749px]:mb-8">
-          <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:mb-0 max-[749px]:text-2xl">
-            {content.landing.startInSeconds.title}
-          </h2>
-          <p className="text-lg text-gray-400 max-[749px]:hidden">
-            {content.landing.startInSeconds.subtitle}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 max-[749px]:gap-[22px]">
-          {/* Step 1 - Card with icon */}
-          <div className="w-full max-w-[280px] max-[749px]:max-w-[90%] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px max-[749px]:p-0">
-            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] max-[749px]:bg-none px-6 py-8 text-center max-[749px]:py-5">
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] max-[749px]:text-[80px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)] max-[749px]:mask-[linear-gradient(to_bottom,black_0%,transparent_100%)] max-[749px]:text-blue-400/[0.27]"
-              >
-                1
-              </span>
-              <span className="relative mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
-                Étape 1
-              </span>
-              <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
-                <ListPlus strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
-              </div>
-              <h3 className="relative mb-2 text-lg font-semibold text-white">
-                {content.landing.startInSeconds.step1.title}
-              </h3>
-              <p className="relative text-sm text-gray-400">
-                {content.landing.startInSeconds.step1.description}
-              </p>
-            </div>
-          </div>
-
-          {/* Arrow 1 */}
-          <div className="hidden lg:flex items-center">
-            <ChevronRight className="h-[18px] w-[18px] text-white/90" strokeWidth={1.6} />
-          </div>
-
-          {/* Step 2 - Card with animated spark border */}
-          <div className="relative w-full max-w-[280px] max-[749px]:max-w-[90%] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px max-[749px]:p-0 motion-safe:bg-[conic-gradient(from_var(--border-angle),transparent_0deg,transparent_155deg,rgba(96,165,250,0.3)_170deg,#60a5fa_180deg,#ffffff_183deg,#ffffff_187deg,#60a5fa_190deg,transparent_205deg,transparent_360deg),linear-gradient(to_bottom_right,rgb(59_130_246/0.2),transparent)] motion-safe:animate-border-spin max-[749px]:bg-none max-[749px]:animate-none">
-            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] max-[749px]:bg-none px-6 py-8 text-center max-[749px]:py-5">
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] max-[749px]:text-[80px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)] max-[749px]:mask-[linear-gradient(to_bottom,black_0%,transparent_100%)] max-[749px]:text-blue-400/[0.27]"
-              >
-                2
-              </span>
-              <span className="relative mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
-                Étape 2
-              </span>
-              <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
-                <Film strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
-              </div>
-              <h3 className="relative mb-2 text-lg font-semibold text-white">
-                {content.landing.startInSeconds.step2.title}
-              </h3>
-              <p className="relative text-sm text-gray-400">
-                {content.landing.startInSeconds.step2.description}
-              </p>
-            </div>
-          </div>
-
-          {/* Arrow 2 */}
-          <div className="hidden lg:flex items-center">
-            <ChevronRight className="h-[18px] w-[18px] text-white/90" strokeWidth={1.6} />
-          </div>
-
-          {/* Step 3 - Card with icon */}
-          <div className="w-full max-w-[280px] max-[749px]:max-w-[90%] rounded-2xl bg-linear-to-br from-blue-500/20 to-transparent p-px max-[749px]:p-0">
-            <div className="relative flex h-full flex-col items-center overflow-hidden rounded-2xl bg-background bg-[linear-gradient(135deg,rgb(30_64_175/0.1),transparent_60%)] max-[749px]:bg-none px-6 py-8 text-center max-[749px]:py-5">
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-[2px] left-[18px] font-black leading-none text-blue-400/[0.14] select-none text-[110px] max-[749px]:text-[80px] mask-[linear-gradient(to_bottom,black_0%,transparent_88%)] max-[749px]:mask-[linear-gradient(to_bottom,black_0%,transparent_100%)] max-[749px]:text-blue-400/[0.27]"
-              >
-                3
-              </span>
-              <span className="relative mb-4 text-xs font-medium text-blue-400/80 uppercase tracking-wider">
-                Étape 3
-              </span>
-              <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
-                <Share strokeWidth={1.4} className="h-7 w-7 text-blue-400" />
-              </div>
-              <h3 className="relative mb-2 text-lg font-semibold text-white">
-                {content.landing.startInSeconds.step3.title}
-              </h3>
-              <p className="relative text-sm text-gray-400">
-                {content.landing.startInSeconds.step3.description}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="relative py-10 pb-30 max-[749px]:py-10 max-[749px]:pb-13">
-        {/* Blur glow shapes */}
-        <div className="pointer-events-none absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full blur-[120px] bg-slate-700/5" />
-        <div className="pointer-events-none absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full blur-[120px] bg-slate-700/5" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] bg-slate-800/5" />
-
-        <div className="relative z-10 container mx-auto max-w-[1150px] px-4">
-          <div className="mb-12 text-center max-[749px]:mb-8">
-            <h2 className="mb-4 text-4xl font-bold text-white max-[749px]:mb-0 max-[749px]:text-2xl">
-              <span className="max-[749px]:hidden">{content.landing.testimonials.title}</span>
-              <span className="hidden max-[749px]:inline">
-                {content.landing.testimonials.titleMobile}
-              </span>
-            </h2>
-            <p className="text-lg text-gray-400 max-[749px]:hidden">
-              {content.landing.testimonials.subtitle}
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {/* Testimonial 1 */}
-            <div className="group rounded-xl bg-linear-to-br from-blue-500/20 to-transparent p-px transition-all duration-300">
-              <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
-                <div>
-                  <div className="mb-4 flex gap-1">
-                    {STAR_KEYS.map((starKey) => (
-                      <Star
-                        key={`testimonial1-${starKey}`}
-                        className="h-4 w-4 fill-yellow-500/70 stroke-yellow-500"
-                        strokeWidth={1.5}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    &quot;{content.landing.testimonials.testimonial1.text}&quot;
-                  </p>
-                </div>
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="rounded-full bg-linear-to-br from-gray-400/40 to-gray-600/20 p-px aspect-square overflow-hidden">
-                    <Image
-                      src="/landing/avatar/marie.webp"
-                      alt={content.landing.testimonials.testimonial1.author}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white text-sm">
-                      {content.landing.testimonials.testimonial1.author}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {content.landing.testimonials.testimonial1.pseudo}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 2 */}
-            <div className="group rounded-xl bg-linear-to-br from-blue-500/20 to-transparent p-px transition-all duration-300">
-              <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
-                <div>
-                  <div className="mb-4 flex gap-1">
-                    {STAR_KEYS.map((starKey) => (
-                      <Star
-                        key={`testimonial2-${starKey}`}
-                        className="h-4 w-4 fill-yellow-500/70 stroke-yellow-500"
-                        strokeWidth={1.5}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    &quot;{content.landing.testimonials.testimonial2.text}&quot;
-                  </p>
-                </div>
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="rounded-full bg-linear-to-br from-gray-400/40 to-gray-600/20 p-px overflow-hidden">
-                    <Image
-                      src="/landing/avatar/thomas.webp"
-                      alt={content.landing.testimonials.testimonial2.author}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white text-sm">
-                      {content.landing.testimonials.testimonial2.author}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {content.landing.testimonials.testimonial2.pseudo}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 3 */}
-            <div className="group rounded-xl bg-linear-to-br from-blue-500/20 to-transparent p-px transition-all duration-300">
-              <div className="flex h-full flex-col justify-between rounded-xl bg-background bg-[linear-gradient(to_bottom,rgb(30_64_175/0.07)_0%,rgb(30_64_175/0.07)_50%,rgb(30_64_175/0.02)_100%)] p-6">
-                <div>
-                  <div className="mb-4 flex gap-1">
-                    {STAR_KEYS.map((starKey) => (
-                      <Star
-                        key={`testimonial3-${starKey}`}
-                        className="h-4 w-4 fill-yellow-500/70 stroke-yellow-500"
-                        strokeWidth={1.5}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    &quot;{content.landing.testimonials.testimonial3.text}&quot;
-                  </p>
-                </div>
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="rounded-full bg-linear-to-br from-gray-400/40 to-gray-600/20 p-px aspect-square overflow-hidden">
-                    <Image
-                      src="/landing/avatar/julie.webp"
-                      alt={content.landing.testimonials.testimonial3.author}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white text-sm">
-                      {content.landing.testimonials.testimonial3.author}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {content.landing.testimonials.testimonial3.pseudo}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-20 pb-24 max-[749px]:py-13">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl">
-            <div className="mb-12 text-center max-[749px]:mb-8">
-              <h2 className="mb-4 text-3xl font-bold text-white max-[749px]:text-2xl">
-                {content.home.faq.title}
-              </h2>
-              <p className="text-muted-foreground">{content.home.faq.subtitle}</p>
-            </div>
-
-            <Accordion type="single" collapsible className="mx-auto w-[90%] max-[749px]:w-full">
-              <AccordionItem value="item-2">
-                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
-                  {content.home.faq.questions.pricing.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {content.home.faq.questions.pricing.answer}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3">
-                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
-                  {content.home.faq.questions.exploreSection.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {content.home.faq.questions.exploreSection.answer}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4">
-                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
-                  {content.home.faq.questions.whatMakesDifferent.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {content.home.faq.questions.whatMakesDifferent.answer}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-5">
-                <AccordionTrigger className="text-left text-white max-[749px]:text-[15px]">
-                  {content.home.faq.questions.streaming.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {content.home.faq.questions.streaming.answer}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="relative py-24 pb-32 max-[749px]:py-13">
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <h2 className="mb-6 text-4xl font-bold text-white max-[749px]:text-2xl max-[749px]:mb-[22px]">
-            {/* Desktop : titre complet, dernier mot souligné */}
-            <span className="max-[749px]:hidden">
-              {content.landing.finalCta.title.split(' ').slice(0, -1).join(' ')}{' '}
-              <span className="relative inline-block">
-                {content.landing.finalCta.title.split(' ').slice(-1)}
-                <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
-              </span>
-            </span>
-            {/* Mobile : titre court, même soulignement sur le dernier mot */}
-            <span className="hidden max-[749px]:inline">
-              {content.landing.finalCta.titleMobile.split(' ').slice(0, -1).join(' ')}{' '}
-              <span className="relative inline-block">
-                {content.landing.finalCta.titleMobile.split(' ').slice(-1)}
-                <span className="absolute -bottom-1 left-0 h-[5px] w-full rounded-full bg-[linear-gradient(48deg,lab(22_22.17_-40.1/0.41),#38c7ff_60%)]" />
-              </span>
-            </span>
-          </h2>
-          <p className="mb-10 text-xl text-gray-400 max-[749px]:mb-8 max-[749px]:text-base">
-            <span className="max-[749px]:hidden">{content.landing.finalCta.subtitle}</span>
-            <span className="hidden max-[749px]:inline">
-              {content.landing.finalCta.subtitleMobile}
-            </span>
-          </p>
-          <Link
-            to={watchlistsUrl}
-            className="corner-squircle inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gray-200 px-7 py-5 text-base font-semibold whitespace-nowrap text-black transition-colors hover:bg-gray-300"
-          >
-            {content.landing.finalCta.button}
-          </Link>
-          <p className="mt-4 text-sm text-gray-400">{content.landing.finalCta.disclaimer}</p>
-        </div>
-      </section>
+      <HeroSwitcher content={content} ctaUrl={ctaUrl} />
+      <Features content={content} />
+      <StepsShowcase content={content} />
+      <TestimonialsShowcase content={content} />
+      <Faq content={content} />
+      <FinalCtaShowcase content={content} ctaUrl={ctaUrl} />
     </div>
   );
 }
@@ -477,7 +137,7 @@ function LandingPageInner() {
 export default function LandingContent() {
   return (
     <PageFade>
-        <LandingPageInner />
+      <LandingPageInner />
     </PageFade>
   );
 }

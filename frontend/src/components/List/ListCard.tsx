@@ -61,7 +61,7 @@ export function ListCard({
   const itemCount = watchlist.items?.length ?? 0;
   const countLabel =
     saveCount >= 1
-      ? `${saveCount} ${saveCount === 1 ? 'sauvegarde' : 'sauvegardes'}`
+      ? `${saveCount} ${saveCount === 1 ? content.watchlists.saveCount : content.watchlists.savesCount}`
       : `${itemCount} ${itemCount === 1 ? content.watchlists.item : content.watchlists.items}`;
 
   // Only add onClick handlers for draggable cards
@@ -191,7 +191,7 @@ export function ListCard({
           <UsersRound strokeWidth={2} className="text-gray-300 h-[13px] w-[13px] shrink-0" />
         )}
 
-        <h3 className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[14.5px] font-semibold text-white mask-[linear-gradient(to_right,black,black_85%,transparent)]">
+        <h3 className="text-title min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-white mask-[linear-gradient(to_right,black,black_85%,transparent)]">
           {handleClick ? (
             <button
               type="button"
@@ -208,8 +208,8 @@ export function ListCard({
       </div>
 
       {showOwner && (
-        <p className="text-muted-foreground mt-0.5 text-xs">
-          {'par '}
+        <p className="text-muted-foreground text-label mt-0.5">
+          {content.watchlists.by}{' '}
           {watchlist.owner?.username ? (
             <button
               type="button"
@@ -218,7 +218,7 @@ export function ListCard({
                 e.stopPropagation();
                 navigate({ to: `/user/${watchlist.owner!.username}` as never });
               }}
-              className="cursor-pointer rounded-md text-white capitalize hover:underline"
+              className="inline-flex min-h-[24px] cursor-pointer items-center rounded-md py-1 text-white capitalize hover:underline"
             >
               {watchlist.owner.username}
             </button>
@@ -231,7 +231,7 @@ export function ListCard({
       {/* Nb d'éléments — masqué sur mobile quand on affiche déjà "par X"
           (décharge l'interface) */}
       <div
-        className={`text-muted-foreground mt-0.5 flex items-center justify-between text-xs ${
+        className={`text-muted-foreground text-label mt-0.5 flex items-center justify-between ${
           showOwner ? 'max-[749px]:hidden' : ''
         }`}
       >

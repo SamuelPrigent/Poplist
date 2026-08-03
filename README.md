@@ -195,6 +195,21 @@ npm run dev
 
 ---
 
+## Design system
+
+Deux documents versionnés font autorité sur toute évolution d'interface, à lire avant de toucher au front :
+
+| Fichier                                    | Contenu                                                              |
+| ------------------------------------------ | -------------------------------------------------------------------- |
+| [frontend/PRODUCT.md](frontend/PRODUCT.md) | Positionnement produit, audience, ton, promesse de chaque page        |
+| [frontend/DESIGN.md](frontend/DESIGN.md)   | Typographie, rôles de couleur, espacements, primitives, règles de motion |
+
+`.impeccable/config.json` (racine et `frontend/`) enregistre les **exceptions validées** au detector de design : chaque entrée porte un `reason` expliquant pourquoi tel gradient ou telle couleur hors-système a été retenu. C'est un journal de décisions, pas un cache — il est commité exprès. Les caches, sessions et captures (`hook.cache.json`, `live/`, `*.png`) sont eux ignorés.
+
+**Outillage recommandé, pas requis.** Ces fichiers sont produits et consommés par le skill Claude Code `impeccable`, volontairement non versionné (`.claude/skills/impeccable`). Le repo se build, se teste et se déploie sans lui : les hooks associés vivent dans `.claude/settings.local.json` (jamais partagé) et sont auto-désactivants si le skill est absent. Si tu fais évoluer l'UI sans le skill, `DESIGN.md` et `PRODUCT.md` restent la référence à respecter — et à mettre à jour quand une règle change.
+
+---
+
 ## Déploiement
 
 - **Frontend** : Vercel (framework preset Vite), build via `vite build`. `frontend/vercel.json` rewrite `/api/*` vers le backend Railway ; le SSR lit `VITE_BACKEND_URL`.

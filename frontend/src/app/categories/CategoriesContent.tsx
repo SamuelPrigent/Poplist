@@ -5,14 +5,11 @@ import { useNavigate } from '@tanstack/react-router';
 import { domAnimation, LazyMotion, m } from 'motion/react';
 import { PageFade } from '@/components/ui/PageFade';
 import { useMemo } from 'react';
-import { ListCardGenre } from '@/components/List/ListCardGenre';
+import { CATEGORY_VISUALS } from '@/components/List/ListCardGenre';
+import { CategoryList, type CategoryTile } from '@/components/List/CategoryList';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import {
-  createPlaceholderItem,
-  type Watchlist,
-  type WatchlistItem,
-} from '@/api';
+import type { Watchlist } from '@/api';
 import { watchlistsQueries } from '@/api/queries';
 import { useLanguageStore } from '@/store/language';
 import { GENRE_CATEGORIES, getCategoryInfo } from '@/types/categories';
@@ -28,19 +25,39 @@ function CategoriesPageInner() {
   const countQueries = useQueries({
     queries: GENRE_CATEGORIES.map(genreId => ({
       ...watchlistsQueries.byGenre(genreId),
-      select: (data: { watchlists: Watchlist[] }) => data.watchlists?.length ?? 0,
+      select: (data: { watchlists: Watchlist[] }) => ({
+        count: data.watchlists?.length ?? 0,
+        // Les plus récemment ajoutées d'abord : l'affiche dit ce qui vient
+        // d'entrer dans la catégorie, elle n'est pas un choix figé.
+        posters: (data.watchlists ?? [])
+          .flatMap((wl) => wl.items ?? [])
+          .filter((item) => !!item.posterPath)
+          .sort((a, b) => (b.addedAt ?? '').localeCompare(a.addedAt ?? ''))
+          .map((item) => item.posterPath as string)
+          .slice(0, 3),
+      }),
     })),
   });
   const loading = countQueries.some(q => q.isPending);
-  const categoryCounts = useMemo<Record<string, number>>(() => {
-    return GENRE_CATEGORIES.reduce(
-      (acc, genreId, i) => {
-        acc[genreId] = countQueries[i]?.data ?? 0;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-  }, [countQueries]);
+  const tiles = useMemo<CategoryTile[]>(() => {
+    return GENRE_CATEGORIES.map((categoryId, i) => {
+      const info = getCategoryInfo(categoryId, content);
+      const data = countQueries[i]?.data;
+      const cutout = CATEGORY_VISUALS[categoryId]?.cutout ?? CATEGORY_VISUALS.movies.cutout;
+      return {
+        id: categoryId,
+        name: info.name,
+        nameMobile: info.nameMobile,
+        href: `/categories/${categoryId}`,
+        cutout: cutout.replace(/\.webp$/, ''),
+        count: data?.count,
+        posters: data?.posters ?? [],
+      };
+    });
+  }, [content, countQueries]);
+
+  const countLabel = (n: number) =>
+    `${n} ${n === 1 ? content.home.categories.list : content.home.categories.lists}`;
 
   const handleBackClick = () => {
     navigate({ to: '/home' as never });
@@ -59,85 +76,16 @@ function CategoriesPageInner() {
           hideSubtitleOnMobile
         />
 
-        {/* Categories Grid */}
+        {/* Même affichage que la section « Listes par catégorie » de la home :
+            les deux endroits parlent le même langage. */}
         {loading ? null : (
           <LazyMotion features={domAnimation}>
             <m.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0,
-                    delayChildren: 0,
-                  },
-                },
-              }}
-              className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-4 max-[749px]:grid-cols-2 max-[749px]:gap-3 md:grid-cols-4 lg:grid-cols-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
             >
-              {GENRE_CATEGORIES.map((categoryId, index) => {
-                const category = getCategoryInfo(categoryId, content);
-                const itemCount = categoryCounts[categoryId] || 0;
-                const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
-                const placeholderItems: WatchlistItem[] = Array.from(
-                  { length: itemCount },
-                  (_, idx) =>
-                    createPlaceholderItem({
-                      tmdbId: idx,
-                      title: category.name,
-                      mediaType: 'movie',
-                      addedAt: placeholderTimestamp,
-                    })
-                );
-
-                const mockWatchlist: Watchlist = {
-                  id: categoryId,
-                  ownerId: 'featured',
-                  thumbnailUrl: null,
-                  dominantColor: null,
-                  genres: [],
-                  imageUrl: null,
-                  owner: {
-                    id: 'featured',
-                    email: 'featured@poplist.app',
-                    username: 'Poplist',
-                    avatarUrl: null,
-                  },
-                  name: category.name,
-                  description: category.description,
-                  collaborators: [],
-                  items: placeholderItems,
-                  createdAt: placeholderTimestamp,
-                  updatedAt: placeholderTimestamp,
-                  likedBy: [],
-                };
-
-                return (
-                  <m.div
-                    key={categoryId}
-                    variants={{
-                      hidden: { opacity: 0, scale: 0.95 },
-                      visible: {
-                        opacity: 1,
-                        scale: 1,
-                        transition: { duration: 0.2 },
-                      },
-                    }}
-                  >
-                    <ListCardGenre
-                      watchlist={mockWatchlist}
-                      content={content}
-                      href={`/categories/${categoryId}`}
-                      genreId={categoryId}
-                      titleMobile={category.nameMobile}
-                      showOwner={false}
-                      index={index}
-                    />
-                  </m.div>
-                );
-              })}
+              <CategoryList tiles={tiles} countLabel={countLabel} />
             </m.div>
           </LazyMotion>
         )}

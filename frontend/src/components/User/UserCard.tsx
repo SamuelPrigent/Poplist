@@ -65,10 +65,10 @@ export function UserCard({ user, listCount, content, carousel = false }: UserCar
           carousel ? 'gap-1 max-[749px]:gap-0.5' : 'max-[749px]:items-start max-[749px]:gap-0.5',
         )}
       >
-        <h3 className="max-w-full truncate text-base font-semibold text-white max-[749px]:text-sm">
+        <h3 className="text-title max-w-full truncate text-white max-[749px]:text-sm">
           {user.username}
         </h3>
-        <span className="text-muted-foreground text-sm max-[749px]:text-xs">
+        <span className="text-muted-foreground text-label max-[749px]:text-xs">
           {listCount}{' '}
           {listCount === 1 ? content.userProfile.watchlist : content.userProfile.watchlists}
         </span>

@@ -1,6 +1,5 @@
 'use client';
 
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import {
   Check,
@@ -8,19 +7,22 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
-  Eye,
-  Plus,
   Search,
-  Star,
   X,
 } from 'lucide-react';
 import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Img as Image } from '@/components/ui/Img';
+import { ExploreCardBody, type TitlePosition } from '@/components/Explore/ExploreCard';
+
+/**
+ * Position du titre sur les cartes de la grille.
+ * - `under` : sous l'affiche, qui garde toute sa hauteur (retenu).
+ * - `mask`  : posé sur l'affiche, dans le voile bas.
+ */
+const TITLE_POSITION: TitlePosition = 'under';
 import { tmdbQueries, watchlistsQueries } from '@/api/queries';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
-import { WatchlistPickerMenu } from '@/components/List/WatchlistPickerMenu';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -48,7 +50,7 @@ import {
   type WatchlistItem,
 } from '@/api';
 import { cn } from '@/lib/cn';
-import { getTMDBLanguage, getTMDBRegion, tmdbPosterSrcSet } from '@/lib/utils';
+import { getTMDBLanguage, getTMDBRegion } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 import type { Content } from '@/types/content';
 import { Section } from '#/components/layout/Section.tsx';
@@ -60,6 +62,8 @@ interface MediaItem {
   poster_path?: string;
   media_type?: string;
   vote_average: number;
+  release_date?: string;
+  first_air_date?: string;
 }
 
 // Generate 36 stable skeleton keys (6 columns × 6 rows)
@@ -107,7 +111,8 @@ export function ExploreContent() {
   const tmdbLanguage = getTMDBLanguage(language);
   const tmdbRegion = getTMDBRegion(language);
 
-  // Track active grid column count (matches Tailwind breakpoints on the grid below)
+  // Nombre de colonnes actif (suit les breakpoints de la grille ci-dessous).
+  // Sert à ouvrir le menu d'ajout du bon côté sur la dernière colonne.
   const [gridCols, setGridCols] = useState(6);
   useEffect(() => {
     const update = () => {
@@ -144,7 +149,6 @@ export function ExploreContent() {
   const isSearching = query.length > 3;
 
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-  const [addingTo] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     tmdbId: string;
@@ -490,7 +494,7 @@ export function ExploreContent() {
         <div className="mb-7 text-left max-[749px]:mb-4">
           {/* text-[28px] en mobile : aligné sur les titres de page des autres
               écrans (« Bibliothèque »), qui étaient plus gros. */}
-          <h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-[28px]">
+          <h1 className="text-headline text-foreground mb-2">
             {content.explore.title}
           </h1>
           {/* Description masquée en mobile : redondante avec le titre sur une
@@ -926,7 +930,7 @@ export function ExploreContent() {
                   },
                 }}
               >
-                <div className="mt-12 grid grid-cols-3 gap-1.75 max-[749px]:mt-11 sm:grid-cols-3 md:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="mt-12 grid grid-cols-3 gap-x-1.75 gap-y-2.25 max-[749px]:mt-11 sm:grid-cols-3 md:grid-cols-4 md:gap-x-4 md:gap-y-4.5 lg:grid-cols-5 xl:grid-cols-6">
                   {media.map((item, index) => (
                     <m.div
                       role="button"
@@ -944,7 +948,7 @@ export function ExploreContent() {
                           },
                         },
                       }}
-                      className="group relative cursor-pointer overflow-hidden rounded-lg text-left max-[749px]:rounded-md"
+                      className="group relative cursor-pointer text-left"
                       onClick={() => handleItemClick(item, index)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -953,83 +957,26 @@ export function ExploreContent() {
                         }
                       }}
                     >
-                      {/* Poster with zoom */}
-                      <div className="bg-muted relative aspect-2/3 overflow-hidden rounded-lg max-[749px]:rounded-md">
-                        {item.poster_path ? (
-                          <Image
-                            src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
-                            srcSet={tmdbPosterSrcSet(item.poster_path)}
-                            alt={item.title || item.name || ''}
-                            fill
-                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                            unoptimized
-                            {...(index < 6 ? { priority: true } : {})}
-                          />
-                        ) : (
-                          <div className="text-muted-foreground flex h-full items-center justify-center">
-                            ?
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Dark overlay with centered eye icon on hover */}
-                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 transition-all duration-300 group-hover:bg-black/50">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                          <Eye className="h-7 w-7 text-white" />
-                        </div>
-                      </div>
-
-                      {/* Bottom gradient - always visible */}
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 rounded-b-lg bg-linear-to-t from-black/80 via-black/30 to-transparent max-[749px]:rounded-b-md" />
-
-                      {/* Rating badge — masqué sur mobile (poster nu) */}
-                      {item.vote_average > 0 && (
-                        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 backdrop-blur-sm max-[749px]:hidden">
-                          <Star
-                            className="h-3.5 w-3.5 fill-yellow-500/70 stroke-yellow-500"
-                            strokeWidth={1.5}
-                          />
-                          <span className="text-sm font-semibold text-white">
-                            {item.vote_average.toFixed(1)}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Add button in top right */}
-                      {isAuthenticated && (
-                        <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-[749px]:hidden">
-                          <WatchlistPickerMenu
-                            watchlists={watchlists.filter((w) => w.isOwner || w.isCollaborator)}
-                            tmdbId={item.id}
-                            onAdd={(watchlistId) =>
-                              handleAddFromDetails(
-                                watchlistId,
-                                item.id.toString(),
-                                item.title ? 'movie' : 'tv',
-                              )
-                            }
-                            onRemove={(watchlistId) =>
-                              handleRemoveFromDetails(watchlistId, item.id.toString())
-                            }
-                            addToLabel={content.watchlists.addToWatchlist}
-                            noWatchlistLabel={content.watchlists.noWatchlist}
-                            side={index % gridCols === gridCols - 1 ? 'left' : 'right'}
-                            align="start"
-                          >
-                            <DropdownMenu.Trigger asChild>
-                              <button
-                                type="button"
-                                className="cursor-pointer rounded-full bg-black/70 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black"
-                                disabled={addingTo === item.id}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </button>
-                            </DropdownMenu.Trigger>
-                          </WatchlistPickerMenu>
-                        </div>
-                      )}
+                      <ExploreCardBody
+                        item={item}
+                        index={index}
+                        titlePosition={TITLE_POSITION}
+                        gridCols={gridCols}
+                        isAuthenticated={isAuthenticated}
+                        watchlists={watchlists}
+                        onAdd={(watchlistId) =>
+                          handleAddFromDetails(
+                            watchlistId,
+                            item.id.toString(),
+                            item.title ? 'movie' : 'tv',
+                          )
+                        }
+                        onRemove={(watchlistId) =>
+                          handleRemoveFromDetails(watchlistId, item.id.toString())
+                        }
+                        addToLabel={content.watchlists.addToWatchlist}
+                        noWatchlistLabel={content.watchlists.noWatchlist}
+                      />
                     </m.div>
                   ))}
                 </div>

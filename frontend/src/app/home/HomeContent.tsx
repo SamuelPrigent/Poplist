@@ -12,10 +12,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@/components/ui/Link';
 import { ListCard } from '@/components/List/ListCard';
 import { ListCardGrid } from '@/components/List/ListCardGrid';
-import { ListCardGenre } from '@/components/List/ListCardGenre';
-import { ListCardSmall } from '@/components/List/ListCardSmall';
+// Section « Bibliothèque » retirée de la home (cf. commentaire dans le rendu).
+// import { ListCardSmall } from '@/components/List/ListCardSmall';
 import { ItemDetailsModal } from '@/components/List/modal/ItemDetailsModal';
-import { UserCard } from '@/components/User/UserCard';
 import { Section } from '@/components/layout/Section';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
@@ -26,10 +25,12 @@ import {
   type WatchlistItem,
 } from '@/api';
 import { tmdbQueries, watchlistsQueries } from '@/api/queries';
-import { useIsMounted } from '@/hooks/useIsMounted';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
-import { MoviePoster } from '@/components/Home/MoviePoster';
 import { TrendingCardMobile } from '@/components/Home/TrendingCardMobile';
+import { TrendingRail } from '@/components/Home/TrendingRail';
+import { CategoryShowcase, type CategoryTile } from '@/components/Home/CategoryShowcase';
+import { CreatorShowcase } from '@/components/Home/CreatorShowcase';
+import { CATEGORY_VISUALS } from '@/components/List/ListCardGenre';
 import { AddToListDrawer } from '@/components/List/AddToListDrawer';
 import {
   getTMDBLanguage,
@@ -57,57 +58,51 @@ interface Creator {
   username: string;
   avatarUrl?: string;
   listCount: number;
-}
-
-interface FeaturedCategory {
-  id: string;
-  name: string;
-  nameMobile?: string;
-  description: string;
-  gradient?: string;
-  /** undefined = count pas encore chargé (badge masqué sur la card). */
-  itemCount: number | undefined;
-  username: string;
+  /** Affiches tirées de ses listes publiques : ce qu'il curate, pas juste son nom. */
+  posters: string[];
 }
 
 /**
- * En-tête de section. Desktop : titre + description à gauche, bouton pill à droite.
- * Mobile (< 750px) : titre allégé + action en texte simple sur la même ligne,
- * description masquée.
+ * En-tête de section : titre au rôle `headline` (allégé en `title` sous 750px),
+ * description optionnelle masquée en compact, action secondaire en ghost (pas
+ * de pilule : une action bordée ou remplie serait une action primaire, et il
+ * n'y en a qu'une par écran — cf. DESIGN.md § Buttons).
+ *
+ * `as` permet à la première section de la page de porter le `h1`.
  */
 function SectionHeader({
   title,
   subtitle,
   to,
   action,
+  as: Heading = 'h2',
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   to: string;
   action: string;
+  as?: 'h1' | 'h2';
 }) {
   return (
-    <div className="mb-6 max-[749px]:mb-[19px]">
-      {/* Desktop : titre + description + bouton pill */}
-      <div className="flex items-start justify-between gap-3 max-[749px]:hidden">
-        <div className="min-w-0">
-          <h2 className="text-3xl font-bold text-white">{title}</h2>
-          <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
-        </div>
-        <Link
-          to={to}
-          className="bg-muted/50 hover:bg-muted shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors"
-        >
-          {action}
-        </Link>
+    // `items-end` + la marge basse négative alignent la ligne de base de
+    // l'action sur le bas de la description, au lieu de la laisser flotter en
+    // haut du bloc ; le padding vertical garde la cible tactile à 44px.
+    <div className="mb-6 flex items-end justify-between gap-3 max-[749px]:mb-[19px]">
+      <div className="min-w-0">
+        <Heading className="text-headline text-foreground max-[749px]:text-title max-[749px]:truncate max-[749px]:font-medium">
+          {title}
+        </Heading>
+        {subtitle && (
+          <p className="text-muted-foreground text-body mt-1 max-[749px]:hidden">{subtitle}</p>
+        )}
       </div>
-      {/* Mobile : titre allégé + action en texte simple, pas de description */}
-      <div className="hidden items-center justify-between gap-3 max-[749px]:flex">
-        <h2 className="min-w-0 truncate text-xl font-semibold text-white">{title}</h2>
-        <Link to={to} className="text-muted-foreground shrink-0 text-sm whitespace-nowrap">
-          {action}
-        </Link>
-      </div>
+      <Link
+        to={to}
+        aria-label={`${action} — ${title}`}
+        className="text-label text-muted-foreground hover:text-foreground -mb-3.5 shrink-0 py-3.5 whitespace-nowrap transition-colors"
+      >
+        {action}
+      </Link>
     </div>
   );
 }
@@ -118,13 +113,6 @@ function HomeContentInner() {
   const tmdbLanguage = getTMDBLanguage(language);
   const queryClient = useQueryClient();
 
-  const mounted = useIsMounted();
-
-  // Page TMDB stable durant la session (sinon chaque re-render = nouveau cache).
-  const [randomPage] = useState(() => Math.floor(Math.random() * 5) + 1);
-
-  // Local watchlists pour les utilisateurs non-auth (localStorage)
-
   const [selectedTrendingItem, setSelectedTrendingItem] = useState<{
     tmdbId: string;
     type: 'movie' | 'tv';
@@ -133,12 +121,6 @@ function HomeContentInner() {
   const [trendingModalOpen, setTrendingModalOpen] = useState(false);
   // Item tendance dont on ouvre le drawer "Ajouter à une liste" (mobile)
   const [trendingAddItem, setTrendingAddItem] = useState<DiscoverItem | null>(null);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<{
-    tmdbId: string;
-    type: 'movie' | 'tv';
-  } | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
   useScrollToTopOnMount();
 
@@ -176,24 +158,33 @@ function HomeContentInner() {
 
   const creators = useMemo<Creator[]>(() => {
     const creatorsMap = new Map<string, Creator>();
+    const postersOf = (wl: Watchlist) =>
+      (wl.items ?? [])
+        .map((item) => item.posterPath)
+        .filter((path): path is string => !!path)
+        .slice(0, 4);
+
     for (const wl of allPublic) {
       if (!wl.owner) continue;
       const ownerId = wl.owner.id;
       const existing = creatorsMap.get(ownerId);
       if (existing) {
         existing.listCount += 1;
+        existing.posters.push(...postersOf(wl));
       } else {
         creatorsMap.set(ownerId, {
           id: ownerId,
           username: wl.owner.username || 'Utilisateur',
           avatarUrl: wl.owner.avatarUrl ?? undefined,
           listCount: 1,
+          posters: postersOf(wl),
         });
       }
     }
     return Array.from(creatorsMap.values())
       .sort((a, b) => b.listCount - a.listCount)
-      .slice(0, 12);
+      .slice(0, 12)
+      .map((creator) => ({ ...creator, posters: creator.posters.slice(0, 6) }));
   }, [allPublic]);
 
   // Mes watchlists côté auth (TQ) ; non connecté → aucune liste
@@ -203,79 +194,57 @@ function HomeContentInner() {
   });
   const userWatchlists: Watchlist[] = user ? (myWatchlistsQuery.data?.watchlists ?? []) : [];
 
-  // Discover movies + TV en parallèle (1h staleTime, partagé inter-pages)
-  const movieDiscoverQuery = useQuery(
-    tmdbQueries.discover('movie', {
-      page: randomPage,
-      language: tmdbLanguage,
-      voteCountGte: 100,
-      voteAverageGte: 5.0,
-      releaseDateGte: '2015-01-01',
-    }),
-  );
-  const tvDiscoverQuery = useQuery(
-    tmdbQueries.discover('tv', {
-      page: randomPage,
-      language: tmdbLanguage,
-      voteCountGte: 100,
-      voteAverageGte: 5.0,
-      releaseDateGte: '2015-01-01',
-    }),
-  );
-
-  const recommendations = useMemo<DiscoverItem[]>(() => {
-    const movieResults = (movieDiscoverQuery.data?.results ?? []).map((item) => ({
-      ...item,
-      media_type: 'movie' as const,
-    }));
-    const tvResults = (tvDiscoverQuery.data?.results ?? []).map((item) => ({
-      ...item,
-      media_type: 'tv' as const,
-    }));
-    const combined: DiscoverItem[] = [];
-    const maxLen = Math.max(movieResults.length, tvResults.length);
-    for (let i = 0; i < maxLen; i++) {
-      if (movieResults[i]) combined.push(movieResults[i]);
-      if (tvResults[i]) combined.push(tvResults[i]);
-    }
-    return combined.filter(
-      (item) => item.poster_path && item.vote_average && item.vote_average >= 5,
-    );
-  }, [movieDiscoverQuery.data, tvDiscoverQuery.data]);
-
-  // Comptage par catégorie : N queries en parallèle via useQueries
+  // Comptage par catégorie : N queries en parallèle via useQueries. On en
+  // profite pour remonter quelques affiches réelles des listes de chaque
+  // catégorie — plusieurs traitements de tuile s'en servent pour représenter
+  // une catégorie par son contenu plutôt que par une couleur abstraite.
   const categoryCountQueries = useQueries({
     queries: GENRE_CATEGORIES.map((genreId) => ({
       ...watchlistsQueries.byGenre(genreId),
-      select: (data: { watchlists: Watchlist[] }) => data.watchlists?.length ?? 0,
+      select: (data: { watchlists: Watchlist[] }) => ({
+        count: data.watchlists?.length ?? 0,
+        // Triées par ajout le plus récent : l'affiche d'une catégorie n'est
+        // pas un choix arbitraire figé, c'est ce qui vient d'y entrer. Elle
+        // change donc à mesure que la communauté ajoute des titres.
+        posters: (data.watchlists ?? [])
+          .flatMap((wl) => wl.items ?? [])
+          .filter((item) => !!item.posterPath)
+          .sort((a, b) => (b.addedAt ?? '').localeCompare(a.addedAt ?? ''))
+          .map((item) => item.posterPath as string)
+          .slice(0, 6),
+      }),
     })),
   });
   // `undefined` tant que la query n'a pas résolu → badge masqué sur la card
   // (au lieu d'un « 0 listes » mensonger pendant le chargement).
-  const categoryCounts = useMemo<Record<string, number | undefined>>(() => {
+  const categoryData = useMemo<
+    Record<string, { count: number; posters: string[] } | undefined>
+  >(() => {
     return GENRE_CATEGORIES.reduce(
       (acc, genreId, i) => {
         acc[genreId] = categoryCountQueries[i]?.data;
         return acc;
       },
-      {} as Record<string, number | undefined>,
+      {} as Record<string, { count: number; posters: string[] } | undefined>,
     );
   }, [categoryCountQueries]);
 
   // Trending (cache 1h, partagé avec Landing)
   const trendingQuery = useQuery(tmdbQueries.trending('day'));
   const trending = useMemo<DiscoverItem[]>(() => {
+    // 8 titres : le rail desktop en montre 6 (tête + 5 vignettes) et garde les
+    // suivants montés hors champ, de sorte qu'aucune vignette n'entre vide.
     return ((trendingQuery.data?.results ?? []) as DiscoverItem[])
-      .filter((r) => r.poster_path)
-      .slice(0, 6)
+      .filter((r) => r.poster_path && r.backdrop_path)
+      .slice(0, 8)
       .map((r) => ({ ...r, media_type: r.media_type || 'movie' }));
   }, [trendingQuery.data]);
 
-  const loading =
-    publicQuery.isPending ||
-    movieDiscoverQuery.isPending ||
-    tvDiscoverQuery.isPending ||
-    (!!user && myWatchlistsQuery.isPending);
+  // Chaque section porte son propre état de chargement : une requête lente ne
+  // retient plus le rendu des autres (avant, un `loading` global gatait toute
+  // la page sur la plus lente des requêtes).
+  const publicLoading = publicQuery.isPending;
+  const trendingLoading = trendingQuery.isPending;
 
   const handleOpenTrending = (item: DiscoverItem, index: number) => {
     setSelectedTrendingItem({
@@ -339,11 +308,11 @@ function HomeContentInner() {
         mediaType,
         language: tmdbLanguage,
       });
-      toast.success('Ajouté à la liste');
+      toast.success(content.watchlists.toasts!.itemAdded);
       queryClient.invalidateQueries({ queryKey: mineKey });
     } catch {
       optimisticRemove(watchlistId, idNum);
-      toast.error("Erreur lors de l'ajout");
+      toast.error(content.watchlists.toasts!.itemAddError);
     }
   };
 
@@ -352,55 +321,36 @@ function HomeContentInner() {
     const removed = optimisticRemove(watchlistId, idNum);
     try {
       await watchlistsApi.removeItem(watchlistId, tmdbId);
-      toast.success('Retiré de la liste');
+      toast.success(content.watchlists.toasts!.itemRemoved);
       queryClient.invalidateQueries({ queryKey: mineKey });
     } catch {
       if (removed) optimisticAdd(watchlistId, removed);
-      toast.error('Erreur lors du retrait');
+      toast.error(content.watchlists.toasts!.itemRemoveError);
     }
   };
 
-  const handleOpenDetails = (item: DiscoverItem, index: number) => {
-    setSelectedItem({
-      tmdbId: item.id.toString(),
-      type: item.media_type || 'movie',
-    });
-    setSelectedIndex(index);
-    setDetailsModalOpen(true);
-  };
+  // Tuiles catégories transmises au banc d'essai des traitements.
+  const categoryTiles = useMemo<CategoryTile[]>(
+    () =>
+      GENRE_CATEGORIES.map((categoryId) => {
+        const info = getCategoryInfo(categoryId, content);
+        const data = categoryData[categoryId];
+        const cutout = CATEGORY_VISUALS[categoryId]?.cutout ?? CATEGORY_VISUALS.movies.cutout;
+        return {
+          id: categoryId,
+          name: info.name,
+          nameMobile: info.nameMobile,
+          href: `/categories/${categoryId}`,
+          cutout: cutout.replace(/\.webp$/, ''),
+          count: data?.count,
+          posters: data?.posters ?? [],
+        };
+      }),
+    [content, categoryData],
+  );
 
-  const handleNavigatePrevious = () => {
-    if (selectedIndex > 0) {
-      const prevItem = safeRecommendations[selectedIndex - 1];
-      handleOpenDetails(prevItem, selectedIndex - 1);
-    }
-  };
-
-  const handleNavigateNext = () => {
-    if (selectedIndex < safeRecommendations.length - 1) {
-      const nextItem = safeRecommendations[selectedIndex + 1];
-      handleOpenDetails(nextItem, selectedIndex + 1);
-    }
-  };
-
-  // Featured categories — 6 first
-  const categories: FeaturedCategory[] = GENRE_CATEGORIES.slice(0, 6).map((categoryId) => {
-    const categoryInfo = getCategoryInfo(categoryId, content);
-    return {
-      id: categoryId,
-      name: categoryInfo.name,
-      nameMobile: categoryInfo.nameMobile,
-      description: categoryInfo.description,
-      gradient: categoryInfo.cardGradient,
-      itemCount: categoryCounts[categoryId],
-      username: 'Poplist',
-    };
-  });
-
-  const safeRecommendations = useMemo(() => recommendations.slice(0, 5), [recommendations]);
-
-  // Use /local/lists by default for SSR to avoid hydration mismatch
-  const listsUrl = mounted && user ? '/account/lists' : '/local/lists';
+  const categoryCountLabel = (n: number) =>
+    `${n} ${n === 1 ? content.home.categories.list : content.home.categories.lists}`;
 
   // Skeleton components with dark background matching card styles
   const ListCardSkeleton = () => (
@@ -413,17 +363,16 @@ function HomeContentInner() {
     </div>
   );
 
-  // Suit exactement le rendu de ListCardSmall : sous 415px, fond/padding
-  // retirés et thumbnail 56px → le skeleton ne « saute » plus au chargement.
-  const ListCardSmallSkeleton = () => (
-    <div className="bg-muted/30 flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 max-[414px]:bg-transparent max-[414px]:p-0">
-      <div className="bg-muted/50 h-16 w-16 shrink-0 rounded-md max-[414px]:h-14 max-[414px]:w-14" />
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="bg-muted/50 h-4 w-3/4 rounded" />
-        <div className="bg-muted/50 h-3 w-1/3 rounded" />
-      </div>
-    </div>
-  );
+  // Skeleton de la section « Bibliothèque », conservé avec elle en commentaire.
+  // const ListCardSmallSkeleton = () => (
+  //   <div className="bg-muted/30 flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 max-[414px]:bg-transparent max-[414px]:p-0">
+  //     <div className="bg-muted/50 h-16 w-16 shrink-0 rounded-md max-[414px]:h-14 max-[414px]:w-14" />
+  //     <div className="flex min-w-0 flex-1 flex-col gap-2">
+  //       <div className="bg-muted/50 h-4 w-3/4 rounded" />
+  //       <div className="bg-muted/50 h-3 w-1/3 rounded" />
+  //     </div>
+  //   </div>
+  // );
 
   const UserCardSkeleton = () => (
     <div className="flex flex-col items-center gap-3 max-[749px]:gap-2">
@@ -435,101 +384,104 @@ function HomeContentInner() {
 
   return (
     <div className="bg-background min-h-screen pb-20 max-[749px]:pb-4">
-      {/* My Watchlists - Library Section */}
-      {(loading || userWatchlists.length > 0) && (
-        <Section className="pb-5">
-          <SectionHeader
-            title={content.home.library.title}
-            subtitle={content.home.library.subtitle}
-            to={listsUrl}
-            action={content.home.library.seeAll}
-          />
+      {/*
+        Section « Bibliothèque » retirée de la home : les listes personnelles
+        vivent uniquement dans « Mes listes ». La home est une page
+        d'exploration (tendances + contenu de la communauté). Code conservé
+        en commentaire tant que la frontière n'est pas définitivement actée.
 
-          {loading ? (
+        {(myWatchlistsQuery.isPending || userWatchlists.length > 0) && (
+          <Section className="pb-5">
+            <SectionHeader
+              title={content.home.library.title}
+              subtitle={content.home.library.subtitle}
+              to={mounted && user ? '/account/lists' : '/local/lists'}
+              action={content.home.library.seeAll}
+            />
             <div className="grid grid-cols-1 gap-3 max-[749px]:grid-cols-2 max-[414px]:gap-x-[4px] max-[414px]:gap-y-[11px] md:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <ListCardSmallSkeleton key={i} />
+              {myWatchlistsQuery.isPending
+                ? Array.from({ length: 4 }).map((_, i) => <ListCardSmallSkeleton key={i} />)
+                : userWatchlists
+                    .slice(0, 4)
+                    .map((watchlist) => (
+                      <ListCardSmall
+                        key={watchlist.id}
+                        watchlist={watchlist}
+                        to={`/lists/${watchlist.id}`}
+                      />
+                    ))}
+            </div>
+          </Section>
+        )}
+      */}
+
+      {/* Trending Section — ouverture de page. C'est la seule section qui
+          réponde à « on regarde quoi ce soir ? », elle passe donc en premier et
+          porte le h1. Desktop : rail à focus tournant (cf. TrendingRail).
+          Mobile : cards paysage pleine largeur, sans rotation. */}
+      <Section>
+        <SectionHeader
+          as="h1"
+          title={content.home.trending.title}
+          subtitle={content.home.trending.subtitle}
+          to="/explore"
+          action={content.home.trending.seeMore}
+        />
+
+        {trendingLoading ? (
+          <>
+            <div className="grid grid-cols-7 gap-[13px] max-[749px]:hidden max-[1099px]:grid-cols-5 max-[1099px]:[&>*:nth-child(n+5)]:hidden">
+              <div className="bg-muted/40 rounded-poster col-span-2" />
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="bg-muted/40 rounded-poster aspect-2/3" />
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 max-[749px]:grid-cols-2 max-[414px]:gap-x-[4px] max-[414px]:gap-y-[11px] md:grid-cols-2 lg:grid-cols-4">
-              {userWatchlists.slice(0, 4).map((watchlist) => (
-                <ListCardSmall
-                  key={watchlist.id}
-                  watchlist={watchlist}
-                  to={`/lists/${watchlist.id}`}
+            <div className="-mx-4 hidden gap-3 overflow-x-auto px-4 max-[749px]:flex">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-muted/40 rounded-card aspect-[2/1] w-[280px] shrink-0" />
+              ))}
+            </div>
+          </>
+        ) : trending.length > 0 ? (
+          <>
+            <TrendingRail
+              items={trending}
+              watchlists={isAuthenticated ? userWatchlists : []}
+              onOpen={handleOpenTrending}
+              onAddToWatchlist={(watchlistId, item) =>
+                handleAddToWatchlist(
+                  watchlistId,
+                  item.id.toString(),
+                  item.media_type || (item.title ? 'movie' : 'tv'),
+                )
+              }
+              onRemoveFromWatchlist={(watchlistId, item) =>
+                handleRemoveFromWatchlist(watchlistId, item.id.toString())
+              }
+              addToWatchlistLabel={content.watchlists.addToWatchlist}
+              noWatchlistLabel={content.watchlists.noWatchlist}
+            />
+
+            {/* Mobile : rail horizontal de cards paysage (backdrop), une
+                seule ligne qui se swipe, edge-to-edge grâce aux -mx/px. Le +
+                ouvre directement le drawer d'ajout à une liste. */}
+            <div className="-mx-4 hidden gap-3 overflow-x-auto px-4 pb-1 max-[749px]:flex max-[749px]:[&::-webkit-scrollbar]:hidden max-[749px]:[scrollbar-width:none] [&>*]:w-[280px] [&>*]:shrink-0">
+              {trending.slice(0, 6).map((item, index) => (
+                <TrendingCardMobile
+                  key={item.id}
+                  id={item.id}
+                  title={item.title}
+                  name={item.name}
+                  backdropPath={item.backdrop_path}
+                  mediaType={item.media_type || (item.title ? 'movie' : 'tv')}
+                  voteAverage={item.vote_average}
+                  onClick={() => handleOpenTrending(item, index)}
+                  onAddClick={isAuthenticated ? () => setTrendingAddItem(item) : undefined}
                 />
               ))}
             </div>
-          )}
-        </Section>
-      )}
-
-      {/* Categories Section */}
-      <Section className="">
-        <SectionHeader
-          title={content.home.categories.title}
-          subtitle={content.home.categories.subtitle}
-          to="/categories"
-          action={content.home.categories.seeMore}
-        />
-
-        {/* Mobile : carrousel horizontal (cards à largeur fixe qui débordent à
-            droite, scroll edge-to-edge grâce aux -mx/px). Desktop : grille. */}
-        <div
-          ref={categoriesScrollRef}
-          className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-[14px] max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-3 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[128px] max-[749px]:[&>*]:shrink-0 md:grid-cols-4 lg:grid-cols-6"
-        >
-          {categories.map((category, index) => {
-            const placeholderTimestamp = '1970-01-01T00:00:00.000Z';
-            const placeholderItems: WatchlistItem[] = Array.from(
-              { length: category.itemCount ?? 0 },
-              (_, idx) =>
-                createPlaceholderItem({
-                  tmdbId: idx,
-                  title: category.name,
-                  mediaType: 'movie',
-                  addedAt: placeholderTimestamp,
-                }),
-            );
-
-            const mockWatchlist: Watchlist = {
-              id: category.id,
-              ownerId: 'featured',
-              owner: {
-                id: 'featured',
-                email: 'featured@poplist.app',
-                username: category.username,
-                avatarUrl: null,
-              },
-              name: category.name,
-              description: category.description,
-              imageUrl: null,
-              thumbnailUrl: null,
-              dominantColor: null,
-              genres: [],
-              collaborators: [],
-              items: placeholderItems,
-              createdAt: placeholderTimestamp,
-              updatedAt: placeholderTimestamp,
-              likedBy: [],
-            };
-
-            return (
-              <ListCardGenre
-                key={category.id}
-                watchlist={mockWatchlist}
-                content={content}
-                href={`/categories/${category.id}`}
-                genreId={category.id}
-                titleMobile={category.nameMobile}
-                desktopAspectOnMobile
-                index={index}
-                itemCount={category.itemCount ?? 'pending'}
-              />
-            );
-          })}
-        </div>
+          </>
+        ) : null}
       </Section>
 
       {/* Popular Watchlists Section */}
@@ -541,7 +493,7 @@ function HomeContentInner() {
           action={content.home.popularWatchlists.seeMore}
         />
 
-        {loading ? (
+        {publicLoading ? (
           // Aperçu accueil : max 6 items sur mobile (le reste via "Voir tout").
           <ListCardGrid className="max-[749px]:[&>*:nth-child(n+7)]:hidden">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -575,13 +527,45 @@ function HomeContentInner() {
             })}
           </ListCardGrid>
         ) : (
-          <div className="border-border bg-card rounded-lg border p-12 text-center">
+          // Un échec de chargement n'est pas un vide : on ne prétend plus qu'il
+          // n'existe aucune liste publique quand la requête a échoué.
+          <div className="border-border bg-card rounded-card border p-12 text-center">
             <Film strokeWidth={1.4} className="text-muted-foreground mx-auto h-16 w-16" />
-            <p className="text-muted-foreground mt-4">
-              {content.home.popularWatchlists.noWatchlists}
+            <p className="text-muted-foreground text-body mt-4">
+              {publicQuery.isError
+                ? content.home.popularWatchlists.loadError
+                : content.home.popularWatchlists.noWatchlists}
             </p>
+            {publicQuery.isError && (
+              <button
+                type="button"
+                onClick={() => publicQuery.refetch()}
+                className="text-label text-foreground border-border rounded-control mt-4 h-11 cursor-pointer border px-4 transition-colors hover:bg-secondary"
+              >
+                {content.home.popularWatchlists.retry}
+              </button>
+            )}
           </div>
         )}
+      </Section>
+
+      {/* Categories Section — le rangement du catalogue passe après le contenu
+          lui-même (tendances) et après ce que la communauté a fabriqué. */}
+      <Section>
+        <SectionHeader
+          title={content.home.categories.title}
+          subtitle={content.home.categories.subtitle}
+          to="/categories"
+          action={content.home.categories.seeMore}
+        />
+
+        {/* Banc d'essai : 10 traitements de la tuile catégorie, sélectionnables
+            en haut à droite comme sur le hero de la landing. Les 5 premiers
+            gardent la carte à l'identique, les 5 suivants remettent la forme
+            en cause. Voir CategoryShowcase. */}
+        <div ref={categoriesScrollRef}>
+          <CategoryShowcase tiles={categoryTiles} countLabel={categoryCountLabel} />
+        </div>
       </Section>
 
       {/* Creators Section */}
@@ -593,114 +577,20 @@ function HomeContentInner() {
           action={content.home.creators.seeMore}
         />
 
-        {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fill,104px)] justify-start gap-x-2 gap-y-3 max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0">
+        {publicLoading ? (
+          <div className="flex flex-wrap justify-start gap-x-6 gap-y-4 min-[750px]:[&>*]:w-[104px] max-[749px]:-mx-4 max-[749px]:flex-nowrap max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-1 max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0">
             {Array.from({ length: 12 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
-          // Mobile : carrousel horizontal (avatars ronds), reset de la position
-          // en nav (cf. creatorsScrollRef). Desktop : grille inchangée.
-          <div
-            ref={creatorsScrollRef}
-            className="grid grid-cols-[repeat(auto-fill,104px)] justify-start gap-x-9 gap-y-3 max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-3 max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0"
-          >
-            {creators.map((creator) => (
-              <UserCard
-                key={creator.id}
-                user={creator}
-                listCount={creator.listCount}
-                content={content}
-                carousel
-              />
-            ))}
+          // Banc d'essai : 10 traitements de la carte créateur, sélectionnables
+          // au-dessus de la section. Voir CreatorShowcase.
+          <div ref={creatorsScrollRef}>
+            <CreatorShowcase creators={creators} content={content} />
           </div>
         ) : null}
       </Section>
-
-      {/* Trending Section */}
-      {!loading && trending.length > 0 && (
-        <Section>
-          <SectionHeader
-            title={content.home.trending.title}
-            subtitle={content.home.trending.subtitle}
-            to="/explore"
-            action={content.home.creators.seeMore}
-          />
-          {/* Desktop : grille de posters (hover + dropdown) */}
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(124px,1fr))] gap-[13px] max-[749px]:hidden sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-            {trending.map((item, index) => (
-              <MoviePoster
-                key={item.id}
-                id={item.id}
-                title={item.title}
-                name={item.name}
-                posterPath={item.poster_path ?? undefined}
-                voteAverage={item.vote_average}
-                onClick={() => handleOpenTrending(item, index)}
-                watchlists={isAuthenticated ? userWatchlists : []}
-                onAddToWatchlist={(watchlistId) =>
-                  handleAddToWatchlist(
-                    watchlistId,
-                    item.id.toString(),
-                    item.media_type || (item.title ? 'movie' : 'tv'),
-                  )
-                }
-                onRemoveFromWatchlist={(watchlistId) =>
-                  handleRemoveFromWatchlist(watchlistId, item.id.toString())
-                }
-                addToWatchlistLabel={content.watchlists.addToWatchlist}
-                noWatchlistLabel={content.watchlists.noWatchlist}
-              />
-            ))}
-          </div>
-
-          {/* Mobile : cards paysage pleine largeur (backdrop), le + ouvre
-              directement le drawer d'ajout à une liste */}
-          <div className="hidden max-[749px]:flex max-[749px]:flex-col max-[749px]:gap-3">
-            {trending.slice(0, 4).map((item, index) => (
-              <TrendingCardMobile
-                key={item.id}
-                id={item.id}
-                title={item.title}
-                name={item.name}
-                backdropPath={item.backdrop_path}
-                mediaType={item.media_type || (item.title ? 'movie' : 'tv')}
-                voteAverage={item.vote_average}
-                onClick={() => handleOpenTrending(item, index)}
-                onAddClick={isAuthenticated ? () => setTrendingAddItem(item) : undefined}
-              />
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* Item Details Modal */}
-      {selectedItem && (
-        <ItemDetailsModal
-          open={detailsModalOpen}
-          onOpenChange={(open) => {
-            setDetailsModalOpen(open);
-            if (!open) {
-              setSelectedItem(null);
-              setSelectedIndex(-1);
-            }
-          }}
-          tmdbId={selectedItem.tmdbId}
-          type={selectedItem.type}
-          onPrevious={selectedIndex > 0 ? handleNavigatePrevious : undefined}
-          onNext={selectedIndex < safeRecommendations.length - 1 ? handleNavigateNext : undefined}
-          watchlists={userWatchlists.filter((w) => w.isOwner || w.isCollaborator)}
-          isAuthenticated={isAuthenticated}
-          onAddToWatchlist={(watchlistId) =>
-            handleAddToWatchlist(watchlistId, selectedItem.tmdbId, selectedItem.type)
-          }
-          onRemoveFromWatchlist={(watchlistId) =>
-            handleRemoveFromWatchlist(watchlistId, selectedItem.tmdbId)
-          }
-        />
-      )}
 
       {/* Drawer "Ajouter à une liste" (mobile, + des cards tendances) */}
       {trendingAddItem && (

@@ -17,7 +17,7 @@ interface TrendingItem {
 interface HeroSectionProps {
   content: Content;
   trending: TrendingItem[];
-  watchlistsUrl: string;
+  ctaUrl: string;
 }
 const saw = '/landing/movies/saw3.webp';
 const pdc = '/landing/movies/pdc2.webp';

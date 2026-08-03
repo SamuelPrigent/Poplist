@@ -17,7 +17,7 @@ export function ListsGuestContent() {
 
   return (
     <div className="container mx-auto mb-32 w-(--sectionWidth) max-w-(--maxWidth) px-4 pt-11 pb-8 max-[749px]:mb-10 max-[749px]:min-h-0 max-[749px]:pt-7">
-      <h1 className="mb-1 text-3xl font-bold text-white max-[749px]:mb-5 max-[749px]:text-[28px]">
+      <h1 className="text-headline text-foreground mb-1 max-[749px]:mb-5">
         {content.watchlists.title}
       </h1>
 
