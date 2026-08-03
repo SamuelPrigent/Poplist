@@ -2,6 +2,29 @@
 @plugin "@toolwind/corner-shape";
 @import 'tw-animate-css';
 
+/* ---------------------------------------------------------------------------
+   Typographie — auto-hébergée via Fontsource (fichiers variables, aucun CDN).
+
+   AVANT : aucune police n'était déclarée dans ce fichier. On héritait donc du
+   stack Tailwind par défaut, conservé ici pour garder une trace :
+     --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+                  'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+   Display  : Bricolage Grotesque (grotesque éditorial, tendu, fait pour les
+              grandes tailles) → titres.
+   Body/UI  : Instrument Sans (grotesque neutre, très lisible en petit corps)
+              → tout le reste.
+--------------------------------------------------------------------------- */
+@import '@fontsource-variable/bricolage-grotesque/wght.css';
+@import '@fontsource-variable/instrument-sans/wght.css';
+/* Compagnon serif d'Instrument Sans, italique uniquement : un seul rôle,
+   l'accent sur un mot du titre (variante « Italique » du hero). */
+@import '@fontsource/instrument-serif/latin-400-italic.css';
+
+/* Piste à essayer : Archivo (déjà installé). Décommenter la ligne ci-dessous,
+   puis basculer --font-display et/ou --font-sans sur 'Archivo Variable'. */
+/* @import '@fontsource-variable/archivo/wght.css'; */
+
 * {
   /* font */
   -webkit-font-smoothing: antialiased;
@@ -21,6 +44,31 @@ img {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Grain photographique (hero landing).
+   SVG feTurbulence inline (fractalNoise) : zéro asset externe, zéro requête,
+   rendu net à tous les DPR — la technique « grainy gradients » classique
+   (CSS-Tricks / Frontend Masters). Posé en overlay au-dessus des spots de
+   couleur du hero pour casser le banding des dégradés et donner la texture.
+--------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   Titre façon template Strix (section Steps, version « Template » uniquement).
+   Texte en dégradé vertical blanc → gris. Exception assumée à la Weight Rule
+   de DESIGN.md, demandée explicitement pour comparer les deux versions.
+--------------------------------------------------------------------------- */
+.effect-font-gradient {
+  background: linear-gradient(180deg, #fcfdff 30%, #a7abb3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
 @property --border-angle {
   syntax: '<angle>';
   initial-value: 0deg;
@@ -28,12 +76,66 @@ img {
 }
 
 @theme {
+  /* Familles. `font-sans` est la police par défaut de tout le document,
+     `font-display` est réservée aux titres. */
+  --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Accent : un mot du titre en italique. Aucun autre usage. */
+  --font-accent: 'Instrument Serif', ui-serif, Georgia, serif;
+
+  /* Échelle typographique — 5 rôles, cf. DESIGN.md § Typography.
+     Aucune taille de texte ne doit être écrite en dur dans un composant. */
+  --text-display: clamp(2.5rem, 5.5vw, 4rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 600;
+
+  --text-headline: clamp(1.75rem, 3vw, 2.5rem);
+  --text-headline--line-height: 1.1;
+  --text-headline--letter-spacing: -0.025em;
+  --text-headline--font-weight: 600;
+
+  /* Titres de SECTION de la landing — style validé sur la version Template
+     (Strix) puis généralisé : Instrument Sans en 400, tracking très serré,
+     rendu avec `.effect-font-gradient`. Le h1 du hero garde `display`. */
+  --text-section: clamp(1.75rem, 2.8vw, 2.75rem);
+  --text-section--line-height: 1.2;
+  --text-section--letter-spacing: -0.045em;
+  --text-section--font-weight: 400;
+
+  --text-title: 1.0625rem;
+  --text-title--line-height: 1.35;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 600;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.01em;
+  --text-label--font-weight: 500;
+
+  /* Formes — cf. DESIGN.md § Shapes */
+  --radius-poster: 8px;
+  --radius-card: 14px;
+  --radius-control: 12px;
+
+  /* Profondeur — l'affiche est le seul objet ombré du système.
+     cf. DESIGN.md § Elevation & Depth */
+  --shadow-poster: 0 18px 40px -24px rgb(0 0 0 / 0.9);
+  --shadow-poster-front: 0 40px 80px -32px rgb(0 0 0 / 0.95);
+
   --color-border: hsl(218 25% 16%);
   --color-input: hsl(218 25% 16%);
   --color-ring: hsl(215 15% 55%);
   --color-background: hsl(224 15% 4%);
   --color-foreground: hsl(210 25% 96%);
 
+  /* L'accent unique du système, documenté dans DESIGN.md mais qui n'avait
+     jamais eu de token — d'où son absence totale de l'interface. Réservé à
+     UNE chose par viewport (« The Marquee Rule »). */
+  --color-marquee: #38c7ff;
   --color-primary: hsl(210 25% 96%);
   --color-primary-foreground: hsl(224 25% 9%);
 
@@ -44,7 +146,13 @@ img {
   --color-destructive-foreground: hsl(210 25% 96%);
 
   --color-muted: hsl(218 25% 14%);
+  /* Méta qui doit s'effacer : compteurs, années, légendes, sur-titres.
+     Bleuté et volontairement en retrait (5,6:1 sur l'encre). */
   --color-muted-foreground: hsl(215 15% 55%);
+  /* Prose qu'on lit vraiment : descriptions, réponses de FAQ, citations.
+     Gris quasi neutre et nettement plus clair (7,9:1) — sur un fond froid,
+     un gris bleuté à ce niveau de luminosité disparaît à la lecture. */
+  --color-copy: hsl(200 3% 64%);
 
   --color-accent: hsl(218 25% 14%);
   --color-accent-foreground: hsl(210 25% 96%);
@@ -70,6 +178,50 @@ img {
   --animate-slide-left: slide-left 60s linear infinite;
   --animate-fade-in: fade-in 0.2s ease-out;
   --animate-border-spin: border-spin 9s linear infinite;
+  /* CTA final « Workflow » : point lumineux qui parcourt la ligne. */
+  --animate-flow-dot: flow-dot 7s linear infinite;
+  /* CTA final « Projecteur » : poussières en suspension dans le faisceau. */
+  --animate-dust: dust 9s ease-in-out infinite alternate;
+
+  @keyframes flow-dot {
+    0% {
+      left: 0%;
+      opacity: 0;
+    }
+    6% {
+      opacity: 1;
+    }
+    94% {
+      opacity: 1;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes dust {
+    from {
+      transform: translateY(0);
+      opacity: 0.5;
+    }
+    to {
+      transform: translateY(-16px);
+      opacity: 0.15;
+    }
+  }
+
+  /* CTA final « Workflow » : flottement doux des tuiles de plateformes. */
+  --animate-tile-float: tile-float 5s ease-in-out infinite alternate;
+
+  @keyframes tile-float {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-7px);
+    }
+  }
 
   @keyframes border-spin {
     to {
@@ -121,6 +273,7 @@ img {
       opacity: 1;
     }
   }
+
 
   /* Enter/exit animations for Radix components */
   @keyframes enter {

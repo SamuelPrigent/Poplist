@@ -256,37 +256,43 @@ function ListsContentInner() {
   return (
     <Section className="mb-20 max-[749px]:mb-2">
       {/* Title */}
-      <div className="mt-0 mb-1 max-[749px]:mb-5">
-        <h1 className="text-3xl font-bold text-white max-[749px]:text-[28px]">
-          {content.watchlists.title}
-        </h1>
+      {/* 16px sous le titre : la valeur de la Breathing Rule (plus d'espace
+          au-dessus d'un titre qu'en dessous). */}
+      <div className="mt-0 mb-4 max-[749px]:mb-5">
+        <h1 className="text-headline text-foreground">{content.watchlists.title}</h1>
       </div>
 
       {/* Filters and Create Button */}
       <div className="mb-8 flex items-end justify-between max-[749px]:mb-6">
-        <div className="flex items-end gap-2 max-[749px]:hidden">
-          <button
-            type="button"
-            onClick={toggleOwned}
-            className={`focus-visible:ring-offset-background h-[31px] cursor-pointer rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
-              showOwned
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            {content.watchlists.myWatchlists || 'Mes watchlists'}
-          </button>
-          <button
-            type="button"
-            onClick={toggleSaved}
-            className={`focus-visible:ring-offset-background h-[31px] cursor-pointer rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
-              showSaved
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            {content.watchlists.followed || 'Suivies'}
-          </button>
+        {/* Habillage d'origine : actif en papier, inactif en gris plein.
+            Le `role="group"` et les `aria-pressed` sont conservés — ils ne
+            changent rien à l'écran mais annoncent l'état aux lecteurs
+            d'écran, ce que la version d'origine ne faisait pas. */}
+        <div
+          role="group"
+          aria-label={content.watchlists.title}
+          className="flex items-end gap-2 max-[749px]:hidden"
+        >
+          {(
+            [
+              { on: showOwned, toggle: toggleOwned, label: content.watchlists.myWatchlists },
+              { on: showSaved, toggle: toggleSaved, label: content.watchlists.followed },
+            ] as const
+          ).map((filter) => (
+            <button
+              key={filter.label}
+              type="button"
+              onClick={filter.toggle}
+              aria-pressed={filter.on}
+              className={`focus-visible:ring-offset-background h-[31px] cursor-pointer rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:outline-none ${
+                filter.on
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
         </div>
 
         <Button

@@ -1,9 +1,10 @@
 'use client';
 
-import { Plus, Star } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Img as Image } from '@/components/ui/Img';
 import { watchlistsQueries } from '@/api/queries';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { getTMDBImageUrl, getTMDBLanguage } from '@/lib/utils';
 import { useLanguageStore } from '@/store/language';
 
@@ -29,7 +30,7 @@ function formatRuntime(minutes: number | undefined) {
 }
 
 /**
- * Card tendance mobile (pleine largeur, format paysage) : backdrop TMDB en
+ * Card tendance mobile (280px dans le rail horizontal, format paysage) : backdrop TMDB en
  * fond (la bannière utilisée dans ItemDetailsModal, pas le poster portrait),
  * note en haut à gauche, "+" en haut à droite, titre + type + durée/saisons
  * en bas. Le clic sur la card ouvre la fiche, le "+" ouvre directement le
@@ -50,9 +51,14 @@ export function TrendingCardMobile({
 
   // Durée (film) / saisons + épisodes (série) : absents de l'API trending,
   // on lit les détails via TQ (cache partagé avec ItemDetailsModal).
-  const detailsQuery = useQuery(
-    watchlistsQueries.itemDetails(String(id), mediaType, getTMDBLanguage(language)),
-  );
+  // Le bloc mobile reste monté sur desktop (il n'est masqué qu'en CSS) : sans
+  // ce garde, ces cartes iraient chercher leurs détails alors qu'elles ne sont
+  // jamais visibles.
+  const isMobile = useIsMobile();
+  const detailsQuery = useQuery({
+    ...watchlistsQueries.itemDetails(String(id), mediaType, getTMDBLanguage(language)),
+    enabled: isMobile,
+  });
   const details = detailsQuery.data?.details;
 
   const typeLabel =
@@ -84,7 +90,7 @@ export function TrendingCardMobile({
           onClick();
         }
       }}
-      className="bg-muted relative block aspect-[2/1] w-full cursor-pointer overflow-hidden rounded-2xl text-left"
+      className="bg-muted rounded-card relative block aspect-[2/1] w-full cursor-pointer overflow-hidden text-left"
     >
       {/* Backdrop */}
       {backdropUrl && (
@@ -92,7 +98,7 @@ export function TrendingCardMobile({
           src={backdropUrl}
           alt={displayTitle || ''}
           fill
-          sizes="100vw"
+          sizes="280px"
           className="object-cover"
           unoptimized
         />
@@ -100,14 +106,6 @@ export function TrendingCardMobile({
 
       {/* Gradient bas pour la lisibilité du texte */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
-
-      {/* Note — top left */}
-      {voteAverage && voteAverage > 0 ? (
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-sm">
-          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-          <span className="text-sm font-semibold text-white">{voteAverage.toFixed(1)}</span>
-        </div>
-      ) : null}
 
       {/* + — top right, ouvre le drawer d'ajout */}
       {onAddClick && (
@@ -121,20 +119,36 @@ export function TrendingCardMobile({
             e.currentTarget.blur();
             onAddClick();
           }}
-          className="absolute top-3 right-3 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors active:bg-black/70"
+          // Cible tactile de 44px, mais disque visible de 30px : à 44 le
+          // bouton écrasait l'affiche. Le fond est porté par le span, pas par
+          // le bouton, donc la zone tapable reste plus grande que le visuel.
+          className="absolute top-1 right-1 z-10 flex h-11 w-11 cursor-pointer items-center justify-center text-white"
         >
-          <Plus className="h-5 w-5" />
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-black/55 transition-colors active:bg-black/75">
+            <Plus className="h-4 w-4" strokeWidth={2} />
+          </span>
         </button>
       )}
 
-      {/* Titre + méta — bas */}
+      {/* Titre + méta — bas. La note est un simple chiffre dans la ligne de
+          méta : pas de pastille colorée, pas d'étoile (cf. DESIGN.md, la
+          couleur appartient aux affiches). */}
       <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-3.5">
-        <h3 className="truncate text-lg leading-tight font-bold text-white">{displayTitle}</h3>
-        <div className="mt-1.5 flex items-center gap-2">
-          <span className="rounded-md bg-white/15 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
-            {typeLabel}
-          </span>
-          {meta && <span className="text-sm text-white/90">{meta}</span>}
+        <h3 className="text-title truncate text-white">{displayTitle}</h3>
+        <div className="text-label mt-1 flex items-center gap-2 text-white/80">
+          <span>{typeLabel}</span>
+          {meta && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{meta}</span>
+            </>
+          )}
+          {voteAverage && voteAverage > 0 ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="text-white">{voteAverage.toFixed(1)}</span>
+            </>
+          ) : null}
         </div>
       </div>
     </div>

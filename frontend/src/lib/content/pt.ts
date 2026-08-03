@@ -16,9 +16,9 @@ export const pt: Content = {
   // Auth Drawer
   auth: {
     loginTitle: 'Entrar',
-    loginDescription: 'Bem-vindo de volta! Inicie sessão para aceder às suas listas.',
+    loginDescription: 'Bem-vindo de volta! Inicia sessão para acederes às tuas listas.',
     signupTitle: 'Registar',
-    signupDescription: 'Crie uma conta para guardar as suas listas.',
+    signupDescription: 'Cria uma conta para guardares as tuas listas.',
     continueWithGoogle: 'Continuar com Google',
     or: 'Ou',
     email: 'Email',
@@ -34,13 +34,13 @@ export const pt: Content = {
   watchlists: {
     title: 'Biblioteca',
     createWatchlist: 'Nova lista',
-    createWatchlistDescription: 'Crie uma nova lista para organizar os seus filmes e séries.',
+    createWatchlistDescription: 'Cria uma nova lista para organizares os teus filmes e séries.',
     noWatchlistsMobile: 'Nenhuma lista',
-    createWatchlistDescriptionMobile: 'Crie a sua primeira lista.',
+    createWatchlistDescriptionMobile: 'Cria a tua primeira lista.',
     noWatchlists: 'Ainda não criou nenhuma lista.',
     signupCta: {
-      title: 'Crie uma conta',
-      description: 'Crie listas de filmes e séries e compartilhe com a comunidade.',
+      title: 'Cria uma conta',
+      description: 'Cria listas de filmes e séries e partilha-as com a comunidade.',
       button: 'Cadastre-se',
     },
     myWatchlists: 'As minhas listas',
@@ -49,15 +49,18 @@ export const pt: Content = {
     adjustFilters: 'Ajuste os filtros para ver mais listas',
     items: 'itens',
     item: 'item',
+    by: 'por',
+    saveCount: 'guardado',
+    savesCount: 'guardados',
     loading: 'A carregar...',
     accountDataBadge: 'Dados da conta de utilizador',
     preview: 'Pré-visualização',
     categories: 'Categorias / Etiquetas',
     categoriesDescription:
-      'Selecione uma ou mais categorias para facilitar a descoberta da sua lista',
+      'Seleciona uma ou mais categorias para facilitar a descoberta da tua lista',
     genreCategories: 'Categorias de género',
     platformCategories: 'Plataformas de streaming',
-    platformsDescription: 'Selecione as plataformas onde a sua lista está disponível',
+    platformsDescription: 'Seleciona as plataformas onde a tua lista está disponível',
     name: 'Nome',
     namePlaceholder: 'A minha lista',
     description: 'Descrição',
@@ -73,7 +76,7 @@ export const pt: Content = {
     back: 'Voltar',
     noItemsYet: 'Ainda sem itens',
     noItemsDescription:
-      'Comece a adicionar filmes e séries à sua lista para organizar a sua fila de visualização.',
+      'Começa a adicionar filmes e séries à tua lista para organizares a tua fila de visualização.',
     edit: 'Editar',
     editWatchlist: 'Editar lista',
     editWatchlistDescription: 'Edite as informações da sua lista.',
@@ -90,7 +93,7 @@ export const pt: Content = {
     searchPlaceholder: 'Pesquisar um filme ou série...',
     searching: 'A pesquisar...',
     noResults: 'Nenhum resultado encontrado',
-    startSearching: 'Comece a digitar para pesquisar filmes e séries',
+    startSearching: 'Começa a escrever para pesquisar filmes e séries',
     add: 'Adicionar',
     added: 'Adicionado',
     inWatchlist: 'Na lista',
@@ -164,7 +167,7 @@ export const pt: Content = {
       removeError: 'Falha ao remover colaborador',
       leaveTitle: 'Sair da lista?',
       leaveDescription:
-        'Tem certeza de que deseja sair desta lista? Você perderá seus direitos de colaborador.',
+        'Tens a certeza de que queres sair desta lista? Vais perder os teus direitos de colaborador.',
       leave: 'Sair',
       leaving: 'Saindo...',
       leaveSuccess: 'Você saiu da lista',
@@ -181,15 +184,19 @@ export const pt: Content = {
       duplicating: 'Duplicando...',
       listDuplicated: 'Lista duplicada',
       duplicateError: 'Não foi possível duplicar a lista',
+      itemAdded: 'Adicionado à lista',
+      itemRemoved: 'Removido da lista',
+      itemAddError: 'Não foi possível adicionar, tenta de novo',
+      itemRemoveError: 'Não foi possível remover, tenta de novo',
     },
   },
 
   landing: {
     hero: {
-      title: 'Crie e compartilhe listas dos seus filmes e séries favoritos',
-      subtitle: 'Organize suas noites de TV e compartilhe suas descobertas com seus amigos',
-      titleMobile: 'Crie listas dos seus filmes e séries favoritos',
-      subtitleMobile: 'Organize suas noites de TV',
+      title: 'Cria e partilha listas dos teus conteúdos favoritos',
+      subtitle: 'Organiza as tuas noites de TV e partilha as tuas descobertas com os teus amigos',
+      titleMobile: 'Cria listas dos teus conteúdos favoritos',
+      subtitleMobile: 'Organiza as tuas noites de TV',
     },
     features: {
       sectionTitle: 'Compartilhe seu universo cinematográfico',
@@ -197,18 +204,18 @@ export const pt: Content = {
       sectionSubtitle: 'Descubra todas as nossas funcionalidades',
       organize: {
         tagline: 'Organização',
-        title: 'Crie listas',
-        description: 'Crie listas pessoais de filmes e séries para assistir.',
+        title: 'Cria listas',
+        description: 'Cria listas pessoais de filmes e séries para veres.',
       },
       collaborate: {
         tagline: 'Colaboração',
         title: 'Adicione colaboradores',
-        description: 'Convide amigos para contribuir com suas listas em tempo real.',
+        description: 'Convida amigos para contribuírem para as tuas listas em tempo real.',
       },
       share: {
         tagline: 'Compartilhamento',
-        title: 'Compartilhe suas listas',
-        description: 'Compartilhe suas listas com um simples link para seus amigos.',
+        title: 'Partilha as tuas listas',
+        description: 'Partilha as tuas listas com um simples link para os teus amigos.',
       },
       discover: {
         tagline: 'Descoberta',
@@ -217,10 +224,10 @@ export const pt: Content = {
       },
     },
     startInSeconds: {
-      title: 'Comece em segundos',
-      subtitle: 'Sem configuração complicada, apenas você e seu conteúdo favorito',
+      title: 'Começa em segundos',
+      subtitle: 'Sem configuração complicada, apenas tu e o teu conteúdo favorito',
       step1: {
-        title: 'Crie sua lista',
+        title: 'Cria a tua lista',
         description: 'Dê um nome à sua lista e comece a organizar.',
       },
       step2: {
@@ -228,8 +235,8 @@ export const pt: Content = {
         description: 'Adicione filmes e séries em poucos cliques.',
       },
       step3: {
-        title: 'Compartilhe com seus amigos',
-        description: 'Um link é tudo que você precisa para compartilhar.',
+        title: 'Partilha com os teus amigos',
+        description: 'Um link é tudo o que precisas para partilhar.',
       },
     },
     testimonials: {
@@ -251,11 +258,26 @@ export const pt: Content = {
         author: 'Julie M.',
         pseudo: '@juliem',
       },
+      testimonial4: {
+        text: 'Compartilhar com um link foi o que me convenceu. Meus amigos veem minha lista sem criar conta.',
+        author: 'Karim B.',
+        pseudo: '@karimb',
+      },
+      testimonial5: {
+        text: 'Planejamos nossas noites de séries juntos, cada um adiciona à mesma lista.',
+        author: 'Léa P.',
+        pseudo: '@leapasc',
+      },
+      testimonial6: {
+        text: 'Finalmente um lugar com tudo que me recomendam. Chega de procurar por 20 minutos.',
+        author: 'Antoine R.',
+        pseudo: '@antoiner',
+      },
     },
     finalCta: {
-      title: 'Comece a criar suas listas facilmente',
+      title: 'Começa a criar as tuas listas facilmente',
       titleMobile: 'Junte-se à aventura',
-      subtitle: 'Junte-se ao Poplist e organize seus conteúdos favoritos em poucos cliques.',
+      subtitle: 'Junta-te ao Poplist e organiza os teus conteúdos favoritos em poucos cliques.',
       subtitleMobile: 'Junte-se à nossa comunidade',
       button: 'Criar minha lista',
       disclaimer: 'Aplicativo gratuito • Não é necessário cartão',
@@ -270,8 +292,8 @@ export const pt: Content = {
       cta: 'Descobrir',
       ctaSecondary: 'Saber mais',
       pills: {
-        organize: 'Organize seus filmes',
-        share: 'Compartilhe com seus amigos',
+        organize: 'Organiza os teus filmes',
+        share: 'Partilha com os teus amigos',
         discover: 'Descubra pérolas',
       },
     },
@@ -284,10 +306,12 @@ export const pt: Content = {
       title: 'Listas por categoria',
       subtitle: 'Seleção Poplist',
       seeMore: 'Ver mais',
+      list: 'lista',
+      lists: 'listas',
     },
     platformsSection: {
       title: 'Listas por plataforma',
-      subtitle: 'As suas plataformas favoritas',
+      subtitle: 'As tuas plataformas favoritas',
       seeAll: 'Ver tudo',
     },
     popularWatchlists: {
@@ -295,30 +319,32 @@ export const pt: Content = {
       subtitle: 'Partilhadas pela comunidade',
       seeMore: 'Ver mais',
       noWatchlists: 'Nenhuma lista pública no momento',
+      loadError: 'Não foi possível carregar as listas',
+      retry: 'Tentar de novo',
     },
     faq: {
       title: 'Perguntas frequentes',
-      subtitle: 'Tudo o que precisa saber para começar',
+      subtitle: 'As perguntas mais frequentes sobre a plataforma: o princípio, o nosso valor acrescentado e como funciona.',
       questions: {
         pricing: {
           question: 'É gratuito para usar?',
           answer:
-            'Sim, a aplicação é completamente gratuita! Pode criar tantas listas quantas quiser, partilhá-las com os seus amigos e explorar milhares de filmes e séries sem qualquer custo.',
+            'Sim, a aplicação é completamente gratuita! Podes criar tantas listas quantas quiseres, partilhá-las com os teus amigos e explorar milhares de filmes e séries sem qualquer custo.',
         },
         exploreSection: {
           question: 'Para que serve a secção Explorar?',
           answer:
-            'A secção Explorar permite-lhe descobrir novos conteúdos navegando pelas tendências atuais, os filmes e séries mais populares ou mais bem classificados. Pode filtrar por género para encontrar exatamente o que procura e adicionar elementos diretamente às suas listas.',
+            'A secção Explorar permite-te descobrir novos conteúdos navegando pelas tendências atuais, os filmes e séries mais populares ou mais bem classificados. Podes filtrar por género para encontrares exatamente o que procuras e adicionar elementos diretamente às tuas listas.',
         },
         whatMakesDifferent: {
           question: 'O que torna esta aplicação diferente?',
           answer:
-            'Esta aplicação visa manter-se simples com poucas funcionalidades e páginas para ser clara e fácil de usar. A experiência pretende ser natural e intuitiva, sem complexidade desnecessária. Focamo-nos no essencial: organizar e partilhar os seus filmes e séries favoritos.',
+            'Esta aplicação visa manter-se simples com poucas funcionalidades e páginas para ser clara e fácil de usar. A experiência pretende ser natural e intuitiva, sem complexidade desnecessária. Focamo-nos no essencial: organizar e partilhar os teus filmes e séries favoritos.',
         },
         streaming: {
           question: 'Posso ver séries ou filmes?',
           answer:
-            'Não, o objetivo desta aplicação não é o streaming mas a partilha fácil de conteúdos que gostou nas suas plataformas favoritas. Ajudamos-lhe a organizar o que quer ver e a partilhá-lo com a sua comunidade, mas para visualizar o conteúdo, terá de ir às plataformas de streaming apropriadas.',
+            'Não, o objetivo desta aplicação não é o streaming mas a partilha fácil de conteúdos de que gostaste nas tuas plataformas favoritas. Ajudamos-te a organizar o que queres ver e a partilhá-lo com a tua comunidade, mas para visualizares o conteúdo, tens de ir às plataformas de streaming apropriadas.',
         },
       },
     },
@@ -326,6 +352,7 @@ export const pt: Content = {
       title: 'Tendências de hoje',
       subtitle: 'Filmes e séries do momento',
       noImage: 'Sem imagem',
+      seeMore: 'Ver tudo',
     },
     recommendations: {
       title: 'Tendências do momento',
@@ -395,7 +422,7 @@ export const pt: Content = {
       pageOf: 'Página {page} de {totalPages}',
     },
     noResults: 'Nenhuma lista encontrada',
-    noResultsDescription: 'Tente ajustar os seus filtros ou pesquisa',
+    noResultsDescription: 'Tenta ajustar os teus filtros ou a pesquisa',
   },
 
   categories: {
@@ -457,16 +484,16 @@ export const pt: Content = {
       },
       toasts: {
         updated: 'Avatar atualizado',
-        updatedDesc: 'Seu avatar foi atualizado com sucesso',
+        updatedDesc: 'O teu avatar foi atualizado com sucesso',
         deleted: 'Avatar excluído',
-        deletedDesc: 'Seu avatar foi excluído com sucesso',
+        deletedDesc: 'O teu avatar foi eliminado com sucesso',
       },
     },
     usernameSection: {
       title: 'Nome de utilizador',
-      description: 'Atualize o seu nome de utilizador. É assim que os outros o verão.',
+      description: 'Atualiza o teu nome de utilizador. É assim que os outros te verão.',
       label: 'Nome de utilizador',
-      placeholder: 'Introduza o seu nome de utilizador',
+      placeholder: 'Introduz o teu nome de utilizador',
       hint: '3-20 caracteres. Apenas letras, números e sublinhados.',
       updateButton: 'Atualizar',
       validation: {
@@ -477,9 +504,9 @@ export const pt: Content = {
     },
     passwordSection: {
       title: 'Palavra-passe',
-      description: 'Altere a sua palavra-passe. Certifique-se de que tem pelo menos 8 caracteres.',
+      description: 'Altera a tua palavra-passe. Certifica-te de que tem pelo menos 8 caracteres.',
       currentPasswordLabel: 'Palavra-passe',
-      currentPasswordPlaceholder: 'Introduza a sua palavra-passe atual',
+      currentPasswordPlaceholder: 'Introduz a tua palavra-passe atual',
       newPasswordLabel: 'Nova palavra-passe',
       newPasswordPlaceholder: 'Nova palavra-passe',
       confirmPasswordLabel: 'Confirmação',
@@ -488,9 +515,9 @@ export const pt: Content = {
     },
     deleteSection: {
       title: 'Eliminar conta',
-      description: 'Ação irreversível. Todos os seus dados serão eliminados.',
-      dialogTitle: 'Eliminar a sua conta',
-      dialogDescription: 'Ação irreversível. Todos os seus dados serão eliminados.',
+      description: 'Ação irreversível. Todos os teus dados serão eliminados.',
+      dialogTitle: 'Eliminar a tua conta',
+      dialogDescription: 'Ação irreversível. Todos os teus dados serão eliminados.',
       confirmationLabel: "Digite 'confirmar' para continuar",
       confirmationPlaceholder: 'confirmar',
       deleteButton: 'Eliminar conta',

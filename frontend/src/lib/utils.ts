@@ -1,9 +1,7 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
+// `cn` vit dans `lib/cn.ts` (twMerge étendu avec nos rôles typographiques).
+// Ce ré-export garde les ~12 imports existants `from '@/lib/utils'` valides
+// tout en garantissant une seule implémentation.
+export { cn } from "./cn";
 
 /**
  * Scrolls the window to the top of the page

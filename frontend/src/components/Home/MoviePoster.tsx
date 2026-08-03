@@ -1,7 +1,7 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Eye, Film, Plus, Star } from "lucide-react";
+import { Film, Plus } from "lucide-react";
 import { Img as Image } from "@/components/ui/Img";
 import { useState } from "react";
 import type { Watchlist } from "@/api";
@@ -13,7 +13,6 @@ interface MoviePosterProps {
    title?: string;
    name?: string;
    posterPath?: string;
-   voteAverage?: number;
    releaseDate?: string;
    overview?: string;
    onClick?: () => void;
@@ -22,6 +21,8 @@ interface MoviePosterProps {
    onRemoveFromWatchlist?: (watchlistId: string) => void;
    addToWatchlistLabel?: string;
    noWatchlistLabel?: string;
+   /** Affiche au-dessus de la ligne de flottaison : chargement non différé. */
+   priority?: boolean;
 }
 
 export function MoviePoster({
@@ -29,13 +30,13 @@ export function MoviePoster({
    title,
    name,
    posterPath,
-   voteAverage,
    onClick,
    watchlists,
    onAddToWatchlist,
    onRemoveFromWatchlist,
    addToWatchlistLabel = "Ajouter à une liste",
    noWatchlistLabel = "Aucune liste",
+   priority = false,
 }: MoviePosterProps) {
    const displayTitle = title || name;
    const [imageError, setImageError] = useState(false);
@@ -44,7 +45,7 @@ export function MoviePoster({
 
    const posterContent = (
       <>
-         <div className="bg-muted relative mb-3 aspect-2/3 overflow-hidden rounded-lg shadow-lg">
+         <div className="bg-muted shadow-poster rounded-poster relative h-full w-full overflow-hidden">
             {/* Image with zoom on hover/focus */}
             {posterPath && !imageError ? (
                <Image
@@ -53,7 +54,8 @@ export function MoviePoster({
                   alt={displayTitle || "Movie poster"}
                   fill
                   sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105"
+                  className="object-cover"
+                  priority={priority}
                   onError={() => setImageError(true)}
                   unoptimized
                />
@@ -63,29 +65,21 @@ export function MoviePoster({
                </div>
             )}
 
-            {/* Dark overlay with centered eye icon on hover/focus */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/50 group-focus-within:bg-black/50">
-               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
-                  <Eye className="h-7 w-7 text-white" />
-               </div>
+            {/* Le titre ne monte qu'au survol, dans le même traitement que la
+                tête de rail (voile bas + rôle `title`) : la ligne reste
+                homogène, et une affiche au repos n'a rien qui la surcharge. */}
+            <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+               <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/85 via-black/35 to-transparent" />
+               <h3 className="text-title text-foreground absolute inset-x-0 bottom-0 line-clamp-2 px-3 pb-3">
+                  {displayTitle}
+               </h3>
             </div>
-
-            {/* Bottom gradient */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
-
-            {/* Rating badge */}
-            {voteAverage && voteAverage > 0 && (
-               <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 backdrop-blur-sm">
-                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-semibold text-white">{voteAverage.toFixed(1)}</span>
-               </div>
-            )}
 
             {/* Add to watchlist dropdown - top right.
                 Masqué sur mobile : opacity-0 restait tapable par inadvertance
                 (pas de hover) — on passe par le drawer détail pour ajouter */}
             {showAddButton && (
-               <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-[749px]:hidden">
+               <div className="absolute top-2.5 right-2.5 z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-[749px]:hidden">
                   <WatchlistPickerMenu
                      watchlists={ownedWatchlists}
                      tmdbId={id}
@@ -99,7 +93,8 @@ export function MoviePoster({
                      <DropdownMenu.Trigger asChild>
                         <button
                            type="button"
-                           className="cursor-pointer rounded-full bg-black/70 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black outline-none focus-visible:ring-2 focus-visible:ring-white"
+                           aria-label={addToWatchlistLabel}
+                           className="cursor-pointer rounded-full bg-black/70 p-2.5 text-white transition-colors hover:bg-black outline-none focus-visible:ring-2 focus-visible:ring-white"
                            onClick={e => e.stopPropagation()}
                            onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
@@ -115,11 +110,6 @@ export function MoviePoster({
                </div>
             )}
          </div>
-         {/* Mobile : jamais de retour à la ligne — 1 seule ligne, "…" en fin
-             de ligne + mask gradient à droite (même pattern que ListCard) */}
-         <h3 className="line-clamp-2 text-base font-semibold text-white max-[749px]:line-clamp-none max-[749px]:truncate max-[749px]:mask-[linear-gradient(to_right,black,black_85%,transparent)]">
-            {displayTitle}
-         </h3>
       </>
    );
 
@@ -130,12 +120,12 @@ export function MoviePoster({
             tabIndex={0}
             onClick={onClick}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
-            className="group w-full cursor-pointer text-left outline-none"
+            className="group aspect-2/3 w-full cursor-pointer text-left outline-none"
          >
             {posterContent}
          </div>
       );
    }
 
-   return <div className="group">{posterContent}</div>;
+   return <div className="group aspect-2/3">{posterContent}</div>;
 }

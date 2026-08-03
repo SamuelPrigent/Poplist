@@ -6,6 +6,7 @@ import { PageFade } from '@/components/ui/PageFade';
 import { useEffect, useMemo, useState } from 'react';
 import { Section } from '@/components/layout/Section';
 import { Pagination } from '@/components/ui/pagination';
+import { CreatorTasteCard } from '@/components/User/CreatorTasteCard';
 import { UserCard } from '@/components/User/UserCard';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { watchlistsQueries } from '@/api/queries';
@@ -15,10 +16,15 @@ const ITEMS_PER_PAGE_DEFAULT = 40;
 
 // Skeleton component
 const UserCardSkeleton = () => (
-  <div className="bg-muted/30 flex flex-col items-center gap-3 rounded-lg p-5">
-    <div className="bg-muted/50 h-20 w-20 rounded-full" />
-    <div className="bg-muted/50 h-4 w-24 rounded" />
-    <div className="bg-muted/50 h-3 w-16 rounded" />
+  <div className="flex flex-col gap-3">
+    <div className="bg-muted/40 rounded-poster h-24 w-28 max-[749px]:h-[60px] max-[749px]:w-[60px] max-[749px]:rounded-full" />
+    <div className="flex items-center gap-2 max-[749px]:flex-col max-[749px]:gap-1">
+      <div className="bg-muted/40 h-9 w-9 rounded-full max-[749px]:hidden" />
+      <div className="flex flex-col gap-1 max-[749px]:items-center">
+        <div className="bg-muted/40 h-3 w-16 rounded" />
+        <div className="bg-muted/40 h-3 w-12 rounded" />
+      </div>
+    </div>
   </div>
 );
 
@@ -27,6 +33,8 @@ interface Creator {
   username: string;
   avatarUrl?: string;
   listCount: number;
+  /** Affiches de ses listes publiques — la carte les montre en éventail. */
+  posters: string[];
 }
 
 function UsersContentInner() {
@@ -44,22 +52,32 @@ function UsersContentInner() {
 
   const creators = useMemo<Creator[]>(() => {
     const creatorsMap = new Map<string, Creator>();
+    const postersOf = (wl: { items?: { posterPath?: string | null }[] }) =>
+      (wl.items ?? [])
+        .map((item) => item.posterPath)
+        .filter((path): path is string => !!path)
+        .slice(0, 3);
+
     for (const wl of publicQuery.data?.watchlists ?? []) {
       if (!wl.owner) continue;
       const ownerId = wl.owner.id;
       const existing = creatorsMap.get(ownerId);
       if (existing) {
         existing.listCount += 1;
+        existing.posters.push(...postersOf(wl));
       } else {
         creatorsMap.set(ownerId, {
           id: ownerId,
           username: wl.owner.username || 'Utilisateur',
           avatarUrl: wl.owner.avatarUrl ?? undefined,
           listCount: 1,
+          posters: postersOf(wl),
         });
       }
     }
-    return Array.from(creatorsMap.values()).sort((a, b) => b.listCount - a.listCount);
+    return Array.from(creatorsMap.values())
+      .sort((a, b) => b.listCount - a.listCount)
+      .map((creator) => ({ ...creator, posters: creator.posters.slice(0, 3) }));
   }, [publicQuery.data]);
 
   // Scroll to top when page changes
@@ -93,7 +111,7 @@ function UsersContentInner() {
 
         {/* Header — mêmes tailles que PageHeader (page /categories) */}
         <div className="mb-8 max-[749px]:mb-6">
-          <h1 className="mb-2 text-4xl font-bold text-white max-[749px]:text-3xl">
+          <h1 className="text-headline text-foreground mb-2">
             {content.home.creators.title}
           </h1>
           <p className="text-muted-foreground text-base max-[749px]:text-sm">
@@ -103,20 +121,38 @@ function UsersContentInner() {
 
         {/* Creators grid */}
         {loading ? (
-          <div className="grid grid-cols-3 gap-3 max-[749px]:grid-cols-2 max-[749px]:gap-2 md:grid-cols-4 lg:grid-cols-6">
-            {Array.from({ length: 10 }).map((_, i) => (
+          <div className="grid grid-cols-7 gap-x-6 gap-y-8 max-[1099px]:grid-cols-5 max-[749px]:grid-cols-3">
+            {Array.from({ length: 12 }).map((_, i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
         ) : creators.length > 0 ? (
           <>
-            <div className="grid grid-cols-3 gap-[11px] max-[749px]:grid-cols-2 max-[749px]:gap-2 md:grid-cols-4 lg:grid-cols-6">
+            {/* Desktop : la carte « Goût » en version large, sur la même
+                densité qu'avant (7 par ligne). Ce sont les affiches et le nom
+                qui ont grandi, pas la grille qui s'est desserrée. */}
+            <div className="grid grid-cols-7 gap-x-6 gap-y-8 max-[1099px]:grid-cols-5 max-[749px]:hidden">
+              {paginatedCreators.map(creator => (
+                <CreatorTasteCard
+                  key={creator.id}
+                  creator={creator}
+                  content={content}
+                  size="md"
+                  className="w-full"
+                />
+              ))}
+            </div>
+
+            {/* Mobile : grille de 3 avatars. L'éventail d'affiches ne tient
+                pas dans une colonne de cette largeur. */}
+            <div className="hidden grid-cols-3 gap-x-4 gap-y-6 max-[749px]:grid">
               {paginatedCreators.map(creator => (
                 <UserCard
                   key={creator.id}
                   user={creator}
                   listCount={creator.listCount}
                   content={content}
+                  carousel
                 />
               ))}
             </div>

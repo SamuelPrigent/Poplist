@@ -49,6 +49,9 @@ export const it: Content = {
     adjustFilters: 'Regola i filtri per vedere più liste',
     items: 'elementi',
     item: 'elemento',
+    by: 'di',
+    saveCount: 'salvataggio',
+    savesCount: 'salvataggi',
     loading: 'Caricamento...',
     accountDataBadge: "Dati dell'account utente",
     preview: 'Anteprima',
@@ -181,14 +184,18 @@ export const it: Content = {
       duplicating: 'Duplicazione in corso...',
       listDuplicated: 'Lista duplicata',
       duplicateError: 'Impossibile duplicare la lista',
+      itemAdded: 'Aggiunto alla lista',
+      itemRemoved: 'Rimosso dalla lista',
+      itemAddError: "Aggiunta non riuscita, riprova",
+      itemRemoveError: 'Rimozione non riuscita, riprova',
     },
   },
 
   landing: {
     hero: {
-      title: 'Crea e condividi liste dei tuoi film e serie preferiti',
+      title: 'Crea e condividi liste dei tuoi contenuti preferiti',
       subtitle: 'Organizza le tue serate TV e condividi le tue scoperte con i tuoi amici',
-      titleMobile: 'Crea liste dei tuoi film e serie preferiti',
+      titleMobile: 'Crea liste dei tuoi contenuti preferiti',
       subtitleMobile: 'Organizza le tue serate TV',
     },
     features: {
@@ -251,6 +258,21 @@ export const it: Content = {
         author: 'Julie M.',
         pseudo: '@juliem',
       },
+      testimonial4: {
+        text: 'La condivisione con un link mi ha conquistato. I miei amici vedono la lista senza account.',
+        author: 'Karim B.',
+        pseudo: '@karimb',
+      },
+      testimonial5: {
+        text: 'Organizziamo le serate serie insieme, ognuno aggiunge alla stessa lista.',
+        author: 'Léa P.',
+        pseudo: '@leapasc',
+      },
+      testimonial6: {
+        text: 'Finalmente un posto con tutto ciò che mi consigliano. Niente più ricerche infinite.',
+        author: 'Antoine R.',
+        pseudo: '@antoiner',
+      },
     },
     finalCta: {
       title: 'Inizia a creare le tue liste facilmente',
@@ -284,6 +306,8 @@ export const it: Content = {
       title: 'Liste per categoria',
       subtitle: 'Selezione Poplist',
       seeMore: 'Vedi altro',
+      list: 'lista',
+      lists: 'liste',
     },
     platformsSection: {
       title: 'Liste per piattaforma',
@@ -295,10 +319,12 @@ export const it: Content = {
       subtitle: 'Condivise dalla community',
       seeMore: 'Vedi altro',
       noWatchlists: 'Nessuna lista pubblica al momento',
+      loadError: 'Non è stato possibile caricare le liste',
+      retry: 'Riprova',
     },
     faq: {
       title: 'Domande frequenti',
-      subtitle: 'Tutto ciò che devi sapere per iniziare',
+      subtitle: 'Le domande più frequenti sulla piattaforma: il principio, il nostro valore aggiunto e come funziona.',
       questions: {
         pricing: {
           question: 'È gratuito da usare?',
@@ -326,6 +352,7 @@ export const it: Content = {
       title: 'Tendenze di oggi',
       subtitle: 'Film e serie del momento',
       noImage: 'Nessuna immagine',
+      seeMore: 'Vedi tutto',
     },
     recommendations: {
       title: 'Tendenze del momento',

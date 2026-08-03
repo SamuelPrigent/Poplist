@@ -44,6 +44,11 @@ export interface Content {
     adjustFilters: string;
     items: string;
     item: string;
+    /** « par » — préfixe de l'auteur d'une liste (ListCard). */
+    by: string;
+    /** Nombre de sauvegardes d'une liste (signal social, cf. ListCard). */
+    saveCount: string;
+    savesCount: string;
     loading: string;
     accountDataBadge: string;
     preview: string;
@@ -168,6 +173,11 @@ export interface Content {
       duplicating: string;
       listDuplicated: string;
       duplicateError: string;
+      /** Ajout / retrait d'un titre dans une liste (home, explore). */
+      itemAdded: string;
+      itemRemoved: string;
+      itemAddError: string;
+      itemRemoveError: string;
     };
   };
   landing: {
@@ -237,6 +247,21 @@ export interface Content {
         author: string;
         pseudo: string;
       };
+      testimonial4: {
+        text: string;
+        author: string;
+        pseudo: string;
+      };
+      testimonial5: {
+        text: string;
+        author: string;
+        pseudo: string;
+      };
+      testimonial6: {
+        text: string;
+        author: string;
+        pseudo: string;
+      };
     };
     finalCta: {
       title: string;
@@ -268,6 +293,9 @@ export interface Content {
       title: string;
       subtitle: string;
       seeMore: string;
+      /** Badge de comptage d'une tuile catégorie : « 3 listes ». */
+      list: string;
+      lists: string;
     };
     platformsSection: {
       title: string;
@@ -279,6 +307,9 @@ export interface Content {
       subtitle: string;
       seeMore: string;
       noWatchlists: string;
+      /** Échec de chargement (distinct d'un vide) + action de reprise. */
+      loadError: string;
+      retry: string;
     };
     faq: {
       title: string;
@@ -306,6 +337,7 @@ export interface Content {
       title: string;
       subtitle: string;
       noImage: string;
+      seeMore: string;
     };
     recommendations: {
       title: string;
