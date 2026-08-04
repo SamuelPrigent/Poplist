@@ -14,9 +14,9 @@ export interface CategoryTile {
   /** Nombre de listes ; `undefined` tant que la donnée n'a pas résolu. */
   count: number | undefined;
   /**
-   * Affiches réelles des listes de la catégorie, **les plus récemment
-   * ajoutées d'abord**. L'affiche n'est donc pas un choix arbitraire figé,
-   * elle dit ce qui vient d'entrer dans la catégorie.
+   * Affiches réelles de la catégorie, déjà réparties par
+   * `lib/categoryPosters` : une par liste, et jamais le même titre que la
+   * catégorie voisine. Le choix est déterministe, pas tiré au sort.
    */
   posters: string[];
 }

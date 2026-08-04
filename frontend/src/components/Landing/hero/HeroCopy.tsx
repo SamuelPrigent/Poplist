@@ -86,11 +86,16 @@ const PLATFORM_LOGOS = [
   '/watchProvider/hbo.svg',
 ];
 
-
 /**
  * Coupe le titre après le premier mot « listes » (list* dans les 6 locales) :
  * avant = premier plan, après = atténué. Sans match, titre rendu tel quel.
  * Réservé aux variantes historiques ; les nouvelles gardent un titre plein.
+ *
+ * La seconde moitié recule sur DEUX axes à la fois : le ton (papier atténué)
+ * et la graisse (400 contre 600). Le titre garde une seule taille, donc une
+ * seule ligne de lecture, mais la hiérarchie se voit sans qu'on la cherche.
+ * C'est la Weight Rule de DESIGN.md appliquée à la lettre : l'emphase passe
+ * par la graisse, jamais par la seule couleur.
  */
 function renderTwoTone(title: string) {
   const words = title.split(' ');
@@ -100,7 +105,9 @@ function renderTwoTone(title: string) {
   return (
     <>
       {words.slice(0, index + 1).join(' ')}{' '}
-      <span className="text-muted-foreground">{words.slice(index + 1).join(' ')}</span>
+      <span className="text-muted-foreground font-normal">
+        {words.slice(index + 1).join(' ')}
+      </span>
     </>
   );
 }
@@ -209,7 +216,9 @@ function Actions({
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-wrap items-center gap-2', centered && 'justify-center', className)}>
+    <div
+      className={cn('flex flex-wrap items-center gap-2', centered && 'justify-center', className)}
+    >
       <CtaPrimary to={ctaUrl} withArrow size={compact ? 'sm' : 'md'}>
         {content.home.hero.cta}
       </CtaPrimary>
@@ -624,9 +633,7 @@ const TEXT_SPECS: Record<(typeof HERO_COPY_TEXTS)[number]['id'], TextSpec> = {
   },
   // Capitales espacées : le mot change de casse, pas de couleur.
   capitales: {
-    wrap: (word) => (
-      <span className="text-[0.78em] tracking-[0.06em] uppercase">{word}</span>
-    ),
+    wrap: (word) => <span className="text-[0.78em] tracking-[0.06em] uppercase">{word}</span>,
     after: 'logos',
   },
   // Contraste de graisse pur : titre en 400, le mot seul en 700.
@@ -708,10 +715,7 @@ function makeTextVariant(id: (typeof HERO_COPY_TEXTS)[number]['id'], spec: TextS
 
 const TEXT_VARIANTS = Object.fromEntries(
   HERO_COPY_TEXTS.map((text) => [text.id, makeTextVariant(text.id, TEXT_SPECS[text.id])]),
-) as Record<
-  (typeof HERO_COPY_TEXTS)[number]['id'],
-  (props: VariantProps) => React.ReactElement
->;
+) as Record<(typeof HERO_COPY_TEXTS)[number]['id'], (props: VariantProps) => React.ReactElement>;
 
 const VARIANTS: Record<HeroCopyVariant, (props: VariantProps) => React.ReactElement> = {
   sobre: CopySobre,
@@ -748,12 +752,7 @@ export function HeroCopy({
         className,
       )}
     >
-      <Variant
-        content={content}
-        ctaUrl={ctaUrl}
-        centered={centered}
-        compact={compact}
-      />
+      <Variant content={content} ctaUrl={ctaUrl} centered={centered} compact={compact} />
     </div>
   );
 }

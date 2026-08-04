@@ -13,6 +13,12 @@ export interface CreatorTile {
   listCount: number;
   /** Affiches tirées de ses listes publiques : ce qu'il curate, pas juste son nom. */
   posters: string[];
+  /**
+   * Une couverture par liste publique, URL déjà résolue (image uploadée si
+   * elle existe, sinon la première affiche de la liste). Sert aux cartes qui
+   * représentent le créateur par ses listes et non par des affiches en vrac.
+   */
+  listCovers?: string[];
 }
 
 export type CreatorContent = { userProfile: { watchlist: string; watchlists: string } };

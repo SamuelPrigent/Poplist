@@ -29,7 +29,10 @@ import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { TrendingCardMobile } from '@/components/Home/TrendingCardMobile';
 import { TrendingRail } from '@/components/Home/TrendingRail';
 import { CategoryShowcase, type CategoryTile } from '@/components/Home/CategoryShowcase';
-import { CreatorShowcase } from '@/components/Home/CreatorShowcase';
+import { categoryPosterPool, dispatchCategoryPosters } from '@/lib/categoryPosters';
+import { CreatorBandCard } from '@/components/User/CreatorBandCard';
+import { listCover } from '@/lib/creatorCovers';
+import { UserCard } from '@/components/User/UserCard';
 import { CATEGORY_VISUALS } from '@/components/List/ListCardGenre';
 import { AddToListDrawer } from '@/components/List/AddToListDrawer';
 import {
@@ -60,6 +63,8 @@ interface Creator {
   listCount: number;
   /** Affiches tirées de ses listes publiques : ce qu'il curate, pas juste son nom. */
   posters: string[];
+  /** Une couverture par liste publique, URL déjà résolue. */
+  listCovers: string[];
 }
 
 /**
@@ -171,6 +176,8 @@ function HomeContentInner() {
       if (existing) {
         existing.listCount += 1;
         existing.posters.push(...postersOf(wl));
+        const cover = listCover(wl);
+        if (cover) existing.listCovers.push(cover);
       } else {
         creatorsMap.set(ownerId, {
           id: ownerId,
@@ -178,13 +185,18 @@ function HomeContentInner() {
           avatarUrl: wl.owner.avatarUrl ?? undefined,
           listCount: 1,
           posters: postersOf(wl),
+          listCovers: [listCover(wl)].filter((c): c is string => !!c),
         });
       }
     }
     return Array.from(creatorsMap.values())
       .sort((a, b) => b.listCount - a.listCount)
       .slice(0, 12)
-      .map((creator) => ({ ...creator, posters: creator.posters.slice(0, 6) }));
+      .map((creator) => ({
+        ...creator,
+        posters: creator.posters.slice(0, 6),
+        listCovers: creator.listCovers.slice(0, 6),
+      }));
   }, [allPublic]);
 
   // Mes watchlists côté auth (TQ) ; non connecté → aucune liste
@@ -203,15 +215,10 @@ function HomeContentInner() {
       ...watchlistsQueries.byGenre(genreId),
       select: (data: { watchlists: Watchlist[] }) => ({
         count: data.watchlists?.length ?? 0,
-        // Triées par ajout le plus récent : l'affiche d'une catégorie n'est
-        // pas un choix arbitraire figé, c'est ce qui vient d'y entrer. Elle
-        // change donc à mesure que la communauté ajoute des titres.
-        posters: (data.watchlists ?? [])
-          .flatMap((wl) => wl.items ?? [])
-          .filter((item) => !!item.posterPath)
-          .sort((a, b) => (b.addedAt ?? '').localeCompare(a.addedAt ?? ''))
-          .map((item) => item.posterPath as string)
-          .slice(0, 6),
+        // Vivier de la catégorie : ses listes en tourniquet, une affiche
+        // chacune (cf. lib/categoryPosters). La répartition finale entre
+        // catégories se fait plus bas, quand tous les viviers sont là.
+        pool: categoryPosterPool(data.watchlists ?? []),
       }),
     })),
   });
@@ -220,9 +227,18 @@ function HomeContentInner() {
   const categoryData = useMemo<
     Record<string, { count: number; posters: string[] } | undefined>
   >(() => {
+    const pools: Record<string, string[] | undefined> = {};
+    GENRE_CATEGORIES.forEach((genreId, i) => {
+      pools[genreId] = categoryCountQueries[i]?.data?.pool;
+    });
+    // Chaque catégorie réserve ses affiches, la suivante saute ce qui est
+    // pris : deux catégories ne se représentent jamais par le même titre.
+    const dispatched = dispatchCategoryPosters(GENRE_CATEGORIES, pools);
+
     return GENRE_CATEGORIES.reduce(
       (acc, genreId, i) => {
-        acc[genreId] = categoryCountQueries[i]?.data;
+        const data = categoryCountQueries[i]?.data;
+        acc[genreId] = data ? { count: data.count, posters: dispatched[genreId] } : undefined;
         return acc;
       },
       {} as Record<string, { count: number; posters: string[] } | undefined>,
@@ -584,10 +600,29 @@ function HomeContentInner() {
             ))}
           </div>
         ) : creators.length > 0 ? (
-          // Banc d'essai : 10 traitements de la carte créateur, sélectionnables
-          // au-dessus de la section. Voir CreatorShowcase.
           <div ref={creatorsScrollRef}>
-            <CreatorShowcase creators={creators} content={content} />
+            {/* Desktop : la carte à bandeau, une colonne par liste. */}
+            <div className="grid grid-cols-7 gap-x-6 gap-y-8 max-[1099px]:grid-cols-5 max-[749px]:hidden">
+              {creators.slice(0, 14).map((creator) => (
+                <CreatorBandCard key={creator.id} creator={creator} content={content} />
+              ))}
+            </div>
+
+            {/* Mobile : le rail d'avatars, tel qu'il était en production. Le
+                bandeau de couvertures passe mal en colonne étroite. */}
+            <div
+              className="hidden max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-1 max-[749px]:[&::-webkit-scrollbar]:hidden max-[749px]:[scrollbar-width:none] max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0"
+            >
+              {creators.map((creator) => (
+                <UserCard
+                  key={creator.id}
+                  user={creator}
+                  listCount={creator.listCount}
+                  content={content}
+                  carousel
+                />
+              ))}
+            </div>
           </div>
         ) : null}
       </Section>

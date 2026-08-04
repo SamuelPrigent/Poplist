@@ -7,6 +7,7 @@ import { PageFade } from '@/components/ui/PageFade';
 import { useMemo } from 'react';
 import { CATEGORY_VISUALS } from '@/components/List/ListCardGenre';
 import { CategoryList, type CategoryTile } from '@/components/List/CategoryList';
+import { categoryPosterPool, dispatchCategoryPosters } from '@/lib/categoryPosters';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import type { Watchlist } from '@/api';
@@ -27,19 +28,20 @@ function CategoriesPageInner() {
       ...watchlistsQueries.byGenre(genreId),
       select: (data: { watchlists: Watchlist[] }) => ({
         count: data.watchlists?.length ?? 0,
-        // Les plus récemment ajoutées d'abord : l'affiche dit ce qui vient
-        // d'entrer dans la catégorie, elle n'est pas un choix figé.
-        posters: (data.watchlists ?? [])
-          .flatMap((wl) => wl.items ?? [])
-          .filter((item) => !!item.posterPath)
-          .sort((a, b) => (b.addedAt ?? '').localeCompare(a.addedAt ?? ''))
-          .map((item) => item.posterPath as string)
-          .slice(0, 3),
+        // Même vivier que la home : les listes de la catégorie en tourniquet
+        // (cf. lib/categoryPosters). La répartition se fait dans le memo.
+        pool: categoryPosterPool(data.watchlists ?? []),
       }),
     })),
   });
   const loading = countQueries.some(q => q.isPending);
   const tiles = useMemo<CategoryTile[]>(() => {
+    const pools: Record<string, string[] | undefined> = {};
+    GENRE_CATEGORIES.forEach((genreId, i) => {
+      pools[genreId] = countQueries[i]?.data?.pool;
+    });
+    const dispatched = dispatchCategoryPosters(GENRE_CATEGORIES, pools);
+
     return GENRE_CATEGORIES.map((categoryId, i) => {
       const info = getCategoryInfo(categoryId, content);
       const data = countQueries[i]?.data;
@@ -51,7 +53,7 @@ function CategoriesPageInner() {
         href: `/categories/${categoryId}`,
         cutout: cutout.replace(/\.webp$/, ''),
         count: data?.count,
-        posters: data?.posters ?? [],
+        posters: dispatched[categoryId] ?? [],
       };
     });
   }, [content, countQueries]);

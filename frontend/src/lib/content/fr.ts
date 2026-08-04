@@ -193,7 +193,7 @@ export const fr: Content = {
 
   landing: {
     hero: {
-      title: 'Crée et partage des listes de tes contenus favoris',
+      title: 'Crée des listes de tes contenus préférés',
       subtitle: 'Organise tes soirées TV et partage tes découvertes',
       titleMobile: 'Crée des listes de tes contenus favoris',
       subtitleMobile: 'Organise tes soirées TV',

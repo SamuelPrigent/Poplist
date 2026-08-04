@@ -6,8 +6,9 @@ import { PageFade } from '@/components/ui/PageFade';
 import { useEffect, useMemo, useState } from 'react';
 import { Section } from '@/components/layout/Section';
 import { Pagination } from '@/components/ui/pagination';
-import { CreatorTasteCard } from '@/components/User/CreatorTasteCard';
+import { CreatorBandCard } from '@/components/User/CreatorBandCard';
 import { UserCard } from '@/components/User/UserCard';
+import { listCover } from '@/lib/creatorCovers';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { watchlistsQueries } from '@/api/queries';
 import { useLanguageStore } from '@/store/language';
@@ -33,8 +34,10 @@ interface Creator {
   username: string;
   avatarUrl?: string;
   listCount: number;
-  /** Affiches de ses listes publiques — la carte les montre en éventail. */
+  /** Affiches de ses listes publiques (rail mobile). */
   posters: string[];
+  /** Une couverture par liste — le bandeau de la carte desktop. */
+  listCovers: string[];
 }
 
 function UsersContentInner() {
@@ -65,6 +68,8 @@ function UsersContentInner() {
       if (existing) {
         existing.listCount += 1;
         existing.posters.push(...postersOf(wl));
+        const cover = listCover(wl);
+        if (cover) existing.listCovers.push(cover);
       } else {
         creatorsMap.set(ownerId, {
           id: ownerId,
@@ -72,12 +77,17 @@ function UsersContentInner() {
           avatarUrl: wl.owner.avatarUrl ?? undefined,
           listCount: 1,
           posters: postersOf(wl),
+          listCovers: [listCover(wl)].filter((c): c is string => !!c),
         });
       }
     }
     return Array.from(creatorsMap.values())
       .sort((a, b) => b.listCount - a.listCount)
-      .map((creator) => ({ ...creator, posters: creator.posters.slice(0, 3) }));
+      .map((creator) => ({
+        ...creator,
+        posters: creator.posters.slice(0, 3),
+        listCovers: creator.listCovers.slice(0, 4),
+      }));
   }, [publicQuery.data]);
 
   // Scroll to top when page changes
@@ -128,18 +138,11 @@ function UsersContentInner() {
           </div>
         ) : creators.length > 0 ? (
           <>
-            {/* Desktop : la carte « Goût » en version large, sur la même
-                densité qu'avant (7 par ligne). Ce sont les affiches et le nom
-                qui ont grandi, pas la grille qui s'est desserrée. */}
+            {/* Desktop : la même carte à bandeau que la home. Les deux pages
+                doivent montrer le même créateur de la même façon. */}
             <div className="grid grid-cols-7 gap-x-6 gap-y-8 max-[1099px]:grid-cols-5 max-[749px]:hidden">
               {paginatedCreators.map(creator => (
-                <CreatorTasteCard
-                  key={creator.id}
-                  creator={creator}
-                  content={content}
-                  size="md"
-                  className="w-full"
-                />
+                <CreatorBandCard key={creator.id} creator={creator} content={content} />
               ))}
             </div>
 
