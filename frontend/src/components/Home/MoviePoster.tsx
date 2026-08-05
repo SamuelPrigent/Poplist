@@ -70,9 +70,16 @@ export function MoviePoster({
                 homogène, et une affiche au repos n'a rien qui la surcharge. */}
             <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/85 via-black/35 to-transparent" />
-               <h3 className="text-title text-foreground absolute inset-x-0 bottom-0 line-clamp-2 px-3 pb-3">
-                  {displayTitle}
-               </h3>
+               {/* Le `line-clamp` doit porter sur un élément NON positionné.
+                   `position: absolute` blockifie le display : le
+                   `display: -webkit-box` du line-clamp devient `flow-root`,
+                   la coupe ne s'applique plus, mais `-webkit-line-clamp`
+                   continue de poser les points de suspension en fin de 2e
+                   ligne. Résultat : « … » puis une 3e ligne quand même, rognée
+                   par l'overflow de la carte. D'où le wrapper. */}
+               <div className="absolute inset-x-0 bottom-0 px-3 pb-3">
+                  <h3 className="text-title text-foreground line-clamp-2">{displayTitle}</h3>
+               </div>
             </div>
 
             {/* Add to watchlist dropdown - top right.
