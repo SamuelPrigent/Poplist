@@ -191,7 +191,11 @@ export function ListCard({
           <UsersRound strokeWidth={2} className="text-gray-300 h-[13px] w-[13px] shrink-0" />
         )}
 
-        <h3 className="text-title min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-white mask-[linear-gradient(to_right,black,black_85%,transparent)]">
+        {/* Mobile : 14px, graisse inchangée (600). Les titres de section sont
+            passés à 17px/500 ; à 17px/600, le titre de card pesait plus lourd
+            que le titre de la section qui le contient. `text-sm` ne touche
+            qu'à la taille, la graisse de `text-title` reste. */}
+        <h3 className="text-title min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-white mask-[linear-gradient(to_right,black,black_85%,transparent)] max-[749px]:text-sm">
           {handleClick ? (
             <button
               type="button"

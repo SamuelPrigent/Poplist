@@ -189,9 +189,12 @@ function HomeContentInner() {
         });
       }
     }
+    // Aucun plafond ici : c'est lui qui coupait la liste à 12 alors que la
+    // section en demandait 14. Le desktop se limite explicitement à 7 (une
+    // ligne), et le rail mobile défile, donc rien n'a besoin d'être tronqué
+    // en silence.
     return Array.from(creatorsMap.values())
       .sort((a, b) => b.listCount - a.listCount)
-      .slice(0, 12)
       .map((creator) => ({
         ...creator,
         posters: creator.posters.slice(0, 6),
@@ -601,9 +604,12 @@ function HomeContentInner() {
           </div>
         ) : creators.length > 0 ? (
           <div ref={creatorsScrollRef}>
-            {/* Desktop : la carte à bandeau, une colonne par liste. */}
-            <div className="grid grid-cols-7 gap-x-6 gap-y-8 max-[1099px]:grid-cols-5 max-[749px]:hidden">
-              {creators.slice(0, 14).map((creator) => (
+            {/* Desktop : la carte à bandeau, une colonne par liste. Une seule
+                ligne, jamais deux : 7 cartes en confortable, et les deux
+                dernières sont masquées sous 1100px où la grille passe à 5.
+                La suite est sur /users, c'est à ça que sert « Voir tout ». */}
+            <div className="grid grid-cols-7 gap-x-6 gap-y-8 max-[1099px]:grid-cols-5 max-[1099px]:[&>*:nth-child(n+6)]:hidden max-[749px]:hidden">
+              {creators.slice(0, 7).map((creator) => (
                 <CreatorBandCard key={creator.id} creator={creator} content={content} />
               ))}
             </div>
