@@ -54,10 +54,7 @@ export function CategoryList({
 }) {
   return (
     <ul
-      className={cn(
-        'border-border grid grid-cols-2 gap-x-10 border-t max-[749px]:grid-cols-1',
-        className,
-      )}
+      className={cn('border-border grid grid-cols-2 gap-x-10 max-[749px]:grid-cols-1', className)}
     >
       {tiles.map((tile) => (
         <li key={tile.id} className="border-border border-b">

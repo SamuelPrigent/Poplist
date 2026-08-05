@@ -40,12 +40,24 @@ test.describe('Cache TanStack Query (keys générées + helpers invalidations)',
     const { username } = await loginWithClientState(context);
     await createWatchlistViaApi(context, 'Ma liste privée e2e');
 
-    // Connecté, la liste apparaît DEUX fois sur la home : dans « Bibliothèque »
-    // (query mine, auth-scopée) ET dans « Listes populaires » (publicFeatured,
-    // vue publique — featured liste toutes les watchlists récentes).
+    // La home n'affiche plus de vue auth-scopée depuis le retrait de la
+    // section « Bibliothèque », mais la query `mine` est toujours dans le
+    // cache : le loader de la route la précharge côté SSR via une server fn
+    // qui forwarde le cookie, puis la déshydrate côté client (cf. routes/
+    // home.tsx). Il y a donc bien quelque chose à purger.
+    //
+    // Corollaire à ne pas oublier en lisant ce test : `/watchlists/mine`
+    // n'est JAMAIS demandé par le navigateur sur cette page en temps normal.
+    // C'est ce qui rend l'assertion « aucune requête après logout » probante :
+    // si la purge utilisait `invalidateQueries` au lieu de `removeQueries`,
+    // l'invalidation déclencherait un refetch CLIENT, immédiatement visible
+    // ici. Le zéro attendu n'est pas un zéro par défaut.
     await page.goto('/home', { waitUntil: 'domcontentloaded' });
     await waitHydrated(page, username);
-    await expect(page.getByText('Ma liste privée e2e')).toHaveCount(2, {
+    await expect(page.getByLabel('Se déconnecter')).toBeVisible({ timeout: 10_000 });
+
+    // La vue PUBLIQUE (populaires/featured) montre la liste une fois.
+    await expect(page.getByText('Ma liste privée e2e')).toHaveCount(1, {
       timeout: 10_000,
     });
 
@@ -53,21 +65,26 @@ test.describe('Cache TanStack Query (keys générées + helpers invalidations)',
     // (La purge utilise `removeQueries` précisément pour éviter le refetch
     // /auth/me → 401 → auto-logout en boucle.)
     const forbiddenRequests: string[] = [];
+    const navigations: string[] = [];
     page.on('request', (req) => {
       const url = req.url();
       if (url.includes('/watchlists/mine') || url.includes('/auth/me')) {
         forbiddenRequests.push(url);
       }
     });
+    page.on('framenavigated', (frame) => {
+      if (frame === page.mainFrame()) navigations.push(frame.url());
+    });
 
     await page.getByLabel('Se déconnecter').click();
 
-    // Sémantique exacte du predicate de purge : la vue AUTH-SCOPÉE
-    // (Bibliothèque/mine) disparaît sans navigation manuelle, la vue PUBLIQUE
-    // (populaires/featured) reste en cache : 2 occurrences → 1.
-    await expect(page.getByText('Ma liste privée e2e')).toHaveCount(1, {
-      timeout: 10_000,
-    });
+    // L'état authentifié tombe côté client, sans navigation ni reload.
+    await expect(page.getByLabel('Se déconnecter')).toHaveCount(0, { timeout: 10_000 });
+    expect(navigations, 'le logout ne doit pas recharger la page').toEqual([]);
+
+    // Sémantique exacte du predicate de purge : seul l'AUTH-SCOPÉ est retiré.
+    // La vue publique reste en cache, donc la liste est toujours affichée.
+    await expect(page.getByText('Ma liste privée e2e')).toHaveCount(1);
 
     // Laisser le temps à une éventuelle boucle de refetch de se manifester.
     await page.waitForTimeout(1_500);

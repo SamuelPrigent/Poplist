@@ -35,6 +35,18 @@ export default defineConfig(({ mode, command }) => {
       ? { cacheDir: 'node_modules/.vite-e2e' }
       : {}),
     resolve: { tsconfigPaths: true },
+    // Deps pré-déclarées pour la passe d'optimisation INITIALE. Sans ça, Vite
+    // ne les découvre qu'au moment où une page les importe, relance une
+    // optimisation, change le `browserHash` — et les requêtes déjà parties
+    // avec l'ancien `?v=` se prennent un « 504 Outdated Optimize Dep ». En
+    // E2E c'est fatal : le smoke test de /home compte les erreurs console et
+    // vire au rouge, de façon intermittente selon qui gagne la course.
+    //
+    // `motion/react` est le cas vécu : il n'est importé que par des composants
+    // de page (cf. ListCardGenre sur /home), donc jamais vu au démarrage.
+    optimizeDeps: {
+      include: ['motion/react'],
+    },
     define: {
       'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(buildVersion),
     },
