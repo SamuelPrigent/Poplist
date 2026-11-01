@@ -29,7 +29,11 @@ import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import { TrendingCardMobile } from '@/components/Home/TrendingCardMobile';
 import { TrendingRail } from '@/components/Home/TrendingRail';
 import { CategoryShowcase, type CategoryTile } from '@/components/Home/CategoryShowcase';
-import { categoryPosterPool, dispatchCategoryPosters } from '@/lib/categoryPosters';
+import {
+  categoryListCovers,
+  categoryPosterPool,
+  dispatchCategoryPosters,
+} from '@/lib/categoryPosters';
 import { CreatorBandCard } from '@/components/User/CreatorBandCard';
 import { listCover } from '@/lib/creatorCovers';
 import { UserCard } from '@/components/User/UserCard';
@@ -222,13 +226,16 @@ function HomeContentInner() {
         // chacune (cf. lib/categoryPosters). La répartition finale entre
         // catégories se fait plus bas, quand tous les viviers sont là.
         pool: categoryPosterPool(data.watchlists ?? []),
+        // Et les mosaïques : 3 listes de la catégorie, 4 affiches chacune.
+        // L'éventail en a besoin pour montrer des LISTES et pas des films.
+        listCovers: categoryListCovers(data.watchlists ?? []),
       }),
     })),
   });
   // `undefined` tant que la query n'a pas résolu → badge masqué sur la card
   // (au lieu d'un « 0 listes » mensonger pendant le chargement).
   const categoryData = useMemo<
-    Record<string, { count: number; posters: string[] } | undefined>
+    Record<string, { count: number; posters: string[]; lists: string[][] } | undefined>
   >(() => {
     const pools: Record<string, string[] | undefined> = {};
     GENRE_CATEGORIES.forEach((genreId, i) => {
@@ -236,15 +243,22 @@ function HomeContentInner() {
     });
     // Chaque catégorie réserve ses affiches, la suivante saute ce qui est
     // pris : deux catégories ne se représentent jamais par le même titre.
+    // Les mosaïques, elles, ne passent pas par là (cf. categoryPosters).
     const dispatched = dispatchCategoryPosters(GENRE_CATEGORIES, pools);
 
     return GENRE_CATEGORIES.reduce(
       (acc, genreId, i) => {
         const data = categoryCountQueries[i]?.data;
-        acc[genreId] = data ? { count: data.count, posters: dispatched[genreId] } : undefined;
+        acc[genreId] = data
+          ? {
+              count: data.count,
+              posters: dispatched[genreId],
+              lists: data.listCovers,
+            }
+          : undefined;
         return acc;
       },
-      {} as Record<string, { count: number; posters: string[] } | undefined>,
+      {} as Record<string, { count: number; posters: string[]; lists: string[][] } | undefined>,
     );
   }, [categoryCountQueries]);
 
@@ -363,6 +377,7 @@ function HomeContentInner() {
           cutout: cutout.replace(/\.webp$/, ''),
           count: data?.count,
           posters: data?.posters ?? [],
+          lists: data?.lists ?? [],
         };
       }),
     [content, categoryData],
@@ -616,9 +631,7 @@ function HomeContentInner() {
 
             {/* Mobile : le rail d'avatars, tel qu'il était en production. Le
                 bandeau de couvertures passe mal en colonne étroite. */}
-            <div
-              className="hidden max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-1 max-[749px]:[&::-webkit-scrollbar]:hidden max-[749px]:[scrollbar-width:none] max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0"
-            >
+            <div className="hidden max-[749px]:-mx-4 max-[749px]:flex max-[749px]:gap-2 max-[749px]:overflow-x-auto max-[749px]:px-4 max-[749px]:pb-1 max-[749px]:[&::-webkit-scrollbar]:hidden max-[749px]:[scrollbar-width:none] max-[749px]:[&>*]:w-[92px] max-[749px]:[&>*]:shrink-0">
               {creators.map((creator) => (
                 <UserCard
                   key={creator.id}

@@ -213,9 +213,121 @@ function SharedList({ tiles, countLabel }: VariantProps) {
   );
 }
 
+// ───────────────────────────── Éventail ─────────────────────────────
+
+/**
+ * Trois listes de la catégorie, posées en éventail.
+ *
+ * Le problème que ça règle : une tuile de catégorie avait exactement le format
+ * d'une carte de liste, donc elle se lisait comme « une liste de films de
+ * plus ». Ici chaque carte de l'éventail est une mosaïque 2×2 des affiches
+ * d'UNE liste (cf. `categoryListCovers`) — trois cartes, trois listes, et la
+ * catégorie se lit pour ce qu'elle est : un paquet.
+ *
+ * Même geste que l'éventail du CTA final de la landing, mais tenu court : 4
+ * par ligne, jamais plus. Répété huit fois en petit il cesserait d'être un
+ * geste et deviendrait un motif de fond.
+ */
+
+/** Poses de l'éventail selon le nombre de listes disponibles. */
+const FAN_POSES: Record<number, string[]> = {
+  1: ['z-20 group-hover:-translate-y-[5%]'],
+  2: [
+    'z-20 -rotate-[9deg] -translate-x-[30%] translate-y-[9%] group-hover:-rotate-[11deg] group-hover:-translate-x-[34%]',
+    'z-10 rotate-[9deg] translate-x-[30%] translate-y-[9%] group-hover:rotate-[11deg] group-hover:translate-x-[34%]',
+  ],
+  3: [
+    'z-20 group-hover:-translate-y-[5%]',
+    // 36% au repos, 39% au survol : au-delà de 40%, le coin de la carte
+    // penchée sort de la scène et se fait raboter par l'overflow.
+    'z-10 -rotate-[13deg] -translate-x-[36%] translate-y-[12%] group-hover:-translate-x-[39%]',
+    'z-10 rotate-[13deg] translate-x-[36%] translate-y-[12%] group-hover:translate-x-[39%]',
+  ],
+};
+
+/** Une liste : ses 4 affiches en 2×2, dans une vraie carte de liste. */
+function ListMosaic({ covers }: { covers: string[] }) {
+  return (
+    <span className="border-border rounded-poster shadow-poster block overflow-hidden border">
+      <span className="grid aspect-square grid-cols-2">
+        {covers.map((path, i) => (
+          <span key={`${path}-${i}`} className="bg-secondary block overflow-hidden">
+            <Poster path={path} />
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+function FanGrid({ tiles, countLabel }: VariantProps) {
+  return (
+    <div className="grid grid-cols-4 gap-x-6 gap-y-9 max-[1100px]:grid-cols-3">
+      {tiles.map((tile) => {
+        const lists = tile.lists.slice(0, 3);
+        const poses = FAN_POSES[lists.length] ?? FAN_POSES[3];
+
+        return (
+          <Link key={tile.id} to={tile.href} className="group block cursor-pointer">
+            {/* La scène est clippée : les cartes penchées sont coupées net par
+                le filet, elles ne débordent pas sur le nom en dessous. */}
+            <div className="border-border relative h-[180px] overflow-hidden border-b max-[1100px]:h-[165px]">
+              {lists.map((covers, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    // La carte de devant pose son bas exactement sur le filet ;
+                    // seules les penchées plongent dessous et sont coupées.
+                    'absolute bottom-0 left-1/2 -ml-[25%] w-[50%]',
+                    'transition-transform duration-300 ease-out',
+                    poses[i],
+                  )}
+                >
+                  <ListMosaic covers={covers} />
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-4 text-center">
+              <h3 className="text-title text-foreground m-0 truncate">{tile.name}</h3>
+              {tile.count !== undefined && (
+                <p className="text-label text-muted-foreground m-0 mt-1">
+                  {countLabel(tile.count)}
+                </p>
+              )}
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Version retenue : l'éventail en confortable, les rangées en compact.
+ *
+ * L'éventail ne tient pas sous 750px — trois cartes qui se chevauchent dans
+ * une colonne de téléphone se superposent au lieu de se déployer. Le compact
+ * garde donc la signalétique en rangées, comme la section Créateurs garde son
+ * propre traitement compact.
+ */
+function FanOrList({ tiles, countLabel }: VariantProps) {
+  return (
+    <>
+      <div className="max-[749px]:hidden">
+        <FanGrid tiles={tiles} countLabel={countLabel} />
+      </div>
+      <div className="hidden max-[749px]:block">
+        <SharedList tiles={tiles} countLabel={countLabel} />
+      </div>
+    </>
+  );
+}
+
 // ───────────────────────────── Switcher ─────────────────────────────
 
 const VERSIONS = [
+  { id: 'eventail', label: 'Éventail', Component: FanOrList },
   { id: 'liste', label: 'Liste', Component: SharedList },
   { id: 'rangee', label: 'Rangée', Component: stackedList('vignettes', 5) },
   { id: 'rangee-fond', label: 'Rangée fond', Component: stackedList('fond', 5) },
@@ -252,7 +364,7 @@ const SHOW_PICKER = false;
  * `useState`, donc SSR-safe, aucune divergence d'hydratation.
  */
 export function CategoryShowcase({ tiles, countLabel }: VariantProps) {
-  const [active, setActive] = useState<VersionId>('liste');
+  const [active, setActive] = useState<VersionId>('eventail');
   const Current = VERSIONS.find((v) => v.id === active)?.Component ?? VERSIONS[0].Component;
 
   return (

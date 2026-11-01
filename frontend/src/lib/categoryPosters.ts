@@ -118,3 +118,64 @@ export function dispatchCategoryPosters(
 
   return out;
 }
+
+// ─────────────────── Mosaïques : une tuile = une liste ───────────────────
+
+/** Affiches par mosaïque. 4 = une grille 2×2, le format retenu pour la tuile. */
+export const COVERS_PER_LIST = 4;
+
+/**
+ * Les listes d'une catégorie, chacune avec SES propres affiches.
+ *
+ * C'est l'inverse exact de `categoryPosterPool`, et c'est voulu : le vivier
+ * sert à montrer la variété d'une catégorie (une affiche par liste), les
+ * mosaïques servent à montrer qu'une catégorie contient plusieurs listes
+ * (quatre affiches d'une même liste par tuile). Une mosaïque qui mélangerait
+ * quatre listes ne voudrait rien dire.
+ *
+ * **Les 4 PREMIÈRES affiches de la liste, dans son ordre d'affichage.** L'API
+ * trie les items par `position`, et la vignette de la liste (`PosterGrid`)
+ * prend `items.slice(0, 4)` : en prenant les mêmes, la mosaïque d'une
+ * catégorie montre exactement les titres que la carte de cette liste montre
+ * ailleurs. Trier par date d'ajout donnait les 4 DERNIERS ajoutés, donc deux
+ * vignettes différentes pour une même liste selon la page.
+ *
+ * L'ordre des LISTES, lui, reste celui de la dernière alimentation (l'id
+ * départage). Aucun tirage : identique côté serveur et côté client.
+ *
+ * Une liste trop courte reboucle sur ses propres affiches : mieux vaut une
+ * affiche en double qu'une case vide dans la grille.
+ */
+export function categoryListCovers(
+  watchlists: Watchlist[],
+  maxLists = 3,
+  perList = COVERS_PER_LIST,
+): string[][] {
+  return (watchlists ?? [])
+    .map((wl) => ({
+      id: wl.id,
+      covers: (wl.items ?? [])
+        .filter((item) => !!item.posterPath)
+        .slice(0, perList)
+        .map((item) => item.posterPath as string),
+      lastAddedAt: (wl.items ?? []).reduce(
+        (max, item) => ((item.addedAt ?? '') > max ? (item.addedAt ?? '') : max),
+        '',
+      ),
+    }))
+    .filter((list) => list.covers.length > 0)
+    .sort((a, b) => b.lastAddedAt.localeCompare(a.lastAddedAt) || a.id.localeCompare(b.id))
+    .slice(0, maxLists)
+    .map((list) => Array.from({ length: perList }, (_, i) => list.covers[i % list.covers.length]));
+}
+
+/*
+ * Pas d'équivalent de `dispatchCategoryPosters` ici, volontairement. Le
+ * partage des affiches entre catégories (« un même titre n'illustre jamais
+ * deux catégories ») n'a de sens que pour le vivier, où chaque affiche
+ * représente une liste à elle seule. Appliqué aux mosaïques, il remplaçait
+ * des affiches déjà prises ailleurs, et la mosaïque d'une liste ne montrait
+ * plus les mêmes titres que la vignette de cette liste — exactement ce que
+ * `categoryListCovers` garantit. Une liste rangée dans deux catégories y
+ * apparaît donc avec la même mosaïque : c'est la même liste, c'est juste.
+ */

@@ -19,6 +19,12 @@ export interface CategoryTile {
    * catégorie voisine. Le choix est déterministe, pas tiré au sort.
    */
   posters: string[];
+  /**
+   * Les listes de la catégorie, chacune avec ses 4 affiches à elle (cf.
+   * `lib/categoryPosters` → `categoryListCovers`). Une mosaïque = une liste :
+   * c'est ce qui distingue une catégorie d'une liste de films de plus.
+   */
+  lists: string[][];
 }
 
 export function CategoryPoster({ path, className }: { path: string; className?: string }) {
@@ -60,13 +66,20 @@ export function CategoryList({
         <li key={tile.id} className="border-border border-b">
           <Link to={tile.href} className="group flex items-center gap-4 py-4">
             <span className="text-title text-foreground min-w-0 flex-1 truncate">{tile.name}</span>
-            <span className="flex shrink-0 gap-1">
-              {tile.posters.slice(0, 3).map((path, i) => (
+            {/* Une mosaïque = une liste, comme l'éventail en confortable.
+                Trois affiches isolées racontaient trois films ; quatre
+                affiches d'une même liste racontent une liste. */}
+            <span className="flex shrink-0 gap-1.5">
+              {tile.lists.slice(0, 3).map((covers, i) => (
                 <span
-                  key={`${path}-${i}`}
-                  className="rounded-poster block h-10 w-7 overflow-hidden opacity-60 transition-opacity duration-200 group-hover:opacity-100"
+                  key={i}
+                  className="rounded-poster grid h-10 w-10 grid-cols-2 overflow-hidden opacity-70 transition-opacity duration-200 group-hover:opacity-100"
                 >
-                  <CategoryPoster path={path} />
+                  {covers.map((path, j) => (
+                    <span key={`${path}-${j}`} className="bg-secondary block overflow-hidden">
+                      <CategoryPoster path={path} />
+                    </span>
+                  ))}
                 </span>
               ))}
             </span>

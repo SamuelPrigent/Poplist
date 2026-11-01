@@ -7,7 +7,11 @@ import { PageFade } from '@/components/ui/PageFade';
 import { useMemo } from 'react';
 import { CATEGORY_VISUALS } from '@/components/List/ListCardGenre';
 import { CategoryList, type CategoryTile } from '@/components/List/CategoryList';
-import { categoryPosterPool, dispatchCategoryPosters } from '@/lib/categoryPosters';
+import {
+  categoryListCovers,
+  categoryPosterPool,
+  dispatchCategoryPosters,
+} from '@/lib/categoryPosters';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useScrollToTopOnMount } from '@/hooks/useScrollToTopOnMount';
 import type { Watchlist } from '@/api';
@@ -31,6 +35,7 @@ function CategoriesPageInner() {
         // Même vivier que la home : les listes de la catégorie en tourniquet
         // (cf. lib/categoryPosters). La répartition se fait dans le memo.
         pool: categoryPosterPool(data.watchlists ?? []),
+        listCovers: categoryListCovers(data.watchlists ?? []),
       }),
     })),
   });
@@ -54,6 +59,7 @@ function CategoriesPageInner() {
         cutout: cutout.replace(/\.webp$/, ''),
         count: data?.count,
         posters: dispatched[categoryId] ?? [],
+        lists: data?.listCovers ?? [],
       };
     });
   }, [content, countQueries]);
