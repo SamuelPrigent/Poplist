@@ -11,18 +11,39 @@ export type Watchlist = {
      * @type string
     */
     id: string;
-    ownerId: (string | null);
+    /**
+     * @type string,null
+    */
+    ownerId: string | null;
     /**
      * @type string
     */
     name: string;
-    description: (string | null);
-    imageUrl: (string | null);
-    thumbnailUrl: (string | null);
-    dominantColor: (string | null);
+    /**
+     * @type string,null
+    */
+    description: string | null;
+    /**
+     * @type string,null
+    */
+    imageUrl: string | null;
+    /**
+     * @type string,null
+    */
+    thumbnailUrl: string | null;
+    /**
+     * @type string,null
+    */
+    dominantColor: string | null;
     genres: (string[] | null);
-    createdAt: (string | null);
-    updatedAt: (string | null);
+    /**
+     * @type string,null
+    */
+    createdAt: string | null;
+    /**
+     * @type string,null
+    */
+    updatedAt: string | null;
     /**
      * @type object | undefined
     */

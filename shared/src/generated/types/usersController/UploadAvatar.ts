@@ -13,7 +13,7 @@ export type UploadAvatar200 = UploadAvatarResponse;
 export type UploadAvatarMutationRequest = {
     /**
      * @pattern ^data:image\/.*
-     * @type string
+     * @type string, starts_with
     */
     imageData: string;
 };

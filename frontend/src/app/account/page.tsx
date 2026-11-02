@@ -440,6 +440,7 @@ export default function AccountPage() {
                     <button
                       type="button"
                       onClick={() => setShowOldPassword(!showOldPassword)}
+                      aria-label={showOldPassword ? content.auth.hidePassword : content.auth.showPassword}
                       className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
                       tabIndex={-1}
                     >
@@ -470,6 +471,7 @@ export default function AccountPage() {
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
+                      aria-label={showNewPassword ? content.auth.hidePassword : content.auth.showPassword}
                       className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
                       tabIndex={-1}
                     >
@@ -504,6 +506,7 @@ export default function AccountPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? content.auth.hidePassword : content.auth.showPassword}
                       className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
                       tabIndex={-1}
                     >

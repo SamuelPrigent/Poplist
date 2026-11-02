@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { setupConsoleErrorTracking } from './helpers/console-errors';
-import { freshUser, getCurrentUser, logoutViaApi, signupAndLogin } from './helpers/auth';
+import {
+  freshUser,
+  getCurrentUser,
+  logoutViaApi,
+  seedClientAuthFlag,
+  signupAndLogin,
+} from './helpers/auth';
 import { FRONTEND_BASE } from './helpers/config';
 import { resetDb } from './helpers/db';
 
@@ -139,12 +145,7 @@ test.describe('Auth', () => {
     // Le client gate /auth/me derrière le flag localStorage `poplist_auth` (posé
     // normalement par le login via l'UI). On le simule pour que la Navbar rende
     // l'état authentifié (bouton de déconnexion).
-    await context.addInitScript((u) => {
-      window.localStorage.setItem(
-        'poplist_auth',
-        JSON.stringify({ isAuthenticated: true, user: u })
-      );
-    }, me);
+    await seedClientAuthFlag(context, me);
 
     await page.goto('/account', { waitUntil: 'domcontentloaded' });
     // Attendre que l'état authentifié soit résolu (username affiché dans la navbar)

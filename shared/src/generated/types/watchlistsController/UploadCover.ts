@@ -20,7 +20,7 @@ export type UploadCover200 = UploadCoverResponse;
 export type UploadCoverMutationRequest = {
     /**
      * @pattern ^data:image\/.*
-     * @type string
+     * @type string, starts_with
     */
     imageData: string;
 };

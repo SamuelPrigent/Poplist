@@ -3,12 +3,16 @@
  * `@tanstack/react-start/plugin/vite` (cherche `src/start.{ts,tsx,js,jsx}`
  * dans le srcDirectory).
  *
- * Utilisé ici pour enregistrer un request middleware global qui ajoute les
- * security headers sur toutes les responses HTML SSR. Voir
- * `src/server/headers.ts` pour la définition exacte des headers.
+ * Utilisé ici pour enregistrer les request middlewares globaux : la protection
+ * CSRF des server functions, et les security headers sur toutes les responses
+ * HTML SSR (voir `src/server/headers.ts` pour la définition exacte des headers).
  */
 
-import { createMiddleware, createStart } from '@tanstack/react-start';
+import {
+  createCsrfMiddleware,
+  createMiddleware,
+  createStart,
+} from '@tanstack/react-start';
 import { applySecurityHeaders } from '@/server/headers';
 
 // Le request middleware tourne sur TOUTES les requêtes (SSR HTML, server
@@ -22,6 +26,13 @@ const securityHeadersMiddleware = createMiddleware({ type: 'request' }).server(
   },
 );
 
+// Protège les server functions (endpoints RPC same-origin) des requêtes
+// cross-site : vérifie Sec-Fetch-Site, puis Origin, puis Referer. Les pages SSR
+// et les server routes ne sont pas concernées (filtre sur `serverFn`).
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === 'serverFn',
+});
+
 export const startInstance = createStart(() => ({
-  requestMiddleware: [securityHeadersMiddleware],
+  requestMiddleware: [csrfMiddleware, securityHeadersMiddleware],
 }));

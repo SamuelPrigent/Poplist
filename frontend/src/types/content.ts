@@ -20,6 +20,8 @@ export interface Content {
     emailPlaceholder: string;
     password: string;
     passwordPlaceholder: string;
+    showPassword: string;
+    hidePassword: string;
     processing: string;
     dontHaveAccount: string;
     alreadyHaveAccount: string;

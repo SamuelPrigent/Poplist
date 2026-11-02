@@ -10,7 +10,10 @@ export type WatchlistItem = {
      * @type string
     */
     id: string;
-    watchlistId: (string | null);
+    /**
+     * @type string,null
+    */
+    watchlistId: string | null;
     /**
      * @type number
     */
@@ -19,16 +22,49 @@ export type WatchlistItem = {
      * @type string
     */
     mediaType: string;
-    title: (string | null);
-    posterPath: (string | null);
-    backdropPath: (string | null);
-    overview: (string | null);
-    releaseDate: (string | null);
-    voteAverage: (string | null);
-    runtime: (number | null);
-    numberOfSeasons: (number | null);
-    numberOfEpisodes: (number | null);
+    /**
+     * @type string,null
+    */
+    title: string | null;
+    /**
+     * @type string,null
+    */
+    posterPath: string | null;
+    /**
+     * @type string,null
+    */
+    backdropPath: string | null;
+    /**
+     * @type string,null
+    */
+    overview: string | null;
+    /**
+     * @type string,null
+    */
+    releaseDate: string | null;
+    /**
+     * @type string,null
+    */
+    voteAverage: string | null;
+    /**
+     * @type number,null
+    */
+    runtime: number | null;
+    /**
+     * @type number,null
+    */
+    numberOfSeasons: number | null;
+    /**
+     * @type number,null
+    */
+    numberOfEpisodes: number | null;
     platformList: (Platform[] | null);
-    position: (number | null);
-    addedAt: (string | null);
+    /**
+     * @type number,null
+    */
+    position: number | null;
+    /**
+     * @type string,null
+    */
+    addedAt: string | null;
 };

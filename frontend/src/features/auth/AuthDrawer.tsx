@@ -244,6 +244,7 @@ export function AuthDrawer({
 								<button
 									type="button"
 									onClick={() => setShowPassword(!showPassword)}
+									aria-label={showPassword ? content.auth.hidePassword : content.auth.showPassword}
 									className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
 									tabIndex={-1}
 								>

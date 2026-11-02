@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import type { APIRequestContext, BrowserContext, Page } from '@playwright/test';
+import { CURRENT_STORAGE_VERSION } from '../../src/lib/localStorageVersion';
 import { FRONTEND_BASE } from './config';
 
 /**
@@ -101,13 +102,37 @@ export async function loginWithClientState(context: BrowserContext, user?: TestU
   const u = await signupAndLogin(context, user);
   const me = await getCurrentUser(context.request);
   if (!me) throw new Error('user attendu authentifié');
-  await context.addInitScript((usr) => {
-    window.localStorage.setItem(
-      'poplist_auth',
-      JSON.stringify({ isAuthenticated: true, user: usr }),
-    );
-  }, me);
+  await seedClientAuthFlag(context, me);
   return { user: u, username: me.username };
+}
+
+/**
+ * Pose le flag `poplist_auth` une seule fois par contexte.
+ *
+ * `addInitScript` rejoue à chaque nouveau document. Sans garde, un reload
+ * après un logout (dont le full-reload que `vite dev` broadcast à la première
+ * compilation d'une route) reposerait le flag → AuthContext relance /auth/me,
+ * ce que l'app réelle ne fait jamais (le logout retire le flag). Ensuite,
+ * c'est AuthContext qui maintient le flag lui-même.
+ *
+ * La version de storage est posée avec : sans elle, le boot client wipe le
+ * localStorage (clé de version absente, storage non vide) et efface le flag.
+ */
+export async function seedClientAuthFlag(context: BrowserContext, me: unknown) {
+  await context.addInitScript(
+    ({ usr, version }) => {
+      // Le script tourne aussi sur l'`about:blank` initial de chaque page.
+      if (!window.location.protocol.startsWith('http')) return;
+      if (window.localStorage.getItem('e2e_auth_seeded')) return;
+      window.localStorage.setItem('e2e_auth_seeded', '1');
+      window.localStorage.setItem('poplist_storage_version', version);
+      window.localStorage.setItem(
+        'poplist_auth',
+        JSON.stringify({ isAuthenticated: true, user: usr }),
+      );
+    },
+    { usr: me, version: CURRENT_STORAGE_VERSION },
+  );
 }
 
 /**

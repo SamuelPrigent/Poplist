@@ -25,6 +25,8 @@ export const es: Content = {
     emailPlaceholder: 'tu@email.com',
     password: 'Contraseña',
     passwordPlaceholder: 'Tu contraseña',
+    showPassword: 'Mostrar contraseña',
+    hidePassword: 'Ocultar contraseña',
     processing: 'Procesando...',
     dontHaveAccount: '¿No tienes una cuenta?',
     alreadyHaveAccount: '¿Ya tienes una cuenta?',

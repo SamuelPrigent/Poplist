@@ -28,8 +28,14 @@ export type TMDBMediaItem = {
      * @type string | undefined
     */
     name?: string;
-    poster_path?: (string | null);
-    backdrop_path?: (string | null);
+    /**
+     * @type string,null
+    */
+    poster_path?: string | null;
+    /**
+     * @type string,null
+    */
+    backdrop_path?: string | null;
     /**
      * @type string | undefined
     */

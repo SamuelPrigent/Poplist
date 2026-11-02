@@ -88,9 +88,12 @@ test.describe('Cache TanStack Query (keys générées + helpers invalidations)',
 
     // Laisser le temps à une éventuelle boucle de refetch de se manifester.
     await page.waitForTimeout(1_500);
+    // Les navigations relevées pendant l'attente (ex. full-reload de `vite dev`)
+    // figurent dans le message : elles disent si une requête vient d'un reload
+    // et non de la purge du cache.
     expect(
       forbiddenRequests,
-      'Aucun refetch /watchlists/mine ni /auth/me ne doit partir après logout',
+      `Aucun refetch /watchlists/mine ni /auth/me ne doit partir après logout (navigations : ${JSON.stringify(navigations)})`,
     ).toEqual([]);
   });
 

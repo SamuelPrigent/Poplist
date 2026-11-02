@@ -13,12 +13,24 @@ export type User = {
      * @type string
     */
     email: string;
-    username: (string | null);
-    language: (string | null);
-    avatarUrl: (string | null);
+    /**
+     * @type string,null
+    */
+    username: string | null;
+    /**
+     * @type string,null
+    */
+    language: string | null;
+    /**
+     * @type string,null
+    */
+    avatarUrl: string | null;
     /**
      * @type boolean | undefined
     */
     hasPassword?: boolean;
-    createdAt?: (string | null);
+    /**
+     * @type string,null
+    */
+    createdAt?: string | null;
 };

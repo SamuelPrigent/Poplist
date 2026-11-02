@@ -24,8 +24,20 @@ export type RecommendedItem = {
      * @type string
     */
     title: string;
-    posterPath: (string | null);
-    runtime: (number | null);
-    numberOfSeasons: (number | null);
-    numberOfEpisodes: (number | null);
+    /**
+     * @type string,null
+    */
+    posterPath: string | null;
+    /**
+     * @type number,null
+    */
+    runtime: number | null;
+    /**
+     * @type number,null
+    */
+    numberOfSeasons: number | null;
+    /**
+     * @type number,null
+    */
+    numberOfEpisodes: number | null;
 };

@@ -45,7 +45,10 @@ export type CreateWatchlistMutationRequest = {
          * @type string
         */
         title: string;
-        posterPath?: (string | null);
+        /**
+         * @type string,null
+        */
+        posterPath?: string | null;
         /**
          * @type string
         */

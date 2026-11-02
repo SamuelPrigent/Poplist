@@ -13,6 +13,12 @@ export type WatchlistOwner = {
      * @type string
     */
     email: string;
-    username: (string | null);
-    avatarUrl: (string | null);
+    /**
+     * @type string,null
+    */
+    username: string | null;
+    /**
+     * @type string,null
+    */
+    avatarUrl: string | null;
 };

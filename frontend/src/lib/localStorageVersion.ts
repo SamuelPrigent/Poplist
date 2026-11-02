@@ -4,7 +4,8 @@
  * Stratégie simple :
  * - Une version unique en dur (`CURRENT_STORAGE_VERSION`)
  * - Au boot, si la version stockée diffère (absente OU différente) → on wipe
- *   tout le localStorage et on pose la version courante
+ *   tout le localStorage et on pose la version courante. Exception : un
+ *   storage vide (première visite) reçoit juste la version, sans wipe.
  * - Pas de migrations incrémentales : les données localStorage sont des prefs
  *   UI + cache, pas des données critiques. Le wipe est acceptable.
  *
@@ -31,6 +32,13 @@ export function cleanLocalStorageIfVersionMismatch(): boolean {
   try {
     const stored = localStorage.getItem(VERSION_KEY);
     if (stored === CURRENT_STORAGE_VERSION) return false;
+
+    // Première visite (storage vide) : rien à nettoyer, donc ni wipe ni reload.
+    // Sans ça, chaque nouveau visiteur chargeait la page deux fois.
+    if (stored === null && localStorage.length === 0) {
+      localStorage.setItem(VERSION_KEY, CURRENT_STORAGE_VERSION);
+      return false;
+    }
 
     localStorage.clear();
     localStorage.setItem(VERSION_KEY, CURRENT_STORAGE_VERSION);
