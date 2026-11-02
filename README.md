@@ -1,4 +1,4 @@
-# Poplist
+# Poplist.
 
 Application web de listes de films et séries — création, organisation collaborative, partage public, métadonnées TMDB. Web (TanStack Start) et Android.
 
