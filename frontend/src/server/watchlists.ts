@@ -13,7 +13,7 @@ const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:3456';
  * Retourne null si la watchlist n'existe pas ou est privée.
  */
 export const getPublicWatchlistForMeta = createServerFn({ method: 'GET' })
-  .inputValidator((data: { id: string }) => data)
+  .validator((data: { id: string }) => data)
   .handler(async ({ data }): Promise<GetPublicWatchlistResponse | null> => {
     try {
       const res = await fetch(`${BACKEND_URL}/watchlists/public/${data.id}`);
@@ -34,7 +34,7 @@ export const getPublicWatchlistForMeta = createServerFn({ method: 'GET' })
  * résolvent en cascade (qui causaient un re-render visible / flicker).
  */
 export const getAuthWatchlistForMeta = createServerFn({ method: 'GET' })
-  .inputValidator((data: { id: string }) => data)
+  .validator((data: { id: string }) => data)
   .handler(async ({ data }): Promise<GetWatchlistByIdResponse | null> => {
     const cookie = getRequestHeader('cookie') ?? '';
     if (!cookie) return null;

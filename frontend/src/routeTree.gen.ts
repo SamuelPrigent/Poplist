@@ -9,39 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UsersRouteImport } from './routes/users'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as HomeRouteImport } from './routes/home'
-import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ListsIndexRouteImport } from './routes/lists/index'
-import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as UsersRouteImport } from './routes/users'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
-import { Route as UserUsernameRouteImport } from './routes/user/$username'
-import { Route as LocalListsRouteImport } from './routes/local/lists'
-import { Route as ListsIdRouteImport } from './routes/lists/$id'
-import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
 import { Route as AccountListsRouteImport } from './routes/account/lists'
+import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
+import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
+import { Route as ListsIndexRouteImport } from './routes/lists/index'
+import { Route as ListsIdRouteImport } from './routes/lists/$id'
+import { Route as LocalListsRouteImport } from './routes/local/lists'
+import { Route as UserUsernameRouteImport } from './routes/user/$username'
 
-const UsersRoute = UsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -49,19 +34,24 @@ const ExploreRoute = ExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ListsIndexRoute = ListsIndexRouteImport.update({
-  id: '/lists/',
-  path: '/lists/',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
-  id: '/categories/',
-  path: '/categories/',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
@@ -69,19 +59,14 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserUsernameRoute = UserUsernameRouteImport.update({
-  id: '/user/$username',
-  path: '/user/$username',
+const AccountListsRoute = AccountListsRouteImport.update({
+  id: '/account/lists',
+  path: '/account/lists',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LocalListsRoute = LocalListsRouteImport.update({
-  id: '/local/lists',
-  path: '/local/lists',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ListsIdRoute = ListsIdRouteImport.update({
-  id: '/lists/$id',
-  path: '/lists/$id',
+const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
+  id: '/categories/',
+  path: '/categories/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesIdRoute = CategoriesIdRouteImport.update({
@@ -89,9 +74,24 @@ const CategoriesIdRoute = CategoriesIdRouteImport.update({
   path: '/categories/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccountListsRoute = AccountListsRouteImport.update({
-  id: '/account/lists',
-  path: '/account/lists',
+const ListsIndexRoute = ListsIndexRouteImport.update({
+  id: '/lists/',
+  path: '/lists/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListsIdRoute = ListsIdRouteImport.update({
+  id: '/lists/$id',
+  path: '/lists/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalListsRoute = LocalListsRouteImport.update({
+  id: '/local/lists',
+  path: '/local/lists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserUsernameRoute = UserUsernameRouteImport.update({
+  id: '/user/$username',
+  path: '/user/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -214,32 +214,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/users': {
-      id: '/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof UsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -249,25 +228,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lists/': {
-      id: '/lists/'
-      path: '/lists'
-      fullPath: '/lists/'
-      preLoaderRoute: typeof ListsIndexRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/categories/': {
-      id: '/categories/'
-      path: '/categories'
-      fullPath: '/categories/'
-      preLoaderRoute: typeof CategoriesIndexRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account/': {
@@ -277,25 +263,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/user/$username': {
-      id: '/user/$username'
-      path: '/user/$username'
-      fullPath: '/user/$username'
-      preLoaderRoute: typeof UserUsernameRouteImport
+    '/account/lists': {
+      id: '/account/lists'
+      path: '/account/lists'
+      fullPath: '/account/lists'
+      preLoaderRoute: typeof AccountListsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/local/lists': {
-      id: '/local/lists'
-      path: '/local/lists'
-      fullPath: '/local/lists'
-      preLoaderRoute: typeof LocalListsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lists/$id': {
-      id: '/lists/$id'
-      path: '/lists/$id'
-      fullPath: '/lists/$id'
-      preLoaderRoute: typeof ListsIdRouteImport
+    '/categories/': {
+      id: '/categories/'
+      path: '/categories'
+      fullPath: '/categories/'
+      preLoaderRoute: typeof CategoriesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories/$id': {
@@ -305,11 +284,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/account/lists': {
-      id: '/account/lists'
-      path: '/account/lists'
-      fullPath: '/account/lists'
-      preLoaderRoute: typeof AccountListsRouteImport
+    '/lists/': {
+      id: '/lists/'
+      path: '/lists'
+      fullPath: '/lists/'
+      preLoaderRoute: typeof ListsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lists/$id': {
+      id: '/lists/$id'
+      path: '/lists/$id'
+      fullPath: '/lists/$id'
+      preLoaderRoute: typeof ListsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/lists': {
+      id: '/local/lists'
+      path: '/local/lists'
+      fullPath: '/local/lists'
+      preLoaderRoute: typeof LocalListsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/$username': {
+      id: '/user/$username'
+      path: '/user/$username'
+      fullPath: '/user/$username'
+      preLoaderRoute: typeof UserUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
